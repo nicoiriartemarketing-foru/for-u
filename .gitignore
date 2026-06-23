@@ -13,3 +13,17 @@ frontend/dist/
 *.log
 npm-debug.log*
 yarn-error.log*
+
+# Legacy static prototype files kept locally, not part of the deployable app.
+admin.html
+ia.html
+index.html
+landing.html
+login.html
+metodologia.html
+css/
+js/
+FOR U.code-workspace
+
+# Manual Hostinger bundle generated from frontend/dist.
+frontend/for-u-hostinger-dist.zip
