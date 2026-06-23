@@ -1,8 +1,9 @@
-import { useParams } from 'react-router-dom';
-import { BadgeCheck, Clock, MapPin, MessageCircle, Phone, Share2, Sparkles } from '../../lib/icons';
+import { Link, useParams } from 'react-router-dom';
+import { BadgeCheck, Clock, Edit3, Eye, MapPin, MessageCircle, Phone, Share2, Sparkles } from '../../lib/icons';
 import {
   type DigitalWorldPage,
   type LandingTheme,
+  draftStorageKey,
   getLandingTheme,
   loadConstructorState,
   loadDigitalWorldPage,
@@ -17,6 +18,7 @@ export default function PublicLanding() {
   const page = loadDigitalWorldPage(draft, constructorState);
   const theme = getLandingTheme(page.themeId);
   const fontClass = page.fontStyle === 'modern' ? 'font-sans' : page.fontStyle === 'rounded' ? 'font-sans' : 'font-serif';
+  const hasLocalDraft = typeof window !== 'undefined' && Boolean(window.localStorage.getItem(draftStorageKey));
 
   return (
     <div className="min-h-screen font-sans" style={{ backgroundColor: theme.background, color: theme.text }}>
@@ -29,6 +31,7 @@ export default function PublicLanding() {
             <a href="#oferta">Oferta</a>
             <a href="#confianza">Confianza</a>
             <a href="#preguntas">Preguntas</a>
+            {hasLocalDraft && <Link to="/editor">Editar</Link>}
           </div>
           <button
             type="button"
@@ -43,9 +46,23 @@ export default function PublicLanding() {
 
       <section id="inicio" className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:min-h-[72vh] lg:grid-cols-[1.02fr_0.98fr] lg:py-18">
         <div>
-          <p className="text-sm font-black uppercase tracking-[0.16em]" style={{ color: theme.accent }}>{draft.businessTitle}</p>
+          <p className="inline-flex rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.16em]" style={{ borderColor: theme.border, color: theme.accent, backgroundColor: theme.surface }}>
+            {draft.businessTitle}
+          </p>
           <h1 className={`mt-5 max-w-4xl ${fontClass} text-5xl font-bold leading-[1.02] md:text-7xl`}>{page.heroTitle}</h1>
           <p className="mt-6 max-w-2xl text-lg font-medium leading-8" style={{ color: theme.muted }}>{page.heroSubtitle}</p>
+          <div className="mt-6 grid max-w-2xl gap-3 sm:grid-cols-3">
+            {[
+              ['1', 'Entiende la oferta'],
+              ['2', 'Confia rapido'],
+              ['3', `Toca ${page.ctaLabel}`],
+            ].map(([number, label]) => (
+              <div key={label} className="rounded-2xl border p-4" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
+                <p className="text-xl font-black" style={{ color: theme.accent }}>{number}</p>
+                <p className="mt-1 text-xs font-black uppercase leading-5" style={{ color: theme.muted }}>{label}</p>
+              </div>
+            ))}
+          </div>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <button
               type="button"
@@ -58,6 +75,16 @@ export default function PublicLanding() {
             <span className="rounded-full border px-4 py-3 text-sm font-bold" style={{ borderColor: theme.border, color: theme.muted }}>
               {slug ? `/${slug}` : 'perfil publico'}
             </span>
+            {hasLocalDraft && (
+              <Link
+                to="/editor"
+                onClick={() => playUiTone('tap')}
+                className="tap-boost inline-flex items-center gap-2 rounded-xl border px-5 py-4 text-sm font-black"
+                style={{ backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }}
+              >
+                Editar esta landing <Edit3 size={17} />
+              </Link>
+            )}
           </div>
         </div>
 
@@ -76,20 +103,42 @@ export default function PublicLanding() {
       <main className="mx-auto max-w-6xl px-4 py-14">
         <div className="grid gap-10 lg:grid-cols-[1fr_0.4fr]">
           <div className="space-y-8">
-            <section id="oferta" className="rounded-3xl border p-7 shadow-sm" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
-              <p className="text-sm font-black uppercase tracking-[0.14em]" style={{ color: theme.accent }}>Oferta</p>
-              <h2 className="mt-3 font-serif text-3xl font-bold" style={{ color: theme.text }}>{page.featuredTitle}</h2>
-              <div className={`mt-6 grid gap-5 ${page.offerLayout === 'spotlight' ? '' : 'sm:grid-cols-2'}`}>
+            <section id="oferta" className="overflow-hidden rounded-3xl border shadow-sm" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
+              <div className="grid gap-5 p-7 md:grid-cols-[0.72fr_0.28fr]">
+                <div>
+                  <p className="text-sm font-black uppercase tracking-[0.14em]" style={{ color: theme.accent }}>Oferta</p>
+                  <h2 className="mt-3 font-serif text-4xl font-bold leading-tight" style={{ color: theme.text }}>{page.featuredTitle}</h2>
+                  <p className="mt-4 text-sm font-bold leading-7" style={{ color: theme.muted }}>
+                    Una ruta simple para que la persona entienda que haces, por que confiar y que accion tomar.
+                  </p>
+                </div>
+                <div className="rounded-2xl p-5" style={{ backgroundColor: theme.accentSoft }}>
+                  <p className="text-xs font-black uppercase tracking-[0.12em]" style={{ color: theme.accent }}>Accion principal</p>
+                  <p className="mt-3 text-2xl font-black leading-tight" style={{ color: theme.text }}>{page.ctaLabel}</p>
+                </div>
+              </div>
+              <div className={`grid gap-5 px-7 pb-7 ${page.offerLayout === 'spotlight' ? '' : 'sm:grid-cols-2'}`}>
                 {page.featuredItems.map((item, index) => (
-                  <article key={item.title} className={`rounded-2xl border p-5 ${page.blockStyle === 'bold' ? 'shadow-lg' : ''}`} style={{ backgroundColor: page.offerLayout === 'spotlight' ? theme.accentSoft : theme.background, borderColor: theme.border }}>
-                    <p className="text-lg font-black" style={{ color: theme.text }}>
-                      {page.offerLayout === 'steps' && <span className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-full text-xs" style={{ backgroundColor: theme.button, color: theme.buttonText }}>{index + 1}</span>}
+                  <article key={item.title} className={`rounded-2xl border p-5 transition ${page.blockStyle === 'bold' ? 'shadow-lg' : ''}`} style={{ backgroundColor: page.offerLayout === 'spotlight' ? theme.accentSoft : theme.background, borderColor: theme.border }}>
+                    <p className="text-lg font-black leading-tight" style={{ color: theme.text }}>
+                      <span className="mr-3 inline-flex h-9 w-9 items-center justify-center rounded-xl text-xs" style={{ backgroundColor: theme.button, color: theme.buttonText }}>{index + 1}</span>
                       {item.title}
                     </p>
                     <p className="mt-3 text-sm font-semibold leading-7" style={{ color: theme.muted }}>{item.description}</p>
                     <span className="mt-4 inline-flex rounded-full px-3 py-1 text-xs font-black" style={{ backgroundColor: theme.accentSoft, color: theme.accent }}>{item.detail}</span>
                   </article>
                 ))}
+              </div>
+              <div className="m-7 rounded-3xl p-5" style={{ backgroundColor: theme.text, color: theme.surface }}>
+                <p className="text-sm font-bold leading-6 opacity-85">{page.contactLine}</p>
+                <button
+                  type="button"
+                  onClick={() => playUiTone('success')}
+                  className="tap-boost mt-4 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-black"
+                  style={{ backgroundColor: theme.surface, color: theme.text }}
+                >
+                  {page.ctaLabel} <MessageCircle size={17} />
+                </button>
               </div>
             </section>
 
@@ -138,6 +187,33 @@ export default function PublicLanding() {
           </aside>
         </div>
       </main>
+      {hasLocalDraft && <CreatorDock page={page} theme={theme} />}
+    </div>
+  );
+}
+
+function CreatorDock({ page, theme }: { page: DigitalWorldPage; theme: LandingTheme }) {
+  return (
+    <div className="fixed inset-x-3 bottom-3 z-30 mx-auto max-w-3xl rounded-2xl border p-3 shadow-2xl backdrop-blur md:bottom-5" style={{ backgroundColor: `${theme.surface}ee`, borderColor: theme.border }}>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: theme.accentSoft, color: theme.accent }}>
+            <Eye size={18} />
+          </span>
+          <div>
+            <p className="text-sm font-black" style={{ color: theme.text }}>Estas viendo tu landing publicada</p>
+            <p className="text-xs font-bold" style={{ color: theme.muted }}>Para cambiar colores, portada, textos e imagenes entra al editor.</p>
+          </div>
+        </div>
+        <Link
+          to="/editor"
+          onClick={() => playUiTone('tap')}
+          className="tap-boost inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black"
+          style={{ backgroundColor: theme.button, color: theme.buttonText }}
+        >
+          Editar landing <Edit3 size={16} />
+        </Link>
+      </div>
     </div>
   );
 }
@@ -167,9 +243,15 @@ function HeroVisual({ page, theme }: { page: DigitalWorldPage; theme: LandingThe
 
   return (
     <div className="relative overflow-hidden rounded-[2rem] border p-5 shadow-xl" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
-      <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full" style={{ backgroundColor: theme.accentSoft }} />
-      <div className="absolute -bottom-12 -left-8 h-44 w-44 rounded-full opacity-80" style={{ backgroundColor: theme.accentSoft }} />
-      <div className="relative flex aspect-[4/3] flex-col justify-between rounded-[1.5rem] p-6" style={{ backgroundColor: theme.accentSoft }}>
+      <div className="grid aspect-[4/3] grid-cols-[0.9fr_1.1fr] gap-4 rounded-[1.5rem] p-5" style={{ backgroundColor: theme.accentSoft }}>
+        <div className="flex flex-col justify-between rounded-3xl p-5" style={{ backgroundColor: theme.surface }}>
+          <Sparkles size={30} style={{ color: theme.accent }} />
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.14em]" style={{ color: theme.accent }}>Portada</p>
+            <p className="mt-2 text-2xl font-black leading-tight" style={{ color: theme.text }}>Lista para vender</p>
+          </div>
+        </div>
+        <div className="flex flex-col justify-between">
         <div>
           <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em]" style={{ color: theme.accent }}>
             <Sparkles size={15} /> Camino simple
@@ -186,6 +268,7 @@ function HeroVisual({ page, theme }: { page: DigitalWorldPage; theme: LandingThe
               </div>
             </div>
           ))}
+        </div>
         </div>
       </div>
     </div>

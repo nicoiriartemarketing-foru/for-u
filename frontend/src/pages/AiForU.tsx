@@ -63,7 +63,11 @@ export default function AiForU() {
       setAiStatus('local');
     } else {
       setAiStatus(data.error === 'missing_gemini_key' ? 'needs-key' : 'live');
-      setAiAnswer(data.text);
+      setAiAnswer(
+        data.error === 'missing_gemini_key'
+          ? 'La IA real esta esperando una sola cosa: agrega GEMINI_API_KEY en Supabase > Edge Functions > Secrets. No va en Hostinger. Mientras tanto, te dejo respuesta local: empieza por elegir una oferta principal, convierte esa oferta en 3 bloques de landing y vuelve aqui para pedir textos de venta.'
+          : data.text,
+      );
     }
 
     setIsThinking(false);
@@ -151,6 +155,11 @@ export default function AiForU() {
                   <span className="mt-4 inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black text-white/80">
                     {aiStatus === 'live' ? 'IA conectada a Supabase' : aiStatus === 'needs-key' ? 'Falta GEMINI_API_KEY en Supabase' : 'Respuesta local de respaldo'}
                   </span>
+                  {aiStatus === 'needs-key' && (
+                    <p className="mt-3 rounded-2xl bg-white/10 p-3 text-xs font-bold leading-5 text-white/80">
+                      Para activar la IA real: Supabase Dashboard, Edge Functions, Secrets, GEMINI_API_KEY. La key de Gemini no debe ir en Hostinger.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
