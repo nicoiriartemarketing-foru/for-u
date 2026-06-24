@@ -11,8 +11,10 @@ export { default as CalendarDays } from 'lucide-react/dist/esm/icons/calendar-da
 export { default as Camera } from 'lucide-react/dist/esm/icons/camera.mjs';
 export { default as CheckCircle2 } from 'lucide-react/dist/esm/icons/check-circle-2.mjs';
 export { default as ChevronLeft } from 'lucide-react/dist/esm/icons/chevron-left.mjs';
+export { default as ChevronRight } from 'lucide-react/dist/esm/icons/chevron-right.mjs';
 export { default as Clipboard } from 'lucide-react/dist/esm/icons/clipboard.mjs';
 export { default as Clock } from 'lucide-react/dist/esm/icons/clock.mjs';
+export { default as Compass } from 'lucide-react/dist/esm/icons/compass.mjs';
 export { default as Dumbbell } from 'lucide-react/dist/esm/icons/dumbbell.mjs';
 export { default as Edit3 } from 'lucide-react/dist/esm/icons/edit-3.mjs';
 export { default as Eye } from 'lucide-react/dist/esm/icons/eye.mjs';
@@ -39,6 +41,7 @@ export { default as Phone } from 'lucide-react/dist/esm/icons/phone.mjs';
 export { default as PlayCircle } from 'lucide-react/dist/esm/icons/play-circle.mjs';
 export { default as Rocket } from 'lucide-react/dist/esm/icons/rocket.mjs';
 export { default as Save } from 'lucide-react/dist/esm/icons/save.mjs';
+export { default as Sailboat } from 'lucide-react/dist/esm/icons/sailboat.mjs';
 export { default as Scissors } from 'lucide-react/dist/esm/icons/scissors.mjs';
 export { default as Send } from 'lucide-react/dist/esm/icons/send.mjs';
 export { default as Settings } from 'lucide-react/dist/esm/icons/settings.mjs';

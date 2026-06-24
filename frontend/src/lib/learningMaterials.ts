@@ -29,6 +29,20 @@ export const phaseLabels: Record<LearningPhase, string> = {
 
 export const learningMaterials: LearningMaterial[] = [
   {
+    id: 'radar-for-u',
+    title: 'Radar For U: tu punto de partida',
+    format: 'Curso',
+    phase: 'base',
+    level: 'Esencial',
+    minutes: 20,
+    summary: 'Diagnóstico interactivo de identidad, cliente, oferta, transformación y recursos disponibles.',
+    whyItMatters: 'Convierte ideas dispersas en una fotografía clara del negocio antes de construir herramientas.',
+    deliverable: 'Radar completado y siguiente ejercicio prioritario.',
+    aiUse: 'La IA usa el resultado para recomendar una sola tarea y el material correcto para continuar.',
+    prompts: ['Lee mi Radar For U y dime solo mi siguiente paso.', 'Que parte de mi base debo aclarar antes de crear mi landing?'],
+    bestFor: ['general', 'servicios', 'restaurante', 'tienda', 'hospedaje', 'salud', 'belleza', 'bienestar', 'educacion'],
+  },
+  {
     id: 'mapa-mundo-digital',
     title: 'Mapa del Mundo Digital',
     format: 'Curso',
