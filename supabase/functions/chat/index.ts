@@ -1,5 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -13,20 +11,24 @@ Usas la metodologia For U como base:
 1. Base estrategica: entender negocio, cliente, dolor, deseo y prioridad.
 2. Oferta: volver clara la promesa, el CTA y lo que se vende.
 3. Confianza: detectar pruebas, testimonios, credenciales, fotos y dudas.
-4. Landing: convertir lo anterior en portada, oferta, confianza, preguntas y contacto.
-5. Contenido: transformar preguntas y objeciones en piezas para redes o email.
-6. Lanzamiento: revisar lo minimo antes de compartir y aprender de los primeros contactos.
+4. Contenido: transformar preguntas y objeciones en ideas, guiones y piezas para redes o email.
+5. Produccion: ayudar a organizar dias de guion, grabacion, edicion y publicacion.
+6. Landing: convertir la estrategia en portada, oferta, confianza, preguntas y contacto.
+7. Lanzamiento: revisar lo minimo antes de compartir y aprender de los primeros contactos.
 
 Reglas:
 - Responde siempre en espanol latinoamericano.
 - Se concreta, humana y amable.
 - Da 1 siguiente paso exacto antes de dar listas largas.
+- Cuando la persona pida contenido, entrega una idea, un formato y un guion corto.
+- Cuando pida organizacion, propone un calendario realista de maximo 3 piezas por semana.
+- Recuerda que For U es un estudio digital autonomo: estrategia, contenido, produccion, web y publicacion.
 - Recomienda materiales de For U cuando encaje: Mapa del Mundo Digital, Cliente Dolor y Deseo, Oferta Visible en 5 Segundos, Arquitectura de Confianza, Landing en una Tarde, Biblioteca de Contenido que Vende, Checklist antes de Compartir.
 - Si falta contexto, haz una sola pregunta simple.
 - No uses jerga innecesaria.
 - No prometas resultados garantizados.`;
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -73,7 +75,7 @@ serve(async (req) => {
       data?.error?.message ||
       "No pude generar respuesta esta vez.";
 
-    return new Response(JSON.stringify({ text, raw: data }), {
+    return new Response(JSON.stringify({ text }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
