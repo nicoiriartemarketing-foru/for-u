@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import defaultBusinessWorld from '../../assets/landing/default-business-world.jpg';
 import {
   ArrowLeft,
   BadgeCheck,
@@ -21,7 +22,6 @@ import {
 } from '../../lib/icons';
 import {
   type DigitalWorldPage,
-  type LandingTheme,
   getLandingTheme,
   landingThemes,
   loadConstructorState,
@@ -83,6 +83,7 @@ export default function WorldEditor() {
   const theme = getLandingTheme(page.themeId);
   const publicPath = `/p/${page.publicSlug || 'preview'}`;
   const fontClass = page.fontStyle === 'modern' ? 'font-sans' : page.fontStyle === 'rounded' ? 'font-sans' : 'font-serif';
+  const previewImage = page.heroVisual === 'image' && page.heroImageUrl.trim() ? page.heroImageUrl : defaultBusinessWorld;
 
   function updatePage(nextPage: Partial<DigitalWorldPage>) {
     setSaved(false);
@@ -435,128 +436,65 @@ export default function WorldEditor() {
           </div>
 
           <div className={`mx-auto overflow-y-auto rounded-2xl border shadow-sm transition-all xl:min-h-0 xl:flex-1 ${previewMode === 'mobile' ? 'w-full max-w-[390px]' : 'w-full max-w-full'}`} style={{ backgroundColor: theme.background, borderColor: theme.border }}>
-            <div className={`relative grid min-h-[430px] items-center gap-8 overflow-hidden px-6 py-12 ${previewMode === 'mobile' ? 'text-left' : 'lg:grid-cols-[1fr_0.82fr]'} ${fontClass}`} style={{ backgroundColor: theme.background, color: theme.text }}>
-              <div className="absolute inset-x-8 top-8 h-32 rounded-full opacity-70 blur-3xl" style={{ backgroundColor: theme.accentSoft }} />
-              <div className="relative z-10">
-                <p className="mb-5 text-sm font-black uppercase" style={{ color: theme.accent }}>{draft.businessTitle}</p>
+            <div
+              className={`relative flex min-h-[460px] items-center overflow-hidden bg-cover bg-center px-7 py-14 ${fontClass}`}
+              style={{ backgroundImage: `url("${previewImage}")`, color: theme.text }}
+            >
+              <div className="absolute inset-0" style={{ backgroundColor: `${theme.background}c4` }} />
+              <div className="relative z-10 max-w-2xl">
+                <p className="mb-5 text-xs font-black uppercase" style={{ color: theme.accent }}>{draft.businessTitle}</p>
                 <h2 className={`${fontClass} text-4xl font-bold leading-tight ${previewMode === 'mobile' ? '' : 'md:text-6xl'}`}>{page.heroTitle}</h2>
-                <p className="mt-6 max-w-2xl text-base font-medium leading-8" style={{ color: theme.muted }}>{page.heroSubtitle}</p>
-                <button
-                  type="button"
-                  onClick={() => playUiTone('next')}
-                  className="tap-boost mt-8 inline-flex items-center gap-2 rounded-xl px-5 py-4 text-sm font-black"
-                  style={{ backgroundColor: theme.button, color: theme.buttonText }}
-                >
+                <p className="mt-6 text-base font-semibold leading-8" style={{ color: theme.muted }}>{page.heroSubtitle}</p>
+                <button type="button" className="mt-8 inline-flex items-center gap-2 rounded-lg px-5 py-4 text-sm font-black" style={{ backgroundColor: theme.button, color: theme.buttonText }}>
                   {page.ctaLabel} <MessageCircle size={17} />
                 </button>
               </div>
-              {page.heroVisual !== 'none' && (
-                <HeroVisual page={page} theme={theme} compact={previewMode === 'mobile'} />
-              )}
             </div>
 
-            <div className={`grid gap-6 p-6 ${previewMode === 'mobile' ? '' : 'lg:grid-cols-[1fr_0.72fr]'} ${fontClass}`} style={{ backgroundColor: theme.background }}>
-              <div className="space-y-6">
-                <section className="rounded-3xl border p-6 shadow-sm" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
-                  <h3 className="font-serif text-3xl font-bold" style={{ color: theme.text }}>{page.storyTitle}</h3>
-                  <p className="mt-4 text-sm font-semibold leading-7" style={{ color: theme.muted }}>{page.storyText}</p>
-                </section>
-
-                <section className="rounded-3xl border p-6 shadow-sm" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
-                  <h3 className="font-serif text-3xl font-bold" style={{ color: theme.text }}>{page.featuredTitle}</h3>
-                  <div className={`mt-5 grid gap-4 ${page.offerLayout === 'spotlight' || previewMode === 'mobile' ? '' : 'sm:grid-cols-2'}`}>
-                    {page.featuredItems.map((item) => (
-                      <article key={item.title} className={`rounded-2xl border p-4 ${page.blockStyle === 'bold' ? 'shadow-lg' : ''}`} style={{ backgroundColor: page.offerLayout === 'spotlight' ? theme.accentSoft : theme.background, borderColor: theme.border }}>
-                        <p className="text-base font-black" style={{ color: theme.text }}>
-                          {page.offerLayout === 'steps' && <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full text-xs" style={{ backgroundColor: theme.button, color: theme.buttonText }}>{page.featuredItems.indexOf(item) + 1}</span>}
-                          {item.title}
-                        </p>
-                        <p className="mt-2 break-words text-sm font-semibold leading-6" style={{ color: theme.muted }}>{item.description}</p>
-                        <span className="mt-3 inline-flex rounded-full px-3 py-1 text-xs font-black" style={{ backgroundColor: theme.accentSoft, color: theme.accent }}>{item.detail}</span>
-                      </article>
-                    ))}
-                  </div>
-                </section>
+            <section className={`p-7 ${fontClass}`} style={{ backgroundColor: theme.background }}>
+              <p className="text-xs font-black uppercase" style={{ color: theme.accent }}>Lo que ofrecemos</p>
+              <h3 className="mt-3 font-serif text-3xl font-bold" style={{ color: theme.text }}>{page.featuredTitle}</h3>
+              <div className="mt-6 border-t" style={{ borderColor: theme.border }}>
+                {page.featuredItems.map((item, index) => (
+                  <article key={`${item.title}-${index}`} className={`grid gap-3 border-b py-5 ${previewMode === 'mobile' ? '' : 'grid-cols-[48px_1fr_auto]'}`} style={{ borderColor: theme.border }}>
+                    <span className="font-serif text-2xl font-bold" style={{ color: theme.accent }}>0{index + 1}</span>
+                    <div>
+                      <p className="text-base font-black" style={{ color: theme.text }}>{item.title}</p>
+                      <p className="mt-2 text-sm font-semibold leading-6" style={{ color: theme.muted }}>{item.description}</p>
+                    </div>
+                    <span className="self-start rounded-full px-3 py-1 text-xs font-black" style={{ backgroundColor: theme.accentSoft, color: theme.accent }}>{item.detail}</span>
+                  </article>
+                ))}
               </div>
+            </section>
 
-              <aside className="space-y-6">
-                <section className="rounded-3xl border p-6 shadow-sm" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
-                  <h3 className="font-serif text-2xl font-bold" style={{ color: theme.text }}>Confianza</h3>
-                  <div className="mt-4 space-y-3">
-                    {page.trustItems.map((item) => (
-                      <div key={item} className="flex gap-3 rounded-2xl p-4" style={{ backgroundColor: theme.accentSoft }}>
-                        <BadgeCheck className="mt-1 shrink-0" style={{ color: theme.accent }} size={18} />
-                        <p className="text-sm font-bold leading-6" style={{ color: theme.text }}>{item}</p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
+            <section className={`grid gap-7 p-7 ${previewMode === 'mobile' ? '' : 'grid-cols-2'} ${fontClass}`} style={{ backgroundColor: theme.text, color: theme.surface }}>
+              <div>
+                <p className="text-xs font-black uppercase" style={{ color: theme.accentSoft }}>Por qué elegirnos</p>
+                <h3 className="mt-3 font-serif text-3xl font-bold">Confianza antes de comprar.</h3>
+              </div>
+              <div className="grid gap-4">
+                {page.trustItems.map((item) => (
+                  <p key={item} className="border-t pt-3 text-sm font-bold leading-6" style={{ borderColor: `${theme.surface}40` }}>{item}</p>
+                ))}
+              </div>
+            </section>
 
-                <section className="rounded-3xl border p-6 shadow-sm" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
-                  <h3 className="font-serif text-2xl font-bold" style={{ color: theme.text }}>Preguntas frecuentes</h3>
-                  <div className="mt-4 space-y-4">
-                    {page.faqItems.map((item) => (
-                      <div key={item.question}>
-                        <p className="text-sm font-black" style={{ color: theme.text }}>{item.question}</p>
-                        <p className="mt-1 text-sm font-semibold leading-6" style={{ color: theme.muted }}>{item.answer}</p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
+            <section className={`grid items-center gap-7 p-7 ${previewMode === 'mobile' ? '' : 'grid-cols-2'} ${fontClass}`} style={{ backgroundColor: theme.surface }}>
+              <img src={previewImage} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
+              <div>
+                <h3 className="font-serif text-3xl font-bold" style={{ color: theme.text }}>{page.storyTitle}</h3>
+                <p className="mt-4 text-sm font-semibold leading-7" style={{ color: theme.muted }}>{page.storyText}</p>
+              </div>
+            </section>
 
-                <section className="rounded-3xl p-6 shadow-sm" style={{ backgroundColor: theme.text, color: theme.surface }}>
-                  <p className="text-sm font-bold leading-6 opacity-85">{page.contactLine}</p>
-                  <button
-                    type="button"
-                    onClick={() => playUiTone('success')}
-                    className="tap-boost mt-4 w-full rounded-xl px-4 py-3 text-sm font-black"
-                    style={{ backgroundColor: theme.surface, color: theme.text }}
-                  >
-                    {page.ctaLabel}
-                  </button>
-                </section>
-              </aside>
-            </div>
+            <section className="p-7 text-center" style={{ backgroundColor: theme.accentSoft }}>
+              <h3 className="font-serif text-3xl font-bold" style={{ color: theme.text }}>{page.contactLine}</h3>
+              <button type="button" className="mt-5 rounded-lg px-5 py-3 text-sm font-black" style={{ backgroundColor: theme.button, color: theme.buttonText }}>{page.ctaLabel}</button>
+            </section>
           </div>
         </section>
       </main>
-    </div>
-  );
-}
-
-function HeroVisual({ page, theme, compact }: { page: DigitalWorldPage; theme: LandingTheme; compact: boolean }) {
-  if (page.heroVisual === 'image' && page.heroImageUrl.trim()) {
-    return (
-      <div className={`relative z-10 overflow-hidden rounded-3xl border shadow-xl ${compact ? 'aspect-[4/3]' : 'aspect-[4/5]'}`} style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
-        <img src={page.heroImageUrl} alt="" className="h-full w-full object-cover" />
-      </div>
-    );
-  }
-
-  return (
-    <div className={`relative z-10 overflow-hidden rounded-3xl border p-5 shadow-xl ${compact ? 'min-h-56' : 'min-h-80'}`} style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
-      <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full" style={{ backgroundColor: theme.accentSoft }} />
-      <div className="absolute -bottom-10 -left-6 h-36 w-36 rounded-full opacity-80" style={{ backgroundColor: theme.accentSoft }} />
-      <div className="relative grid h-full gap-4">
-        <div className="rounded-2xl p-4" style={{ backgroundColor: theme.accentSoft }}>
-          <p className="text-xs font-black uppercase" style={{ color: theme.accent }}>Mundo digital</p>
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            {[0, 1, 2].map((item) => (
-              <span key={item} className="h-16 rounded-2xl bg-white/80 shadow-sm" />
-            ))}
-          </div>
-        </div>
-        <div className="grid grid-cols-[0.68fr_1fr] gap-3">
-          <div className="rounded-2xl p-4" style={{ backgroundColor: theme.text, color: theme.surface }}>
-            <Sparkles size={20} />
-            <p className="mt-3 text-sm font-black leading-5">Oferta clara</p>
-          </div>
-          <div className="rounded-2xl border bg-white/80 p-4" style={{ borderColor: theme.border }}>
-            <p className="text-sm font-black" style={{ color: theme.text }}>{page.ctaLabel}</p>
-            <p className="mt-2 text-xs font-bold leading-5" style={{ color: theme.muted }}>Un camino simple para que te escriban.</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
