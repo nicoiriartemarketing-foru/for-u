@@ -39,6 +39,7 @@ export { default as Palette } from 'lucide-react/dist/esm/icons/palette.mjs';
 export { default as PartyPopper } from 'lucide-react/dist/esm/icons/party-popper.mjs';
 export { default as Phone } from 'lucide-react/dist/esm/icons/phone.mjs';
 export { default as PlayCircle } from 'lucide-react/dist/esm/icons/play-circle.mjs';
+export { default as Plus } from 'lucide-react/dist/esm/icons/plus.mjs';
 export { default as Rocket } from 'lucide-react/dist/esm/icons/rocket.mjs';
 export { default as Save } from 'lucide-react/dist/esm/icons/save.mjs';
 export { default as Sailboat } from 'lucide-react/dist/esm/icons/sailboat.mjs';
@@ -50,6 +51,7 @@ export { default as ShoppingBag } from 'lucide-react/dist/esm/icons/shopping-bag
 export { default as Smartphone } from 'lucide-react/dist/esm/icons/smartphone.mjs';
 export { default as Sparkles } from 'lucide-react/dist/esm/icons/sparkles.mjs';
 export { default as Store } from 'lucide-react/dist/esm/icons/store.mjs';
+export { default as Trash2 } from 'lucide-react/dist/esm/icons/trash-2.mjs';
 export { default as Type } from 'lucide-react/dist/esm/icons/type.mjs';
 export { default as Users } from 'lucide-react/dist/esm/icons/users.mjs';
 export { default as UtensilsCrossed } from 'lucide-react/dist/esm/icons/utensils-crossed.mjs';

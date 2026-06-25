@@ -1,43 +1,63 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Bot, CheckCircle2, FileText, Lightbulb, MessageCircle, Send, Sparkles } from '../lib/icons';
+import { ArrowLeft, ArrowRight, BookOpen, Bot, CheckCircle2, Clock, Edit3, Send, Sparkles } from '../lib/icons';
 import { loadLocalDraft } from '../lib/digitalWorldDraft';
 import {
   getLearningPhaseFromDraft,
   getRecommendedMaterials,
-  learningMaterials,
   phaseLabels,
   type LearningPhase,
 } from '../lib/learningMaterials';
 import { playUiTone } from '../lib/sound';
 import { supabase } from '../lib/supabase';
 
-const phaseOptions = Object.keys(phaseLabels) as LearningPhase[];
+const quickQuestions = [
+  'No sé por dónde empezar',
+  'Quiero mejorar mi landing',
+  'Necesito ordenar mi oferta',
+  '¿Qué contenido hago hoy?',
+];
 
 export default function AiForU() {
   const draft = loadLocalDraft();
   const detectedPhase = getLearningPhaseFromDraft(draft);
   const [phase, setPhase] = useState<LearningPhase>(detectedPhase);
   const [question, setQuestion] = useState('');
-  const [aiAnswer, setAiAnswer] = useState('');
+  const [answer, setAnswer] = useState(
+    `Hola. Ya tengo los datos básicos de ${draft.businessName}. Dime qué te está trabando y te recomendaré una sola acción y el contenido exacto para resolverla.`,
+  );
+  const [hasAsked, setHasAsked] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [aiStatus, setAiStatus] = useState<'local' | 'live' | 'needs-key'>('local');
   const recommendations = useMemo(() => getRecommendedMaterials(phase, draft), [phase, draft]);
-  const knowledgeCount = learningMaterials.length;
   const primaryMaterial = recommendations[0];
 
-  const answer = question.trim()
-    ? aiAnswer || `Para ${draft.businessName}, yo empezaria por ${primaryMaterial.title}. Tu pregunta apunta a ${phaseLabels[phase].toLowerCase()}, asi que el siguiente paso es crear este entregable: ${primaryMaterial.deliverable.toLowerCase()}.`
-    : `Segun tu mundo digital actual, la fase mas util parece ser ${phaseLabels[phase].toLowerCase()}. Te recomiendo empezar con ${primaryMaterial.title} y convertirlo en una accion concreta antes de abrir mas tareas.`;
+  function inferPhase(text: string): LearningPhase {
+    const normalized = text.toLowerCase();
+    if (normalized.includes('contenido') || normalized.includes('post') || normalized.includes('redes')) return 'contenido';
+    if (normalized.includes('landing') || normalized.includes('web') || normalized.includes('página')) return 'landing';
+    if (normalized.includes('oferta') || normalized.includes('vender') || normalized.includes('precio')) return 'oferta';
+    if (normalized.includes('confianza') || normalized.includes('testimonio')) return 'confianza';
+    if (normalized.includes('lanzar') || normalized.includes('publicar')) return 'lanzamiento';
+    return 'base';
+  }
 
-  async function askAiForU() {
-    playUiTone('success');
-    if (!question.trim()) return;
+  async function askAiForU(nextQuestion = question) {
+    const cleanQuestion = nextQuestion.trim();
+    if (!cleanQuestion) return;
 
+    const nextPhase = inferPhase(cleanQuestion);
+    const nextRecommendations = getRecommendedMaterials(nextPhase, draft);
+    const nextPrimary = nextRecommendations[0];
+    setQuestion(cleanQuestion);
+    setPhase(nextPhase);
+    setHasAsked(true);
     setIsThinking(true);
-    setAiAnswer('');
+    setAnswer('');
+    playUiTone('success');
 
     if (!supabase) {
+      setAnswer(`Empieza por ${nextPrimary.title}. Hoy haz solo esto: ${nextPrimary.deliverable} Cuando lo termines, vuelve y lo convertimos en tu siguiente pieza.`);
       setAiStatus('local');
       setIsThinking(false);
       return;
@@ -45,11 +65,11 @@ export default function AiForU() {
 
     const { data, error } = await supabase.functions.invoke('chat', {
       body: {
-        question,
+        question: cleanQuestion,
         context: {
           business: draft,
-          selectedPhase: phaseLabels[phase],
-          recommendedMaterials: recommendations.map((material) => ({
+          selectedPhase: phaseLabels[nextPhase],
+          recommendedMaterials: nextRecommendations.map((material) => ({
             title: material.title,
             format: material.format,
             deliverable: material.deliverable,
@@ -60,217 +80,136 @@ export default function AiForU() {
     });
 
     if (error || !data?.text) {
+      setAnswer(`Empieza por ${nextPrimary.title}. Tu única tarea ahora es: ${nextPrimary.deliverable}`);
       setAiStatus('local');
+    } else if (data.error === 'missing_gemini_key') {
+      setAnswer(`Empieza por ${nextPrimary.title}. Tu única tarea ahora es: ${nextPrimary.deliverable} La conversación inteligente todavía necesita activar su conexión en Supabase.`);
+      setAiStatus('needs-key');
     } else {
-      setAiStatus(data.error === 'missing_gemini_key' ? 'needs-key' : 'live');
-      setAiAnswer(
-        data.error === 'missing_gemini_key'
-          ? 'La IA real esta esperando una sola cosa: agrega GEMINI_API_KEY en Supabase > Edge Functions > Secrets. No va en Hostinger. Mientras tanto, te dejo respuesta local: empieza por elegir una oferta principal, convierte esa oferta en 3 bloques de landing y vuelve aqui para pedir textos de venta.'
-          : data.text,
-      );
+      setAnswer(data.text);
+      setAiStatus('live');
     }
 
     setIsThinking(false);
   }
 
   return (
-    <div className="foru-app-bg min-h-screen text-[#171717]">
-      <nav className="foru-nav foru-container">
-        <Link to="/" onClick={() => playUiTone('tap')} className="foru-logo">FOR <span>U</span></Link>
-        <div className="foru-nav-links">
-          <Link to="/metodologia" onClick={() => playUiTone('tap')} className="foru-btn foru-btn--outline px-5 py-2 text-sm">
-            Metodologia
+    <div className="min-h-screen bg-[#f7f7f5] text-[#171717]">
+      <header className="border-b border-black/8 bg-white">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm font-black">
+            <ArrowLeft size={17} /> Inicio
+          </Link>
+          <p className="font-serif text-xl font-bold">IA For U</p>
+          <Link to="/editor" className="inline-flex items-center gap-2 text-sm font-black">
+            Editor <Edit3 size={16} />
           </Link>
         </div>
-      </nav>
+      </header>
 
-      <main className="foru-container pb-12 pt-4">
-        <section className="grid gap-6 lg:grid-cols-[0.74fr_1fr]">
-          <aside className="foru-aurora-card rounded-3xl p-6 md:p-7">
-            <span className="foru-badge">IA For U</span>
-            <h1 className="foru-title mt-5" style={{ fontSize: 'clamp(2.1rem, 4vw, 3.6rem)' }}>
-              Una IA guiada por la <span className="text-gradient-animated">metodologia</span>.
-            </h1>
-            <p className="foru-subtitle mt-4">
-              No responde desde el aire: usa cursos, ebooks, workbooks, tutoriales y checklists de For U para recomendar el material correcto en cada fase.
-            </p>
+      <main className="mx-auto flex min-h-[calc(100vh-64px)] max-w-5xl flex-col px-4 py-6">
+        <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
+          <div className="mb-5 text-center">
+            <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl foru-gradient-button">
+              <Bot size={23} />
+            </span>
+            <h1 className="mt-3 font-serif text-3xl font-bold md:text-4xl">¿Qué necesitas resolver?</h1>
+            <p className="mt-2 text-sm font-semibold text-gray-500">Pregunta como hablarías con una persona. For U te dará un paso y un contenido.</p>
+          </div>
 
-            <div className="mt-6 grid gap-3">
-              <div className="grid grid-cols-3 gap-2">
-                {['Elige fase', 'Pregunta', 'Haz 1 cosa'].map((step, index) => (
-                  <div key={step} className="foru-soft-panel rounded-2xl p-3 text-center">
-                    <p className="text-lg font-black text-[#7C5CFF]">{index + 1}</p>
-                    <p className="text-xs font-black text-gray-700">{step}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="foru-soft-panel rounded-2xl p-4">
-                <p className="text-xs font-black uppercase text-gray-500">Negocio detectado</p>
-                <p className="mt-2 text-lg font-black text-gray-950">{draft.businessName}</p>
-                <p className="mt-1 text-sm font-semibold text-gray-600">{draft.businessTitle}</p>
-              </div>
-              <div className="foru-soft-panel rounded-2xl p-4">
-                <p className="text-xs font-black uppercase text-gray-500">Base de conocimiento</p>
-                <p className="mt-2 text-lg font-black text-gray-950">{knowledgeCount} materiales internos</p>
-                <p className="mt-1 text-sm font-semibold text-gray-600">Cada uno tiene fase, entregable, prompts y uso para IA.</p>
-              </div>
-            </div>
-          </aside>
-
-          <section className="rounded-3xl border border-black/10 foru-glass p-5 shadow-xl md:p-6">
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-black text-[#7C5CFF]">Asistente de fase</p>
-                <h2 className="font-serif text-3xl font-bold">Que necesitas resolver ahora?</h2>
-              </div>
-              <Bot className="text-[#7C5CFF]" />
-            </div>
-
-            <div className="grid gap-2 md:grid-cols-3">
-              {phaseOptions.map((option) => (
+          {!hasAsked && (
+            <div className="mb-4 grid grid-cols-2 gap-2">
+              {quickQuestions.map((prompt) => (
                 <button
-                  key={option}
+                  key={prompt}
                   type="button"
-                  onClick={() => {
-                    playUiTone('tap');
-                    setPhase(option);
-                  }}
-                  className={`tap-boost rounded-xl px-3 py-3 text-sm font-black ${
-                    phase === option ? 'foru-gradient-button' : 'foru-soft-panel text-gray-700'
-                  }`}
+                  onClick={() => askAiForU(prompt)}
+                  className="tap-boost min-h-16 rounded-xl border border-black/10 bg-white p-3 text-left text-sm font-black shadow-sm"
                 >
-                  {phaseLabels[option]}
+                  {prompt}
                 </button>
               ))}
             </div>
+          )}
 
-            <div className="mt-5 rounded-3xl foru-dark-gradient p-5 text-white">
-              <div className="flex gap-3">
-                <span className="foru-gradient-button flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
-                  <Sparkles size={18} />
-                </span>
-                <div>
-                  <p className="text-sm font-black text-[#6EE7B7]">Respuesta For U</p>
-                  <p className="mt-2 text-base font-semibold leading-7 text-white/92">{isThinking ? 'Pensando con la metodologia For U...' : answer}</p>
-                  <span className="mt-4 inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black text-white/80">
-                    {aiStatus === 'live' ? 'IA conectada a Supabase' : aiStatus === 'needs-key' ? 'Falta GEMINI_API_KEY en Supabase' : 'Respuesta local de respaldo'}
-                  </span>
-                  {aiStatus === 'needs-key' && (
-                    <p className="mt-3 rounded-2xl bg-white/10 p-3 text-xs font-bold leading-5 text-white/80">
-                      Para activar la IA real: Supabase Dashboard, Edge Functions, Secrets, GEMINI_API_KEY. La key de Gemini no debe ir en Hostinger.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <label className="mt-5 block">
-              <span className="mb-2 flex items-center gap-2 text-sm font-black text-gray-700">
-                <MessageCircle size={16} /> Preguntale a IA For U
+          <div className="rounded-2xl border border-black/8 bg-white p-5 shadow-sm">
+            <div className="flex gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F3F0FF] text-[#6D4AFF]">
+                <Sparkles size={17} />
               </span>
-              <textarea
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                className="foru-input min-h-28 w-full rounded-2xl p-4 text-sm font-semibold text-gray-800 outline-none transition"
-                placeholder="Ej. quiero vender mas reservas, no se que poner en la landing, necesito contenido para explicar mi oferta..."
-              />
-            </label>
-            <button
-              type="button"
-              onClick={askAiForU}
-              className="tap-boost mt-3 inline-flex items-center gap-2 rounded-xl foru-dark-gradient px-5 py-3 text-sm font-black text-white"
-            >
-              {isThinking ? 'Pensando...' : 'Recomendar material'} <Send size={16} />
-            </button>
-          </section>
-        </section>
-
-        <section className="mt-7 grid gap-5 lg:grid-cols-[1fr_0.5fr]">
-          <div className="rounded-3xl border border-black/10 foru-glass p-5 shadow-xl">
-            <div className="mb-5 flex items-center justify-between">
               <div>
-                <h2 className="font-serif text-2xl font-bold">Material recomendado para esta fase</h2>
-                <p className="mt-1 text-sm font-semibold text-gray-600">La IA elige desde la metodologia, no desde una lista generica.</p>
+                <p className="text-xs font-black uppercase text-[#6D4AFF]">For U recomienda</p>
+                <p className="mt-2 text-base font-semibold leading-7 text-gray-800">
+                  {isThinking ? 'Pensando en el siguiente paso más útil...' : answer}
+                </p>
+                {aiStatus === 'needs-key' && <p className="mt-3 text-xs font-bold text-amber-700">La respuesta guiada funciona; falta activar la conexión inteligente en Supabase.</p>}
               </div>
-              <BookOpen className="text-[#7C5CFF]" />
-            </div>
-
-            <div className="grid gap-4">
-              {recommendations.map((material, index) => (
-                <article key={material.id} className={index === 0 ? 'foru-gradient-border rounded-3xl p-5 shadow-lg' : 'foru-soft-panel rounded-3xl p-5'}>
-                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                    <div>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black text-[#7C5CFF]">{index === 0 ? 'Primero' : 'Despues'}</span>
-                        <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black text-gray-600">{material.format}</span>
-                        <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black text-gray-600">{material.minutes} min</span>
-                      </div>
-                      <h3 className="mt-4 font-serif text-2xl font-bold text-gray-950">{material.title}</h3>
-                      <p className="mt-2 text-sm font-semibold leading-7 text-gray-650">{material.summary}</p>
-                    </div>
-                    <Link
-                      to="/metodologia"
-                      onClick={() => playUiTone('tap')}
-                      className="tap-boost inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-gray-950 shadow-sm"
-                    >
-                      Ver material <ArrowRight size={16} />
-                    </Link>
-                  </div>
-
-                  <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-2xl bg-white/70 p-4">
-                      <p className="text-xs font-black uppercase text-gray-500">Entregable</p>
-                      <p className="mt-2 text-sm font-bold leading-6 text-gray-800">{material.deliverable}</p>
-                    </div>
-                    <div className="rounded-2xl bg-white/70 p-4">
-                      <p className="text-xs font-black uppercase text-gray-500">Uso de IA</p>
-                      <p className="mt-2 text-sm font-bold leading-6 text-gray-800">{material.aiUse}</p>
-                    </div>
-                  </div>
-                </article>
-              ))}
             </div>
           </div>
 
-          <aside className="space-y-5">
-            <div className="rounded-3xl border border-black/10 foru-glass p-5 shadow-xl">
-              <h3 className="font-serif text-2xl font-bold">Siguiente paso exacto</h3>
-              <div className="mt-4 flex gap-3 rounded-2xl foru-soft-panel p-4">
-                <CheckCircle2 className="mt-1 shrink-0 text-[#7C5CFF]" size={20} />
-                <p className="text-sm font-bold leading-6 text-gray-800">
-                  Abre {primaryMaterial.title}, completa el entregable y vuelve a IA For U para convertirlo en texto de landing, contenido o checklist de publicacion.
-                </p>
+          {hasAsked && !isThinking && (
+            <section className="mt-4">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-black">Contenido recomendado</p>
+                <span className="text-xs font-bold text-gray-500">{phaseLabels[phase]}</span>
               </div>
-            </div>
-
-            <div className="rounded-3xl border border-black/10 foru-glass p-5 shadow-xl">
-              <h3 className="font-serif text-2xl font-bold">Prompts listos</h3>
-              <div className="mt-4 grid gap-2">
-                {primaryMaterial.prompts.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    onClick={() => {
-                      playUiTone('tap');
-                      setQuestion(prompt);
-                    }}
-                    className="tap-boost foru-soft-panel rounded-2xl p-3 text-left text-sm font-bold leading-6 text-gray-700"
+              <div className="grid gap-3 sm:grid-cols-3">
+                {recommendations.map((material, index) => (
+                  <Link
+                    key={material.id}
+                    to="/metodologia"
+                    onClick={() => playUiTone('tap')}
+                    className={`tap-boost flex min-h-48 flex-col rounded-xl border p-4 ${
+                      index === 0 ? 'border-[#7C5CFF] bg-[#F5F2FF]' : 'border-black/8 bg-white'
+                    }`}
                   >
-                    <Lightbulb className="mr-2 inline text-[#7C5CFF]" size={16} />
-                    {prompt}
-                  </button>
+                    <div className="flex items-center justify-between text-xs font-black text-gray-500">
+                      <span>{index === 0 ? 'EMPIEZA AQUÍ' : material.format.toUpperCase()}</span>
+                      <span className="inline-flex items-center gap-1"><Clock size={13} /> {material.minutes} min</span>
+                    </div>
+                    <BookOpen className="mt-5 text-[#7C5CFF]" size={22} />
+                    <h2 className="mt-3 font-serif text-xl font-bold leading-tight">{material.title}</h2>
+                    <p className="mt-2 line-clamp-3 text-xs font-semibold leading-5 text-gray-600">{material.summary}</p>
+                    <span className="mt-auto pt-4 text-xs font-black text-[#6D4AFF]">Abrir contenido →</span>
+                  </Link>
                 ))}
               </div>
-            </div>
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#ECFDF5] p-3 text-sm font-bold text-[#087F5B]">
+                <CheckCircle2 size={17} /> Haz primero: {primaryMaterial.deliverable}
+              </div>
+            </section>
+          )}
 
-            <Link
-              to="/register"
-              onClick={() => playUiTone('next')}
-              className="tap-boost flex items-center justify-between rounded-3xl foru-gradient-button p-5 text-left font-black text-[#1a1a1a] shadow-xl"
-            >
-              Crear o actualizar mundo digital <ArrowRight size={18} />
-            </Link>
-          </aside>
+          <div className="sticky bottom-0 mt-auto bg-[#f7f7f5] pb-2 pt-5">
+            <div className="flex items-end gap-2 rounded-2xl border border-black/10 bg-white p-2 shadow-xl">
+              <textarea
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    askAiForU();
+                  }
+                }}
+                className="min-h-12 max-h-28 flex-1 resize-none bg-transparent px-3 py-3 text-sm font-semibold outline-none"
+                placeholder="Escribe aquí lo que no sabes cómo resolver..."
+              />
+              <button
+                type="button"
+                onClick={() => askAiForU()}
+                disabled={!question.trim() || isThinking}
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl foru-dark-gradient text-white disabled:opacity-30"
+                title="Enviar"
+              >
+                <Send size={18} />
+              </button>
+            </div>
+            <div className="mt-2 flex justify-center">
+              <Link to="/metodologia" className="inline-flex items-center gap-2 text-xs font-black text-gray-500">
+                Ver toda la metodología <ArrowRight size={13} />
+              </Link>
+            </div>
+          </div>
         </section>
       </main>
     </div>

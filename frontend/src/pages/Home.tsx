@@ -1,93 +1,72 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Bot, Sparkles } from '../lib/icons';
+import { ArrowRight, BookOpen, Bot, Edit3, Sparkles } from '../lib/icons';
+import { draftStorageKey, loadDigitalWorldPage, loadLocalDraft } from '../lib/digitalWorldDraft';
 import { playUiTone } from '../lib/sound';
 
-const hubItems = [
-  {
-    label: 'Aprende',
-    title: 'Metodologia For U',
-    description: 'Clases y recursos para ordenar tu marca, tu mensaje y la forma en que vendes.',
-    to: '/metodologia',
-    icon: BookOpen,
-  },
-  {
-    label: 'Exclusivo',
-    title: 'IA For U',
-    description: 'Una guia conversacional para pensar ofertas, contenido, ventas y siguientes pasos.',
-    to: '/ia',
-    icon: Bot,
-    premium: true,
-  },
-  {
-    label: 'Crear',
-    title: 'Mi Mundo Digital',
-    description: 'Construye una ruta personalizada para que tu negocio tenga web, reservas, catalogo o menu.',
-    to: '/register',
-    icon: Sparkles,
-  },
-];
-
 export default function Home() {
-  return (
-    <div className="foru-app-bg relative min-h-screen">
-      <div className="foru-blur foru-blur--gold" />
-      <div className="foru-blur foru-blur--green" />
-      <div className="foru-blur foru-blur--pink" />
+  const hasBusiness = typeof window !== 'undefined' && Boolean(localStorage.getItem(draftStorageKey));
+  const draft = loadLocalDraft();
+  const page = loadDigitalWorldPage(draft);
+  const primaryPath = hasBusiness ? '/editor' : '/metodologia';
 
+  return (
+    <div className="min-h-screen bg-white text-[#171717]">
       <nav className="foru-nav foru-container">
         <Link to="/" className="foru-logo">FOR <span>U</span></Link>
-        <div className="foru-nav-links">
+        {hasBusiness && (
           <Link
-            to="/register"
+            to={`/p/${page.publicSlug}`}
             onClick={() => playUiTone('next')}
-            className="foru-btn foru-btn--outline py-2 px-6 text-sm"
+            className="inline-flex items-center gap-2 text-sm font-black text-gray-700"
           >
-            Empezar
+            Ver mi landing <ArrowRight size={16} />
           </Link>
-        </div>
+        )}
       </nav>
 
-      <main className="foru-container hub-container">
-        <div className="hub-header">
-          <span className="foru-badge">Tu Ecosistema Digital</span>
-          <h1 className="foru-title mt-6">
-            Bienvenido a <span className="text-gradient-animated">For U</span>
-          </h1>
-          <p className="foru-subtitle mx-auto mt-4 max-w-[520px]">
-            Explora tu ecosistema, conversa con la IA y crea una presencia digital que se sienta hecha para tu negocio.
-          </p>
-          <div className="motivation-strip">
-            <span className="motivation-pill">Ruta clara</span>
-            <span className="motivation-pill">IA guiandote</span>
-            <span className="motivation-pill">Web viva</span>
+      <main className="foru-container flex min-h-[calc(100vh-92px)] items-center py-8">
+        <section className="mx-auto w-full max-w-4xl">
+          <div className="text-center">
+            <span className="foru-badge">{hasBusiness ? `Hola, ${draft.businessName}` : 'Empieza sin enredarte'}</span>
+            <h1 className="mx-auto mt-6 max-w-3xl font-serif text-5xl font-bold leading-[1.04] md:text-7xl">
+              {hasBusiness ? '¿Qué quieres hacer ahora?' : 'Construye tu mundo digital paso a paso.'}
+            </h1>
+            <p className="mx-auto mt-5 max-w-xl text-base font-semibold leading-7 text-gray-600">
+              {hasBusiness
+                ? 'For U ya tiene la información de tu negocio. Elige una sola acción y continúa desde ahí.'
+                : 'Comienza con una guía corta. Después la IA te dirá qué material usar y qué crear primero.'}
+            </p>
           </div>
-        </div>
 
-        <div className="hub-grid">
-          {hubItems.map((item) => {
-            const Icon = item.icon;
+          <Link
+            to={primaryPath}
+            onClick={() => playUiTone('next')}
+            className="tap-boost mx-auto mt-8 flex max-w-2xl items-center justify-between gap-5 rounded-2xl foru-dark-gradient p-6 text-white shadow-2xl"
+          >
+            <span className="flex items-center gap-4 text-left">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl foru-gradient-button text-gray-950">
+                {hasBusiness ? <Edit3 size={25} /> : <Sparkles size={25} />}
+              </span>
+              <span>
+                <span className="block text-xs font-black uppercase text-[#6EE7B7]">Recomendado</span>
+                <span className="mt-1 block text-xl font-black">{hasBusiness ? 'Editar mi landing' : 'Descubrir por dónde empezar'}</span>
+                <span className="mt-1 block text-sm font-semibold text-white/65">
+                  {hasBusiness ? 'Editor y vista previa juntos.' : 'Haz el Radar For U en pocos minutos.'}
+                </span>
+              </span>
+            </span>
+            <ArrowRight className="shrink-0" />
+          </Link>
 
-            return (
-              <Link
-                key={item.title}
-                to={item.to}
-                onClick={() => playUiTone(item.to === '/register' ? 'next' : 'tap')}
-                className={`hub-card ${item.premium ? 'hub-card--premium' : ''}`}
-              >
-                <span className="hub-card-icon" aria-hidden="true">
-                  <Icon size={24} strokeWidth={1.8} />
-                </span>
-                <span className="hub-card-label">{item.label}</span>
-                <h2 className="hub-card-title">{item.title}</h2>
-                <p className="hub-card-desc">{item.description}</p>
-                {item.premium && <span className="hub-lock">Solo miembros</span>}
-                <span className="hub-card-arrow">
-                  Abrir <ArrowRight size={16} strokeWidth={1.8} />
-                </span>
-              </Link>
-            );
-          })}
-        </div>
+          <div className="mx-auto mt-4 grid max-w-2xl gap-3 sm:grid-cols-2">
+            <Link to="/ia" onClick={() => playUiTone('tap')} className="tap-boost flex items-center gap-3 rounded-xl border border-black/10 p-4 font-black">
+              <Bot className="text-[#7C5CFF]" size={20} /> Preguntar a IA For U
+            </Link>
+            <Link to="/metodologia" onClick={() => playUiTone('tap')} className="tap-boost flex items-center gap-3 rounded-xl border border-black/10 p-4 font-black">
+              <BookOpen className="text-[#7C5CFF]" size={20} /> Ver contenidos
+            </Link>
+          </div>
+        </section>
       </main>
     </div>
   );

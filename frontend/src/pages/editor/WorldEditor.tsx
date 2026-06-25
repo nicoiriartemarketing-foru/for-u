@@ -12,9 +12,11 @@ import {
   Monitor,
   Palette,
   Paintbrush,
+  Plus,
   Save,
   Sparkles,
   Smartphone,
+  Trash2,
   Type,
 } from '../../lib/icons';
 import {
@@ -30,12 +32,12 @@ import {
 import { playUiTone } from '../../lib/sound';
 
 const tabs = [
-  { id: 'hero', label: '1. Portada', icon: Sparkles },
-  { id: 'featured', label: '2. Oferta', icon: ListChecks },
-  { id: 'trust', label: '3. Confianza', icon: BadgeCheck },
-  { id: 'visual', label: '4. Visual', icon: Image },
-  { id: 'story', label: '5. Historia', icon: Edit3 },
-  { id: 'style', label: '6. Estilo', icon: Palette },
+  { id: 'hero', label: 'Portada', icon: Sparkles },
+  { id: 'featured', label: 'Productos', icon: ListChecks },
+  { id: 'visual', label: 'Imágenes', icon: Image },
+  { id: 'style', label: 'Estilo', icon: Palette },
+  { id: 'trust', label: 'Confianza', icon: BadgeCheck },
+  { id: 'story', label: 'Historia', icon: Edit3 },
   { id: 'faq', label: 'FAQ', icon: HelpCircle },
 ];
 
@@ -110,6 +112,19 @@ export default function WorldEditor() {
     updatePage({ featuredItems: nextItems });
   }
 
+  function addFeaturedItem() {
+    updatePage({
+      featuredItems: [
+        ...page.featuredItems,
+        { title: 'Nuevo producto o servicio', description: 'Describe qué incluye y para quién es.', detail: 'Editar detalle' },
+      ],
+    });
+  }
+
+  function removeFeaturedItem(index: number) {
+    updatePage({ featuredItems: page.featuredItems.filter((_, itemIndex) => itemIndex !== index) });
+  }
+
   function updateFaqItem(index: number, field: 'question' | 'answer', value: string) {
     const nextItems = page.faqItems.map((item, itemIndex) => (
       itemIndex === index ? { ...item, [field]: value } : item
@@ -119,7 +134,7 @@ export default function WorldEditor() {
 
   return (
     <div className="foru-app-bg min-h-screen text-[#171717]">
-      <header className="sticky top-0 z-30 border-b border-black/10 foru-glass px-5 py-4 backdrop-blur md:px-8">
+      <header className="sticky top-0 z-30 border-b border-black/10 bg-white px-4 py-3 md:px-6">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link
@@ -130,8 +145,8 @@ export default function WorldEditor() {
               <ArrowLeft size={18} />
             </Link>
             <div>
-              <p className="text-sm font-black text-[#7C5CFF]">Editor visual</p>
-              <h1 className="font-serif text-2xl font-bold text-gray-950">Editor del Mundo Digital</h1>
+              <p className="text-xs font-black text-[#7C5CFF]">EDITOR EN VIVO</p>
+              <h1 className="text-lg font-black text-gray-950">{page.heroTitle}</h1>
             </div>
           </div>
 
@@ -141,28 +156,24 @@ export default function WorldEditor() {
               onClick={() => playUiTone('next')}
               className="tap-boost hidden items-center gap-2 rounded-xl border border-gray-200 foru-glass px-4 py-3 text-sm font-black text-gray-800 shadow-sm sm:inline-flex"
             >
-              Ver publica <Eye size={17} />
+              Abrir landing <Eye size={17} />
             </Link>
             <button
               type="button"
               onClick={savePage}
               className="tap-boost inline-flex items-center gap-2 rounded-xl foru-dark-gradient px-4 py-3 text-sm font-black text-white shadow-lg"
             >
-              <Save size={17} /> {saved ? 'Guardado' : 'Guardar cambios de texto'}
+              <Save size={17} /> {saved ? 'Guardado' : 'Guardar'}
             </button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-7xl gap-6 p-5 md:p-8 xl:grid-cols-[0.92fr_1.08fr]">
-        <section className="space-y-5">
-          <div className="rounded-3xl border border-black/10 foru-glass p-5 shadow-xl">
-            <span className="foru-badge">Claridad, estilo y vista publica</span>
-            <h2 className="mt-4 font-serif text-3xl font-bold text-gray-950">Edita una cosa a la vez</h2>
-            <p className="foru-subtitle mt-2">
-              Sigue los pasos de izquierda a derecha. La vista previa cambia al instante y puedes guardar cuando algo ya se sienta bien.
-            </p>
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <main className="mx-auto grid max-w-[1500px] gap-4 p-3 md:p-4 xl:h-[calc(100vh-73px)] xl:grid-cols-[430px_minmax(0,1fr)]">
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg">
+          <div className="border-b border-black/8 p-3">
+            <p className="mb-2 px-1 text-xs font-black uppercase text-gray-500">¿Qué quieres cambiar?</p>
+            <div className="grid grid-cols-4 gap-2">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const active = activeTab === tab.id;
@@ -175,7 +186,7 @@ export default function WorldEditor() {
                       playUiTone('tap');
                       setActiveTab(tab.id);
                     }}
-                    className={`tap-boost flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-xs font-black ${
+                    className={`tap-boost flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-black ${
                       active ? 'foru-gradient-button text-[#1a1a1a]' : 'foru-soft-panel text-gray-700'
                     }`}
                   >
@@ -185,11 +196,10 @@ export default function WorldEditor() {
               })}
             </div>
           </div>
-
-          <div className="rounded-3xl border border-black/10 foru-glass p-6 shadow-xl">
-            <div className="mb-5 rounded-2xl foru-soft-panel p-4">
-              <p className="text-sm font-black text-[#7C5CFF]">{tabHelp[activeTab].title}</p>
-              <p className="mt-1 text-sm font-semibold leading-6 text-gray-700">{tabHelp[activeTab].text}</p>
+          <div className="min-h-0 flex-1 overflow-y-auto p-4">
+            <div className="mb-4 border-l-4 border-[#7C5CFF] bg-[#F7F5FF] p-3">
+              <p className="text-sm font-black text-gray-900">{tabHelp[activeTab].title}</p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-gray-600">{tabHelp[activeTab].text}</p>
             </div>
 
             {activeTab === 'hero' && (
@@ -210,10 +220,24 @@ export default function WorldEditor() {
 
             {activeTab === 'featured' && (
               <div className="space-y-5">
-                <Field label="Titulo de oferta" hint="Ej. Servicios principales, Menu destacado, Habitaciones, Planes." value={page.featuredTitle} onChange={(value) => updatePage({ featuredTitle: value })} />
+                <div className="flex items-end gap-3">
+                  <div className="flex-1">
+                    <Field label="Título de esta sección" hint="Ej. Servicios, menú, productos o planes." value={page.featuredTitle} onChange={(value) => updatePage({ featuredTitle: value })} />
+                  </div>
+                  <button type="button" onClick={addFeaturedItem} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl foru-dark-gradient text-white" title="Agregar producto">
+                    <Plus size={18} />
+                  </button>
+                </div>
                 {page.featuredItems.map((item, index) => (
                   <div key={index} className="foru-soft-panel rounded-2xl p-4">
-                    <p className="mb-3 text-xs font-black uppercase text-gray-500">Parte visible {index + 1}</p>
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-xs font-black uppercase text-gray-500">Producto o servicio {index + 1}</p>
+                      {page.featuredItems.length > 1 && (
+                        <button type="button" onClick={() => removeFeaturedItem(index)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-red-500" title="Eliminar">
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                    </div>
                     <div className="grid gap-3">
                       <Field label="Nombre de esta parte" hint="Servicio, producto, paquete o parte de la experiencia." value={item.title} onChange={(value) => updateFeaturedItem(index, 'title', value)} />
                       <Area label="Descripcion corta" hint="Explica lo suficiente para que la persona entienda si le interesa." value={item.description} onChange={(value) => updateFeaturedItem(index, 'description', value)} compact />
@@ -383,11 +407,11 @@ export default function WorldEditor() {
           </div>
         </section>
 
-        <section className="rounded-3xl border border-black/10 foru-glass p-4 shadow-xl">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <section className="min-h-0 overflow-hidden rounded-2xl border border-black/10 bg-[#ededeb] p-3 shadow-lg xl:flex xl:flex-col">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-black text-[#7C5CFF]">Vista en vivo</p>
-              <h2 className="font-serif text-2xl font-bold text-gray-950">Asi lo ve tu cliente</h2>
+              <p className="text-xs font-black uppercase text-[#7C5CFF]">Vista en vivo</p>
+              <h2 className="text-base font-black text-gray-950">Así lo verá tu cliente</h2>
             </div>
             <div className="foru-soft-panel flex rounded-2xl p-1">
               {[
@@ -410,7 +434,7 @@ export default function WorldEditor() {
             </div>
           </div>
 
-          <div className={`mx-auto overflow-hidden rounded-3xl border shadow-sm transition-all ${previewMode === 'mobile' ? 'max-w-[390px]' : 'max-w-full'}`} style={{ backgroundColor: theme.background, borderColor: theme.border }}>
+          <div className={`mx-auto overflow-y-auto rounded-2xl border shadow-sm transition-all xl:min-h-0 xl:flex-1 ${previewMode === 'mobile' ? 'w-full max-w-[390px]' : 'w-full max-w-full'}`} style={{ backgroundColor: theme.background, borderColor: theme.border }}>
             <div className={`relative grid min-h-[430px] items-center gap-8 overflow-hidden px-6 py-12 ${previewMode === 'mobile' ? 'text-left' : 'lg:grid-cols-[1fr_0.82fr]'} ${fontClass}`} style={{ backgroundColor: theme.background, color: theme.text }}>
               <div className="absolute inset-x-8 top-8 h-32 rounded-full opacity-70 blur-3xl" style={{ backgroundColor: theme.accentSoft }} />
               <div className="relative z-10">

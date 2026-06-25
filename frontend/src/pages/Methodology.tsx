@@ -11,7 +11,6 @@ import {
   Compass,
   FileText,
   GraduationCap,
-  Layers3,
   Lightbulb,
   PlayCircle,
   Sailboat,
@@ -151,7 +150,7 @@ const radarStorageKey = 'foru-radar-course-v1';
 
 export default function Methodology() {
   const [activePhase, setActivePhase] = useState<LearningPhase>('base');
-  const [courseOpen, setCourseOpen] = useState(true);
+  const [courseOpen, setCourseOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, RadarAnswer>>(() => {
     try {
@@ -166,10 +165,6 @@ export default function Methodology() {
   const activeMaterials = useMemo(
     () => learningMaterials.filter((material) => material.phase === activePhase),
     [activePhase],
-  );
-  const aiInputs = useMemo(
-    () => learningMaterials.flatMap((material) => material.prompts).slice(0, 8),
-    [],
   );
   const completedCount = Object.keys(answers).length;
   const progress = Math.round((completedCount / radarSteps.length) * 100);
@@ -400,39 +395,19 @@ export default function Methodology() {
           </section>
         )}
 
-        <section className="mt-7 grid gap-5 lg:grid-cols-[1fr_0.72fr]">
+        <section className="mt-8 flex flex-col gap-4 border-t border-black/10 pt-8 md:flex-row md:items-end md:justify-between">
           <div className="p-2 md:p-5">
             <span className="foru-badge">Biblioteca For U</span>
-            <h2 className="mt-4 font-serif text-4xl font-bold">Cuando termines lo básico, sigue por aquí.</h2>
-            <p className="mt-3 max-w-xl text-sm font-semibold leading-7 text-gray-600">
-              Cursos, ebooks, workbooks y tutoriales para cada fase. Solo aparece el material que eliges, sin soltarte el plan entero encima.
-            </p>
+            <h2 className="mt-4 font-serif text-4xl font-bold">Contenido para tu siguiente paso.</h2>
           </div>
 
-          <aside className="rounded-3xl border border-black/10 foru-dark-gradient p-6 text-white shadow-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-black text-[#6EE7B7]">Conecta lo aprendido</p>
-                <h2 className="font-serif text-2xl">La IA usa esta metodología</h2>
-              </div>
-              <Bot className="text-[#FDE68A]" />
-            </div>
-            <Link to="/ia" onClick={() => playUiTone('next')} className="tap-boost mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-black text-gray-950">
-              Preguntar a IA For U <ArrowRight size={17} />
-            </Link>
-          </aside>
+          <Link to="/ia" onClick={() => playUiTone('next')} className="tap-boost inline-flex items-center justify-center gap-2 rounded-xl foru-dark-gradient px-5 py-4 text-sm font-black text-white">
+            No sé cuál elegir <Bot size={17} />
+          </Link>
         </section>
 
-        <section className="mt-5 rounded-3xl border border-black/10 foru-glass p-5 shadow-xl">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="font-serif text-2xl font-bold">Fases del Mundo Digital</h2>
-              <p className="mt-1 text-sm font-semibold text-gray-600">Toca una fase. Abajo aparece solo el material que importa ahora.</p>
-            </div>
-            <Layers3 className="text-[#7C5CFF]" />
-          </div>
-
-          <div className="grid gap-2 md:grid-cols-6">
+        <section className="mt-5">
+          <div className="flex gap-2 overflow-x-auto pb-2">
             {phaseOrder.map((phase) => (
               <button
                 key={phase}
@@ -441,7 +416,7 @@ export default function Methodology() {
                   playUiTone('tap');
                   setActivePhase(phase);
                 }}
-                className={`tap-boost rounded-xl px-3 py-3 text-sm font-black ${
+                className={`tap-boost shrink-0 rounded-xl px-4 py-3 text-sm font-black ${
                   activePhase === phase ? 'foru-gradient-button' : 'foru-soft-panel text-gray-700'
                 }`}
               >
@@ -451,65 +426,27 @@ export default function Methodology() {
           </div>
         </section>
 
-        <section className="mt-7 grid gap-5 lg:grid-cols-[1fr_0.48fr]">
-          <div className="grid gap-4">
+        <section className="mt-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {activeMaterials.map((material) => {
               const Icon = formatIcon[material.format];
 
               return (
-                <article key={material.id} className="foru-gradient-border rounded-3xl p-5 shadow-lg">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-black text-gray-700">
-                          <Icon size={14} /> {material.format}
-                        </span>
-                        <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black text-[#7C5CFF]">{material.level}</span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white/80 px-3 py-1 text-xs font-black text-gray-600">
-                          <Clock size={13} /> {material.minutes} min
-                        </span>
-                      </div>
-                      <h3 className="mt-4 font-serif text-2xl font-bold text-gray-950">{material.title}</h3>
-                      <p className="mt-2 text-sm font-semibold leading-7 text-gray-650">{material.summary}</p>
-                    </div>
-                    <Link
-                      to="/ia"
-                      onClick={() => playUiTone('next')}
-                      className="tap-boost inline-flex shrink-0 items-center justify-center gap-2 rounded-xl foru-dark-gradient px-4 py-3 text-sm font-black text-white"
-                    >
-                      Usar con IA <ArrowRight size={16} />
-                    </Link>
+                <article key={material.id} className="tap-boost flex min-h-64 flex-col rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F3F0FF] text-[#6D4AFF]"><Icon size={19} /></span>
+                    <span className="inline-flex items-center gap-1 text-xs font-black text-gray-500"><Clock size={13} /> {material.minutes} min</span>
                   </div>
-
-                  <div className="mt-5 grid gap-3 md:grid-cols-3">
-                    <InfoBlock label="Por que importa" text={material.whyItMatters} />
-                    <InfoBlock label="Entregable" text={material.deliverable} />
-                    <InfoBlock label="Como lo usa la IA" text={material.aiUse} />
-                  </div>
+                  <p className="mt-5 text-xs font-black uppercase text-[#6D4AFF]">{material.format} · {material.level}</p>
+                  <h3 className="mt-2 font-serif text-2xl font-bold leading-tight">{material.title}</h3>
+                  <p className="mt-3 line-clamp-3 text-sm font-semibold leading-6 text-gray-600">{material.summary}</p>
+                  <Link to="/ia" onClick={() => playUiTone('next')} className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-black text-[#6D4AFF]">
+                    Usar con IA <ArrowRight size={15} />
+                  </Link>
                 </article>
               );
             })}
           </div>
-
-          <aside className="space-y-5">
-            <div className="rounded-3xl border border-black/10 foru-glass p-5 shadow-xl">
-              <h3 className="font-serif text-2xl font-bold">Prompts que nacen del material</h3>
-              <div className="mt-4 grid gap-2">
-                {aiInputs.map((prompt) => (
-                  <div key={prompt} className="foru-soft-panel rounded-2xl p-3 text-sm font-bold leading-6 text-gray-700">
-                    {prompt}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-black/10 foru-glass p-5 shadow-xl">
-              <h3 className="font-serif text-2xl font-bold">Materiales vitales incluidos</h3>
-              <p className="mt-2 text-sm font-semibold leading-7 text-gray-600">
-                Base estrategica, cliente, oferta visible, confianza, landing inmediata, contenido y lanzamiento. Esa es la memoria educativa con la que trabaja IA For U.
-              </p>
-            </div>
-          </aside>
         </section>
       </main>
     </div>
@@ -568,15 +505,6 @@ function RadarDiagnosis({ answers, onReview }: { answers: Record<string, RadarAn
           Revisar mis respuestas
         </button>
       </div>
-    </div>
-  );
-}
-
-function InfoBlock({ label, text }: { label: string; text: string }) {
-  return (
-    <div className="foru-soft-panel rounded-2xl p-4">
-      <p className="text-xs font-black uppercase text-gray-500">{label}</p>
-      <p className="mt-2 text-sm font-semibold leading-6 text-gray-750">{text}</p>
     </div>
   );
 }
