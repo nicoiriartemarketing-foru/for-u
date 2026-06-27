@@ -33,6 +33,11 @@ type ContentItem = {
   status: ContentStatus;
 };
 
+type AiMessage = {
+  role: 'bot' | 'user';
+  text: string;
+};
+
 const contentStorageKey = 'foru:content-studio-v1';
 
 const statusOptions: Array<{ id: ContentStatus; label: string; icon: typeof Lightbulb; color: string }> = [
@@ -69,6 +74,14 @@ export default function Dashboard() {
   const [mobileNav, setMobileNav] = useState(false);
   const [items, setItems] = useState<ContentItem[]>(loadContentItems);
   const [newTitle, setNewTitle] = useState('');
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiInput, setAiInput] = useState('');
+  const [aiMessages, setAiMessages] = useState<AiMessage[]>([
+    {
+      role: 'bot',
+      text: 'Estoy aquí para bajarte el ruido. Puedes pedirme una idea, un guion corto, o qué hacer hoy.',
+    },
+  ]);
 
   const nextItem = items.find((item) => item.status !== 'publish') ?? items[0];
   const publishedCount = items.filter((item) => item.status === 'publish').length;
@@ -118,13 +131,32 @@ export default function Dashboard() {
     saveItems(items.map((item) => item.id === id ? { ...item, day } : item));
   }
 
+  function askStudioAi(prompt?: string) {
+    const question = (prompt ?? aiInput).trim();
+    if (!question) return;
+
+    const lowerQuestion = question.toLowerCase();
+    const answer = lowerQuestion.includes('guion') || lowerQuestion.includes('grabar')
+      ? 'Hazlo así: gancho de 3 segundos, una idea central, ejemplo concreto y cierre con “escríbeme si quieres que te ayude”. Graba una sola toma de 40 segundos.'
+      : lowerQuestion.includes('calendario') || lowerQuestion.includes('semana')
+        ? 'Esta semana: lunes explica tu oferta, miércoles responde una pregunta frecuente, viernes muestra prueba o resultado. Tres piezas bastan.'
+        : lowerQuestion.includes('web') || lowerQuestion.includes('landing')
+          ? 'Primero mejora la portada: promesa clara, una imagen/ilustración amable y un botón único. Luego agrega confianza y preguntas frecuentes.'
+          : 'Empieza por una cosa: elige una duda frecuente de tu cliente y conviértela en una pieza corta. Después la pasamos por Idea → Guion → Grabar → Editar → Publicar.';
+
+    setAiMessages((current) => [...current, { role: 'user', text: question }, { role: 'bot', text: answer }]);
+    setAiInput('');
+    setAiOpen(true);
+    playUiTone('tap');
+  }
+
   return (
-    <div className="flex min-h-screen bg-[#f7f7f5] text-[#171717]">
+    <div className="foru-studio-surface flex min-h-screen text-[#171717]">
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-black/8 bg-white p-4 transition-transform md:sticky md:translate-x-0 ${mobileNav ? 'translate-x-0' : '-translate-x-full'}`}>
         <Link to="/" className="foru-logo block px-3 py-4">FOR <span>U</span></Link>
-        <div className="mt-3 rounded-xl foru-dark-gradient p-4 text-white">
-          <p className="text-xs font-black uppercase text-[#6EE7B7]">Estudio digital</p>
-          <p className="mt-2 font-serif text-xl font-bold">{draft.businessName}</p>
+        <div className="foru-studio-sidebar-card mt-3 p-4">
+          <p className="text-xs font-black uppercase text-[#10B981]">Estudio digital</p>
+          <p className="mt-2 font-serif text-xl font-bold text-gray-950">{draft.businessName}</p>
           <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/15">
             <div className="h-full foru-gradient-button" style={{ width: `${Math.max(18, weekProgress)}%` }} />
           </div>
@@ -148,9 +180,9 @@ export default function Dashboard() {
           })}
         </nav>
 
-        <Link to="/ia" className="mt-6 flex items-center gap-3 rounded-xl bg-[#F3F0FF] p-4 text-sm font-black text-[#5B3FD1]">
+        <button type="button" onClick={() => setAiOpen(true)} className="mt-auto flex items-center gap-3 rounded-xl bg-[#F3F0FF] p-4 text-left text-sm font-black text-[#5B3FD1] transition hover:-translate-y-0.5">
           <Bot size={20} /> Preguntar a IA
-        </Link>
+        </button>
       </aside>
 
       {mobileNav && <button type="button" aria-label="Cerrar menú" onClick={() => setMobileNav(false)} className="fixed inset-0 z-30 bg-black/20 md:hidden" />}
@@ -178,6 +210,7 @@ export default function Dashboard() {
               publishedCount={publishedCount}
               onOpenContent={() => selectView('content')}
               onOpenCalendar={() => selectView('calendar')}
+              onAskAi={askStudioAi}
             />
           )}
           {activeView === 'content' && (
@@ -194,6 +227,15 @@ export default function Dashboard() {
           {activeView === 'publish' && <PublishView items={items} publicPath={publicPath} />}
         </div>
       </main>
+
+      <StudioAiDock
+        open={aiOpen}
+        messages={aiMessages}
+        input={aiInput}
+        onInput={setAiInput}
+        onClose={() => setAiOpen(false)}
+        onAsk={askStudioAi}
+      />
     </div>
   );
 }
@@ -205,6 +247,7 @@ function TodayView({
   publishedCount,
   onOpenContent,
   onOpenCalendar,
+  onAskAi,
 }: {
   draftName: string;
   nextItem?: ContentItem;
@@ -212,6 +255,7 @@ function TodayView({
   publishedCount: number;
   onOpenContent: () => void;
   onOpenCalendar: () => void;
+  onAskAi: (prompt?: string) => void;
 }) {
   return (
     <div className="grid gap-5">
@@ -226,9 +270,14 @@ function TodayView({
         <div className="relative max-w-2xl">
           <p className="text-sm font-black text-[#6EE7B7]">Hola, {draftName}</p>
           <h2 className="mt-3 font-serif text-4xl font-bold leading-tight md:text-5xl">Hoy toca crear, no organizarlo todo.</h2>
-          <button type="button" onClick={onOpenContent} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-4 text-sm font-black text-gray-950">
+          <div className="mt-6 flex flex-wrap gap-3">
+          <button type="button" onClick={onOpenContent} className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-4 text-sm font-black text-gray-950">
             Abrir mi tarea <ArrowRight size={17} />
           </button>
+          <button type="button" onClick={() => onAskAi('No sé por dónde empezar hoy')} className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-5 py-4 text-sm font-black text-white ring-1 ring-white/15">
+            Preguntar IA <Bot size={17} />
+          </button>
+          </div>
         </div>
       </section>
 
@@ -259,7 +308,10 @@ function TodayView({
       </section>
 
       <section className="grid gap-3 sm:grid-cols-3">
-        <QuickAction to="/ia" icon={Bot} title="Pedir una idea" color="#F9A8D4" />
+        <button type="button" onClick={() => onAskAi('Dame una idea de contenido para mi negocio')} className="tap-boost flex items-center gap-3 rounded-2xl border border-black/8 bg-white p-4 text-left text-sm font-black shadow-sm">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F9A8D4]"><Bot size={19} /></span>
+          Pedir una idea
+        </button>
         <QuickAction to="/metodologia" icon={BookOpen} title="Aprender algo" color="#FDE68A" />
         <QuickAction to="/editor" icon={Edit3} title="Editar mi web" color="#6EE7B7" />
       </section>
@@ -458,5 +510,70 @@ function QuickAction({ to, icon: Icon, title, color }: { to: string; icon: typeo
       <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: color }}><Icon size={19} /></span>
       {title}
     </Link>
+  );
+}
+
+function StudioAiDock({
+  open,
+  messages,
+  input,
+  onInput,
+  onClose,
+  onAsk,
+}: {
+  open: boolean;
+  messages: AiMessage[];
+  input: string;
+  onInput: (value: string) => void;
+  onClose: () => void;
+  onAsk: (prompt?: string) => void;
+}) {
+  return (
+    <section className={`foru-ai-dock ${open ? 'open' : ''}`}>
+      <div className="flex h-full flex-col rounded-t-[20px] border border-black/10 bg-white shadow-2xl">
+        <header className="flex items-center justify-between border-b border-black/8 px-5 py-4">
+          <div>
+            <p className="text-xs font-black uppercase text-[#10B981]">IA For U</p>
+            <h2 className="font-serif text-xl font-bold">Tu guía de estudio</h2>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Cerrar IA" className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-lg font-black">×</button>
+        </header>
+
+        <div className="flex-1 space-y-3 overflow-y-auto p-5">
+          <div className="flex flex-wrap gap-2">
+            {['¿Qué hago hoy?', 'Dame un guion', 'Arma mi semana'].map((prompt) => (
+              <button key={prompt} type="button" onClick={() => onAsk(prompt)} className="rounded-full bg-gray-100 px-3 py-2 text-xs font-black text-gray-700">
+                {prompt}
+              </button>
+            ))}
+          </div>
+          {messages.map((message, index) => (
+            <div
+              key={`${message.role}-${index}`}
+              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm font-semibold leading-6 ${
+                message.role === 'user'
+                  ? 'ml-auto rounded-br bg-[#1a1a1a] text-white'
+                  : 'rounded-bl bg-gray-100 text-gray-800'
+              }`}
+            >
+              {message.text}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-3 border-t border-black/8 p-4">
+          <input
+            value={input}
+            onChange={(event) => onInput(event.target.value)}
+            onKeyDown={(event) => event.key === 'Enter' && onAsk()}
+            placeholder="Pregúntame algo..."
+            className="foru-input min-w-0 flex-1 rounded-xl px-4 py-3 text-sm font-bold outline-none"
+          />
+          <button type="button" onClick={() => onAsk()} aria-label="Enviar" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#1a1a1a] text-white">
+            <Send size={18} />
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }

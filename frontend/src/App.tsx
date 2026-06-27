@@ -6,6 +6,7 @@ import RegisterWizard from './pages/auth/RegisterWizard';
 import Dashboard from './pages/dashboard/Dashboard';
 import WorldEditor from './pages/editor/WorldEditor';
 import PublicLanding from './pages/public/PublicLanding';
+import MundoDigital from './pages/MundoDigital';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/ia" element={<AiForU />} />
         <Route path="/metodologia" element={<Methodology />} />
+        <Route path="/mundo-digital" element={<MundoDigital />} />
         <Route path="/register" element={<RegisterWizard />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/editor" element={<WorldEditor />} />

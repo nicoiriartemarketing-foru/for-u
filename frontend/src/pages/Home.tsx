@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Bot, Edit3, Sparkles } from '../lib/icons';
+import { ArrowRight, BookOpen, Bot, Edit3, LayoutDashboard, Sparkles, Store } from '../lib/icons';
 import { draftStorageKey, loadDigitalWorldPage, loadLocalDraft } from '../lib/digitalWorldDraft';
 import { playUiTone } from '../lib/sound';
 
@@ -7,71 +7,49 @@ export default function Home() {
   const hasBusiness = typeof window !== 'undefined' && Boolean(localStorage.getItem(draftStorageKey));
   const draft = loadLocalDraft();
   const page = loadDigitalWorldPage(draft);
-  const primaryPath = hasBusiness ? '/ia' : '/metodologia';
 
   return (
-    <div className="foru-app-bg relative min-h-screen overflow-hidden text-[#171717]">
-      <nav className="foru-nav foru-container">
-        <Link to="/" className="foru-logo">FOR <span>U</span></Link>
-        {hasBusiness && (
-          <Link
-            to={`/p/${page.publicSlug}`}
-            onClick={() => playUiTone('next')}
-            className="inline-flex items-center gap-2 text-sm font-black text-gray-700"
-          >
-            Ver mi landing <ArrowRight size={16} />
-          </Link>
-        )}
-      </nav>
+    <main className="foru-reference-hub text-[#171717]">
+      <div className="foru-reference-blur foru-reference-blur--gold" />
+      <div className="foru-reference-blur foru-reference-blur--green" />
+      <div className="foru-reference-blur foru-reference-blur--pink" />
 
-      <main className="foru-container flex min-h-[calc(100vh-92px)] items-center py-8">
-        <section className="mx-auto w-full max-w-4xl">
-          <div className="text-center">
-            <span className="foru-badge">{hasBusiness ? `Hola, ${draft.businessName}` : 'Tu ecosistema digital'}</span>
-            <h1 className="mx-auto mt-6 max-w-3xl font-serif text-5xl font-bold leading-[1.04] md:text-7xl">
-              Vive la experiencia <span className="text-gradient-animated">For U</span> completa.
-            </h1>
-            <p className="mx-auto mt-5 max-w-xl text-base font-semibold leading-7 text-gray-600">
-              Déjate guiar: entiende tu negocio, recibe el contenido correcto y convierte tus ideas en una web lista para compartir.
-            </p>
-          </div>
+      <Link to="/" className="foru-reference-logo" onClick={() => playUiTone('tap')}>
+        FOR <span>U</span>
+      </Link>
+      <p className="foru-reference-subtitle">
+        {hasBusiness ? `Hola, ${draft.businessName}. Elige cómo quieres continuar.` : 'Tu sistema digital completo. Elige cómo quieres empezar.'}
+      </p>
 
-          <Link
-            to={primaryPath}
-            onClick={() => playUiTone('next')}
-            className="tap-boost mx-auto mt-8 flex max-w-2xl items-center justify-between gap-5 rounded-2xl foru-dark-gradient p-6 text-white shadow-2xl"
-          >
-            <span className="flex items-center gap-4 text-left">
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl foru-gradient-button text-gray-950">
-                <Sparkles size={25} />
-              </span>
-              <span>
-                <span className="block text-xs font-black uppercase text-[#6EE7B7]">Ruta recomendada</span>
-                <span className="mt-1 block text-xl font-black">Guíame de una</span>
-                <span className="mt-1 block text-sm font-semibold text-white/65">
-                  For U te dice qué hacer primero y te acompaña hasta publicarlo.
-                </span>
-              </span>
-            </span>
-            <ArrowRight className="shrink-0" />
-          </Link>
+      <section className="foru-reference-buttons">
+        <Link to={hasBusiness ? '/dashboard' : '/register'} onClick={() => playUiTone('next')} className="foru-reference-card">
+          <span className="foru-reference-card-icon"><LayoutDashboard size={31} /></span>
+          <h2>Studio Digital <span className="foru-reference-gradient-text">FOR U</span></h2>
+          <p>Plataforma guiada: crea contenido, diseña tu web, organiza tu calendario y publica sin perderte.</p>
+          <span className="foru-reference-tag">Experiencia completa →</span>
+        </Link>
 
-          <div className="mx-auto mt-4 grid max-w-3xl gap-3 sm:grid-cols-3">
-            <Link to="/metodologia" onClick={() => playUiTone('tap')} className="tap-boost flex min-h-24 flex-col justify-between rounded-xl border border-black/10 bg-white/80 p-4 font-black shadow-sm backdrop-blur">
-              <BookOpen className="text-[#7C5CFF]" size={21} />
-              <span>Metodología</span>
-            </Link>
-            <Link to="/ia" onClick={() => playUiTone('tap')} className="tap-boost flex min-h-24 flex-col justify-between rounded-xl border border-black/10 bg-white/80 p-4 font-black shadow-sm backdrop-blur">
-              <Bot className="text-[#7C5CFF]" size={21} />
-              <span>IA For U</span>
-            </Link>
-            <Link to={hasBusiness ? '/editor' : '/register'} onClick={() => playUiTone('tap')} className="tap-boost flex min-h-24 flex-col justify-between rounded-xl border border-black/10 bg-white/80 p-4 font-black shadow-sm backdrop-blur">
-              <Edit3 className="text-[#7C5CFF]" size={21} />
-              <span>{hasBusiness ? 'Editar mi web' : 'Quiero mi web'}</span>
-            </Link>
-          </div>
-        </section>
-      </main>
-    </div>
+        <Link to="/mundo-digital" onClick={() => playUiTone('next')} className="foru-reference-card">
+          <span className="foru-reference-card-icon"><Store size={31} /></span>
+          <h2>Mundo Digital <span className="foru-reference-gradient-text">For U</span></h2>
+          <p>Tu presencia lista para vender: portada, oferta, confianza, preguntas y botón principal de acción.</p>
+          <span className="foru-reference-tag">Servicio a medida →</span>
+        </Link>
+      </section>
+
+      <p className="foru-reference-note">Ambos caminos convergen: tu marca, en su mejor versión.</p>
+
+      <section className="foru-reference-minis">
+        <Link to="/metodologia" onClick={() => playUiTone('tap')} className="foru-reference-mini">
+          <BookOpen size={19} /> Metodología
+        </Link>
+        <Link to="/ia" onClick={() => playUiTone('tap')} className="foru-reference-mini">
+          <Bot size={19} /> IA For U
+        </Link>
+        <Link to={hasBusiness ? '/editor' : '/register'} onClick={() => playUiTone('tap')} className="foru-reference-mini">
+          <Edit3 size={19} /> {hasBusiness ? 'Editor' : 'Quiero mi web'} <ArrowRight size={16} className="ml-auto" />
+        </Link>
+      </section>
+    </main>
   );
 }
