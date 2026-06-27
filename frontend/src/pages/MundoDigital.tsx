@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom';
 import {
-  ArrowLeft,
   ArrowRight,
-  BadgeCheck,
   Bot,
   CalendarDays,
   MessageCircle,
@@ -11,137 +9,187 @@ import {
   Sparkles,
   Store,
 } from '../lib/icons';
-import { playUiTone } from '../lib/sound';
 
 const services = [
-  { label: 'Presencia', title: 'Webs & apps a medida', icon: Store, text: 'Landing pages, sitios completos o web apps para que tu marca se vea clara y vendible.' },
-  { label: 'Automatización', title: 'Chatbots & respuestas IA', icon: Bot, text: 'Atención automática para responder dudas, guiar clientes y no perder oportunidades.' },
-  { label: 'Operación', title: 'Reservas & pedidos', icon: CalendarDays, text: 'Agenda, pedidos, catálogos o consultas conectadas a la forma real en que vendes.' },
-  { label: 'Integración', title: 'Configuración completa', icon: Settings, text: 'Conectamos web, WhatsApp, calendario, base de datos y publicación en una sola ruta.' },
-];
+  ['Presencia', 'Webs & Apps a Medida', 'Landing pages, sitios completos o web apps. Diseñadas desde cero, alineadas a tu esencia y optimizadas para convertir.', Store],
+  ['Automatización', 'Chatbots & Respuestas IA', 'Atención automática en WhatsApp, Instagram y tu web. Califica leads, responde dudas y agenda citas 24/7.', Bot],
+  ['Operación', 'Reservas & Pedidos', 'Sistemas de agenda, pedidos o catálogos interactivos. Tu cliente reserva, pide o compra directamente.', CalendarDays],
+  ['Ingresos digitales', 'Productos & Servicios Digitales', 'Cursos, membresías, descargas, asesorías. Pasarelas de pago y entregas automáticas.', Rocket],
+  ['Crecimiento', 'Campañas & Embudos', 'Meta Ads, Google Ads, tracking avanzado, landing pages optimizadas. Atraemos tráfico y lo convertimos.', Sparkles],
+  ['Integración', 'Configuración Completa', 'Conectamos web, WhatsApp, calendario, base de datos y redes. Todo hablando el mismo idioma.', Settings],
+] as const;
 
 const plans = [
-  { name: 'Esencial', oldPrice: 'S/ 649', price: 'S/ 389', tag: 'Sistema base', text: 'Landing estratégica + botón de contacto. Para empezar a convertir visitas en mensajes.', featured: false },
-  { name: 'Profesional', oldPrice: 'S/ 1,149', price: 'S/ 689', tag: 'Más popular', text: 'Sitio completo + automatizaciones + reservas. Para vender sin estar explicando todo a mano.', featured: true },
-  { name: 'Premium', oldPrice: 'S/ 1,650', price: 'S/ 990', tag: 'A medida', text: 'Web app + IA + productos digitales + campañas. Para convertir tu negocio en sistema.', featured: false },
+  {
+    name: 'Esencial',
+    type: 'Sistema Base',
+    old: 'S/ 649',
+    price: 'S/ 389',
+    description: 'Landing page estratégica + chatbot básico. Perfecto para empezar a convertir visitas en mensajes reales.',
+    items: ['Landing page de una sola página', 'Chatbot de WhatsApp automatizado', 'Redacción de textos persuasivos', 'Botón directo a WhatsApp', 'Hosting incluido 1er año'],
+  },
+  {
+    name: 'Profesional',
+    type: 'Sistema Completo',
+    old: 'S/ 1,149',
+    price: 'S/ 689',
+    description: 'Sitio web completo + automatizaciones + reservas. El sistema que necesitas para escalar sin perder tiempo.',
+    items: ['Sitio web de varias páginas', 'Chatbot avanzado con IA', 'Sistema de reservas automático', 'Formulario de contacto inteligente', 'Google Maps + SEO básico', 'Landing de marca incluida'],
+    featured: true,
+  },
+  {
+    name: 'Premium',
+    type: 'Sistema a Medida',
+    old: 'S/ 1,650',
+    price: 'S/ 990',
+    description: 'Web app completa + IA + productos digitales + campañas. El ecosistema que hace que tu negocio escale solo.',
+    items: ['Web app con pedidos o reservas', 'Integración con IA personalizada', 'Productos digitales con entrega automática', 'Configuración de campañas', 'Soporte VIP por 15 días'],
+  },
 ];
-
-const process = ['Diagnóstico gratuito', 'Diseño del sistema', 'Construcción guiada', 'Lanzamiento'];
 
 export default function MundoDigital() {
   return (
-    <div className="min-h-screen bg-[#fafaf8] text-[#1a1a1a]">
-      <nav className="sticky top-0 z-40 border-b border-black/8 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-          <Link to="/" onClick={() => playUiTone('tap')} className="foru-logo">FOR <span>U</span></Link>
-          <div className="flex items-center gap-2">
-            <a href="#planes" className="hidden rounded-full border border-black/10 px-4 py-2 text-sm font-black text-gray-700 sm:inline-flex">Planes</a>
-            <Link to="/" className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm font-black text-gray-800">
-              <ArrowLeft size={16} /> Hub
-            </Link>
-          </div>
+    <div className="foru-lp">
+      <nav className="foru-lp-nav">
+        <Link to="/" className="foru-logo">FOR <span>U</span></Link>
+        <div className="foru-lp-links">
+          <a href="#servicios" className="foru-lp-link">Servicios</a>
+          <a href="#caso" className="foru-lp-link">Caso real</a>
+          <a href="#oferta" className="foru-lp-link">Oferta</a>
+          <Link to="/" className="top-nav-back">← Hub</Link>
         </div>
       </nav>
 
-      <main>
-        <section className="relative isolate flex min-h-[88vh] items-center overflow-hidden px-5 py-16 text-center">
-          <div className="foru-reference-blur foru-reference-blur--gold" />
-          <div className="foru-reference-blur foru-reference-blur--green" />
-          <div className="foru-reference-blur foru-reference-blur--pink" />
-          <div className="relative z-10 mx-auto max-w-5xl">
-            <span className="foru-badge gap-2"><Sparkles size={16} /> Oferta limitada · 40% OFF</span>
-            <h1 className="mx-auto mt-8 max-w-4xl font-serif text-5xl font-bold leading-[1.06] md:text-7xl">
-              Tienes el producto. Tienes los clientes. <span className="foru-reference-gradient-text italic">Te falta el sistema.</span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-3xl text-lg font-semibold leading-8 text-gray-600">
-              Un mundo digital no es solo una web. Es la estructura que une tu oferta, contenido, reservas, automatizaciones, IA y venta para que tu negocio trabaje con más orden.
-            </p>
-            <div className="mt-9 flex flex-wrap justify-center gap-3">
-              <a href="#diagnostico" className="foru-btn">Agendar sesión gratis <ArrowRight size={18} /></a>
-              <a href="#planes" className="foru-btn foru-btn--outline">Ver planes con 40% OFF</a>
-            </div>
-            <p className="mt-5 text-sm font-bold text-gray-400">Diagnóstico gratuito de 15 minutos · Sin compromiso</p>
+      <section className="foru-lp-hero">
+        <div className="foru-reference-blur foru-reference-blur--gold" />
+        <div className="foru-reference-blur foru-reference-blur--green" />
+        <div className="foru-reference-blur foru-reference-blur--pink" />
+        <div className="foru-lp-inner">
+          <span className="foru-lp-badge">⚡ Oferta limitada · 40% OFF</span>
+          <h1 className="foru-lp-title">
+            <span>Tienes el producto.</span>
+            <span>Tienes los clientes.</span>
+            <span className="foru-reference-gradient-text italic">Te falta el sistema.</span>
+          </h1>
+          <p className="foru-lp-sub">
+            Un sistema digital <strong>no es solo una web</strong>. Es el motor que hace que tu negocio funcione por ti:
+            automatizaciones, chatbots, reservas, productos digitales, campañas y más. <strong>Todo integrado a tu realidad.</strong>
+          </p>
+          <div className="foru-lp-buttons">
+            <a href="#agenda" className="foru-btn">Agendar sesión gratis <CalendarDays size={18} /></a>
+            <a href="#oferta" className="foru-btn foru-btn--outline">Ver planes con 40% OFF <ArrowRight size={18} /></a>
           </div>
-        </section>
+          <p className="text-sm font-medium text-gray-400">Diagnóstico gratuito de 15 minutos · Sin compromiso</p>
+        </div>
+      </section>
 
-        <section id="diagnostico" className="px-5 py-14">
-          <div className="mx-auto max-w-4xl rounded-[24px] border border-black/6 bg-white px-6 py-12 text-center shadow-sm md:px-12">
-            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl foru-gradient-button"><BadgeCheck size={28} /></span>
-            <h2 className="mt-6 font-serif text-4xl font-bold">¿No sabes exactamente qué necesita tu negocio?</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-base font-semibold leading-8 text-gray-600">
-              Perfecto. Para eso existe For U: traducimos tu idea en tecnología real y te decimos qué pieza falta primero.
-            </p>
+      <section className="foru-lp-section">
+        <div className="foru-lp-diag">
+          <span className="foru-lp-icon"><Sparkles size={28} /></span>
+          <h2 className="font-serif text-3xl font-bold">¿No sabes exactamente qué necesita tu negocio?</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base font-light leading-8 text-gray-500">
+            Es normal. Muchas emprendedoras tienen una idea clara, pero no saben si les conviene una web, un chatbot,
+            reservas automáticas, productos digitales o una campaña que convierta.
+          </p>
+          <p className="mt-3 font-semibold">No tienes que saberlo todo. Solo necesitas traducir tu visión en tecnología real.</p>
+        </div>
+      </section>
+
+      <section id="servicios" className="foru-lp-section">
+        <div className="foru-lp-inner">
+          <div className="foru-lp-section-header">
+            <h2 className="foru-lp-section-title">Un sistema digital es <span className="foru-reference-gradient-text">mucho más</span> que una web</h2>
+            <p className="foru-lp-section-sub">Dependiendo de tu negocio, instalamos una o varias piezas. Todo conectado, todo trabajando por ti.</p>
           </div>
-        </section>
-
-        <section className="px-5 py-20">
-          <div className="mx-auto max-w-7xl">
-            <div className="mx-auto max-w-3xl text-center">
-              <h2 className="font-serif text-4xl font-bold md:text-5xl">Un sistema digital es <span className="foru-reference-gradient-text">mucho más</span> que una web</h2>
-              <p className="mt-4 text-base font-semibold leading-8 text-gray-600">Instalamos solo las piezas que tu negocio necesita, conectadas entre sí.</p>
-            </div>
-            <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-              {services.map((service) => {
-                const Icon = service.icon;
-                return (
-                  <article key={service.title} className="foru-reference-card min-h-[260px] w-full text-left">
-                    <span className="foru-reference-card-icon mx-0 h-14 w-14"><Icon size={24} /></span>
-                    <p className="mt-0 text-xs font-black uppercase text-gray-400">{service.label}</p>
-                    <h3 className="mt-2 font-serif text-2xl font-bold">{service.title}</h3>
-                    <p>{service.text}</p>
-                  </article>
-                );
-              })}
-            </div>
+          <div className="foru-lp-grid">
+            {services.map(([label, title, text, Icon]) => (
+              <article key={title} className="foru-lp-service">
+                <span className="foru-lp-service-icon"><Icon size={23} /></span>
+                <p className="foru-lp-label">{label}</p>
+                <h3 className="foru-lp-card-title">{title}</h3>
+                <p className="foru-lp-card-text">{text}</p>
+              </article>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section id="planes" className="bg-white px-5 py-20">
-          <div className="mx-auto max-w-7xl">
-            <div className="mx-auto max-w-3xl text-center">
-              <span className="foru-badge">Oferta por tiempo limitado</span>
-              <h2 className="mt-5 font-serif text-4xl font-bold md:text-5xl">Tu sistema digital a medida <span className="foru-reference-gradient-text">con 40% OFF</span></h2>
+      <section id="caso" className="foru-lp-section">
+        <div className="foru-lp-inner">
+          <div className="foru-lp-section-header">
+            <h2 className="foru-lp-section-title">Caso real: <span className="foru-reference-gradient-text">Somos Cíclicas</span></h2>
+            <p className="foru-lp-section-sub">Así convertimos una marca de suplementos en un sistema digital completo.</p>
+          </div>
+          <div className="foru-lp-case">
+            <div>
+              <h3>De vender suplementos a crear una experiencia completa</h3>
+              <p>Somos Cíclicas empezó como una marca de suplementos para mujeres. Pero los suplementos solos no eran suficientes.</p>
+              <p>Construimos una app con IA, calendario personalizado, biblioteca de rutinas, comunidad y automatizaciones.</p>
             </div>
-            <div className="mt-12 grid gap-5 lg:grid-cols-3">
-              {plans.map((plan) => (
-                <article key={plan.name} className={`relative rounded-[20px] border bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${plan.featured ? 'foru-gradient-border' : 'border-black/6'}`}>
-                  {plan.featured && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full foru-gradient-button px-4 py-1 text-xs font-black">Más popular</span>}
-                  <p className="text-xs font-black uppercase text-gray-400">{plan.tag}</p>
-                  <h3 className="mt-3 font-serif text-4xl font-bold">{plan.name}</h3>
-                  <p className="mt-5 text-sm font-bold text-gray-400 line-through">Antes {plan.oldPrice}</p>
-                  <p className="font-serif text-5xl font-bold">{plan.price}</p>
-                  <p className="mt-4 min-h-16 text-sm font-semibold leading-7 text-gray-600">{plan.text}</p>
-                  <a href="#diagnostico" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1a1a1a] px-5 py-4 text-sm font-black text-white">
-                    Quiero este plan <MessageCircle size={17} />
-                  </a>
-                </article>
+            <div className="foru-lp-case-visual">
+              <h3 className="mb-3 font-serif text-lg font-bold">Lo que incluye el sistema</h3>
+              {['Asistente IA personalizado', 'Calendario editable', 'Biblioteca de rutinas y recetas', 'Comunidad', 'Integración con Telegram y WhatsApp'].map((item) => (
+                <div key={item} className="foru-lp-feature">
+                  <span className="foru-lp-feature-icon">✓</span>
+                  <span>{item}</span>
+                </div>
               ))}
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="px-5 py-20">
-          <div className="mx-auto max-w-5xl">
-            <h2 className="text-center font-serif text-4xl font-bold md:text-5xl">Cómo <span className="foru-reference-gradient-text">trabajamos</span></h2>
-            <div className="mt-12 grid gap-6 md:grid-cols-4">
-              {process.map((step, index) => (
-                <article key={step} className="text-center">
-                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full foru-gradient-border bg-white font-serif text-2xl font-bold">{index + 1}</span>
-                  <h3 className="mt-5 text-base font-black">{step}</h3>
-                </article>
-              ))}
-            </div>
+      <section id="oferta" className="foru-lp-section">
+        <div className="foru-lp-inner">
+          <div className="foru-lp-section-header">
+            <span className="foru-lp-badge">⚡ Oferta por tiempo limitado</span>
+            <h2 className="foru-lp-section-title mt-5">Tu sistema digital a medida<br /><span className="foru-reference-gradient-text">con 40% de descuento</span></h2>
+            <p className="foru-lp-section-sub">Para emprendedoras que ya tienen su contenido, producto o idea clara.</p>
           </div>
-        </section>
+          <div className="foru-lp-grid">
+            {plans.map((plan) => (
+              <article key={plan.name} className={`foru-lp-plan ${plan.featured ? 'foru-lp-plan-featured' : ''}`}>
+                {plan.featured && <span className="foru-lp-plan-badge">★ Más popular</span>}
+                <p className="foru-lp-label">{plan.type}</p>
+                <h3 className="mt-2 font-serif text-3xl font-bold">{plan.name}</h3>
+                <p className="foru-lp-price-old">Antes {plan.old}</p>
+                <p className="foru-lp-price">{plan.price}</p>
+                <p className="foru-lp-card-text">{plan.description}</p>
+                <ul className="foru-lp-list">
+                  {plan.items.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+                <a href="#agenda" className="foru-btn w-full px-4 py-3 text-sm">Quiero este plan <MessageCircle size={17} /></a>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        <section className="px-5 py-20 text-center">
-          <div className="mx-auto max-w-3xl">
-            <Rocket className="mx-auto text-[#7C5CFF]" size={34} />
-            <h2 className="mt-5 font-serif text-5xl font-bold">Tu marca, <span className="foru-reference-gradient-text">en su mejor versión.</span></h2>
-            <a href="#diagnostico" className="foru-btn mt-8">Empezar ahora <ArrowRight size={18} /></a>
+      <section className="foru-lp-section">
+        <div className="foru-lp-inner">
+          <div className="foru-lp-section-header">
+            <h2 className="foru-lp-section-title">Cómo <span className="foru-reference-gradient-text">trabajamos</span></h2>
+            <p className="foru-lp-section-sub">Un proceso claro, sin sorpresas y sin presión.</p>
           </div>
-        </section>
-      </main>
+          <div className="foru-lp-process">
+            {['Diagnóstico gratuito', 'Diseño del sistema', 'Construcción', 'Lanzamiento'].map((step, index) => (
+              <article key={step} className="foru-lp-process-step">
+                <span className="foru-lp-process-num">{index + 1}</span>
+                <h3 className="font-bold">{step}</h3>
+                <p className="mx-auto mt-2 max-w-[210px] text-sm leading-6 text-gray-500">Avanzamos con una ruta concreta y revisiones claras.</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="agenda" className="foru-lp-section text-center">
+        <div className="foru-lp-inner max-w-3xl">
+          <h2 className="font-serif text-5xl font-bold leading-tight">Tu marca, <span className="foru-reference-gradient-text">en su mejor versión.</span></h2>
+          <p className="foru-lp-sub mt-5">Una conversación de 15 minutos basta para saber qué sistema necesita tu negocio.</p>
+          <a href="https://wa.me/" className="foru-btn">Escribir por WhatsApp <MessageCircle size={18} /></a>
+        </div>
+      </section>
     </div>
   );
 }
