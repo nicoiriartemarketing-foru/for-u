@@ -18,9 +18,11 @@ import {
   Rocket,
   Send,
   Sparkles,
+  Trash2,
   Video,
 } from '../../lib/icons';
 import { loadConstructorState, loadDigitalWorldPage, loadLocalDraft } from '../../lib/digitalWorldDraft';
+import { draftStorageKey } from '../../lib/digitalWorldDraft';
 import { playUiTone } from '../../lib/sound';
 
 type StudioView = 'today' | 'content' | 'calendar' | 'web' | 'publish';
@@ -70,6 +72,7 @@ const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
 const campaignStorageKey = 'foru:campaign-studio-v1';
 const campaignDoneStorageKey = 'foru:campaign-studio-done-v1';
+const customCampaignStorageKey = 'foru:campaign-custom-tasks-v1';
 
 const campaignSchedule = [
   ['AHORA', 'Subir Video Día 1 + Carrusel 1', 'Orgánico'],
@@ -262,7 +265,16 @@ function loadContentItems(): ContentItem[] {
   ];
 }
 
+function loadCustomCampaignTasks(): CampaignTask[] {
+  try {
+    return JSON.parse(localStorage.getItem(customCampaignStorageKey) || '[]') as CampaignTask[];
+  } catch {
+    return [];
+  }
+}
+
 export default function Dashboard() {
+  const hasProfile = typeof window !== 'undefined' && Boolean(localStorage.getItem(draftStorageKey));
   const draft = loadLocalDraft();
   const constructorState = loadConstructorState(draft);
   const page = loadDigitalWorldPage(draft, constructorState);
@@ -272,6 +284,10 @@ export default function Dashboard() {
   const [items, setItems] = useState<ContentItem[]>(loadContentItems);
   const [newTitle, setNewTitle] = useState('');
   const [aiOpen, setAiOpen] = useState(false);
+  const [profilePrompt, setProfilePrompt] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return !localStorage.getItem(draftStorageKey) && localStorage.getItem('foru:profile-prompt-dismissed') !== 'yes';
+  });
   const [aiInput, setAiInput] = useState('');
   const [aiMessages, setAiMessages] = useState<AiMessage[]>([
     {
@@ -317,6 +333,20 @@ export default function Dashboard() {
     ]);
     setNewTitle('');
     playUiTone('success');
+  }
+
+  function addCalendarItem(item: Omit<ContentItem, 'id'>) {
+    saveItems([...items, { ...item, id: crypto.randomUUID() }]);
+    playUiTone('success');
+  }
+
+  function updateItemTitle(id: string, title: string) {
+    saveItems(items.map((item) => item.id === id ? { ...item, title } : item));
+  }
+
+  function deleteCalendarItem(id: string) {
+    saveItems(items.filter((item) => item.id !== id));
+    playUiTone('tap');
   }
 
   function updateDay(id: string, day: number) {
@@ -388,8 +418,8 @@ export default function Dashboard() {
             <p className="text-xs font-black uppercase text-[#7C5CFF]">Estudio For U</p>
             <h1 className="text-lg font-black">{navigation.find((item) => item.id === activeView)?.label}</h1>
           </div>
-          <Link to={publicPath} className="inline-flex items-center gap-2 rounded-lg border border-black/10 px-3 py-2 text-xs font-black">
-            <Eye size={16} /> <span className="hidden sm:inline">Ver landing</span>
+          <Link to={hasProfile ? publicPath : '/register'} className="inline-flex items-center gap-2 rounded-lg border border-black/10 px-3 py-2 text-xs font-black">
+            <Eye size={16} /> <span className="hidden sm:inline">{hasProfile ? 'Ver landing' : 'Configurar'}</span>
           </Link>
         </header>
 
@@ -406,14 +436,18 @@ export default function Dashboard() {
             />
           )}
           {activeView === 'content' && (
-            <ContentView
-              newTitle={newTitle}
-              onNewTitle={setNewTitle}
-              onAdd={addContent}
+            <ContentView />
+          )}
+          {activeView === 'calendar' && (
+            <CalendarView
+              items={items}
+              onDay={updateDay}
+              onAddItem={addCalendarItem}
+              onDeleteItem={deleteCalendarItem}
+              onTitle={updateItemTitle}
             />
           )}
-          {activeView === 'calendar' && <CalendarView items={items} onDay={updateDay} onOpenContent={() => selectView('content')} />}
-          {activeView === 'web' && <WebView pageTitle={page.heroTitle} publicPath={publicPath} />}
+          {activeView === 'web' && <WebView pageTitle={page.heroTitle} publicPath={publicPath} hasProfile={hasProfile} />}
           {activeView === 'publish' && <PublishView items={items} publicPath={publicPath} />}
         </div>
       </main>
@@ -426,6 +460,14 @@ export default function Dashboard() {
         onClose={() => setAiOpen(false)}
         onAsk={askStudioAi}
       />
+      {profilePrompt && (
+        <ProfilePrompt
+          onClose={() => {
+            localStorage.setItem('foru:profile-prompt-dismissed', 'yes');
+            setProfilePrompt(false);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -509,16 +551,13 @@ function TodayView({
   );
 }
 
-function ContentView({
-  newTitle,
-  onNewTitle,
-  onAdd,
-}: {
-  newTitle: string;
-  onNewTitle: (value: string) => void;
-  onAdd: () => void;
-}) {
-  const allTasks = Object.values(campaignTasks).flat();
+function ContentView() {
+  const [customTasks, setCustomTasks] = useState<CampaignTask[]>(loadCustomCampaignTasks);
+  const [ideaModal, setIdeaModal] = useState(false);
+  const [ideaTitle, setIdeaTitle] = useState('');
+  const [ideaText, setIdeaText] = useState('');
+  const [ideaTab, setIdeaTab] = useState<CampaignTab>('organic');
+  const allTasks = [...Object.values(campaignTasks).flat(), ...customTasks];
   const defaultTextMap = allTasks.reduce<Record<string, string>>((accumulator, task) => {
     task.copies?.forEach((copy) => {
       accumulator[copy.id] = copy.text;
@@ -541,9 +580,43 @@ function ContentView({
     }
   });
   const [copiedId, setCopiedId] = useState('');
-  const currentTasks = campaignTasks[activeTab];
+  const currentTasks = [...campaignTasks[activeTab], ...customTasks.filter((task) => task.tag === activeTab)];
   const completedCount = allTasks.filter((task) => doneMap[task.id]).length;
   const progress = Math.round((completedCount / allTasks.length) * 100);
+
+  function saveCustomTasks(nextTasks: CampaignTask[]) {
+    setCustomTasks(nextTasks);
+    localStorage.setItem(customCampaignStorageKey, JSON.stringify(nextTasks));
+  }
+
+  function addIdea() {
+    if (!ideaTitle.trim()) return;
+    const copyId = `custom-copy-${crypto.randomUUID()}`;
+    const newTask: CampaignTask = {
+      id: `custom-${crypto.randomUUID()}`,
+      tag: ideaTab,
+      tagTone: ideaTab === 'ads' ? 'ads' : ideaTab === 'manychat' ? 'many' : ideaTab === 'closing' ? 'close' : 'content',
+      title: ideaTitle.trim(),
+      description: 'Agregado por ti',
+      copies: [{ id: copyId, label: 'Texto', text: ideaText.trim() || 'Escribe aquí el texto para copiar.' }],
+    };
+    saveCustomTasks([...customTasks, newTask]);
+    setCopyTextMap((current) => {
+      const nextMap = { ...current, [copyId]: newTask.copies?.[0].text ?? '' };
+      localStorage.setItem(campaignStorageKey, JSON.stringify(nextMap));
+      return nextMap;
+    });
+    setIdeaTitle('');
+    setIdeaText('');
+    setIdeaModal(false);
+    setActiveTab(ideaTab);
+    playUiTone('success');
+  }
+
+  function deleteTask(id: string) {
+    saveCustomTasks(customTasks.filter((task) => task.id !== id));
+    playUiTone('tap');
+  }
 
   function updateCopyText(id: string, value: string) {
     const nextMap = { ...copyTextMap, [id]: value };
@@ -610,10 +683,9 @@ function ContentView({
                 {activeTab === 'closing' && 'Script de cierre'}
               </h2>
             </div>
-            <div className="flex w-full max-w-md gap-2">
-              <input value={newTitle} onChange={(event) => onNewTitle(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && onAdd()} placeholder="Nueva idea rápida..." className="foru-input min-w-0 flex-1 rounded-xl px-4 py-3 text-sm font-bold outline-none" />
-              <button type="button" onClick={onAdd} title="Agregar idea" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl foru-dark-gradient text-white"><Plus size={19} /></button>
-            </div>
+            <button type="button" onClick={() => setIdeaModal(true)} className="inline-flex items-center justify-center gap-2 rounded-xl foru-dark-gradient px-5 py-3 text-sm font-black text-white">
+              <Plus size={17} /> Nueva idea
+            </button>
           </div>
 
           {activeTab === 'today' && (
@@ -651,11 +723,24 @@ function ContentView({
                 onToggleDone={toggleDone}
                 onUpdateCopy={updateCopyText}
                 onCopy={copyBlock}
+                onDelete={task.id.startsWith('custom-') ? deleteTask : undefined}
               />
             ))}
           </section>
         </div>
       </section>
+      {ideaModal && (
+        <IdeaModal
+          title={ideaTitle}
+          text={ideaText}
+          tab={ideaTab}
+          onTitle={setIdeaTitle}
+          onText={setIdeaText}
+          onTab={setIdeaTab}
+          onClose={() => setIdeaModal(false)}
+          onSave={addIdea}
+        />
+      )}
     </div>
   );
 }
@@ -668,6 +753,7 @@ function CampaignTaskCard({
   onToggleDone,
   onUpdateCopy,
   onCopy,
+  onDelete,
 }: {
   task: CampaignTask;
   done: boolean;
@@ -676,6 +762,7 @@ function CampaignTaskCard({
   onToggleDone: (id: string) => void;
   onUpdateCopy: (id: string, value: string) => void;
   onCopy: (id: string) => void;
+  onDelete?: (id: string) => void;
 }) {
   const tagClasses = {
     urgent: 'bg-[#FEF3C7] text-[#92400E]',
@@ -698,11 +785,16 @@ function CampaignTaskCard({
         >
           {done && '✓'}
         </button>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <span className={`inline-flex rounded px-2 py-1 text-[10px] font-black uppercase ${tagClasses[task.tagTone]}`}>{task.tag}</span>
           <h3 className={`mt-2 font-serif text-xl font-bold leading-tight ${done ? 'line-through' : ''}`}>{task.title}</h3>
           {task.description && <p className="mt-1 text-sm font-semibold leading-6 text-gray-500">{task.description}</p>}
         </div>
+        {onDelete && (
+          <button type="button" onClick={() => onDelete(task.id)} className="rounded-lg border border-black/8 px-3 py-2 text-xs font-black text-gray-500 hover:border-red-200 hover:text-red-500">
+            Borrar
+          </button>
+        )}
       </div>
 
       {task.copies?.map((copy) => (
@@ -730,7 +822,92 @@ function CampaignTaskCard({
   );
 }
 
-function CalendarView({ items, onDay, onOpenContent }: { items: ContentItem[]; onDay: (id: string, day: number) => void; onOpenContent: () => void }) {
+function IdeaModal({
+  title,
+  text,
+  tab,
+  onTitle,
+  onText,
+  onTab,
+  onClose,
+  onSave,
+}: {
+  title: string;
+  text: string;
+  tab: CampaignTab;
+  onTitle: (value: string) => void;
+  onText: (value: string) => void;
+  onTab: (value: CampaignTab) => void;
+  onClose: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
+      <section className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase text-[#7C5CFF]">Nueva idea</p>
+            <h2 className="mt-1 font-serif text-3xl font-bold">Agrega una pieza a tu campaña</h2>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-lg font-black">×</button>
+        </div>
+
+        <div className="mt-5 grid gap-4">
+          <label>
+            <span className="text-sm font-black text-gray-700">Título</span>
+            <input value={title} onChange={(event) => onTitle(event.target.value)} className="foru-input mt-2 w-full rounded-xl px-4 py-3 text-sm font-bold outline-none" placeholder="Ej. Reel: por qué tu web no vende" />
+          </label>
+          <label>
+            <span className="text-sm font-black text-gray-700">Dónde va</span>
+            <select value={tab} onChange={(event) => onTab(event.target.value as CampaignTab)} className="foru-input mt-2 w-full rounded-xl px-4 py-3 text-sm font-bold outline-none">
+              <option value="organic">Contenido orgánico</option>
+              <option value="ads">Meta Ads</option>
+              <option value="manychat">ManyChat</option>
+              <option value="closing">Cierre de ventas</option>
+            </select>
+          </label>
+          <label>
+            <span className="text-sm font-black text-gray-700">Texto editable para copiar</span>
+            <textarea value={text} onChange={(event) => onText(event.target.value)} className="foru-input mt-2 min-h-40 w-full rounded-xl px-4 py-3 text-sm font-semibold leading-7 outline-none" placeholder="Escribe caption, mensaje, anuncio o script..." />
+          </label>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button type="button" onClick={onClose} className="rounded-xl border border-black/10 px-4 py-3 text-sm font-black">Cancelar</button>
+          <button type="button" onClick={onSave} className="rounded-xl foru-dark-gradient px-5 py-3 text-sm font-black text-white">Agregar</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function CalendarView({
+  items,
+  onDay,
+  onAddItem,
+  onDeleteItem,
+  onTitle,
+}: {
+  items: ContentItem[];
+  onDay: (id: string, day: number) => void;
+  onAddItem: (item: Omit<ContentItem, 'id'>) => void;
+  onDeleteItem: (id: string) => void;
+  onTitle: (id: string, title: string) => void;
+}) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [format, setFormat] = useState('Reel');
+  const [day, setDay] = useState(1);
+
+  function saveNewItem() {
+    if (!title.trim()) return;
+    onAddItem({ title: title.trim(), format, day, status: 'idea' });
+    setTitle('');
+    setFormat('Reel');
+    setDay(1);
+    setModalOpen(false);
+  }
+
   return (
     <div>
       <div className="flex items-end justify-between gap-4">
@@ -738,7 +915,7 @@ function CalendarView({ items, onDay, onOpenContent }: { items: ContentItem[]; o
           <span className="foru-badge">Calendario de contenido</span>
           <h2 className="mt-4 font-serif text-4xl font-bold">Tu semana de grabación.</h2>
         </div>
-        <button type="button" onClick={onOpenContent} className="hidden items-center gap-2 rounded-xl foru-dark-gradient px-4 py-3 text-sm font-black text-white sm:inline-flex">
+        <button type="button" onClick={() => setModalOpen(true)} className="inline-flex items-center gap-2 rounded-xl foru-dark-gradient px-4 py-3 text-sm font-black text-white">
           <Plus size={17} /> Nueva idea
         </button>
       </div>
@@ -756,10 +933,21 @@ function CalendarView({ items, onDay, onOpenContent }: { items: ContentItem[]; o
                 {dayItems.map((item) => {
                   const status = statusOptions.find((option) => option.id === item.status) ?? statusOptions[0];
                   return (
-                    <button key={item.id} type="button" onClick={() => onDay(item.id, (dayIndex + 1) % 7)} className="tap-boost rounded-xl p-3 text-left" style={{ backgroundColor: `${status.color}77` }}>
-                      <p className="text-[10px] font-black uppercase">{item.format}</p>
-                      <p className="mt-1 text-xs font-black leading-4">{item.title}</p>
-                    </button>
+                    <article key={item.id} className="rounded-xl p-3" style={{ backgroundColor: `${status.color}77` }}>
+                      <div className="flex items-start justify-between gap-2">
+                        <button type="button" onClick={() => onDay(item.id, (dayIndex + 1) % 7)} className="text-left text-[10px] font-black uppercase">
+                          {item.format}
+                        </button>
+                        <button type="button" onClick={() => onDeleteItem(item.id)} aria-label="Borrar" className="text-gray-500 hover:text-red-500">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                      <textarea
+                        value={item.title}
+                        onChange={(event) => onTitle(item.id, event.target.value)}
+                        className="mt-1 min-h-14 w-full resize-none bg-transparent text-xs font-black leading-4 outline-none"
+                      />
+                    </article>
                   );
                 })}
                 {!dayItems.length && <div className="flex min-h-24 items-center justify-center rounded-xl border border-dashed border-black/10 text-xs font-bold text-gray-350">Libre</div>}
@@ -769,31 +957,75 @@ function CalendarView({ items, onDay, onOpenContent }: { items: ContentItem[]; o
         })}
       </div>
       <p className="mt-3 text-center text-xs font-bold text-gray-500">Toca una pieza para moverla al día siguiente.</p>
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
+          <section className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase text-[#7C5CFF]">Calendario</p>
+                <h2 className="mt-1 font-serif text-3xl font-bold">Nueva pieza</h2>
+              </div>
+              <button type="button" onClick={() => setModalOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-lg font-black">×</button>
+            </div>
+            <div className="mt-5 grid gap-4">
+              <input value={title} onChange={(event) => setTitle(event.target.value)} className="foru-input rounded-xl px-4 py-3 text-sm font-bold outline-none" placeholder="Título de la pieza" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <select value={format} onChange={(event) => setFormat(event.target.value)} className="foru-input rounded-xl px-4 py-3 text-sm font-bold outline-none">
+                  <option>Reel</option>
+                  <option>Historia</option>
+                  <option>Carrusel</option>
+                  <option>Email</option>
+                  <option>Anuncio</option>
+                </select>
+                <select value={day} onChange={(event) => setDay(Number(event.target.value))} className="foru-input rounded-xl px-4 py-3 text-sm font-bold outline-none">
+                  {weekDays.map((label, index) => <option key={label} value={index}>{label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" onClick={() => setModalOpen(false)} className="rounded-xl border border-black/10 px-4 py-3 text-sm font-black">Cancelar</button>
+              <button type="button" onClick={saveNewItem} className="rounded-xl foru-dark-gradient px-5 py-3 text-sm font-black text-white">Agregar</button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
 
-function WebView({ pageTitle, publicPath }: { pageTitle: string; publicPath: string }) {
+function WebView({ pageTitle, publicPath, hasProfile }: { pageTitle: string; publicPath: string; hasProfile: boolean }) {
   return (
     <div>
       <span className="foru-badge">Tu web</span>
       <h2 className="mt-4 font-serif text-4xl font-bold">Una página que trabaja contigo.</h2>
+      {!hasProfile && (
+        <section className="mt-7 rounded-2xl border border-dashed border-[#7C5CFF]/30 bg-[#F7F5FF] p-6">
+          <p className="text-xs font-black uppercase text-[#7C5CFF]">Configuración básica</p>
+          <h3 className="mt-2 font-serif text-3xl font-bold">Primero define tu negocio</h3>
+          <p className="mt-3 max-w-2xl text-sm font-semibold leading-7 text-gray-600">
+            Aquí van las preguntas importantes: nombre, rubro, objetivo y personalidad. Después se abre el editor de la landing.
+          </p>
+          <Link to="/register" className="mt-5 inline-flex items-center gap-2 rounded-xl foru-dark-gradient px-5 py-3 text-sm font-black text-white">
+            Configurar y abrir editor <ArrowRight size={17} />
+          </Link>
+        </section>
+      )}
       <div className="mt-7 grid gap-4 md:grid-cols-2">
-        <Link to="/editor" className="tap-boost flex min-h-64 flex-col justify-between rounded-2xl foru-dark-gradient p-6 text-white shadow-xl">
+        <Link to={hasProfile ? '/editor' : '/register'} className="tap-boost flex min-h-64 flex-col justify-between rounded-2xl foru-dark-gradient p-6 text-white shadow-xl">
           <Edit3 size={30} className="text-[#F9A8D4]" />
           <div>
             <p className="text-sm font-bold text-white/60">Editor en vivo</p>
-            <h3 className="mt-2 font-serif text-3xl font-bold">{pageTitle}</h3>
+            <h3 className="mt-2 font-serif text-3xl font-bold">{hasProfile ? pageTitle : 'Configura tu landing'}</h3>
           </div>
-          <span className="inline-flex items-center gap-2 text-sm font-black">Editar web <ArrowRight size={16} /></span>
+          <span className="inline-flex items-center gap-2 text-sm font-black">{hasProfile ? 'Editar web' : 'Empezar configuración'} <ArrowRight size={16} /></span>
         </Link>
-        <Link to={publicPath} className="tap-boost flex min-h-64 flex-col justify-between rounded-2xl border border-black/8 bg-white p-6 shadow-sm">
+        <Link to={hasProfile ? publicPath : '/register'} className="tap-boost flex min-h-64 flex-col justify-between rounded-2xl border border-black/8 bg-white p-6 shadow-sm">
           <Eye size={30} className="text-[#7C5CFF]" />
           <div>
             <p className="text-sm font-bold text-gray-500">Vista pública</p>
-            <h3 className="mt-2 font-serif text-3xl font-bold">Mírala como cliente.</h3>
+            <h3 className="mt-2 font-serif text-3xl font-bold">{hasProfile ? 'Mírala como cliente.' : 'Disponible al configurar.'}</h3>
           </div>
-          <span className="inline-flex items-center gap-2 text-sm font-black text-[#6D4AFF]">Abrir landing <ArrowRight size={16} /></span>
+          <span className="inline-flex items-center gap-2 text-sm font-black text-[#6D4AFF]">{hasProfile ? 'Abrir landing' : 'Configurar'} <ArrowRight size={16} /></span>
         </Link>
       </div>
     </div>
@@ -855,6 +1087,33 @@ function QuickAction({ to, icon: Icon, title, color }: { to: string; icon: typeo
       <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: color }}><Icon size={19} /></span>
       {title}
     </Link>
+  );
+}
+
+function ProfilePrompt({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 p-4 backdrop-blur-sm">
+      <section className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase text-[#7C5CFF]">Antes de editar tu web</p>
+            <h2 className="mt-1 font-serif text-3xl font-bold">Configura tu perfil</h2>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-lg font-black">×</button>
+        </div>
+        <p className="mt-4 text-sm font-semibold leading-7 text-gray-600">
+          Puedes explorar el Studio desde ya. Cuando quieras crear o editar tu landing, completa nombre, rubro y objetivo en `Mi web`.
+        </p>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <Link to="/register" className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl foru-dark-gradient px-5 py-3 text-sm font-black text-white">
+            Configurar ahora <ArrowRight size={17} />
+          </Link>
+          <button type="button" onClick={onClose} className="rounded-xl border border-black/10 px-5 py-3 text-sm font-black">
+            Después
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
 

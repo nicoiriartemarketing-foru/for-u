@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Bot, Edit3, LayoutDashboard, Sparkles, Store } from '../lib/icons';
-import { draftStorageKey, loadDigitalWorldPage, loadLocalDraft } from '../lib/digitalWorldDraft';
+import { ArrowRight, BookOpen, Bot, Edit3, LayoutDashboard, Store } from '../lib/icons';
+import { draftStorageKey, loadLocalDraft } from '../lib/digitalWorldDraft';
 import { playUiTone } from '../lib/sound';
 
 export default function Home() {
   const hasBusiness = typeof window !== 'undefined' && Boolean(localStorage.getItem(draftStorageKey));
   const draft = loadLocalDraft();
-  const page = loadDigitalWorldPage(draft);
 
   return (
     <main className="foru-reference-hub text-[#171717]">
@@ -22,7 +21,7 @@ export default function Home() {
       </p>
 
       <section className="foru-reference-buttons">
-        <Link to={hasBusiness ? '/dashboard' : '/register'} onClick={() => playUiTone('next')} className="foru-reference-card">
+        <Link to="/dashboard" onClick={() => playUiTone('next')} className="foru-reference-card">
           <span className="foru-reference-card-icon"><LayoutDashboard size={31} /></span>
           <h2>Studio Digital <span className="foru-reference-gradient-text">FOR U</span></h2>
           <p>Plataforma guiada: crea contenido, diseña tu web, organiza tu calendario y publica sin perderte.</p>
@@ -46,8 +45,8 @@ export default function Home() {
         <Link to="/ia" onClick={() => playUiTone('tap')} className="foru-reference-mini">
           <Bot size={19} /> IA For U
         </Link>
-        <Link to={hasBusiness ? '/editor' : '/register'} onClick={() => playUiTone('tap')} className="foru-reference-mini">
-          <Edit3 size={19} /> {hasBusiness ? 'Editor' : 'Quiero mi web'} <ArrowRight size={16} className="ml-auto" />
+        <Link to="/dashboard" onClick={() => playUiTone('tap')} className="foru-reference-mini">
+          <Edit3 size={19} /> Studio <ArrowRight size={16} className="ml-auto" />
         </Link>
       </section>
     </main>
