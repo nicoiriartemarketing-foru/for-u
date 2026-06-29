@@ -12,11 +12,11 @@ CREATE TABLE IF NOT EXISTS consultation_requests (
     phone_whatsapp VARCHAR(50) NOT NULL,
     business_type VARCHAR(120),
     goal TEXT NOT NULL,
-    preferred_day VARCHAR(120),
-    preferred_time VARCHAR(80),
+    appointment_date DATE NOT NULL,
+    appointment_time TIME NOT NULL,
     plan_interest VARCHAR(80),
     source VARCHAR(80) DEFAULT 'mundo_digital_landing',
-    status VARCHAR(40) DEFAULT 'new',
+    status VARCHAR(40) DEFAULT 'scheduled',
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -26,6 +26,10 @@ CREATE INDEX IF NOT EXISTS idx_consultation_requests_created_at
 
 CREATE INDEX IF NOT EXISTS idx_consultation_requests_status
     ON consultation_requests(status);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_consultation_requests_appointment_slot
+    ON consultation_requests(appointment_date, appointment_time)
+    WHERE status IN ('scheduled', 'confirmed');
 
 ALTER TABLE consultation_requests ENABLE ROW LEVEL SECURITY;
 
@@ -37,6 +41,7 @@ WITH CHECK (
     length(trim(full_name)) BETWEEN 2 AND 160
     AND length(trim(phone_whatsapp)) BETWEEN 6 AND 50
     AND length(trim(goal)) BETWEEN 8 AND 1200
+    AND appointment_date >= CURRENT_DATE
 );
 
 CREATE POLICY "Authenticated users can review consultation requests"

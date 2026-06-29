@@ -8,8 +8,8 @@ export type ConsultationRequestInput = {
   phoneWhatsapp: string;
   businessType: string;
   goal: string;
-  preferredDay: string;
-  preferredTime: string;
+  appointmentDate: string;
+  appointmentTime: string;
   planInterest: string;
 };
 
@@ -22,8 +22,8 @@ export async function saveConsultationRequest(input: ConsultationRequestInput) {
     phone_whatsapp: input.phoneWhatsapp.trim(),
     business_type: input.businessType.trim() || null,
     goal: input.goal.trim(),
-    preferred_day: input.preferredDay.trim() || null,
-    preferred_time: input.preferredTime.trim() || null,
+    appointment_date: input.appointmentDate,
+    appointment_time: input.appointmentTime,
     plan_interest: input.planInterest,
     metadata: {
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null,

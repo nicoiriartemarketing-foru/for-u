@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Bot, Edit3, LayoutDashboard, Sparkles, Store } from '../lib/icons';
+import { LayoutDashboard, Sparkles, Store } from '../lib/icons';
 import { draftStorageKey, loadLocalDraft } from '../lib/digitalWorldDraft';
 import { playUiTone } from '../lib/sound';
 
@@ -45,19 +45,7 @@ export default function Home() {
         </Link>
       </section>
 
-      <p className="foru-reference-note">Ambos caminos convergen: tu marca, en su mejor versión.</p>
-
-      <section className="foru-reference-minis">
-        <Link to="/metodologia" onClick={() => playUiTone('tap')} className="foru-reference-mini">
-          <BookOpen size={19} /> Metodología
-        </Link>
-        <Link to="/ia" onClick={() => playUiTone('tap')} className="foru-reference-mini">
-          <Bot size={19} /> IA For U
-        </Link>
-        <Link to="/studio" onClick={() => playUiTone('tap')} className="foru-reference-mini">
-          <Edit3 size={19} /> Studio <ArrowRight size={16} className="ml-auto" />
-        </Link>
-      </section>
+      <p className="foru-reference-note">Primero activamos tu mundo digital. El Studio se abrira cuando este listo.</p>
 
       {studioModalOpen && (
         <div className="foru-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="studio-modal-title">

@@ -50,7 +50,22 @@ const plans = [
   },
 ];
 
+const bookingSlots = ['09:00', '10:30', '12:00', '15:00', '16:30', '18:00'];
+
+function getTodayDateValue() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function formatSlot(slot: string) {
+  const [hour, minute] = slot.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hour, minute, 0, 0);
+
+  return date.toLocaleTimeString('es-PE', { hour: 'numeric', minute: '2-digit' });
+}
+
 export default function MundoDigital() {
+  const [bookingOpen, setBookingOpen] = useState(false);
   const [form, setForm] = useState<ConsultationRequestInput>({
     fullName: '',
     businessName: '',
@@ -59,8 +74,8 @@ export default function MundoDigital() {
     phoneWhatsapp: '',
     businessType: '',
     goal: '',
-    preferredDay: '',
-    preferredTime: '',
+    appointmentDate: getTodayDateValue(),
+    appointmentTime: bookingSlots[0],
     planInterest: 'Por definir',
   });
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'local' | 'error'>('idle');
@@ -70,14 +85,21 @@ export default function MundoDigital() {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
+  function openBooking(planInterest?: string) {
+    if (planInterest) updateField('planInterest', planInterest);
+    setBookingOpen(true);
+    setStatus('idle');
+    setError('');
+  }
+
   async function submitRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus('sending');
     setError('');
 
-    if (!form.fullName.trim() || !form.phoneWhatsapp.trim() || !form.goal.trim()) {
+    if (!form.fullName.trim() || !form.phoneWhatsapp.trim() || !form.goal.trim() || !form.appointmentDate || !form.appointmentTime) {
       setStatus('idle');
-      setError('Completa tu nombre, WhatsApp y objetivo para agendar.');
+      setError('Elige fecha, horario, nombre, WhatsApp y objetivo para reservar.');
       return;
     }
 
@@ -93,8 +115,8 @@ export default function MundoDigital() {
         phoneWhatsapp: '',
         businessType: '',
         goal: '',
-        preferredDay: '',
-        preferredTime: '',
+        appointmentDate: getTodayDateValue(),
+        appointmentTime: bookingSlots[0],
       }));
     } catch {
       setStatus('error');
@@ -129,7 +151,7 @@ export default function MundoDigital() {
             automatizaciones, chatbots, reservas, productos digitales, campañas y más. <strong>Todo integrado a tu realidad.</strong>
           </p>
           <div className="foru-lp-buttons">
-            <a href="#agenda" className="foru-btn">Quiero mi mundo digital <CalendarDays size={18} /></a>
+            <button type="button" className="foru-btn" onClick={() => openBooking()}>Agendar cita <CalendarDays size={18} /></button>
             <a href="#oferta" className="foru-btn foru-btn--outline">Ver planes con 40% OFF <ArrowRight size={18} /></a>
           </div>
           <p className="text-sm font-medium text-gray-400">Diagnóstico gratuito de 15 minutos · Sin compromiso</p>
@@ -211,13 +233,13 @@ export default function MundoDigital() {
                 <ul className="foru-lp-list">
                   {plan.items.map((item) => <li key={item}>{item}</li>)}
                 </ul>
-                <a
-                  href="#agenda"
+                <button
+                  type="button"
                   className="foru-btn w-full px-4 py-3 text-sm"
-                  onClick={() => updateField('planInterest', plan.name)}
+                  onClick={() => openBooking(plan.name)}
                 >
                   Quiero este plan <MessageCircle size={17} />
-                </a>
+                </button>
               </article>
             ))}
           </div>
@@ -249,17 +271,66 @@ export default function MundoDigital() {
               <span className="foru-lp-badge"><CalendarDays size={16} /> Diagnostico gratis</span>
               <h2>Tu marca, <span className="foru-reference-gradient-text">en su mejor version.</span></h2>
               <p>
-                Dejame tus datos y te escribo para coordinar una sesion de 15 minutos.
-                La idea es entender tu negocio y decirte que sistema conviene construir primero.
+                Reserva un espacio real de 15 minutos. Elige fecha, horario y deja tus datos para llegar directo
+                a la llamada con contexto de tu negocio.
               </p>
               <div className="foru-lp-agenda-points">
-                <span>Sin compromiso</span>
-                <span>Respuesta por WhatsApp</span>
+                <span>Slot reservado</span>
+                <span>Confirmacion por WhatsApp</span>
                 <span>Ruta clara para empezar</span>
               </div>
             </div>
 
-            <form className="foru-lp-form" onSubmit={submitRequest}>
+            <div className="foru-booking-preview">
+              <CalendarDays size={32} />
+              <h3>Agenda tu cita de diagnostico</h3>
+              <p>Selecciona un dia y uno de los horarios disponibles. Si el horario ya fue tomado, la base evita la doble reserva.</p>
+              <button type="button" className="foru-btn w-full" onClick={() => openBooking()}>
+                Agendar cita <MessageCircle size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {bookingOpen && (
+        <div className="foru-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="booking-modal-title">
+          <div className="foru-booking-modal">
+            <button type="button" className="foru-modal-close" onClick={() => setBookingOpen(false)} aria-label="Cerrar">x</button>
+            <span className="foru-lp-badge"><CalendarDays size={16} /> Reserva tu cita</span>
+            <h2 id="booking-modal-title">Elige tu horario</h2>
+            <p>Diagnostico gratuito de 15 minutos para aterrizar el primer sistema digital que necesita tu negocio.</p>
+
+            <form className="foru-lp-form foru-booking-form" onSubmit={submitRequest}>
+              <div className="foru-booking-calendar">
+                <label>
+                  Fecha
+                  <input
+                    type="date"
+                    min={getTodayDateValue()}
+                    value={form.appointmentDate}
+                    onChange={(event) => updateField('appointmentDate', event.target.value)}
+                    required
+                  />
+                </label>
+
+                <div>
+                  <span className="foru-booking-label">Horario disponible</span>
+                  <div className="foru-booking-slots">
+                    {bookingSlots.map((slot) => (
+                      <button
+                        key={slot}
+                        type="button"
+                        className={form.appointmentTime === slot ? 'foru-slot foru-slot--active' : 'foru-slot'}
+                        onClick={() => updateField('appointmentTime', slot)}
+                      >
+                        {formatSlot(slot)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               <div className="foru-lp-form-grid">
                 <label>
                   Nombre
@@ -297,15 +368,8 @@ export default function MundoDigital() {
                     {plans.map((plan) => <option key={plan.name}>{plan.name}</option>)}
                   </select>
                 </label>
-                <label>
-                  Dia ideal
-                  <input value={form.preferredDay} onChange={(event) => updateField('preferredDay', event.target.value)} placeholder="Ej. martes o jueves" />
-                </label>
-                <label>
-                  Hora ideal
-                  <input value={form.preferredTime} onChange={(event) => updateField('preferredTime', event.target.value)} placeholder="Ej. 10 am" />
-                </label>
               </div>
+
               <label>
                 Que quieres lograr primero?
                 <textarea
@@ -316,17 +380,18 @@ export default function MundoDigital() {
                   placeholder="Ej. quiero que mis clientas agenden solas, vender por WhatsApp o tener una landing para anuncios."
                 />
               </label>
+
               {error && <p className="foru-form-error">{error}</p>}
-              {status === 'sent' && <p className="foru-form-success">Listo. Tu solicitud quedo agendada y te escribire por WhatsApp.</p>}
-              {status === 'local' && <p className="foru-form-success">Listo. Guarde tu solicitud en este dispositivo; cuando Supabase este conectado quedara centralizada.</p>}
-              {status === 'error' && <p className="foru-form-error">No se pudo enviar. Intenta otra vez en un momento.</p>}
+              {status === 'sent' && <p className="foru-form-success">Cita reservada. Te escribire por WhatsApp para confirmar el enlace.</p>}
+              {status === 'local' && <p className="foru-form-success">Cita guardada en este dispositivo. Falta conectar Supabase para centralizarla.</p>}
+              {status === 'error' && <p className="foru-form-error">No se pudo reservar. Prueba otro horario o intenta otra vez.</p>}
               <button type="submit" className="foru-btn w-full" disabled={status === 'sending'}>
-                {status === 'sending' ? 'Agendando...' : 'Agendar mi diagnostico'} <MessageCircle size={18} />
+                {status === 'sending' ? 'Reservando...' : 'Confirmar reserva'} <MessageCircle size={18} />
               </button>
             </form>
           </div>
         </div>
-      </section>
+      )}
     </div>
   );
 }
