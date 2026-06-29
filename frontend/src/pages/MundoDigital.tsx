@@ -5,6 +5,7 @@ import {
   ArrowRight,
   Bot,
   CalendarDays,
+  ChevronLeft,
   MessageCircle,
   Rocket,
   Settings,
@@ -51,6 +52,7 @@ const plans = [
 ];
 
 const bookingSlots = ['09:00', '10:30', '12:00', '15:00', '16:30', '18:00'];
+const bookingStepLabels = ['Horario', 'Contacto', 'Negocio', 'Objetivo'];
 
 function getTodayDateValue() {
   return new Date().toISOString().slice(0, 10);
@@ -66,6 +68,7 @@ function formatSlot(slot: string) {
 
 export default function MundoDigital() {
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingStep, setBookingStep] = useState(0);
   const [form, setForm] = useState<ConsultationRequestInput>({
     fullName: '',
     businessName: '',
@@ -88,8 +91,51 @@ export default function MundoDigital() {
   function openBooking(planInterest?: string) {
     if (planInterest) updateField('planInterest', planInterest);
     setBookingOpen(true);
+    setBookingStep(0);
     setStatus('idle');
     setError('');
+  }
+
+  function closeBooking() {
+    setBookingOpen(false);
+    setError('');
+  }
+
+  function validateStep(step: number) {
+    if (step === 0 && (!form.appointmentDate || !form.appointmentTime)) {
+      return 'Elige una fecha y un horario para continuar.';
+    }
+
+    if (step === 1 && (!form.fullName.trim() || !form.phoneWhatsapp.trim())) {
+      return 'Dejame tu nombre y WhatsApp para poder confirmar la cita.';
+    }
+
+    if (step === 2 && !form.businessType.trim()) {
+      return 'Elige el tipo de negocio para entender mejor tu caso.';
+    }
+
+    if (step === 3 && !form.goal.trim()) {
+      return 'Cuentame que quieres lograr primero para reservar con contexto.';
+    }
+
+    return '';
+  }
+
+  function nextStep() {
+    const stepError = validateStep(bookingStep);
+
+    if (stepError) {
+      setError(stepError);
+      return;
+    }
+
+    setError('');
+    setBookingStep((current) => Math.min(current + 1, bookingStepLabels.length - 1));
+  }
+
+  function previousStep() {
+    setError('');
+    setBookingStep((current) => Math.max(current - 1, 0));
   }
 
   async function submitRequest(event: FormEvent<HTMLFormElement>) {
@@ -296,98 +342,141 @@ export default function MundoDigital() {
       {bookingOpen && (
         <div className="foru-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="booking-modal-title">
           <div className="foru-booking-modal">
-            <button type="button" className="foru-modal-close" onClick={() => setBookingOpen(false)} aria-label="Cerrar">x</button>
+            <button type="button" className="foru-modal-close" onClick={closeBooking} aria-label="Cerrar">x</button>
             <span className="foru-lp-badge"><CalendarDays size={16} /> Reserva tu cita</span>
-            <h2 id="booking-modal-title">Elige tu horario</h2>
-            <p>Diagnostico gratuito de 15 minutos para aterrizar el primer sistema digital que necesita tu negocio.</p>
+            <h2 id="booking-modal-title">{bookingStepLabels[bookingStep]}</h2>
+            <p>{bookingStep + 1} de {bookingStepLabels.length} · Diagnostico gratuito de 15 minutos para aterrizar tu primer sistema digital.</p>
+
+            <div className="foru-booking-progress" aria-hidden="true">
+              {bookingStepLabels.map((label, index) => (
+                <span key={label} className={index <= bookingStep ? 'foru-booking-dot foru-booking-dot--active' : 'foru-booking-dot'} />
+              ))}
+            </div>
 
             <form className="foru-lp-form foru-booking-form" onSubmit={submitRequest}>
-              <div className="foru-booking-calendar">
-                <label>
-                  Fecha
-                  <input
-                    type="date"
-                    min={getTodayDateValue()}
-                    value={form.appointmentDate}
-                    onChange={(event) => updateField('appointmentDate', event.target.value)}
-                    required
-                  />
-                </label>
+              {bookingStep === 0 && (
+                <div className="foru-booking-step">
+                  <h3>Que dia y hora te quedan mejor?</h3>
+                  <p>Reserva un espacio concreto. Luego te confirmo el enlace por WhatsApp.</p>
+                  <div className="foru-booking-calendar">
+                    <label>
+                      Fecha
+                      <input
+                        type="date"
+                        min={getTodayDateValue()}
+                        value={form.appointmentDate}
+                        onChange={(event) => updateField('appointmentDate', event.target.value)}
+                        required
+                      />
+                    </label>
 
-                <div>
-                  <span className="foru-booking-label">Horario disponible</span>
-                  <div className="foru-booking-slots">
-                    {bookingSlots.map((slot) => (
-                      <button
-                        key={slot}
-                        type="button"
-                        className={form.appointmentTime === slot ? 'foru-slot foru-slot--active' : 'foru-slot'}
-                        onClick={() => updateField('appointmentTime', slot)}
-                      >
-                        {formatSlot(slot)}
-                      </button>
-                    ))}
+                    <div>
+                      <span className="foru-booking-label">Horario disponible</span>
+                      <div className="foru-booking-slots">
+                        {bookingSlots.map((slot) => (
+                          <button
+                            key={slot}
+                            type="button"
+                            className={form.appointmentTime === slot ? 'foru-slot foru-slot--active' : 'foru-slot'}
+                            onClick={() => updateField('appointmentTime', slot)}
+                          >
+                            {formatSlot(slot)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className="foru-lp-form-grid">
-                <label>
-                  Nombre
-                  <input value={form.fullName} onChange={(event) => updateField('fullName', event.target.value)} required />
-                </label>
-                <label>
-                  WhatsApp
-                  <input value={form.phoneWhatsapp} onChange={(event) => updateField('phoneWhatsapp', event.target.value)} required />
-                </label>
-                <label>
-                  Nombre del negocio
-                  <input value={form.businessName} onChange={(event) => updateField('businessName', event.target.value)} />
-                </label>
-                <label>
-                  Instagram
-                  <input value={form.instagramHandle} onChange={(event) => updateField('instagramHandle', event.target.value)} placeholder="@tunegocio" />
-                </label>
-                <label>
-                  Tipo de negocio
-                  <select value={form.businessType} onChange={(event) => updateField('businessType', event.target.value)}>
-                    <option value="">Seleccionar</option>
-                    <option value="servicios">Servicios</option>
-                    <option value="belleza">Belleza</option>
-                    <option value="bienestar">Bienestar</option>
-                    <option value="tienda">Tienda</option>
-                    <option value="educacion">Educacion</option>
-                    <option value="restaurante">Restaurante</option>
-                    <option value="otro">Otro</option>
-                  </select>
-                </label>
-                <label>
-                  Plan que te interesa
-                  <select value={form.planInterest} onChange={(event) => updateField('planInterest', event.target.value)}>
-                    <option>Por definir</option>
-                    {plans.map((plan) => <option key={plan.name}>{plan.name}</option>)}
-                  </select>
-                </label>
-              </div>
+              {bookingStep === 1 && (
+                <div className="foru-booking-step">
+                  <h3>Como te contacto?</h3>
+                  <p>Solo necesito lo esencial para confirmar la cita.</p>
+                  <label>
+                    Nombre
+                    <input value={form.fullName} onChange={(event) => updateField('fullName', event.target.value)} required autoFocus />
+                  </label>
+                  <label>
+                    WhatsApp
+                    <input value={form.phoneWhatsapp} onChange={(event) => updateField('phoneWhatsapp', event.target.value)} required placeholder="+51 999 999 999" />
+                  </label>
+                </div>
+              )}
 
-              <label>
-                Que quieres lograr primero?
-                <textarea
-                  value={form.goal}
-                  onChange={(event) => updateField('goal', event.target.value)}
-                  required
-                  rows={4}
-                  placeholder="Ej. quiero que mis clientas agenden solas, vender por WhatsApp o tener una landing para anuncios."
-                />
-              </label>
+              {bookingStep === 2 && (
+                <div className="foru-booking-step">
+                  <h3>Sobre tu negocio</h3>
+                  <p>Con esto puedo llegar a la cita con una idea clara de que sistema puede ayudarte.</p>
+                  <label>
+                    Nombre del negocio
+                    <input value={form.businessName} onChange={(event) => updateField('businessName', event.target.value)} placeholder="Ej. Studio Nicole" />
+                  </label>
+                  <label>
+                    Instagram
+                    <input value={form.instagramHandle} onChange={(event) => updateField('instagramHandle', event.target.value)} placeholder="@tunegocio" />
+                  </label>
+                  <label>
+                    Tipo de negocio
+                    <select value={form.businessType} onChange={(event) => updateField('businessType', event.target.value)} required>
+                      <option value="">Seleccionar</option>
+                      <option value="servicios">Servicios</option>
+                      <option value="belleza">Belleza</option>
+                      <option value="bienestar">Bienestar</option>
+                      <option value="tienda">Tienda</option>
+                      <option value="educacion">Educacion</option>
+                      <option value="restaurante">Restaurante</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                  </label>
+                </div>
+              )}
+
+              {bookingStep === 3 && (
+                <div className="foru-booking-step">
+                  <h3>Que quieres lograr primero?</h3>
+                  <p>Una frase basta. Esto define si conviene web, reservas, WhatsApp, chatbot, campana o todo conectado.</p>
+                  <label>
+                    Plan que te interesa
+                    <select value={form.planInterest} onChange={(event) => updateField('planInterest', event.target.value)}>
+                      <option>Por definir</option>
+                      {plans.map((plan) => <option key={plan.name}>{plan.name}</option>)}
+                    </select>
+                  </label>
+                  <label>
+                    Objetivo principal
+                    <textarea
+                      value={form.goal}
+                      onChange={(event) => updateField('goal', event.target.value)}
+                      required
+                      rows={4}
+                      placeholder="Ej. quiero que mis clientas agenden solas, vender por WhatsApp o tener una landing para anuncios."
+                    />
+                  </label>
+                </div>
+              )}
 
               {error && <p className="foru-form-error">{error}</p>}
               {status === 'sent' && <p className="foru-form-success">Cita reservada. Te escribire por WhatsApp para confirmar el enlace.</p>}
               {status === 'local' && <p className="foru-form-success">Cita guardada en este dispositivo. Falta conectar Supabase para centralizarla.</p>}
               {status === 'error' && <p className="foru-form-error">No se pudo reservar. Prueba otro horario o intenta otra vez.</p>}
-              <button type="submit" className="foru-btn w-full" disabled={status === 'sending'}>
-                {status === 'sending' ? 'Reservando...' : 'Confirmar reserva'} <MessageCircle size={18} />
-              </button>
+
+              <div className="foru-booking-actions">
+                {bookingStep > 0 && (
+                  <button type="button" className="foru-btn foru-btn--outline" onClick={previousStep}>
+                    <ChevronLeft size={18} /> Atrás
+                  </button>
+                )}
+                {bookingStep < bookingStepLabels.length - 1 ? (
+                  <button type="button" className="foru-btn" onClick={nextStep}>
+                    Siguiente <ArrowRight size={18} />
+                  </button>
+                ) : (
+                  <button type="submit" className="foru-btn" disabled={status === 'sending'}>
+                    {status === 'sending' ? 'Reservando...' : 'Confirmar reserva'} <MessageCircle size={18} />
+                  </button>
+                )}
+              </div>
             </form>
           </div>
         </div>

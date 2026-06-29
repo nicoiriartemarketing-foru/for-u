@@ -1411,11 +1411,57 @@ body {
   box-shadow: none;
 }
 
+.foru-booking-progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0 auto 1rem;
+  max-width: 420px;
+}
+
+.foru-booking-dot {
+  height: 7px;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+.foru-booking-dot--active {
+  background: linear-gradient(135deg, #FDE68A, #6EE7B7, #F9A8D4, #93C5FD);
+}
+
+.foru-booking-step {
+  display: flex;
+  min-height: 340px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.9rem;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(253,230,138,0.08), rgba(110,231,183,0.08), rgba(249,168,212,0.08));
+  padding: 1.2rem;
+}
+
+.foru-booking-step h3 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.55rem, 4vw, 2rem);
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.foru-booking-step > p {
+  margin: -0.2rem auto 0.4rem;
+  max-width: 520px;
+  color: #5f6673;
+  font-size: 0.92rem;
+  font-weight: 350;
+  line-height: 1.55;
+  text-align: center;
+}
+
 .foru-booking-calendar {
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
   gap: 1rem;
-  margin-bottom: 1rem;
 }
 
 .foru-booking-label {
@@ -1457,6 +1503,18 @@ body {
   color: #171717;
 }
 
+.foru-booking-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.foru-booking-actions .foru-btn {
+  min-width: 150px;
+  padding-inline: 1.2rem;
+}
+
 @media (max-width: 900px) {
   .foru-lp-links { display: none; }
   .foru-lp-grid,
@@ -1472,6 +1530,9 @@ body {
   .foru-lp-agenda-copy { position: static; }
   .foru-booking-slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .foru-booking-modal { padding: 1.2rem; }
+  .foru-booking-step { min-height: 390px; padding: 1rem; }
+  .foru-booking-actions { flex-direction: column-reverse; }
+  .foru-booking-actions .foru-btn { width: 100%; }
 }
 
 .foru-studio-card {
