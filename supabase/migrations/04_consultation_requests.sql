@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS consultation_requests (
     business_name VARCHAR(180),
     instagram_handle VARCHAR(120),
     email VARCHAR(255),
-    phone_whatsapp VARCHAR(50) NOT NULL,
+    phone_whatsapp VARCHAR(50),
     business_type VARCHAR(120),
     goal TEXT NOT NULL,
     appointment_date DATE NOT NULL,
@@ -39,7 +39,6 @@ FOR INSERT
 TO anon, authenticated
 WITH CHECK (
     length(trim(full_name)) BETWEEN 2 AND 160
-    AND length(trim(phone_whatsapp)) BETWEEN 6 AND 50
     AND length(trim(goal)) BETWEEN 8 AND 1200
     AND appointment_date >= CURRENT_DATE
 );

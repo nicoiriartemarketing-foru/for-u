@@ -12,7 +12,7 @@ import {
   Sparkles,
   Store,
 } from '../lib/icons';
-import { saveConsultationRequest, type ConsultationRequestInput } from '../lib/consultationRequests';
+import { buildWhatsappConfirmationUrl, saveConsultationRequest, type ConsultationRequestInput } from '../lib/consultationRequests';
 
 const services = [
   ['Presencia', 'Webs & Apps a Medida', 'Landing pages, sitios completos o web apps. Diseñadas desde cero, alineadas a tu esencia y optimizadas para convertir.', Store],
@@ -106,8 +106,12 @@ export default function MundoDigital() {
       return 'Elige una fecha y un horario para continuar.';
     }
 
-    if (step === 1 && (!form.fullName.trim() || !form.phoneWhatsapp.trim())) {
-      return 'Dejame tu nombre y WhatsApp para poder confirmar la cita.';
+    if (step === 1 && !form.fullName.trim()) {
+      return 'Dejame tu nombre para poder identificar tu reserva.';
+    }
+
+    if (step === 1 && !form.instagramHandle.trim() && !form.email.trim()) {
+      return 'Dejame tu Instagram o email. La confirmacion final se enviara por WhatsApp.';
     }
 
     if (step === 2 && !form.businessType.trim()) {
@@ -143,15 +147,22 @@ export default function MundoDigital() {
     setStatus('sending');
     setError('');
 
-    if (!form.fullName.trim() || !form.phoneWhatsapp.trim() || !form.goal.trim() || !form.appointmentDate || !form.appointmentTime) {
+    if (!form.fullName.trim() || !form.goal.trim() || !form.appointmentDate || !form.appointmentTime) {
       setStatus('idle');
-      setError('Elige fecha, horario, nombre, WhatsApp y objetivo para reservar.');
+      setError('Elige fecha, horario, nombre y objetivo para reservar.');
       return;
     }
 
     try {
+      const whatsappWindow = window.open('', '_blank', 'noopener,noreferrer');
+      const whatsappUrl = buildWhatsappConfirmationUrl(form);
       const result = await saveConsultationRequest(form);
       setStatus(result.savedRemote ? 'sent' : 'local');
+      if (whatsappWindow) {
+        whatsappWindow.location.href = whatsappUrl;
+      } else {
+        window.location.href = whatsappUrl;
+      }
       setForm((current) => ({
         ...current,
         fullName: '',
@@ -392,14 +403,18 @@ export default function MundoDigital() {
               {bookingStep === 1 && (
                 <div className="foru-booking-step">
                   <h3>Como te contacto?</h3>
-                  <p>Solo necesito lo esencial para confirmar la cita.</p>
+                  <p>Solo necesito identificar tu reserva. Al final se abrira WhatsApp con la confirmacion lista.</p>
                   <label>
                     Nombre
                     <input value={form.fullName} onChange={(event) => updateField('fullName', event.target.value)} required autoFocus />
                   </label>
                   <label>
-                    WhatsApp
-                    <input value={form.phoneWhatsapp} onChange={(event) => updateField('phoneWhatsapp', event.target.value)} required placeholder="+51 999 999 999" />
+                    Instagram
+                    <input value={form.instagramHandle} onChange={(event) => updateField('instagramHandle', event.target.value)} placeholder="@tunegocio" />
+                  </label>
+                  <label>
+                    Email opcional
+                    <input type="email" value={form.email} onChange={(event) => updateField('email', event.target.value)} placeholder="hola@tunegocio.com" />
                   </label>
                 </div>
               )}
@@ -411,10 +426,6 @@ export default function MundoDigital() {
                   <label>
                     Nombre del negocio
                     <input value={form.businessName} onChange={(event) => updateField('businessName', event.target.value)} placeholder="Ej. Studio Nicole" />
-                  </label>
-                  <label>
-                    Instagram
-                    <input value={form.instagramHandle} onChange={(event) => updateField('instagramHandle', event.target.value)} placeholder="@tunegocio" />
                   </label>
                   <label>
                     Tipo de negocio
@@ -473,7 +484,7 @@ export default function MundoDigital() {
                   </button>
                 ) : (
                   <button type="submit" className="foru-btn" disabled={status === 'sending'}>
-                    {status === 'sending' ? 'Reservando...' : 'Confirmar reserva'} <MessageCircle size={18} />
+                    {status === 'sending' ? 'Reservando...' : 'Enviar confirmacion por WhatsApp'} <MessageCircle size={18} />
                   </button>
                 )}
               </div>

@@ -673,6 +673,44 @@ body {
   opacity: 1;
 }
 
+.foru-reference-card--primary {
+  width: min(360px, 100%);
+  min-height: 310px;
+  border: 1.5px solid transparent;
+  background-image: linear-gradient(#ffffff, #ffffff),
+    linear-gradient(135deg, rgba(253,230,138,0.9), rgba(110,231,183,0.75), rgba(249,168,212,0.75), rgba(147,197,253,0.9));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 18px 48px rgba(124, 92, 255, 0.12);
+}
+
+.foru-reference-card--soon {
+  isolation: isolate;
+}
+
+.foru-reference-card--soon::after {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  z-index: -1;
+  background: conic-gradient(from 0deg, transparent, rgba(253,230,138,0.28), rgba(110,231,183,0.28), rgba(249,168,212,0.28), transparent);
+  animation: foru-gradient-flow 10s linear infinite;
+  opacity: 0.9;
+}
+
+.foru-soon-ribbon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #FDE68A, #6EE7B7, #F9A8D4, #93C5FD);
+  padding: 0.35rem 0.75rem;
+  color: #171717;
+  font-size: 0.68rem;
+  font-weight: 950;
+  box-shadow: 0 8px 22px rgba(124,92,255,0.18);
+}
+
 .foru-reference-card-icon {
   width: 72px;
   height: 72px;
@@ -1515,6 +1553,187 @@ body {
   padding-inline: 1.2rem;
 }
 
+.foru-admin-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(253,230,138,0.24), transparent 24rem),
+    radial-gradient(circle at 85% 20%, rgba(147,197,253,0.22), transparent 26rem),
+    #ffffff;
+  color: #171717;
+  padding: 1.2rem;
+}
+
+.foru-admin-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.foru-admin-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.foru-admin-hero {
+  max-width: 780px;
+  margin: 4rem auto 2rem;
+  text-align: center;
+}
+
+.foru-admin-hero h1 {
+  margin-top: 1rem;
+  font-family: var(--font-serif);
+  font-size: clamp(2.3rem, 6vw, 4rem);
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.foru-admin-hero p {
+  margin: 1rem auto 0;
+  max-width: 600px;
+  color: #5f6673;
+  font-size: 1rem;
+  font-weight: 350;
+  line-height: 1.7;
+}
+
+.foru-admin-alert {
+  max-width: 960px;
+  margin: 0 auto 1rem;
+  border-radius: 14px;
+  background: #fff7ed;
+  color: #9a3412;
+  padding: 0.9rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.foru-admin-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  max-width: 960px;
+  margin: 0 auto 1.2rem;
+}
+
+.foru-admin-summary article,
+.foru-admin-reservation,
+.foru-admin-empty {
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.86);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.055);
+}
+
+.foru-admin-summary article {
+  padding: 1rem;
+}
+
+.foru-admin-summary span {
+  display: block;
+  color: #6b7280;
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.foru-admin-summary strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+
+.foru-admin-list {
+  display: grid;
+  gap: 0.9rem;
+  max-width: 960px;
+  margin: 0 auto 4rem;
+}
+
+.foru-admin-reservation {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 48px;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+}
+
+.foru-admin-reservation-time {
+  display: grid;
+  gap: 0.4rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(253,230,138,0.22), rgba(110,231,183,0.18));
+  padding: 1rem;
+}
+
+.foru-admin-reservation-time strong {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+}
+
+.foru-admin-reservation-time span,
+.foru-admin-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  color: #5f6673;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.foru-admin-reservation-body h2 {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.foru-admin-reservation-body p {
+  color: #5f6673;
+  font-size: 0.9rem;
+}
+
+.foru-admin-goal {
+  margin: 0.7rem 0;
+  line-height: 1.55;
+}
+
+.foru-admin-contact span {
+  border-radius: 999px;
+  background: #f3f4f6;
+  padding: 0.35rem 0.65rem;
+}
+
+.foru-admin-whatsapp {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: #171717;
+  color: #ffffff;
+}
+
+.foru-admin-empty {
+  display: grid;
+  place-items: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.foru-admin-empty h2 {
+  margin-top: 0.8rem;
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
 @media (max-width: 900px) {
   .foru-lp-links { display: none; }
   .foru-lp-grid,
@@ -1533,6 +1752,11 @@ body {
   .foru-booking-step { min-height: 390px; padding: 1rem; }
   .foru-booking-actions { flex-direction: column-reverse; }
   .foru-booking-actions .foru-btn { width: 100%; }
+  .foru-admin-nav,
+  .foru-admin-nav-actions { align-items: stretch; flex-direction: column; }
+  .foru-admin-summary,
+  .foru-admin-reservation { grid-template-columns: 1fr; }
+  .foru-admin-whatsapp { width: 100%; }
 }
 
 .foru-studio-card {

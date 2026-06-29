@@ -23,29 +23,30 @@ export default function Home() {
       </p>
 
       <section className="foru-reference-buttons">
+        <Link to="/mundo-digital" onClick={() => playUiTone('next')} className="foru-reference-card foru-reference-card--primary">
+          <span className="foru-reference-card-icon"><Store size={31} /></span>
+          <h2>Webs y sistemas <span className="foru-reference-gradient-text">a medida</span></h2>
+          <p>El servicio principal: landing, reservas, automatizaciones y presencia lista para convertir visitas en clientas.</p>
+          <span className="foru-reference-tag">Ver servicio →</span>
+        </Link>
+
         <button
           type="button"
           onClick={() => {
             playUiTone('tap');
             setStudioModalOpen(true);
           }}
-          className="foru-reference-card"
+          className="foru-reference-card foru-reference-card--soon"
         >
+          <span className="foru-soon-ribbon">Muy pronto</span>
           <span className="foru-reference-card-icon"><LayoutDashboard size={31} /></span>
           <h2>Studio Digital <span className="foru-reference-gradient-text">FOR U</span></h2>
-          <p>Tu centro de contenido, calendario, web y campanas. Estamos puliendo la experiencia antes de abrirla.</p>
-          <span className="foru-reference-tag">Muy pronto</span>
+          <p>Tu futuro centro para contenido, calendario, web y campanas. Todavia privado, pero ya se siente cerca.</p>
+          <span className="foru-reference-tag">Preview privado</span>
         </button>
-
-        <Link to="/mundo-digital" onClick={() => playUiTone('next')} className="foru-reference-card">
-          <span className="foru-reference-card-icon"><Store size={31} /></span>
-          <h2>Quiero mi mundo <span className="foru-reference-gradient-text">digital</span></h2>
-          <p>Agenda tu diagnostico y armamos el sistema que tu negocio necesita para vender, reservar o captar leads.</p>
-          <span className="foru-reference-tag">Agendar ahora →</span>
-        </Link>
       </section>
 
-      <p className="foru-reference-note">Primero activamos tu mundo digital. El Studio se abrira cuando este listo.</p>
+      <p className="foru-reference-note">Empieza por tu web/sistema. El Studio queda como siguiente capa.</p>
 
       {studioModalOpen && (
         <div className="foru-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="studio-modal-title">
@@ -60,6 +61,7 @@ export default function Home() {
             <div className="foru-coming-actions">
               <Link to="/mundo-digital" className="foru-btn" onClick={() => playUiTone('next')}>Quiero mi mundo digital</Link>
               <Link to="/studio" className="foru-btn foru-btn--outline" onClick={() => playUiTone('tap')}>Ingresar con contraseña</Link>
+              <Link to="/reservas" className="foru-btn foru-btn--outline" onClick={() => playUiTone('tap')}>Ver reservas</Link>
             </div>
           </div>
         </div>

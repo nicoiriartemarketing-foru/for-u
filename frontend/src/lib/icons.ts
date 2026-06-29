@@ -42,6 +42,7 @@ export { default as PartyPopper } from 'lucide-react/dist/esm/icons/party-popper
 export { default as Phone } from 'lucide-react/dist/esm/icons/phone.mjs';
 export { default as PlayCircle } from 'lucide-react/dist/esm/icons/play-circle.mjs';
 export { default as Plus } from 'lucide-react/dist/esm/icons/plus.mjs';
+export { default as RefreshCw } from 'lucide-react/dist/esm/icons/refresh-cw.mjs';
 export { default as Rocket } from 'lucide-react/dist/esm/icons/rocket.mjs';
 export { default as Save } from 'lucide-react/dist/esm/icons/save.mjs';
 export { default as Sailboat } from 'lucide-react/dist/esm/icons/sailboat.mjs';

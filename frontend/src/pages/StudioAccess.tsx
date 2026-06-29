@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react';
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Clapperboard, Sparkles } from '../lib/icons';
 import { playUiTone } from '../lib/sound';
 
@@ -21,6 +21,7 @@ export function hasStudioAccess() {
 }
 
 export default function StudioAccess() {
+  const [searchParams] = useSearchParams();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isUnlocked, setIsUnlocked] = useState(hasStudioAccess());
@@ -46,7 +47,10 @@ export default function StudioAccess() {
     setIsChecking(false);
   }
 
-  if (isUnlocked) return <Navigate to="/dashboard" replace />;
+  const requestedNextPath = searchParams.get('next');
+  const nextPath = requestedNextPath?.startsWith('/') ? requestedNextPath : '/dashboard';
+
+  if (isUnlocked) return <Navigate to={nextPath} replace />;
 
   return (
     <main className="foru-reference-hub text-[#171717]">

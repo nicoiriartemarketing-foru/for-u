@@ -9,9 +9,11 @@ import WorldEditor from './pages/editor/WorldEditor';
 import PublicLanding from './pages/public/PublicLanding';
 import MundoDigital from './pages/MundoDigital';
 import StudioAccess, { hasStudioAccess } from './pages/StudioAccess';
+import ReservationsAdmin from './pages/admin/ReservationsAdmin';
 
 function PrivateStudio({ children }: { children: ReactNode }) {
-  return hasStudioAccess() ? children : <Navigate to="/studio" replace />;
+  const nextPath = `${window.location.pathname}${window.location.search}`;
+  return hasStudioAccess() ? children : <Navigate to={`/studio?next=${encodeURIComponent(nextPath)}`} replace />;
 }
 
 function App() {
@@ -26,6 +28,7 @@ function App() {
         <Route path="/register" element={<RegisterWizard />} />
         <Route path="/dashboard" element={<PrivateStudio><Dashboard /></PrivateStudio>} />
         <Route path="/editor" element={<PrivateStudio><WorldEditor /></PrivateStudio>} />
+        <Route path="/reservas" element={<PrivateStudio><ReservationsAdmin /></PrivateStudio>} />
         <Route path="/p/:slug" element={<PublicLanding />} />
       </Routes>
     </Router>
