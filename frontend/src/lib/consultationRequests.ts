@@ -37,6 +37,7 @@ export function buildWhatsappConfirmationUrl(input: ConsultationRequestInput) {
     'Hola FOR U, quiero confirmar mi cita de diagnostico.',
     '',
     `Nombre: ${input.fullName.trim()}`,
+    input.phoneWhatsapp.trim() ? `WhatsApp: ${input.phoneWhatsapp.trim()}` : '',
     input.businessName.trim() ? `Negocio: ${input.businessName.trim()}` : '',
     input.instagramHandle.trim() ? `Instagram: ${input.instagramHandle.trim()}` : '',
     input.email.trim() ? `Email: ${input.email.trim()}` : '',

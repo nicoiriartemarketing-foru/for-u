@@ -114,7 +114,7 @@ export default function ReservationsAdmin() {
             </div>
             <a
               className="foru-admin-whatsapp"
-              href={`https://wa.me/?text=${encodeURIComponent(`Hola ${request.full_name}, confirmo tu cita FOR U para ${formatDate(request.appointment_date)} a las ${formatTime(request.appointment_time)}.`)}`}
+              href={`https://wa.me/${(request.phone_whatsapp ?? '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${request.full_name}, confirmo tu cita FOR U para ${formatDate(request.appointment_date)} a las ${formatTime(request.appointment_time)}.`)}`}
               target="_blank"
               rel="noreferrer"
               title="Enviar mensaje"

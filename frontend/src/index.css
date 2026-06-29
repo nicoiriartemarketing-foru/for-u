@@ -1340,6 +1340,14 @@ body {
   color: #047857;
 }
 
+.foru-form-success a {
+  display: inline-flex;
+  margin-left: 0.45rem;
+  color: #065f46;
+  font-weight: 900;
+  text-decoration: underline;
+}
+
 .foru-modal-backdrop {
   position: fixed;
   inset: 0;
