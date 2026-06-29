@@ -1,3 +1,5 @@
+import type { FormEvent } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -9,6 +11,7 @@ import {
   Sparkles,
   Store,
 } from '../lib/icons';
+import { saveConsultationRequest, type ConsultationRequestInput } from '../lib/consultationRequests';
 
 const services = [
   ['Presencia', 'Webs & Apps a Medida', 'Landing pages, sitios completos o web apps. Diseñadas desde cero, alineadas a tu esencia y optimizadas para convertir.', Store],
@@ -48,6 +51,56 @@ const plans = [
 ];
 
 export default function MundoDigital() {
+  const [form, setForm] = useState<ConsultationRequestInput>({
+    fullName: '',
+    businessName: '',
+    instagramHandle: '',
+    email: '',
+    phoneWhatsapp: '',
+    businessType: '',
+    goal: '',
+    preferredDay: '',
+    preferredTime: '',
+    planInterest: 'Por definir',
+  });
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'local' | 'error'>('idle');
+  const [error, setError] = useState('');
+
+  function updateField(field: keyof ConsultationRequestInput, value: string) {
+    setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  async function submitRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus('sending');
+    setError('');
+
+    if (!form.fullName.trim() || !form.phoneWhatsapp.trim() || !form.goal.trim()) {
+      setStatus('idle');
+      setError('Completa tu nombre, WhatsApp y objetivo para agendar.');
+      return;
+    }
+
+    try {
+      const result = await saveConsultationRequest(form);
+      setStatus(result.savedRemote ? 'sent' : 'local');
+      setForm((current) => ({
+        ...current,
+        fullName: '',
+        businessName: '',
+        instagramHandle: '',
+        email: '',
+        phoneWhatsapp: '',
+        businessType: '',
+        goal: '',
+        preferredDay: '',
+        preferredTime: '',
+      }));
+    } catch {
+      setStatus('error');
+    }
+  }
+
   return (
     <div className="foru-lp">
       <nav className="foru-lp-nav">
@@ -65,7 +118,7 @@ export default function MundoDigital() {
         <div className="foru-reference-blur foru-reference-blur--green" />
         <div className="foru-reference-blur foru-reference-blur--pink" />
         <div className="foru-lp-inner">
-          <span className="foru-lp-badge">⚡ Oferta limitada · 40% OFF</span>
+          <span className="foru-lp-badge">Oferta limitada · Diagnostico gratis</span>
           <h1 className="foru-lp-title">
             <span>Tienes el producto.</span>
             <span>Tienes los clientes.</span>
@@ -76,7 +129,7 @@ export default function MundoDigital() {
             automatizaciones, chatbots, reservas, productos digitales, campañas y más. <strong>Todo integrado a tu realidad.</strong>
           </p>
           <div className="foru-lp-buttons">
-            <a href="#agenda" className="foru-btn">Agendar sesión gratis <CalendarDays size={18} /></a>
+            <a href="#agenda" className="foru-btn">Quiero mi mundo digital <CalendarDays size={18} /></a>
             <a href="#oferta" className="foru-btn foru-btn--outline">Ver planes con 40% OFF <ArrowRight size={18} /></a>
           </div>
           <p className="text-sm font-medium text-gray-400">Diagnóstico gratuito de 15 minutos · Sin compromiso</p>
@@ -142,7 +195,7 @@ export default function MundoDigital() {
       <section id="oferta" className="foru-lp-section">
         <div className="foru-lp-inner">
           <div className="foru-lp-section-header">
-            <span className="foru-lp-badge">⚡ Oferta por tiempo limitado</span>
+            <span className="foru-lp-badge">Oferta por tiempo limitado</span>
             <h2 className="foru-lp-section-title mt-5">Tu sistema digital a medida<br /><span className="foru-reference-gradient-text">con 40% de descuento</span></h2>
             <p className="foru-lp-section-sub">Para emprendedoras que ya tienen su contenido, producto o idea clara.</p>
           </div>
@@ -158,7 +211,13 @@ export default function MundoDigital() {
                 <ul className="foru-lp-list">
                   {plan.items.map((item) => <li key={item}>{item}</li>)}
                 </ul>
-                <a href="#agenda" className="foru-btn w-full px-4 py-3 text-sm">Quiero este plan <MessageCircle size={17} /></a>
+                <a
+                  href="#agenda"
+                  className="foru-btn w-full px-4 py-3 text-sm"
+                  onClick={() => updateField('planInterest', plan.name)}
+                >
+                  Quiero este plan <MessageCircle size={17} />
+                </a>
               </article>
             ))}
           </div>
@@ -183,11 +242,89 @@ export default function MundoDigital() {
         </div>
       </section>
 
-      <section id="agenda" className="foru-lp-section text-center">
-        <div className="foru-lp-inner max-w-3xl">
-          <h2 className="font-serif text-5xl font-bold leading-tight">Tu marca, <span className="foru-reference-gradient-text">en su mejor versión.</span></h2>
-          <p className="foru-lp-sub mt-5">Una conversación de 15 minutos basta para saber qué sistema necesita tu negocio.</p>
-          <a href="https://wa.me/" className="foru-btn">Escribir por WhatsApp <MessageCircle size={18} /></a>
+      <section id="agenda" className="foru-lp-section">
+        <div className="foru-lp-inner">
+          <div className="foru-lp-agenda">
+            <div className="foru-lp-agenda-copy">
+              <span className="foru-lp-badge"><CalendarDays size={16} /> Diagnostico gratis</span>
+              <h2>Tu marca, <span className="foru-reference-gradient-text">en su mejor version.</span></h2>
+              <p>
+                Dejame tus datos y te escribo para coordinar una sesion de 15 minutos.
+                La idea es entender tu negocio y decirte que sistema conviene construir primero.
+              </p>
+              <div className="foru-lp-agenda-points">
+                <span>Sin compromiso</span>
+                <span>Respuesta por WhatsApp</span>
+                <span>Ruta clara para empezar</span>
+              </div>
+            </div>
+
+            <form className="foru-lp-form" onSubmit={submitRequest}>
+              <div className="foru-lp-form-grid">
+                <label>
+                  Nombre
+                  <input value={form.fullName} onChange={(event) => updateField('fullName', event.target.value)} required />
+                </label>
+                <label>
+                  WhatsApp
+                  <input value={form.phoneWhatsapp} onChange={(event) => updateField('phoneWhatsapp', event.target.value)} required />
+                </label>
+                <label>
+                  Nombre del negocio
+                  <input value={form.businessName} onChange={(event) => updateField('businessName', event.target.value)} />
+                </label>
+                <label>
+                  Instagram
+                  <input value={form.instagramHandle} onChange={(event) => updateField('instagramHandle', event.target.value)} placeholder="@tunegocio" />
+                </label>
+                <label>
+                  Tipo de negocio
+                  <select value={form.businessType} onChange={(event) => updateField('businessType', event.target.value)}>
+                    <option value="">Seleccionar</option>
+                    <option value="servicios">Servicios</option>
+                    <option value="belleza">Belleza</option>
+                    <option value="bienestar">Bienestar</option>
+                    <option value="tienda">Tienda</option>
+                    <option value="educacion">Educacion</option>
+                    <option value="restaurante">Restaurante</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </label>
+                <label>
+                  Plan que te interesa
+                  <select value={form.planInterest} onChange={(event) => updateField('planInterest', event.target.value)}>
+                    <option>Por definir</option>
+                    {plans.map((plan) => <option key={plan.name}>{plan.name}</option>)}
+                  </select>
+                </label>
+                <label>
+                  Dia ideal
+                  <input value={form.preferredDay} onChange={(event) => updateField('preferredDay', event.target.value)} placeholder="Ej. martes o jueves" />
+                </label>
+                <label>
+                  Hora ideal
+                  <input value={form.preferredTime} onChange={(event) => updateField('preferredTime', event.target.value)} placeholder="Ej. 10 am" />
+                </label>
+              </div>
+              <label>
+                Que quieres lograr primero?
+                <textarea
+                  value={form.goal}
+                  onChange={(event) => updateField('goal', event.target.value)}
+                  required
+                  rows={4}
+                  placeholder="Ej. quiero que mis clientas agenden solas, vender por WhatsApp o tener una landing para anuncios."
+                />
+              </label>
+              {error && <p className="foru-form-error">{error}</p>}
+              {status === 'sent' && <p className="foru-form-success">Listo. Tu solicitud quedo agendada y te escribire por WhatsApp.</p>}
+              {status === 'local' && <p className="foru-form-success">Listo. Guarde tu solicitud en este dispositivo; cuando Supabase este conectado quedara centralizada.</p>}
+              {status === 'error' && <p className="foru-form-error">No se pudo enviar. Intenta otra vez en un momento.</p>}
+              <button type="submit" className="foru-btn w-full" disabled={status === 'sending'}>
+                {status === 'sending' ? 'Agendando...' : 'Agendar mi diagnostico'} <MessageCircle size={18} />
+              </button>
+            </form>
+          </div>
         </div>
       </section>
     </div>

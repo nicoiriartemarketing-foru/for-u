@@ -9,7 +9,7 @@ import {
   type LearningPhase,
 } from '../lib/learningMaterials';
 import { playUiTone } from '../lib/sound';
-import { supabase } from '../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 
 const quickQuestions = [
   'No sé por dónde empezar',
@@ -17,6 +17,52 @@ const quickQuestions = [
   'Ayúdame con un guion',
   'Quiero mejorar mi web',
 ];
+
+type AiStatus = 'idle' | 'thinking' | 'live' | 'local_config' | 'missing_secret' | 'function_error' | 'provider_error';
+
+type ChatFunctionResponse = {
+  mode?: 'live' | 'fallback';
+  fallbackReason?: 'missing_gemini_key' | 'function_error' | 'provider_error';
+  text?: string;
+};
+
+const aiStatusCopy: Record<AiStatus, { label: string; detail: string; dotClass: string }> = {
+  idle: {
+    label: 'Guía local lista',
+    detail: 'For U puede recomendar pasos con la metodología local. La IA en vivo se intentará al enviar tu pregunta.',
+    dotClass: 'bg-amber-300',
+  },
+  thinking: {
+    label: 'Conectando IA',
+    detail: 'Estoy intentando usar la función live de Supabase antes de responder.',
+    dotClass: 'bg-blue-400',
+  },
+  live: {
+    label: 'IA en vivo',
+    detail: 'Respuesta generada por Gemini desde la función chat de Supabase.',
+    dotClass: 'bg-emerald-400',
+  },
+  local_config: {
+    label: 'Guía local',
+    detail: 'La app publicada no tiene VITE_SUPABASE_URL y una clave pública VITE_ de Supabase disponibles en el build, así que no puede llamar a chat.',
+    dotClass: 'bg-amber-300',
+  },
+  missing_secret: {
+    label: 'Guía local',
+    detail: 'La función chat respondió, pero falta GEMINI_API_KEY en Supabase Edge Functions > Secrets.',
+    dotClass: 'bg-amber-300',
+  },
+  function_error: {
+    label: 'Guía local',
+    detail: 'No pude llegar a la función chat. Puede ser red, CORS, URL/key pública de Supabase o un error temporal.',
+    dotClass: 'bg-amber-300',
+  },
+  provider_error: {
+    label: 'Guía local',
+    detail: 'La función chat respondió, pero Gemini no entregó una respuesta utilizable.',
+    dotClass: 'bg-amber-300',
+  },
+};
 
 export default function AiForU() {
   const draft = loadLocalDraft();
@@ -28,9 +74,10 @@ export default function AiForU() {
   );
   const [hasAsked, setHasAsked] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
-  const [aiStatus, setAiStatus] = useState<'guided' | 'live'>('guided');
+  const [aiStatus, setAiStatus] = useState<AiStatus>('idle');
   const recommendations = useMemo(() => getRecommendedMaterials(phase, draft), [phase, draft]);
   const primaryMaterial = recommendations[0];
+  const currentAiStatus = aiStatusCopy[isThinking ? 'thinking' : aiStatus];
 
   function inferPhase(text: string): LearningPhase {
     const normalized = text.toLowerCase();
@@ -70,41 +117,53 @@ export default function AiForU() {
     setPhase(nextPhase);
     setHasAsked(true);
     setIsThinking(true);
+    setAiStatus('thinking');
     setAnswer('');
     playUiTone('success');
 
-    if (!supabase) {
+    if (!isSupabaseConfigured || !supabase) {
       setAnswer(guidedAnswer(cleanQuestion, nextPrimary));
-      setAiStatus('guided');
+      setAiStatus('local_config');
       setIsThinking(false);
       return;
     }
 
-    const { data, error } = await supabase.functions.invoke('chat', {
-      body: {
-        question: cleanQuestion,
-        context: {
-          business: draft,
-          selectedPhase: phaseLabels[nextPhase],
-          recommendedMaterials: nextRecommendations.map((material) => ({
-            title: material.title,
-            format: material.format,
-            deliverable: material.deliverable,
-            aiUse: material.aiUse,
-          })),
+    try {
+      const { data, error } = await supabase.functions.invoke<ChatFunctionResponse>('chat', {
+        body: {
+          question: cleanQuestion,
+          context: {
+            business: draft,
+            selectedPhase: phaseLabels[nextPhase],
+            recommendedMaterials: nextRecommendations.map((material) => ({
+              title: material.title,
+              format: material.format,
+              deliverable: material.deliverable,
+              aiUse: material.aiUse,
+            })),
+          },
         },
-      },
-    });
+      });
 
-    if (error || !data?.text) {
+      if (error || !data?.text) {
+        setAnswer(guidedAnswer(cleanQuestion, nextPrimary));
+        setAiStatus('function_error');
+      } else if (data.mode === 'live') {
+        setAnswer(data.text);
+        setAiStatus('live');
+      } else if (data.fallbackReason === 'missing_gemini_key') {
+        setAnswer(guidedAnswer(cleanQuestion, nextPrimary));
+        setAiStatus('missing_secret');
+      } else if (data.fallbackReason === 'provider_error') {
+        setAnswer(guidedAnswer(cleanQuestion, nextPrimary));
+        setAiStatus('provider_error');
+      } else {
+        setAnswer(guidedAnswer(cleanQuestion, nextPrimary));
+        setAiStatus('function_error');
+      }
+    } catch {
       setAnswer(guidedAnswer(cleanQuestion, nextPrimary));
-      setAiStatus('guided');
-    } else if (data.error === 'missing_gemini_key') {
-      setAnswer(guidedAnswer(cleanQuestion, nextPrimary));
-      setAiStatus('guided');
-    } else {
-      setAnswer(data.text);
-      setAiStatus('live');
+      setAiStatus('function_error');
     }
 
     setIsThinking(false);
@@ -171,10 +230,13 @@ export default function AiForU() {
                 <p className="mt-2 text-base font-semibold leading-7 text-gray-800">
                   {isThinking ? 'Pensando en el siguiente paso más útil...' : answer}
                 </p>
-                <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-[11px] font-black text-gray-500">
-                  <span className={`h-2 w-2 rounded-full ${aiStatus === 'live' ? 'bg-emerald-400' : 'bg-amber-300'}`} />
-                  {aiStatus === 'live' ? 'IA conectada' : 'Guía For U'}
-                </span>
+                <div className="mt-4 rounded-xl bg-gray-100 px-3 py-2">
+                  <span className="inline-flex items-center gap-2 text-[11px] font-black uppercase text-gray-600">
+                    <span className={`h-2 w-2 rounded-full ${currentAiStatus.dotClass}`} />
+                    {currentAiStatus.label}
+                  </span>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-gray-500">{currentAiStatus.detail}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -238,7 +300,7 @@ export default function AiForU() {
             </div>
             <div className="mt-2 flex justify-center">
               <div className="flex gap-4">
-                <Link to="/dashboard" className="inline-flex items-center gap-2 text-xs font-black text-gray-500">Abrir estudio <Clapperboard size={13} /></Link>
+                <Link to="/studio" className="inline-flex items-center gap-2 text-xs font-black text-gray-500">Abrir estudio <Clapperboard size={13} /></Link>
                 <Link to="/metodologia" className="inline-flex items-center gap-2 text-xs font-black text-gray-500">Metodología <ArrowRight size={13} /></Link>
               </div>
             </div>

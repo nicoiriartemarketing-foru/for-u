@@ -3,6 +3,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    status,
+  });
+}
+
 const SYSTEM_PROMPT = `Eres IA For U, una guia calida, directa y estrategica para emprendedores que estan creando su mundo digital.
 
 Tu trabajo no es mostrar todo el plan de golpe. Tu trabajo es ayudar a la persona a quedarse, entender el siguiente paso y avanzar con calma.
@@ -38,16 +45,11 @@ Deno.serve(async (req) => {
     const geminiKey = Deno.env.get("GEMINI_API_KEY");
 
     if (!geminiKey) {
-      return new Response(
-        JSON.stringify({
-          error: "missing_gemini_key",
-          text: "IA For U esta casi lista, pero falta configurar GEMINI_API_KEY en los secretos de Supabase.",
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        },
-      );
+      return jsonResponse({
+        mode: "fallback",
+        fallbackReason: "missing_gemini_key",
+        text: "IA For U esta casi lista, pero falta configurar GEMINI_API_KEY en los secretos de Supabase.",
+      });
     }
 
     const userText = question || history?.at?.(-1)?.parts?.[0]?.text || "";
@@ -75,20 +77,25 @@ Deno.serve(async (req) => {
       data?.error?.message ||
       "No pude generar respuesta esta vez.";
 
-    return new Response(JSON.stringify({ text }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
+    if (!response.ok || data?.error) {
+      return jsonResponse({
+        mode: "fallback",
+        fallbackReason: "provider_error",
+        providerStatus: response.status,
+        text: data?.error?.message || "Gemini no pudo responder esta vez. Usemos la guia local por ahora.",
+      });
+    }
+
+    return jsonResponse({
+      mode: "live",
+      text,
     });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: String(error?.message || error),
-        text: "Tuve un problema procesando la pregunta. Probemos con una frase mas corta.",
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      },
-    );
+    return jsonResponse({
+      mode: "fallback",
+      fallbackReason: "function_error",
+      error: String(error?.message || error),
+      text: "Tuve un problema procesando la pregunta. Probemos con una frase mas corta.",
+    });
   }
 });

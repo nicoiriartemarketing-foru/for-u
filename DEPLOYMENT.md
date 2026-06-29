@@ -4,7 +4,7 @@
 
 - La app principal esta en `frontend/`.
 - La app usa Vite + React y se publica como sitio estatico.
-- Supabase ya esta conectado en codigo con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
+- Supabase ya esta conectado en codigo con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` o `VITE_SUPABASE_PUBLISHABLE_KEY`.
 - La app guarda los registros del creador en la tabla `digital_world_drafts`.
 - La Edge Function `chat` esta desplegada en Supabase y se invoca desde `/ia`.
 - Las rutas internas como `/ia`, `/metodologia`, `/editor` y `/p/slug` necesitan fallback a `index.html`. El archivo `frontend/public/.htaccess` ya cubre esto para Hostinger.
@@ -20,12 +20,14 @@
 
 ## Variables que necesita Hostinger
 
-En Hostinger o en el entorno donde se haga el build:
+En Hostinger o en el entorno donde se haga el build de `frontend/`:
 
 ```env
 VITE_SUPABASE_URL=https://TU-PROYECTO.supabase.co
 VITE_SUPABASE_ANON_KEY=TU_PUBLIC_ANON_O_PUBLISHABLE_KEY
 ```
+
+Tambien sirve `VITE_SUPABASE_PUBLISHABLE_KEY` en lugar de `VITE_SUPABASE_ANON_KEY`. Una variable llamada `SB_PUBLISHABLE_KEY` en la raiz del repo no llega al navegador: Vite solo expone variables con prefijo `VITE_` durante el build.
 
 Nunca publiques `SB_SECRET_KEY` ni service role keys en el frontend.
 
@@ -37,7 +39,9 @@ En Supabase Dashboard > Edge Functions > Secrets, agregar:
 GEMINI_API_KEY=TU_GEMINI_API_KEY
 ```
 
-Sin este secreto, la funcion `chat` responde con un aviso y la app mantiene la recomendacion local como respaldo.
+Ruta exacta: Supabase Dashboard > Edge Functions > Secrets. Tambien se puede configurar por CLI con `supabase secrets set GEMINI_API_KEY=... --project-ref yizkrarmnrwkdrndqdji`.
+
+Sin este secreto, la funcion `chat` responde con `mode: "fallback"` y `fallbackReason: "missing_gemini_key"`. La app mantiene la recomendacion local como respaldo y lo explica en pantalla.
 
 ## Build para Hostinger
 
@@ -79,6 +83,13 @@ Verificado el 2026-06-22:
 - Edge Function `chat` existe y responde.
 - Falta configurar `GEMINI_API_KEY` como secreto para respuestas reales de Gemini.
 - Build de Hostinger verificado con `npm run build`.
+
+Auditoria del 2026-06-28:
+
+- La Edge Function `chat` sigue activa en Supabase, version 2, con `verify_jwt=false`.
+- Los logs de Edge Functions de las ultimas 24 horas no muestran invocaciones recientes de `chat`.
+- Hay un `.env` en la raiz con `SB_PUBLISHABLE_KEY`, pero esa clave no activa el cliente del sitio. El build de `frontend/` necesita `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` o `VITE_SUPABASE_PUBLISHABLE_KEY`.
+- `/ia` ahora distingue en pantalla entre IA en vivo, falta de variables publicas del frontend, falta de `GEMINI_API_KEY` en Supabase y errores temporales de funcion/proveedor.
 
 ## Prueba minima despues de publicar
 
