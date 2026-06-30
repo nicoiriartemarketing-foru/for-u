@@ -562,8 +562,11 @@ function TodayView({
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F9A8D4]"><Bot size={19} /></span>
           Pedir una idea
         </button>
+        <button type="button" onClick={onOpenContent} className="tap-boost flex items-center gap-3 rounded-2xl border border-[#F9A8D4]/40 bg-white p-4 text-left text-sm font-black shadow-sm">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F9A8D4]"><Video size={19} /></span>
+          Grabar con teleprompter
+        </button>
         <QuickAction to="/metodologia" icon={BookOpen} title="Aprender algo" color="#FDE68A" />
-        <QuickAction to="/editor" icon={Edit3} title="Editar mi web" color="#6EE7B7" />
       </section>
     </div>
   );
@@ -586,7 +589,7 @@ function ContentView() {
     });
     return accumulator;
   }, {});
-  const [activeTab, setActiveTab] = useState<CampaignTab>('today');
+  const [activeTab, setActiveTab] = useState<CampaignTab>('organic');
   const [doneMap, setDoneMap] = useState<Record<string, boolean>>(() => {
     try {
       return JSON.parse(localStorage.getItem(campaignDoneStorageKey) || '{}') as Record<string, boolean>;
@@ -697,6 +700,18 @@ function ContentView() {
     playUiTone('next');
   }
 
+  function openDemoTeleprompter() {
+    const firstTaskWithCopy = [...campaignTasks.organic, ...customTasks].find((task) => task.copies?.length);
+    const firstCopy = firstTaskWithCopy?.copies?.[0];
+
+    setTeleprompterScript({
+      title: firstTaskWithCopy?.title ?? 'Prueba de teleprompter',
+      label: firstCopy?.label ?? 'Guion',
+      text: firstCopy ? (copyTextMap[firstCopy.id] ?? firstCopy.text) : 'Hola, soy FOR U.\nHoy voy a grabar una idea corta.\nPrimero digo el problema.\nLuego muestro una solucion simple.\nY cierro con una invitacion clara.',
+    });
+    playUiTone('next');
+  }
+
   return (
     <div className="grid gap-5">
       <section className="grid gap-4 lg:grid-cols-[280px_1fr]">
@@ -746,6 +761,16 @@ function ContentView() {
               <Plus size={17} /> Nueva idea
             </button>
           </div>
+          <section className="mt-4 grid gap-3 rounded-2xl border border-[#F9A8D4]/40 bg-white p-4 shadow-sm md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <p className="text-xs font-black uppercase text-[#D946EF]">Grabar contenido</p>
+              <h3 className="font-serif text-2xl font-bold">Teleprompter conectado a tus guiones</h3>
+              <p className="mt-1 text-sm font-semibold leading-6 text-gray-500">Abre un guion, graba con cámara y guarda el video en la biblioteca de FOR U.</p>
+            </div>
+            <button type="button" onClick={openDemoTeleprompter} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#171717] px-5 py-4 text-sm font-black text-white">
+              <Video size={18} /> Probar teleprompter
+            </button>
+          </section>
           <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-black/6 bg-white p-3 text-sm font-bold text-gray-600 shadow-sm">
             <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 px-4 py-3 text-xs font-black text-gray-800">
               <Save size={16} /> Biblioteca FOR U
