@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -14,8 +14,10 @@ import {
   Lightbulb,
   Menu,
   Mic2,
+  PlayCircle,
   Plus,
   Rocket,
+  Save,
   Send,
   Sparkles,
   Trash2,
@@ -24,6 +26,7 @@ import {
 import { loadConstructorState, loadDigitalWorldPage, loadLocalDraft } from '../../lib/digitalWorldDraft';
 import { draftStorageKey } from '../../lib/digitalWorldDraft';
 import { playUiTone } from '../../lib/sound';
+import { downloadAsset, loadStudioContentAssets, saveStudioContentAsset, type StudioContentAsset } from '../../lib/studioContentAssets';
 
 type StudioView = 'today' | 'content' | 'calendar' | 'web' | 'publish';
 type ContentStatus = 'idea' | 'script' | 'record' | 'edit' | 'publish';
@@ -58,6 +61,12 @@ type CampaignTask = {
   copies?: CampaignCopyBlock[];
 };
 
+type TeleprompterScript = {
+  title: string;
+  label: string;
+  text: string;
+};
+
 const contentStorageKey = 'foru:content-studio-v1';
 
 const statusOptions: Array<{ id: ContentStatus; label: string; icon: typeof Lightbulb; color: string }> = [
@@ -73,6 +82,15 @@ const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const campaignStorageKey = 'foru:campaign-studio-v1';
 const campaignDoneStorageKey = 'foru:campaign-studio-done-v1';
 const customCampaignStorageKey = 'foru:campaign-custom-tasks-v1';
+
+function safeFileName(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9-_]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 70) || 'contenido-for-u';
+}
 
 const campaignSchedule = [
   ['AHORA', 'Subir Video Día 1 + Carrusel 1', 'Orgánico'],
@@ -557,6 +575,10 @@ function ContentView() {
   const [ideaTitle, setIdeaTitle] = useState('');
   const [ideaText, setIdeaText] = useState('');
   const [ideaTab, setIdeaTab] = useState<CampaignTab>('organic');
+  const [teleprompterScript, setTeleprompterScript] = useState<TeleprompterScript | null>(null);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [assets, setAssets] = useState<StudioContentAsset[]>([]);
+  const [assetSource, setAssetSource] = useState<'local' | 'remote'>('local');
   const allTasks = [...Object.values(campaignTasks).flat(), ...customTasks];
   const defaultTextMap = allTasks.reduce<Record<string, string>>((accumulator, task) => {
     task.copies?.forEach((copy) => {
@@ -583,6 +605,16 @@ function ContentView() {
   const currentTasks = [...campaignTasks[activeTab], ...customTasks.filter((task) => task.tag === activeTab)];
   const completedCount = allTasks.filter((task) => doneMap[task.id]).length;
   const progress = Math.round((completedCount / allTasks.length) * 100);
+
+  async function refreshAssets() {
+    const result = await loadStudioContentAssets();
+    setAssets(result.assets);
+    setAssetSource(result.source);
+  }
+
+  useEffect(() => {
+    refreshAssets();
+  }, []);
 
   function saveCustomTasks(nextTasks: CampaignTask[]) {
     setCustomTasks(nextTasks);
@@ -638,6 +670,33 @@ function ContentView() {
     window.setTimeout(() => setCopiedId(''), 1600);
   }
 
+  async function saveScript(task: CampaignTask, copy: CampaignCopyBlock) {
+    const text = copyTextMap[copy.id] ?? copy.text;
+    const fileName = `${safeFileName(task.title)}-${safeFileName(copy.label)}.txt`;
+    const result = await saveStudioContentAsset({
+      title: task.title,
+      label: copy.label,
+      kind: 'script',
+      text: `${task.title}\n${copy.label}\n\n${text}`,
+      fileName,
+      fileType: 'text/plain;charset=utf-8',
+      sourceTaskId: task.id,
+      sourceCopyId: copy.id,
+    });
+    setSaveMessage(result.savedRemote ? `Guardado en biblioteca: ${fileName}` : `Guardado local: ${fileName}`);
+    await refreshAssets();
+    playUiTone('success');
+  }
+
+  function openTeleprompter(task: CampaignTask, copy: CampaignCopyBlock) {
+    setTeleprompterScript({
+      title: task.title,
+      label: copy.label,
+      text: copyTextMap[copy.id] ?? copy.text,
+    });
+    playUiTone('next');
+  }
+
   return (
     <div className="grid gap-5">
       <section className="grid gap-4 lg:grid-cols-[280px_1fr]">
@@ -687,6 +746,13 @@ function ContentView() {
               <Plus size={17} /> Nueva idea
             </button>
           </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-black/6 bg-white p-3 text-sm font-bold text-gray-600 shadow-sm">
+            <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 px-4 py-3 text-xs font-black text-gray-800">
+              <Save size={16} /> Biblioteca FOR U
+            </span>
+            <span>{assets.length} archivos guardados · Fuente: {assetSource === 'remote' ? 'Supabase' : 'local'}</span>
+            {saveMessage && <span className="rounded-full bg-[#ECFDF5] px-3 py-1 text-xs font-black text-[#047857]">{saveMessage}</span>}
+          </div>
 
           {activeTab === 'today' && (
             <section className="mt-6 rounded-2xl border border-black/6 bg-white p-5 shadow-sm">
@@ -723,9 +789,33 @@ function ContentView() {
                 onToggleDone={toggleDone}
                 onUpdateCopy={updateCopyText}
                 onCopy={copyBlock}
+                onSaveScript={saveScript}
+                onTeleprompter={openTeleprompter}
                 onDelete={task.id.startsWith('custom-') ? deleteTask : undefined}
               />
             ))}
+          </section>
+          <section className="mt-6 rounded-2xl border border-black/6 bg-white p-5 shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase text-gray-400">Carpeta dentro de FOR U</p>
+                <h3 className="font-serif text-2xl font-bold">Biblioteca descargable</h3>
+              </div>
+              <button type="button" onClick={refreshAssets} className="rounded-xl border border-black/10 px-4 py-3 text-xs font-black text-gray-700">Actualizar</button>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {assets.length === 0 && <p className="rounded-xl bg-gray-50 p-4 text-sm font-bold text-gray-500">Aun no hay guiones o videos guardados.</p>}
+              {assets.map((asset) => (
+                <button key={asset.id} type="button" onClick={() => downloadAsset(asset)} className="flex items-center justify-between gap-3 rounded-xl border border-black/6 bg-gray-50 p-4 text-left transition hover:border-[#6EE7B7] hover:bg-white">
+                  <span>
+                    <span className="block text-xs font-black uppercase text-gray-400">{asset.kind === 'video' ? 'Video' : 'Guion'}</span>
+                    <span className="mt-1 block text-sm font-black text-gray-900">{asset.title}</span>
+                    <span className="mt-1 block text-xs font-bold text-gray-500">{asset.file_name}</span>
+                  </span>
+                  <Save size={18} className="shrink-0 text-[#7C5CFF]" />
+                </button>
+              ))}
+            </div>
           </section>
         </div>
       </section>
@@ -741,6 +831,16 @@ function ContentView() {
           onSave={addIdea}
         />
       )}
+      {teleprompterScript && (
+        <TeleprompterModal
+          script={teleprompterScript}
+          onClose={() => setTeleprompterScript(null)}
+          onSaved={async (message) => {
+            setSaveMessage(message);
+            await refreshAssets();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -753,6 +853,8 @@ function CampaignTaskCard({
   onToggleDone,
   onUpdateCopy,
   onCopy,
+  onSaveScript,
+  onTeleprompter,
   onDelete,
 }: {
   task: CampaignTask;
@@ -762,6 +864,8 @@ function CampaignTaskCard({
   onToggleDone: (id: string) => void;
   onUpdateCopy: (id: string, value: string) => void;
   onCopy: (id: string) => void;
+  onSaveScript: (task: CampaignTask, copy: CampaignCopyBlock) => void;
+  onTeleprompter: (task: CampaignTask, copy: CampaignCopyBlock) => void;
   onDelete?: (id: string) => void;
 }) {
   const tagClasses = {
@@ -801,15 +905,31 @@ function CampaignTaskCard({
         <div key={copy.id} className="relative mt-4 rounded-xl border border-black/6 bg-gray-50 p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <p className="text-xs font-black uppercase text-gray-400">{copy.label}</p>
-            <button
-              type="button"
-              onClick={() => onCopy(copy.id)}
-              className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-black transition ${
-                copiedId === copy.id ? 'border-[#6EE7B7] bg-[#6EE7B7] text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-[#6EE7B7]'
-              }`}
-            >
-              <Clipboard size={14} /> {copiedId === copy.id ? 'Copiado' : 'Copiar'}
-            </button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => onTeleprompter(task, copy)}
+                className="inline-flex items-center gap-2 rounded-lg border border-[#F9A8D4]/50 bg-white px-3 py-2 text-xs font-black text-gray-700 transition hover:border-[#F9A8D4]"
+              >
+                <Video size={14} /> Teleprompter
+              </button>
+              <button
+                type="button"
+                onClick={() => onSaveScript(task, copy)}
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-black text-gray-700 transition hover:border-[#6EE7B7]"
+              >
+                <Save size={14} /> Guardar
+              </button>
+              <button
+                type="button"
+                onClick={() => onCopy(copy.id)}
+                className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-black transition ${
+                  copiedId === copy.id ? 'border-[#6EE7B7] bg-[#6EE7B7] text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-[#6EE7B7]'
+                }`}
+              >
+                <Clipboard size={14} /> {copiedId === copy.id ? 'Copiado' : 'Copiar'}
+              </button>
+            </div>
           </div>
           <textarea
             value={copyTextMap[copy.id] ?? copy.text}
@@ -877,6 +997,185 @@ function IdeaModal({
           <button type="button" onClick={onSave} className="rounded-xl foru-dark-gradient px-5 py-3 text-sm font-black text-white">Agregar</button>
         </div>
       </section>
+    </div>
+  );
+}
+
+function TeleprompterModal({
+  script,
+  onClose,
+  onSaved,
+}: {
+  script: TeleprompterScript;
+  onClose: () => void;
+  onSaved: (message: string) => void | Promise<void>;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [activeLine, setActiveLine] = useState(0);
+  const [speed, setSpeed] = useState(2400);
+  const [fontSize, setFontSize] = useState(32);
+  const [mirrored, setMirrored] = useState(true);
+  const lines = useMemo(() => script.text.split(/\n+/).map((line) => line.trim()).filter(Boolean), [script.text]);
+  const currentLines = lines.length ? lines : ['Escribe tu guion para verlo aqui.'];
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (!mounted) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) videoRef.current.srcObject = stream;
+        setCameraReady(true);
+      } catch {
+        setCameraError('No pude abrir la cámara. Puedes usar el teleprompter igual y guardar el guion.');
+      }
+    }
+
+    startCamera();
+
+    return () => {
+      mounted = false;
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      recorderRef.current?.stop();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isPlaying) return undefined;
+
+    const timer = window.setInterval(() => {
+      setActiveLine((current) => Math.min(current + 1, currentLines.length - 1));
+    }, speed);
+
+    return () => window.clearInterval(timer);
+  }, [currentLines.length, isPlaying, speed]);
+
+  async function saveCurrentScript() {
+    const fileName = `${safeFileName(script.title)}-${safeFileName(script.label)}.txt`;
+    const result = await saveStudioContentAsset({
+      title: script.title,
+      label: script.label,
+      kind: 'script',
+      text: `${script.title}\n${script.label}\n\n${script.text}`,
+      fileName,
+      fileType: 'text/plain;charset=utf-8',
+    });
+    await onSaved(result.savedRemote ? `Guion guardado en biblioteca: ${fileName}` : `Guion guardado local: ${fileName}`);
+    playUiTone('success');
+  }
+
+  function startRecording() {
+    if (!streamRef.current) {
+      setCameraError('Activa la cámara para grabar video.');
+      return;
+    }
+
+    chunksRef.current = [];
+    const recorder = new MediaRecorder(streamRef.current, { mimeType: 'video/webm' });
+    recorderRef.current = recorder;
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) chunksRef.current.push(event.data);
+    };
+    recorder.onstop = async () => {
+      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+      const fileName = `${safeFileName(script.title)}-${Date.now()}.webm`;
+      const result = await saveStudioContentAsset({
+        title: script.title,
+        label: script.label,
+        kind: 'video',
+        blob,
+        fileName,
+        fileType: 'video/webm',
+      });
+      await onSaved(result.savedRemote ? `Video guardado en biblioteca: ${fileName}` : `Video guardado local: ${fileName}`);
+      playUiTone('success');
+    };
+    recorder.start();
+    setIsRecording(true);
+    setIsPlaying(true);
+    playUiTone('next');
+  }
+
+  function stopRecording() {
+    recorderRef.current?.stop();
+    setIsRecording(false);
+    setIsPlaying(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-[70] bg-black text-white">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className={`absolute inset-0 h-full w-full object-cover ${mirrored ? '-scale-x-100' : ''}`}
+      />
+      <div className="absolute inset-0 bg-black/35" />
+
+      <div className="absolute left-4 top-4 z-10 flex flex-wrap gap-2">
+        <button type="button" onClick={onClose} className="rounded-xl bg-white/95 px-4 py-3 text-sm font-black text-gray-950">Salir</button>
+        <button type="button" onClick={saveCurrentScript} className="rounded-xl bg-white/95 px-4 py-3 text-sm font-black text-gray-950">Guardar guion</button>
+        <button type="button" onClick={() => setMirrored((value) => !value)} className="rounded-xl bg-white/95 px-4 py-3 text-sm font-black text-gray-950">
+          {mirrored ? 'Sin espejo' : 'Espejo'}
+        </button>
+      </div>
+
+      <div className="absolute right-4 top-4 z-10 rounded-xl bg-black/55 px-4 py-3 text-sm font-black text-white backdrop-blur">
+        {isRecording ? 'REC grabando' : cameraReady ? 'Camara lista' : 'Preparando camara'}
+      </div>
+
+      <section className="absolute left-1/2 top-[12%] z-10 w-[88%] max-w-4xl -translate-x-1/2">
+        <div className="relative overflow-hidden rounded-2xl bg-black/45 p-6 text-center shadow-2xl backdrop-blur-md" style={{ fontSize }}>
+          <span className="pointer-events-none absolute left-[10%] right-[10%] top-1/2 h-px bg-white/25" />
+          {currentLines.map((line, index) => (
+            <p
+              key={`${line}-${index}`}
+              className={`my-3 leading-snug transition ${index === activeLine ? 'font-black text-white opacity-100' : 'font-semibold text-white/35'}`}
+            >
+              {line}
+            </p>
+          ))}
+        </div>
+      </section>
+
+      <section className="absolute bottom-5 left-1/2 z-10 grid w-[min(92%,980px)] -translate-x-1/2 gap-3 rounded-3xl bg-black/65 p-4 backdrop-blur-md md:grid-cols-[1fr_auto] md:items-center">
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="text-xs font-black uppercase text-white/70">
+            Velocidad
+            <input type="range" min="900" max="4500" step="100" value={speed} onChange={(event) => setSpeed(Number(event.target.value))} className="mt-2 w-full" />
+          </label>
+          <label className="text-xs font-black uppercase text-white/70">
+            Tamaño
+            <input type="range" min="22" max="52" step="1" value={fontSize} onChange={(event) => setFontSize(Number(event.target.value))} className="mt-2 w-full" />
+          </label>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => setActiveLine(0)} className="rounded-xl bg-white/10 px-4 py-3 text-sm font-black text-white ring-1 ring-white/15">Inicio</button>
+          <button type="button" onClick={() => setIsPlaying((value) => !value)} className="rounded-xl bg-white px-4 py-3 text-sm font-black text-gray-950">
+            <PlayCircle size={16} className="inline" /> {isPlaying ? 'Pausar' : 'Leer'}
+          </button>
+          {isRecording ? (
+            <button type="button" onClick={stopRecording} className="rounded-xl bg-red-500 px-4 py-3 text-sm font-black text-white">Detener</button>
+          ) : (
+            <button type="button" onClick={startRecording} className="rounded-xl bg-[#F9A8D4] px-4 py-3 text-sm font-black text-gray-950">Grabar</button>
+          )}
+        </div>
+      </section>
+
+      {cameraError && <div className="absolute bottom-32 left-1/2 z-10 w-[min(92%,560px)] -translate-x-1/2 rounded-xl bg-white px-4 py-3 text-center text-sm font-black text-gray-950">{cameraError}</div>}
     </div>
   );
 }
