@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Sparkles, Store } from '../lib/icons';
+import { LayoutDashboard, Sailboat, Sparkles, Store } from '../lib/icons';
 import { draftStorageKey, loadLocalDraft } from '../lib/digitalWorldDraft';
 import { playUiTone } from '../lib/sound';
 
@@ -44,6 +44,13 @@ export default function Home() {
           <p>Tu futuro centro para contenido, calendario, web y campanas. Todavia privado, pero ya se siente cerca.</p>
           <span className="foru-reference-tag">Preview privado</span>
         </button>
+
+        <Link to="/aventura" onClick={() => playUiTone('next')} className="foru-reference-card foru-reference-card--premium">
+          <span className="foru-reference-card-icon"><Sailboat size={31} /></span>
+          <h2>Aventura <span className="foru-reference-gradient-text">FOR U</span></h2>
+          <p>El MVP jugable: meta, barco, ruta, misión y mapa de archipiélagos para validar la experiencia.</p>
+          <span className="foru-reference-tag">Jugar MVP →</span>
+        </Link>
       </section>
 
       <p className="foru-reference-note">Empieza por tu web/sistema. El Studio queda como siguiente capa.</p>

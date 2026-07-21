@@ -10,6 +10,7 @@ import PublicLanding from './pages/public/PublicLanding';
 import MundoDigital from './pages/MundoDigital';
 import StudioAccess, { hasStudioAccess } from './pages/StudioAccess';
 import ReservationsAdmin from './pages/admin/ReservationsAdmin';
+import AdventureMvp from './pages/AdventureMvp';
 
 function PrivateStudio({ children }: { children: ReactNode }) {
   const nextPath = `${window.location.pathname}${window.location.search}`;
@@ -24,6 +25,7 @@ function App() {
         <Route path="/ia" element={<AiForU />} />
         <Route path="/metodologia" element={<Methodology />} />
         <Route path="/mundo-digital" element={<MundoDigital />} />
+        <Route path="/aventura" element={<AdventureMvp />} />
         <Route path="/studio" element={<StudioAccess />} />
         <Route path="/register" element={<RegisterWizard />} />
         <Route path="/dashboard" element={<PrivateStudio><Dashboard /></PrivateStudio>} />

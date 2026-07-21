@@ -416,6 +416,677 @@ body {
   }
 }
 
+.foru-adventure {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  color: #24212b;
+  background:
+    radial-gradient(circle at 12% 16%, rgba(253, 230, 138, 0.45), transparent 18rem),
+    radial-gradient(circle at 88% 14%, rgba(118, 215, 196, 0.38), transparent 22rem),
+    radial-gradient(circle at 44% 86%, rgba(195, 155, 211, 0.34), transparent 24rem),
+    linear-gradient(135deg, #fefefe 0%, #faf7ff 48%, #f0fdfa 100%);
+  padding: 1.2rem;
+}
+
+.foru-adventure-header,
+.foru-adventure-shell,
+.foru-progress,
+.foru-toast {
+  position: relative;
+  z-index: 2;
+}
+
+.foru-adventure-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.foru-adventure-logo {
+  text-decoration: none;
+  color: #24212b;
+  font-weight: 800;
+  letter-spacing: 0;
+  font-size: 1.35rem;
+}
+
+.foru-adventure-logo span {
+  background: linear-gradient(135deg, #f4d03f, #c39bd3, #76d7c4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.foru-adventure-status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.foru-adventure-status span,
+.foru-adventure-status button,
+.foru-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 12px 28px rgba(46, 41, 64, 0.08);
+  backdrop-filter: blur(20px);
+  color: #4f465c;
+}
+
+.foru-adventure-status span,
+.foru-adventure-status button {
+  min-height: 2.35rem;
+  border-radius: 999px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.foru-adventure-status button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.foru-progress {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.45rem;
+  max-width: 760px;
+  margin: 1rem auto 1.4rem;
+}
+
+.foru-progress span {
+  height: 0.42rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(36, 33, 43, 0.05);
+}
+
+.foru-progress span.is-active {
+  background: linear-gradient(90deg, #f4d03f, #c39bd3, #76d7c4);
+}
+
+.foru-adventure-shell {
+  max-width: 1180px;
+  min-height: calc(100vh - 8rem);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.9fr) minmax(20rem, 1fr);
+  gap: 1.2rem;
+  align-items: stretch;
+}
+
+.foru-ocean-scene,
+.foru-adventure-card {
+  min-height: 34rem;
+  border-radius: 1.3rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.foru-ocean-scene {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.08) 38%),
+    radial-gradient(circle at 28% 22%, rgba(253, 230, 138, 0.86), transparent 4.8rem),
+    linear-gradient(180deg, #bae9ee 0%, #bceff0 44%, #92d9d4 45%, #77c8c7 100%);
+  box-shadow: inset 0 -3rem 5rem rgba(47, 119, 137, 0.18), 0 22px 58px rgba(46, 41, 64, 0.08);
+}
+
+.foru-ocean-scene::after {
+  content: '';
+  position: absolute;
+  inset: 58% -10% -8%;
+  background:
+    repeating-linear-gradient(170deg, rgba(255,255,255,0.36) 0 0.1rem, transparent 0.1rem 2.8rem),
+    linear-gradient(180deg, rgba(255,255,255,0.22), transparent);
+  animation: foru-water-drift 8s linear infinite;
+}
+
+.foru-sun {
+  position: absolute;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 999px;
+  top: 13%;
+  left: 18%;
+  background: radial-gradient(circle at 35% 32%, #fff8cf, #f4d03f 65%, #efad52);
+  box-shadow: 0 0 3rem rgba(244, 208, 63, 0.55);
+}
+
+.foru-island {
+  position: absolute;
+  width: 10rem;
+  height: 4.3rem;
+  border-radius: 55% 45% 48% 52%;
+  background: linear-gradient(135deg, #f8dba0, #8bd4a8);
+  box-shadow: 0 1rem 0 rgba(52, 129, 126, 0.16);
+}
+
+.foru-island::before,
+.foru-island::after {
+  content: '';
+  position: absolute;
+  border-radius: 0.45rem;
+  background: linear-gradient(135deg, #ffffff, #f7e6ff);
+  box-shadow: 0 -0.55rem 0 #f4d03f;
+}
+
+.foru-island::before {
+  width: 2.1rem;
+  height: 2rem;
+  left: 2.2rem;
+  top: -1.1rem;
+}
+
+.foru-island::after {
+  width: 1.7rem;
+  height: 1.7rem;
+  right: 2.4rem;
+  top: -0.8rem;
+}
+
+.foru-island--left {
+  left: 9%;
+  bottom: 23%;
+}
+
+.foru-island--right {
+  right: 10%;
+  bottom: 34%;
+  transform: scale(0.82);
+}
+
+.foru-pearl {
+  position: absolute;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #ffffff, rgba(244,208,63,0.34), rgba(195,155,211,0.48), rgba(118,215,196,0.32));
+  box-shadow: 0 0 2rem rgba(195, 155, 211, 0.46), inset -0.4rem -0.4rem 1rem rgba(195, 155, 211, 0.24);
+  animation: foru-pearl-float 4.8s ease-in-out infinite;
+}
+
+.foru-pearl--one {
+  width: 3.2rem;
+  height: 3.2rem;
+  top: 24%;
+  right: 16%;
+}
+
+.foru-pearl--two {
+  width: 2.1rem;
+  height: 2.1rem;
+  top: 42%;
+  left: 18%;
+  animation-delay: 1.1s;
+}
+
+.foru-boat-hero {
+  position: absolute;
+  left: 44%;
+  bottom: 18%;
+  font-size: 5rem;
+  filter: drop-shadow(0 1rem 1.6rem rgba(25, 74, 92, 0.2));
+  animation: foru-boat-bob 3.4s ease-in-out infinite;
+  z-index: 1;
+}
+
+.foru-adventure-card {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,255,255,0.74)) padding-box,
+    linear-gradient(135deg, rgba(244, 208, 63, 0.8), rgba(195, 155, 211, 0.62), rgba(118, 215, 196, 0.78)) border-box;
+  border: 1.5px solid transparent;
+  box-shadow: 0 22px 58px rgba(46, 41, 64, 0.1);
+  backdrop-filter: blur(24px);
+  padding: clamp(1.2rem, 3vw, 2.1rem);
+}
+
+.foru-step {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.foru-step-centered {
+  align-items: center;
+  text-align: center;
+}
+
+.foru-step-kicker {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.42rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #4f465c;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(195, 155, 211, 0.22);
+}
+
+.foru-step h1,
+.foru-map-copy h1 {
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  line-height: 1;
+  margin: 0;
+  color: #24212b;
+}
+
+.foru-step p,
+.foru-map-copy p {
+  margin: 0;
+  color: #645d6f;
+  line-height: 1.65;
+  max-width: 40rem;
+}
+
+.foru-primary-action,
+.foru-lifebuoy,
+.foru-back-button,
+.foru-tags button,
+.foru-route-grid button,
+.foru-world-tabs button,
+.foru-bay-hotspot {
+  font-family: inherit;
+  border: 0;
+  cursor: pointer;
+}
+
+.foru-primary-action {
+  min-height: 3.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 999px;
+  padding: 0.85rem 1.2rem;
+  color: #24212b;
+  font-weight: 850;
+  background: linear-gradient(135deg, #f4d03f, #c39bd3, #76d7c4);
+  box-shadow: 0 14px 30px rgba(118, 215, 196, 0.26);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.foru-primary-action:hover,
+.foru-route-grid button:hover,
+.foru-world-tabs button:hover,
+.foru-bay-hotspot:hover {
+  transform: translateY(-0.12rem);
+}
+
+.foru-primary-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.foru-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.55rem 0.78rem;
+  color: #645d6f;
+  background: rgba(255, 255, 255, 0.62);
+  margin-bottom: 0.7rem;
+}
+
+.foru-goal-value {
+  font-size: clamp(2.6rem, 8vw, 5.2rem);
+  line-height: 1;
+  font-weight: 850;
+  background: linear-gradient(135deg, #f4d03f, #c39bd3, #76d7c4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.foru-range {
+  width: 100%;
+  accent-color: #76d7c4;
+}
+
+.foru-soft-copy {
+  border-radius: 1rem;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(195, 155, 211, 0.14);
+}
+
+.foru-text-input,
+.foru-textarea {
+  width: 100%;
+  border: 1px solid rgba(195, 155, 211, 0.22);
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 1rem;
+  padding: 1rem;
+  font: inherit;
+  color: #24212b;
+  outline: none;
+}
+
+.foru-textarea {
+  min-height: 8.5rem;
+  resize: vertical;
+}
+
+.foru-text-input:focus,
+.foru-textarea:focus {
+  border-color: rgba(118, 215, 196, 0.9);
+  box-shadow: 0 0 0 4px rgba(118, 215, 196, 0.18);
+}
+
+.foru-tags,
+.foru-world-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.foru-tags button,
+.foru-world-tabs button {
+  border-radius: 999px;
+  padding: 0.58rem 0.82rem;
+  color: #4f465c;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(195, 155, 211, 0.18);
+  font-weight: 750;
+}
+
+.foru-world-tabs button.is-active {
+  background: linear-gradient(135deg, #f4d03f, #c39bd3, #76d7c4);
+  color: #24212b;
+}
+
+.foru-lifebuoy {
+  width: 100%;
+  text-align: left;
+  border-radius: 1rem;
+  padding: 0.95rem 1rem;
+  color: #4f465c;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.64);
+  border: 1px dashed rgba(195, 155, 211, 0.55);
+}
+
+.foru-ship-reveal {
+  font-size: 7rem;
+  filter: drop-shadow(0 1rem 1.4rem rgba(36, 33, 43, 0.14));
+  animation: foru-ship-pop 0.75s ease both, foru-boat-bob 3.4s ease-in-out 0.75s infinite;
+}
+
+.foru-route-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.foru-route-grid button {
+  min-height: 7rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-radius: 1rem;
+  padding: 1rem;
+  color: #4f465c;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(195, 155, 211, 0.2);
+  text-align: left;
+  font-weight: 850;
+}
+
+.foru-route-grid button.is-selected {
+  color: #24212b;
+  background:
+    linear-gradient(rgba(255,255,255,0.78), rgba(255,255,255,0.78)) padding-box,
+    linear-gradient(135deg, #f4d03f, #c39bd3, #76d7c4) border-box;
+  border: 1.5px solid transparent;
+}
+
+.foru-mission-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem 1rem;
+  align-items: center;
+  width: 100%;
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(195, 155, 211, 0.18);
+  padding: 1rem;
+}
+
+.foru-mission-card span {
+  grid-row: span 2;
+  font-size: 2.4rem;
+}
+
+.foru-mission-card small {
+  color: #847b91;
+  font-weight: 750;
+}
+
+.foru-map-layout {
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(20rem, 1fr);
+  gap: 1rem;
+}
+
+.foru-map-copy {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.foru-world-map {
+  position: relative;
+  min-height: 22rem;
+  overflow: hidden;
+  border-radius: 1.2rem;
+  background:
+    radial-gradient(circle at 28% 30%, rgba(255,255,255,0.7), transparent 7rem),
+    repeating-linear-gradient(170deg, rgba(255,255,255,0.25) 0 0.12rem, transparent 0.12rem 2.4rem),
+    linear-gradient(180deg, #bdecef, #79cfd1);
+  box-shadow: inset 0 -2rem 4rem rgba(31, 114, 128, 0.18);
+}
+
+.foru-world-map::before,
+.foru-world-map::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f6dda2, #84d0a4);
+  box-shadow: 0 1.2rem 0 rgba(47, 119, 137, 0.16);
+}
+
+.foru-world-map::before {
+  width: 12rem;
+  height: 6.5rem;
+  left: 12%;
+  top: 28%;
+}
+
+.foru-world-map::after {
+  width: 14rem;
+  height: 7rem;
+  right: 11%;
+  bottom: 16%;
+}
+
+.foru-world--sabores::before {
+  background: linear-gradient(135deg, #ffd6df, #a9e4be);
+}
+
+.foru-world--estrategia::before,
+.foru-world--estrategia::after {
+  background: linear-gradient(135deg, #ffffff, #b9eef0 42%, #a4ddb9);
+}
+
+.foru-world--creatividad::before,
+.foru-world--creatividad::after {
+  background: linear-gradient(135deg, #f6d4ff, #bde8ff 46%, #ffefaa);
+}
+
+.foru-map-boat {
+  position: absolute;
+  left: 48%;
+  top: 50%;
+  z-index: 2;
+  font-size: 3.5rem;
+  animation: foru-boat-bob 3.4s ease-in-out infinite;
+  filter: drop-shadow(0 0.75rem 1rem rgba(36, 33, 43, 0.16));
+}
+
+.foru-bay-hotspot {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 4.8rem;
+  min-height: 4.8rem;
+  border-radius: 999px;
+  padding: 0.55rem;
+  color: #24212b;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  box-shadow: 0 12px 26px rgba(46, 41, 64, 0.12);
+  backdrop-filter: blur(18px);
+}
+
+.foru-bay-hotspot span {
+  font-size: 1.6rem;
+}
+
+.foru-bay-hotspot small {
+  max-width: 4.2rem;
+  font-size: 0.64rem;
+  font-weight: 850;
+  line-height: 1.05;
+}
+
+.foru-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.1rem;
+  transform: translateX(-50%);
+  max-width: min(92vw, 42rem);
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+
+.foru-guide {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 3;
+  width: 3.5rem;
+  height: 3.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #24212b;
+  font-weight: 850;
+  font-size: 1.6rem;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(195, 155, 211, 0.24);
+  box-shadow: 0 16px 34px rgba(46, 41, 64, 0.14);
+}
+
+.foru-confetti {
+  position: fixed;
+  top: -1rem;
+  z-index: 5;
+  width: 0.62rem;
+  height: 0.62rem;
+  border-radius: 0.2rem;
+  background: linear-gradient(135deg, #f4d03f, #c39bd3, #76d7c4);
+  animation: foru-confetti-fall 2s ease-out forwards;
+}
+
+@keyframes foru-water-drift {
+  from { transform: translateX(-2rem); }
+  to { transform: translateX(2rem); }
+}
+
+@keyframes foru-pearl-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-1.1rem) scale(1.04); }
+}
+
+@keyframes foru-boat-bob {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-0.75rem) rotate(3deg); }
+}
+
+@keyframes foru-ship-pop {
+  from { opacity: 0; transform: scale(0.72) rotate(-8deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes foru-confetti-fall {
+  from { transform: translateY(-1rem) rotate(0); opacity: 1; }
+  to { transform: translateY(100vh) rotate(540deg); opacity: 0; }
+}
+
+@media (max-width: 900px) {
+  .foru-adventure {
+    padding: 0.85rem;
+  }
+
+  .foru-adventure-header {
+    align-items: flex-start;
+  }
+
+  .foru-adventure-status {
+    gap: 0.4rem;
+  }
+
+  .foru-adventure-status span,
+  .foru-adventure-status button {
+    font-size: 0.72rem;
+    padding: 0.48rem 0.62rem;
+  }
+
+  .foru-adventure-shell {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .foru-ocean-scene {
+    min-height: 16rem;
+  }
+
+  .foru-adventure-card {
+    min-height: 30rem;
+  }
+
+  .foru-route-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .foru-toast {
+    bottom: 0.75rem;
+  }
+
+  .foru-guide {
+    display: none;
+  }
+}
+
 .motivation-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
