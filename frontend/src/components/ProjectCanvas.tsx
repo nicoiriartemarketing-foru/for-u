@@ -114,7 +114,12 @@ export default function ProjectCanvas() {
       { kind: 'idea', title: 'Idea: versión express para clientas', icon: '✨', x: 580, y: 330 },
     ];
 
-    demoNodes.forEach((node) => addNode(activeProjectId, node));
+    const createdIds = demoNodes
+      .map((node) => addNode(activeProjectId, node))
+      .filter((nodeId): nodeId is string => Boolean(nodeId));
+
+    const [centerId, ...satelliteIds] = createdIds;
+    satelliteIds.forEach((nodeId) => connectNodes(activeProjectId, centerId, nodeId));
   }
 
   return (
