@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { X } from '../lib/icons';
-import { type ForUNodeKind, type ForUProjectNode, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import SplitTaskModal from './SplitTaskModal';
+import { type ForUNodeKind, type ForUNodePriority, type ForUProjectNode, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
 const nodeKindMeta: Record<ForUNodeKind, { label: string; icon: string; title: string }> = {
   center: { label: 'Proyecto', icon: '✨', title: 'Nucleo del proyecto' },
@@ -83,6 +84,7 @@ function getActionButtons(node: ForUProjectNode) {
 }
 
 export default function NodeDetailPanel() {
+  const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
   const selectedNodeId = useActiveProjectsStore((state) => state.selectedNodeId);
@@ -117,42 +119,68 @@ export default function NodeDetailPanel() {
       }
     : nodeKindMeta[selectedNode.kind];
   const actionButtons = getActionButtons(selectedNode);
+  const priority = selectedNode.priority ?? 'low';
 
   return (
-    <motion.aside
-      className="foru-node-panel"
-      initial={{ x: 400, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: 400, opacity: 0 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-      aria-label="Detalles del nodo"
-    >
-      <header className="foru-node-panel-header">
-        <div>
-          <div className="foru-node-panel-icon" aria-hidden="true">{meta.icon}</div>
-          <span className="foru-node-panel-badge">{meta.icon} {meta.label}</span>
-          <h2>{selectedNode.title}</h2>
-          <p>{meta.title}</p>
-        </div>
-        <button type="button" onClick={deselectNode} aria-label="Cerrar panel de detalles">
-          <X size={18} />
-        </button>
-      </header>
-
-      <label className="foru-node-panel-field">
-        <span>Descripcion / notas</span>
-        <textarea
-          value={draftDescription}
-          onChange={(event) => setDraftDescription(event.target.value)}
-          onBlur={() => updateNode(activeProjectId, selectedNode.id, { description: draftDescription })}
-          placeholder="Agrega más detalles..."
-        />
-      </label>
-
-      <section className="foru-node-panel-actions" aria-label="Acciones rapidas del nodo">
-        <span>Acciones rápidas</span>
-        {actionButtons.length > 0 ? (
+    <>
+      <motion.aside
+        className="foru-node-panel"
+        initial={{ x: 400, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: 400, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+        aria-label="Detalles del nodo"
+      >
+        <header className="foru-node-panel-header">
           <div>
+            <div className="foru-node-panel-icon" aria-hidden="true">{meta.icon}</div>
+            <span className="foru-node-panel-badge">{meta.icon} {meta.label}</span>
+            <span className={`foru-node-panel-priority is-${priority}`}>
+              {priorityIcon[priority]} {priorityLabel[priority]}
+            </span>
+            <h2>{selectedNode.title}</h2>
+            <p>{meta.title}</p>
+          </div>
+          <button type="button" onClick={deselectNode} aria-label="Cerrar panel de detalles">
+            <X size={18} />
+          </button>
+        </header>
+
+        {selectedNode.reasoning ? (
+          <div className="foru-node-reasoning">
+            <strong>Por qué está aquí</strong>
+            <p>{selectedNode.reasoning}</p>
+          </div>
+        ) : null}
+
+        {selectedNode.subtasks?.length ? (
+          <div className="foru-node-subtasks">
+            <strong>Subtareas sugeridas</strong>
+            {selectedNode.subtasks.map((subtask) => (
+              <span key={subtask}>{subtask}</span>
+            ))}
+          </div>
+        ) : null}
+
+        <label className="foru-node-panel-field">
+          <span>Descripcion / notas</span>
+          <textarea
+            value={draftDescription}
+            onChange={(event) => setDraftDescription(event.target.value)}
+            onBlur={() => updateNode(activeProjectId, selectedNode.id, { description: draftDescription })}
+            placeholder="Agrega más detalles..."
+          />
+        </label>
+
+        <section className="foru-node-panel-actions" aria-label="Acciones rapidas del nodo">
+          <span>Acciones rápidas</span>
+          <div>
+            {selectedNode.role === 'free' ? (
+              <button type="button" onClick={() => setIsSplitModalOpen(true)}>
+                <span aria-hidden="true">✂️</span>
+                Dividir en subtareas
+              </button>
+            ) : null}
             {actionButtons.map((action) => (
               <button key={action.label} type="button" onClick={action.onClick}>
                 <span aria-hidden="true">{action.icon}</span>
@@ -160,10 +188,33 @@ export default function NodeDetailPanel() {
               </button>
             ))}
           </div>
-        ) : (
-          <p>Selecciona o conecta nodos libres para activar herramientas especificas.</p>
-        )}
-      </section>
-    </motion.aside>
+          {actionButtons.length === 0 && selectedNode.role !== 'free' ? (
+            <p>Selecciona o conecta nodos libres para activar herramientas especificas.</p>
+          ) : null}
+        </section>
+      </motion.aside>
+
+      <AnimatePresence>
+        {isSplitModalOpen ? (
+          <SplitTaskModal
+            nodeId={selectedNode.id}
+            nodeTitle={selectedNode.title}
+            onClose={() => setIsSplitModalOpen(false)}
+          />
+        ) : null}
+      </AnimatePresence>
+    </>
   );
 }
+
+const priorityIcon: Record<ForUNodePriority, string> = {
+  high: '🔴',
+  medium: '🟠',
+  low: '🟢',
+};
+
+const priorityLabel: Record<ForUNodePriority, string> = {
+  high: 'Alta prioridad',
+  medium: 'Prioridad media',
+  low: 'Baja presión',
+};

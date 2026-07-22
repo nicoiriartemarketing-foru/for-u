@@ -47,11 +47,14 @@ export default function IdeaJarFab() {
       const createdNodeIds = addFreeNodesToBranches(
         activeProjectId,
         response.nodos.map((node) => ({
-          title: node.data.label,
+          title: node.label,
           kind: mapAiTypeToNodeKind(node.type),
-          icon: node.data.icon,
+          icon: iconByAiType[node.type],
           branchKey: node.branchKey,
-          description: node.data.description,
+          description: node.description,
+          priority: node.priority,
+          subtasks: node.subtasks,
+          reasoning: node.reasoning,
           x: node.position.x,
           y: node.position.y,
         })),
@@ -177,11 +180,17 @@ export default function IdeaJarFab() {
 }
 
 function mapAiTypeToNodeKind(type: AiNodeType): ForUNodeKind {
-  if (type === 'accion') return 'task';
-  if (type === 'recurso') return 'resource';
+  if (type === 'Acción') return 'task';
+  if (type === 'Recurso') return 'resource';
 
   return 'idea';
 }
+
+const iconByAiType: Record<AiNodeType, string> = {
+  Idea: '💡',
+  Acción: '✅',
+  Recurso: '🔗',
+};
 
 const placeholderByKind: Record<ForURawNoteKind, string> = {
   text: 'Escribe la idea tal como salga...',

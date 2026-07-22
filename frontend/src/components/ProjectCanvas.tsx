@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { CSSProperties } from 'react';
+import toast from 'react-hot-toast';
 import ReactFlow, {
   Background,
   BackgroundVariant,
@@ -8,6 +10,7 @@ import ReactFlow, {
   type Edge,
   type Node,
   type NodeChange,
+  type NodeDragHandler,
   type NodeMouseHandler,
   type NodeTypes,
 } from 'reactflow';
@@ -20,6 +23,7 @@ import {
   baseBranches,
   getCenterNodeId,
   type ForUNodeKind,
+  type ForUBranchKey,
   type ForUProjectNode,
   useActiveProjectsStore,
 } from '../stores/useActiveProjectsStore';
@@ -38,7 +42,21 @@ const addOptions: Array<{ kind: ForUNodeKind; label: string; title: string }> = 
 
 type ForUCanvasNodeData = IdeaNodeData | BranchNodeData | CenterNodeData;
 
-function toFlowNode(node: ForUProjectNode): Node<ForUCanvasNodeData> {
+function getFocusOpacity(node: ForUProjectNode, focusedBranch: ForUBranchKey | null) {
+  if (!focusedBranch) return 1;
+  if (node.branchKey === focusedBranch) return 1;
+
+  return 0.2;
+}
+
+function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null): Node<ForUCanvasNodeData> {
+  const opacity = getFocusOpacity(node, focusedBranch);
+  const style: CSSProperties = {
+    opacity,
+    transition: 'opacity 0.3s ease',
+    pointerEvents: opacity < 1 ? 'none' : 'auto',
+  };
+
   if (node.role === 'center') {
     return {
       id: node.id,
@@ -46,6 +64,7 @@ function toFlowNode(node: ForUProjectNode): Node<ForUCanvasNodeData> {
       position: { x: node.x, y: node.y },
       draggable: false,
       deletable: false,
+      style,
       data: {
         title: node.title,
         icon: node.icon,
@@ -62,6 +81,7 @@ function toFlowNode(node: ForUProjectNode): Node<ForUCanvasNodeData> {
       position: { x: node.x, y: node.y },
       draggable: false,
       deletable: false,
+      style,
       data: {
         title: node.title,
         icon: node.icon,
@@ -76,10 +96,12 @@ function toFlowNode(node: ForUProjectNode): Node<ForUCanvasNodeData> {
     type: 'ideaNode',
     position: { x: node.x, y: node.y },
     draggable: true,
+    style,
     data: {
       title: node.title,
       kind: node.kind,
       icon: node.icon,
+      priority: node.priority,
     },
   };
 }
@@ -95,6 +117,8 @@ export default function ProjectCanvas() {
   const removeEdge = useActiveProjectsStore((state) => state.removeEdge);
   const selectNode = useActiveProjectsStore((state) => state.selectNode);
   const deselectNode = useActiveProjectsStore((state) => state.deselectNode);
+  const focusedBranch = useActiveProjectsStore((state) => state.focusedBranch);
+  const reassignNodeBranch = useActiveProjectsStore((state) => state.reassignNodeBranch);
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
 
   useEffect(() => {
@@ -102,8 +126,8 @@ export default function ProjectCanvas() {
   }, [activeProjectId]);
 
   const nodes = useMemo<Node<ForUCanvasNodeData>[]>(() => {
-    return activeProject?.nodes?.map(toFlowNode) ?? [];
-  }, [activeProject?.nodes]);
+    return activeProject?.nodes?.map((node) => toFlowNode(node, focusedBranch)) ?? [];
+  }, [activeProject?.nodes, focusedBranch]);
 
   const edges = useMemo<Edge[]>(() => {
     const centerNodeId = activeProject ? getCenterNodeId(activeProject.id) : '';
@@ -114,11 +138,12 @@ export default function ProjectCanvas() {
       target: edge.target,
       type: 'default',
       animated: edge.source === centerNodeId,
+      markerEnd: undefined,
       style: edge.source === centerNodeId
-        ? { stroke: '#C39BD3', strokeWidth: 3, strokeDasharray: '8 8' }
-        : { stroke: '#A8A1B5', strokeWidth: 2 },
+        ? { stroke: '#C39BD3', strokeWidth: 3, strokeDasharray: '8 8', opacity: getEdgeOpacity(edge.source, edge.target, activeProject.nodes, focusedBranch) }
+        : { stroke: '#A8A1B5', strokeWidth: 2, opacity: getEdgeOpacity(edge.source, edge.target, activeProject?.nodes ?? [], focusedBranch), transition: 'opacity 0.3s ease' },
     }));
-  }, [activeProject]);
+  }, [activeProject, focusedBranch]);
 
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
     if (!activeProjectId) return;
@@ -143,6 +168,19 @@ export default function ProjectCanvas() {
   const handleNodeClick = useCallback<NodeMouseHandler>((_event, node) => {
     selectNode(node.id);
   }, [selectNode]);
+
+  const handleNodeDragStop = useCallback<NodeDragHandler>((_event, node) => {
+    if (!activeProjectId || !activeProject) return;
+
+    const projectNode = activeProject.nodes.find((item) => item.id === node.id);
+    if (!projectNode || projectNode.locked || projectNode.role !== 'free') return;
+
+    const nearestBranch = getNearestBranch(node.position.x, node.position.y);
+    if (!nearestBranch || nearestBranch.key === projectNode.branchKey) return;
+
+    reassignNodeBranch(activeProjectId, projectNode.id, nearestBranch.key);
+    toast.success(`Movido a ${nearestBranch.title}`);
+  }, [activeProject, activeProjectId, reassignNodeBranch]);
 
   function createNode(branchKey: typeof baseBranches[number]['key']) {
     if (!activeProjectId || !selectedOption) return;
@@ -173,6 +211,7 @@ export default function ProjectCanvas() {
         nodeTypes={nodeTypes}
         onNodesChange={handleNodesChange}
         onNodeClick={handleNodeClick}
+        onNodeDragStop={handleNodeDragStop}
         onPaneClick={deselectNode}
         onConnect={handleConnect}
         onEdgesDelete={handleEdgesDelete}
@@ -234,4 +273,24 @@ export default function ProjectCanvas() {
       </div>
     </section>
   );
+}
+
+function getNearestBranch(x: number, y: number) {
+  const nearest = baseBranches
+    .map((branch) => ({
+      ...branch,
+      distance: Math.hypot(branch.x - x, branch.y - y),
+    }))
+    .sort((a, b) => a.distance - b.distance)[0];
+
+  return nearest && nearest.distance < 260 ? nearest : null;
+}
+
+function getEdgeOpacity(source: string, target: string, nodes: ForUProjectNode[], focusedBranch: ForUBranchKey | null) {
+  if (!focusedBranch) return 1;
+
+  const sourceNode = nodes.find((node) => node.id === source);
+  const targetNode = nodes.find((node) => node.id === target);
+
+  return sourceNode?.branchKey === focusedBranch || targetNode?.branchKey === focusedBranch ? 1 : 0.18;
 }

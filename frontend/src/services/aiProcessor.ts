@@ -1,29 +1,26 @@
-import type { ForUBranchKey } from '../stores/useActiveProjectsStore';
+import type { ForUBranchKey, ForUNodePriority } from '../stores/useActiveProjectsStore';
 
-export type AiNodeType = 'idea' | 'accion' | 'recurso';
+export type AiNodeType = 'Idea' | 'Acción' | 'Recurso';
 
-export type AiProcessedNode = {
+export interface ProcessedNode {
   id: string;
+  label: string;
   type: AiNodeType;
   branchKey: ForUBranchKey;
-  data: {
-    label: string;
-    icon: string;
-    description?: string;
-  };
-  position: {
-    x: number;
-    y: number;
-  };
-};
+  description?: string;
+  priority?: ForUNodePriority;
+  subtasks?: string[];
+  reasoning?: string;
+  position: { x: number; y: number };
+}
 
 export type AiProcessResponse = {
-  nodos: AiProcessedNode[];
+  nodos: ProcessedNode[];
   mensaje: string;
 };
 
-export const FOR_U_AI_SYSTEM_PROMPT = `Eres For U, un asistente empático y juguetón para emprendedores con TDAH. Usas analogías de mar y navegación (⛵, 🌊, ✨). Recibes una lista de ideas crudas y desordenadas. Tu tarea es agruparlas en categorías lógicas (ej: "Marketing", "Finanzas", "Ideas") y convertirlas en micro-tareas de máximo 15 minutos. Responde SOLO en formato JSON con esta estructura exacta:
-{ "nodos": [ { "id": "string", "type": "idea" | "accion" | "recurso", "branchKey": "ideas" | "actions" | "finances" | "marketing" | "resources", "data": { "label": "string", "icon": "string", "description": "string" }, "position": { "x": number, "y": number } } ], "mensaje": "string" }`;
+export const FOR_U_AI_SYSTEM_PROMPT = `Eres For U, un asistente empático y juguetón para emprendedores con TDAH. Usas analogías de mar y navegación. Recibes notas crudas y desordenadas. Tu tarea es priorizarlas, detectar rama, dividir tareas complejas en micro-subtareas de maximo 15 minutos y responder SOLO JSON:
+{ "nodos": [ { "id": "string", "label": "string", "type": "Idea" | "Acción" | "Recurso", "branchKey": "ideas" | "actions" | "finances" | "marketing" | "resources", "description": "string", "priority": "high" | "medium" | "low", "subtasks": ["string"], "reasoning": "string", "position": { "x": number, "y": number } } ], "mensaje": "string" }`;
 
 const mockDelayMs = 1200;
 
@@ -32,26 +29,30 @@ export async function processRawNotes(rawNotes: string[], projectName: string): 
 
   const usableNotes = rawNotes.map((note) => note.trim()).filter(Boolean);
   const notes = usableNotes.length > 0 ? usableNotes : ['Ordenar ideas del proyecto'];
+  const branchCounts = createEmptyBranchCounts();
 
-  const nodos = notes.slice(0, 8).map<AiProcessedNode>((note, index) => {
+  const nodos = notes.slice(0, 10).map<ProcessedNode>((note, index) => {
     const type = inferNodeType(note, index);
-    const branchKey = inferBranchKey(note, type, index);
-    const branchOrigin = branchOrigins[branchKey];
-    const siblingIndex = notes.slice(0, index).filter((previousNote, previousIndex) => {
-      return inferBranchKey(previousNote, inferNodeType(previousNote, previousIndex), previousIndex) === branchKey;
-    }).length;
+    const branch = inferBranch(note, type, index);
+    const priority = inferPriority(note);
+    const subtasks = inferSubtasks(note, type, branch.key);
+    const siblingIndex = branchCounts[branch.key]++;
+    const branchOrigin = branchOrigins[branch.key];
     const angle = branchOrigin.angle + siblingIndex * 0.42;
     const radius = 180 + siblingIndex * 28;
 
     return {
       id: `ai-node-${Date.now()}-${index}`,
+      label: toMicroTaskLabel(note, type, subtasks),
       type,
-      branchKey,
-      data: {
-        label: toMicroTaskLabel(note, type),
-        icon: iconByType[type],
-        description: `Nota original: ${note}`,
-      },
+      branchKey: branch.key,
+      description: [
+        `Nota original: ${note}`,
+        subtasks.length > 0 ? `Subtareas sugeridas: ${subtasks.join(', ')}` : '',
+      ].filter(Boolean).join('\n'),
+      priority,
+      subtasks,
+      reasoning: branch.reasoning,
       position: {
         x: Math.round(branchOrigin.x + Math.cos(angle) * radius),
         y: Math.round(branchOrigin.y + Math.sin(angle) * radius),
@@ -59,64 +60,97 @@ export async function processRawNotes(rawNotes: string[], projectName: string): 
     };
   });
 
+  const highPriorityCount = nodos.filter((node) => node.priority === 'high').length;
+
   return {
     nodos,
-    mensaje: `⛵ Listo, organicé ${nodos.length} ideas para "${projectName}". Tu mapa ya tiene rutas pequeñas para navegar sin culpa.`,
+    mensaje: `⛵ Listo: organicé ${nodos.length} ideas para "${projectName}"${highPriorityCount ? ` y marqué ${highPriorityCount} como prioridad alta` : ''}.`,
   };
+}
+
+function createEmptyBranchCounts(): Record<ForUBranchKey, number> {
+  return {
+    ideas: 0,
+    actions: 0,
+    finances: 0,
+    marketing: 0,
+    resources: 0,
+  };
+}
+
+function inferPriority(note: string): ForUNodePriority {
+  const text = note.toLowerCase();
+
+  if (/(urgente|importante|hoy|ya|ahora|asap|inmediato|inmediata)/.test(text)) return 'high';
+  if (/(pronto|esta semana|semana|mañana|manana|luego)/.test(text)) return 'medium';
+
+  return 'low';
 }
 
 function inferNodeType(note: string, index: number): AiNodeType {
   const text = note.toLowerCase();
 
-  if (/(link|canva|drive|recurso|archivo|plantilla|referencia|foto|video)/.test(text)) return 'recurso';
-  if (/(hacer|llamar|enviar|publicar|comprar|crear|revisar|agenda|cotizar|escribir)/.test(text)) return 'accion';
-  if (index % 3 === 1) return 'accion';
-  if (index % 3 === 2) return 'recurso';
+  if (/(link|canva|drive|recurso|archivo|plantilla|referencia|foto|video|documento|pdf)/.test(text)) return 'Recurso';
+  if (/(hacer|llamar|enviar|publicar|comprar|crear|revisar|agenda|agendar|cotizar|escribir|diseñar|programar|preparar|terminar)/.test(text)) return 'Acción';
+  if (index % 3 === 1) return 'Acción';
+  if (index % 3 === 2) return 'Recurso';
 
-  return 'idea';
+  return 'Idea';
 }
 
-function inferBranchKey(note: string, type: AiNodeType, index: number): ForUBranchKey {
+function inferBranch(note: string, type: AiNodeType, index: number): { key: ForUBranchKey; reasoning: string } {
   const text = note.toLowerCase();
 
-  if (/(finanza|finanzas|precio|costo|costos|presupuesto|venta|ventas|pago|factura|dinero|cobrar|cotizar)/.test(text)) {
-    return 'finances';
+  if (/(finanza|finanzas|precio|costo|costos|presupuesto|venta|ventas|pago|factura|dinero|cobrar|cotizar|ingreso|gasto)/.test(text)) {
+    return { key: 'finances', reasoning: 'Te puse esto en Finanzas porque mencionaste presupuesto, pagos, precios o dinero.' };
   }
 
-  if (/(marketing|instagram|tiktok|post|publicar|contenido|campaña|campana|marca|audiencia|redes|email)/.test(text)) {
-    return 'marketing';
+  if (/(marketing|instagram|tiktok|post|publicar|contenido|campaña|campana|marca|audiencia|redes|email|copy|reel)/.test(text)) {
+    return { key: 'marketing', reasoning: 'Te puse esto en Marketing porque habla de contenido, redes, campaña, copy o audiencia.' };
   }
 
-  if (/(canva|drive|link|enlace|archivo|plantilla|referencia|foto|video|recurso|documento)/.test(text)) {
-    return 'resources';
+  if (/(canva|drive|link|enlace|archivo|plantilla|referencia|foto|video|recurso|documento|pdf)/.test(text)) {
+    return { key: 'resources', reasoning: 'Te puse esto en Recursos porque parece un enlace, archivo, plantilla o referencia para consultar.' };
   }
 
-  if (type === 'accion' || /(hacer|llamar|enviar|crear|revisar|agendar|comprar|escribir)/.test(text)) {
-    return 'actions';
+  if (type === 'Acción' || /(hacer|llamar|enviar|crear|revisar|agendar|comprar|escribir|terminar)/.test(text)) {
+    return { key: 'actions', reasoning: 'Te puse esto en Acciones porque suena a un siguiente paso concreto.' };
   }
 
-  if (type === 'recurso') return 'resources';
-  if (index % 5 === 2) return 'finances';
-  if (index % 5 === 3) return 'marketing';
+  if (type === 'Recurso') {
+    return { key: 'resources', reasoning: 'Te puse esto en Recursos porque puede servir como material de apoyo.' };
+  }
 
-  return 'ideas';
+  if (index % 5 === 2) return { key: 'finances', reasoning: 'Lo puse en Finanzas para balancear el mapa y revisar si tiene impacto económico.' };
+  if (index % 5 === 3) return { key: 'marketing', reasoning: 'Lo puse en Marketing porque puede convertirse en comunicación o visibilidad.' };
+
+  return { key: 'ideas', reasoning: 'Te puse esto en Ideas porque todavía parece una posibilidad abierta para explorar.' };
 }
 
-function toMicroTaskLabel(note: string, type: AiNodeType) {
+function inferSubtasks(note: string, type: AiNodeType, branchKey: ForUBranchKey) {
   const cleanNote = note.replace(/\s+/g, ' ').trim();
-  const shortNote = cleanNote.length > 70 ? `${cleanNote.slice(0, 67)}...` : cleanNote;
+  const looksComplex = cleanNote.length > 50 || /(campaña|campana|lanzamiento|estrategia|plan|organizar|crear|preparar)/i.test(cleanNote);
+  if (!looksComplex || type === 'Recurso') return [];
 
-  if (type === 'accion') return `15 min: ${shortNote}`;
-  if (type === 'recurso') return `Recurso: ${shortNote}`;
+  if (branchKey === 'marketing') return ['Diseñar posts', 'Escribir copy', 'Programar publicación'];
+  if (branchKey === 'finances') return ['Listar costos', 'Definir presupuesto', 'Revisar próximos pagos'];
+  if (branchKey === 'actions') return ['Definir primer paso', 'Bloquear 15 minutos', 'Enviar o completar avance'];
+  if (branchKey === 'resources') return ['Guardar enlace', 'Nombrar recurso', 'Adjuntarlo al proyecto'];
+
+  return ['Aclarar la idea', 'Elegir siguiente paso', 'Convertirla en micro-acción'];
+}
+
+function toMicroTaskLabel(note: string, type: AiNodeType, subtasks: string[]) {
+  if (subtasks.length > 0) return subtasks[0];
+
+  const cleanNote = note.replace(/\s+/g, ' ').trim();
+  const shortNote = cleanNote.length > 68 ? `${cleanNote.slice(0, 65)}...` : cleanNote;
+
+  if (type === 'Acción') return `15 min: ${shortNote}`;
+  if (type === 'Recurso') return `Recurso: ${shortNote}`;
 
   return `Idea: ${shortNote}`;
 }
-
-const iconByType: Record<AiNodeType, string> = {
-  idea: '💡',
-  accion: '✅',
-  recurso: '🔗',
-};
 
 const branchOrigins: Record<ForUBranchKey, { x: number; y: number; angle: number }> = {
   ideas: { x: 240, y: 210, angle: -2.35 },
