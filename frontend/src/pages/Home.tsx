@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, Sailboat, Sparkles, Store } from '../lib/icons';
+import { Compass, LayoutDashboard, Sailboat, Sparkles, Store } from '../lib/icons';
 import { draftStorageKey, loadLocalDraft } from '../lib/digitalWorldDraft';
 import { playUiTone } from '../lib/sound';
 
@@ -50,6 +50,13 @@ export default function Home() {
           <h2>Aventura <span className="foru-reference-gradient-text">FOR U</span></h2>
           <p>El MVP jugable: meta, barco, ruta, misión y mapa de archipiélagos para validar la experiencia.</p>
           <span className="foru-reference-tag">Jugar MVP →</span>
+        </Link>
+
+        <Link to="/workspace" onClick={() => playUiTone('next')} className="foru-reference-card foru-reference-card--premium">
+          <span className="foru-reference-card-icon"><Compass size={31} /></span>
+          <h2>Workspace <span className="foru-reference-gradient-text">TDAH</span></h2>
+          <p>La base nueva: pestañas de proyectos, estado global, microacciones y nodos independientes.</p>
+          <span className="foru-reference-tag">Ver arquitectura →</span>
         </Link>
       </section>
 

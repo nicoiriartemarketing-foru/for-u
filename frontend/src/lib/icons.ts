@@ -59,3 +59,4 @@ export { default as Type } from 'lucide-react/dist/esm/icons/type.mjs';
 export { default as Users } from 'lucide-react/dist/esm/icons/users.mjs';
 export { default as UtensilsCrossed } from 'lucide-react/dist/esm/icons/utensils-crossed.mjs';
 export { default as Video } from 'lucide-react/dist/esm/icons/video.mjs';
+export { default as X } from 'lucide-react/dist/esm/icons/x.mjs';

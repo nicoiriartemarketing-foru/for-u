@@ -11,6 +11,7 @@ import MundoDigital from './pages/MundoDigital';
 import StudioAccess, { hasStudioAccess } from './pages/StudioAccess';
 import ReservationsAdmin from './pages/admin/ReservationsAdmin';
 import AdventureMvp from './pages/AdventureMvp';
+import ForUWorkspace from './pages/ForUWorkspace';
 
 function PrivateStudio({ children }: { children: ReactNode }) {
   const nextPath = `${window.location.pathname}${window.location.search}`;
@@ -26,6 +27,7 @@ function App() {
         <Route path="/metodologia" element={<Methodology />} />
         <Route path="/mundo-digital" element={<MundoDigital />} />
         <Route path="/aventura" element={<AdventureMvp />} />
+        <Route path="/workspace" element={<ForUWorkspace />} />
         <Route path="/studio" element={<StudioAccess />} />
         <Route path="/register" element={<RegisterWizard />} />
         <Route path="/dashboard" element={<PrivateStudio><Dashboard /></PrivateStudio>} />
