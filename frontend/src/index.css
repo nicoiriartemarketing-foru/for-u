@@ -3254,6 +3254,36 @@ body {
   transform: translateY(-1px);
 }
 
+.foru-world3d-tooltip {
+  min-width: 8.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 16px;
+  padding: 0.62rem 0.75rem;
+  color: #333333;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 16px 34px rgba(46, 41, 64, 0.16);
+  backdrop-filter: blur(18px);
+  text-align: center;
+  pointer-events: none;
+}
+
+.foru-world3d-tooltip strong,
+.foru-world3d-tooltip span {
+  display: block;
+}
+
+.foru-world3d-tooltip strong {
+  font-size: 0.86rem;
+  font-weight: 950;
+}
+
+.foru-world3d-tooltip span {
+  margin-top: 0.18rem;
+  color: #7a7185;
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
 .foru-node-panel {
   position: absolute;
   top: 4.65rem;
