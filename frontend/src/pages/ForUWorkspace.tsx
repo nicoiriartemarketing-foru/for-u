@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import IdeaJarFab from '../components/IdeaJarFab';
+import Logo from '../components/Logo';
 import ProjectCanvas from '../components/ProjectCanvas';
 import ProjectTabBar from '../components/ProjectTabBar';
 import { Sparkles } from '../lib/icons';
@@ -15,7 +16,9 @@ export default function ForUWorkspace() {
   return (
     <main className="foru-shell">
       <header className="foru-shell-header">
-        <Link to="/" className="foru-shell-logo">FOR <span>U</span></Link>
+        <Link to="/" className="foru-shell-logo" aria-label="FOR U">
+          <Logo />
+        </Link>
         <div className="foru-shell-tabs">
           <ProjectTabBar />
         </div>

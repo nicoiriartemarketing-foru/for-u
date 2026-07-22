@@ -81,6 +81,7 @@ export default function IdeaJarFab() {
       >
         <Sparkles size={26} />
         <span>{rawNotes.length}</span>
+        <small>Frasco</small>
       </motion.button>
 
       <AnimatePresence>

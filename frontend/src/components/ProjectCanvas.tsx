@@ -12,7 +12,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import IdeaNode, { type IdeaNodeData } from './IdeaNode';
-import { Plus } from '../lib/icons';
+import { Plus, Sparkles } from '../lib/icons';
 import {
   type ForUNodeKind,
   type ForUProjectNode,
@@ -50,6 +50,7 @@ export default function ProjectCanvas() {
   const moveNode = useActiveProjectsStore((state) => state.moveNode);
   const connectNodes = useActiveProjectsStore((state) => state.connectNodes);
   const removeEdge = useActiveProjectsStore((state) => state.removeEdge);
+  const openIdeaJar = useActiveProjectsStore((state) => state.openIdeaJar);
 
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
 
@@ -102,6 +103,20 @@ export default function ProjectCanvas() {
     setIsMenuOpen(false);
   }
 
+  function createDemoMap() {
+    if (!activeProjectId) return;
+
+    const demoNodes: Array<{ kind: ForUNodeKind; title: string; icon: string; x: number; y: number }> = [
+      { kind: 'idea', title: 'Idea central: campaña FOR U', icon: '💡', x: 320, y: 180 },
+      { kind: 'task', title: '15 min: escribir 3 posts posibles', icon: '✅', x: 80, y: 70 },
+      { kind: 'resource', title: 'Recurso: abrir plantilla en Canva', icon: '🔗', x: 590, y: 70 },
+      { kind: 'task', title: '15 min: elegir una oferta simple', icon: '✅', x: 100, y: 330 },
+      { kind: 'idea', title: 'Idea: versión express para clientas', icon: '✨', x: 580, y: 330 },
+    ];
+
+    demoNodes.forEach((node) => addNode(activeProjectId, node));
+  }
+
   return (
     <section className="foru-canvas-shell" aria-label="Lienzo radial del proyecto">
       <ReactFlow
@@ -127,8 +142,21 @@ export default function ProjectCanvas() {
 
       {nodes.length === 0 && (
         <div className="foru-canvas-empty">
-          <span>Mapa radial listo</span>
-          <p>Usa el botón + para crear tu primer nodo.</p>
+          <div className="foru-canvas-empty-orbit" aria-hidden="true">
+            <span>💡</span>
+            <span>✅</span>
+            <span>🔗</span>
+          </div>
+          <span>Tu mapa está esperando ideas</span>
+          <p>Prueba el Frasco con notas caóticas o genera un mapa demo para ver cómo se siente.</p>
+          <div className="foru-canvas-empty-actions">
+            <button type="button" onClick={openIdeaJar}>
+              <Sparkles size={17} /> Abrir Frasco
+            </button>
+            <button type="button" onClick={createDemoMap}>
+              Crear demo
+            </button>
+          </div>
         </div>
       )}
 

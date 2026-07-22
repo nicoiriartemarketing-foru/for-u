@@ -2807,14 +2807,38 @@ body {
 
 .foru-shell-logo {
   flex: 0 0 auto;
-  color: #24212b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-decoration: none;
-  font-size: 1.45rem;
-  font-weight: 900;
-  letter-spacing: 0;
+  width: auto;
+  min-height: 4.2rem;
 }
 
-.foru-shell-logo span {
+.foru-logo-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #24212b;
+}
+
+.foru-logo-mark {
+  display: block;
+  width: 3.2rem;
+  height: 3.75rem;
+  flex: 0 0 auto;
+}
+
+.foru-logo-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.foru-logo-wordmark strong {
   background: linear-gradient(135deg, #FDE68A, #6EE7B7, #F9A8D4, #93C5FD);
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -3034,6 +3058,7 @@ body {
   text-align: center;
   pointer-events: none;
   color: #6b6278;
+  padding: 1.5rem;
 }
 
 .foru-canvas-empty span {
@@ -3044,7 +3069,75 @@ body {
 
 .foru-canvas-empty p {
   margin: 0;
+  max-width: 28rem;
   font-weight: 700;
+}
+
+.foru-canvas-empty-orbit {
+  position: relative;
+  width: 9rem;
+  height: 5rem;
+  margin: 0 auto 0.4rem;
+}
+
+.foru-canvas-empty-orbit span {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 14px 30px rgba(46, 41, 64, 0.1);
+  font-size: 1.35rem;
+  animation: foru-pearl-float 3.4s ease-in-out infinite;
+}
+
+.foru-canvas-empty-orbit span:nth-child(1) {
+  left: 0;
+  top: 1.2rem;
+}
+
+.foru-canvas-empty-orbit span:nth-child(2) {
+  left: 3rem;
+  top: 0;
+  animation-delay: 0.35s;
+}
+
+.foru-canvas-empty-orbit span:nth-child(3) {
+  right: 0;
+  top: 1.2rem;
+  animation-delay: 0.7s;
+}
+
+.foru-canvas-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 0.45rem;
+  pointer-events: auto;
+}
+
+.foru-canvas-empty-actions button {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.72rem 1rem;
+  color: #24212b;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 12px 26px rgba(46, 41, 64, 0.08);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 900;
+}
+
+.foru-canvas-empty-actions button:first-child {
+  background: linear-gradient(135deg, #FDE68A, #6EE7B7, #F9A8D4, #93C5FD);
 }
 
 .foru-canvas-add {
@@ -3137,6 +3230,20 @@ body {
   color: #ffffff;
   background: #24212b;
   font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.foru-idea-jar-fab small {
+  position: absolute;
+  left: 50%;
+  bottom: -1.55rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  padding: 0.24rem 0.52rem;
+  color: #4f465c;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 22px rgba(46, 41, 64, 0.08);
+  font-size: 0.68rem;
   font-weight: 900;
 }
 
