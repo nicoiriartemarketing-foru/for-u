@@ -2875,6 +2875,28 @@ body {
   padding: 0.62rem 0.78rem;
 }
 
+.foru-world3d-toggle {
+  min-height: 2.7rem;
+  flex: 0 0 auto;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.72rem 1rem;
+  color: #333333;
+  background:
+    linear-gradient(rgba(255,255,255,0.78), rgba(255,255,255,0.78)) padding-box,
+    linear-gradient(135deg, #FDE68A, #6EE7B7, #F9A8D4, #93C5FD) border-box;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 950;
+  box-shadow: 0 14px 30px rgba(124, 92, 255, 0.1);
+}
+
+.foru-world3d-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 38px rgba(124, 92, 255, 0.15);
+}
+
 .foru-shell-main {
   min-height: calc(100vh - 5.25rem);
   display: flex;
@@ -3189,6 +3211,47 @@ body {
 
 .foru-canvas-add-menu button:hover {
   background: rgba(250, 247, 255, 0.95);
+}
+
+.foru-world3d-shell {
+  position: relative;
+  flex: 1;
+  min-height: 36rem;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  background: #f5f0ff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.82), 0 24px 68px rgba(46, 41, 64, 0.08);
+}
+
+.foru-world3d-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 36rem;
+}
+
+.foru-world3d-back {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 2;
+  min-height: 2.65rem;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.72rem 1rem;
+  color: #333333;
+  background: rgba(255, 255, 255, 0.86);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 950;
+  box-shadow: 0 14px 30px rgba(46, 41, 64, 0.1);
+  backdrop-filter: blur(18px);
+}
+
+.foru-world3d-back:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
 }
 
 .foru-node-panel {
@@ -3661,6 +3724,10 @@ body {
     max-width: none;
   }
 
+  .foru-world3d-toggle {
+    width: 100%;
+  }
+
   .foru-shell-tabs .foru-tabbar {
     flex-direction: column;
   }
@@ -3680,6 +3747,12 @@ body {
   }
 
   .foru-canvas-shell {
+    min-height: 30rem;
+    border-radius: 18px;
+  }
+
+  .foru-world3d-shell,
+  .foru-world3d-canvas {
     min-height: 30rem;
     border-radius: 18px;
   }
