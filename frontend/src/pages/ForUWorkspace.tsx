@@ -1,6 +1,8 @@
+import { AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import IdeaJarFab from '../components/IdeaJarFab';
 import Logo from '../components/Logo';
+import NodeDetailPanel from '../components/NodeDetailPanel';
 import ProjectCanvas from '../components/ProjectCanvas';
 import ProjectTabBar from '../components/ProjectTabBar';
 import { Sparkles } from '../lib/icons';
@@ -10,6 +12,7 @@ export default function ForUWorkspace() {
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
   const rawNotes = useActiveProjectsStore((state) => state.rawNotes);
+  const selectedNodeId = useActiveProjectsStore((state) => state.selectedNodeId);
 
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
 
@@ -27,13 +30,16 @@ export default function ForUWorkspace() {
       <section className="foru-shell-main">
         <div className="foru-canvas-stage">
           <div className="foru-canvas-toolbar">
-            <span className="foru-step-kicker">Fase 3 · Lienzo Radial</span>
+            <span className="foru-step-kicker">Fase 6 · Mapa Mental Radial</span>
             <div className="foru-shell-metrics">
               <span><Sparkles size={16} /> {rawNotes.length} notas crudas</span>
               <span>{activeProject?.name ?? 'sin proyecto'}</span>
             </div>
           </div>
           <ProjectCanvas />
+          <AnimatePresence>
+            {selectedNodeId ? <NodeDetailPanel key={selectedNodeId} /> : null}
+          </AnimatePresence>
         </div>
       </section>
 

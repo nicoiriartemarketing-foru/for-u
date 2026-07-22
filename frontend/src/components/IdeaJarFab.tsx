@@ -22,7 +22,7 @@ export default function IdeaJarFab() {
   const openIdeaJar = useActiveProjectsStore((state) => state.openIdeaJar);
   const closeIdeaJar = useActiveProjectsStore((state) => state.closeIdeaJar);
   const addRawNote = useActiveProjectsStore((state) => state.addRawNote);
-  const addNode = useActiveProjectsStore((state) => state.addNode);
+  const addFreeNodesToBranches = useActiveProjectsStore((state) => state.addFreeNodesToBranches);
   const clearRawNotes = useActiveProjectsStore((state) => state.clearRawNotes);
 
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
@@ -44,19 +44,24 @@ export default function IdeaJarFab() {
     try {
       const response = await processRawNotes(rawNotes.map((note) => note.content), activeProject.name);
 
-      response.nodos.forEach((node) => {
-        addNode(activeProjectId, {
+      const createdNodeIds = addFreeNodesToBranches(
+        activeProjectId,
+        response.nodos.map((node) => ({
           title: node.data.label,
           kind: mapAiTypeToNodeKind(node.type),
           icon: node.data.icon,
+          branchKey: node.branchKey,
+          description: node.data.description,
           x: node.position.x,
           y: node.position.y,
-        });
-      });
+        })),
+      );
 
       clearRawNotes();
       closeIdeaJar();
-      showToast(response.mensaje);
+      showToast(createdNodeIds.length > 0
+        ? response.mensaje
+        : '⚓ La IA organizó ideas, pero no encontró una rama válida para soltarlas.');
     } catch {
       showToast('🌊 La marea se movió raro. Intenta organizar tus ideas otra vez.');
     } finally {

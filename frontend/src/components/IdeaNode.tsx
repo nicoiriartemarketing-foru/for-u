@@ -7,7 +7,7 @@ export type IdeaNodeData = {
   icon?: string;
 };
 
-const nodeLabels: Record<ForUNodeKind, string> = {
+const nodeLabels: Partial<Record<ForUNodeKind, string>> = {
   idea: 'Idea',
   task: 'Accion',
   resource: 'Recurso',
@@ -19,7 +19,7 @@ export default function IdeaNode({ data, selected }: NodeProps<IdeaNodeData>) {
   return (
     <article className={selected ? 'foru-idea-node is-selected' : 'foru-idea-node'}>
       <Handle className="foru-node-handle" type="target" position={Position.Left} />
-      <div className="foru-idea-node-kicker">{nodeLabels[data.kind]}</div>
+      <div className="foru-idea-node-kicker">{nodeLabels[data.kind] ?? 'Nodo'}</div>
       <h3>
         {data.icon && <span aria-hidden="true">{data.icon}</span>}
         {data.title}

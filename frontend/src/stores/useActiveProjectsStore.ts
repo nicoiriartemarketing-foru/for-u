@@ -3,7 +3,9 @@ import { persist } from 'zustand/middleware';
 
 export type ForUProjectStatus = 'active' | 'paused' | 'blocked' | 'completed';
 export type ForUTaskStatus = 'todo' | 'doing' | 'done';
-export type ForUNodeKind = 'idea' | 'task' | 'resource' | 'blocker' | 'inspiration';
+export type ForUNodeKind = 'center' | 'branch' | 'idea' | 'task' | 'resource' | 'blocker' | 'inspiration';
+export type ForUNodeRole = 'center' | 'branch' | 'free';
+export type ForUBranchKey = 'ideas' | 'actions' | 'finances' | 'marketing' | 'resources';
 export type ForURawNoteKind = 'text' | 'audio' | 'photo';
 
 export type ForUTask = {
@@ -18,9 +20,13 @@ export type ForUProjectNode = {
   id: string;
   title: string;
   kind: ForUNodeKind;
+  role?: ForUNodeRole;
+  branchKey?: ForUBranchKey;
   x: number;
   y: number;
   icon?: string;
+  description?: string;
+  locked?: boolean;
   linkedTaskId?: string;
   externalUrl?: string;
   createdAt: string;
@@ -66,12 +72,17 @@ type CreateRawNoteInput = {
   previewUrl?: string;
 };
 
+export type CreateFreeNodeForBranchInput = Omit<ForUProjectNode, 'id' | 'createdAt' | 'role'> & {
+  branchKey: ForUBranchKey;
+};
+
 type ActiveProjectsState = {
   activeProjectIds: string[];
   activeProjectId: string | null;
   projectsById: Record<string, ForUActiveProject>;
   rawNotes: ForURawNote[];
   isJarOpen: boolean;
+  selectedNodeId: string | null;
   openProject: (input: CreateProjectInput) => string;
   focusProject: (projectId: string) => void;
   closeProject: (projectId: string) => void;
@@ -80,10 +91,14 @@ type ActiveProjectsState = {
   addTask: (projectId: string, title: string) => string | null;
   updateTaskStatus: (projectId: string, taskId: string, status: ForUTaskStatus) => void;
   addNode: (projectId: string, node: Omit<ForUProjectNode, 'id' | 'createdAt'>) => string | null;
+  addFreeNodeToBranch: (projectId: string, branchKey: ForUBranchKey, node: Omit<ForUProjectNode, 'id' | 'createdAt' | 'role'>) => string | null;
+  addFreeNodesToBranches: (projectId: string, nodes: CreateFreeNodeForBranchInput[]) => string[];
   updateNode: (projectId: string, nodeId: string, patch: Partial<Omit<ForUProjectNode, 'id'>>) => void;
   moveNode: (projectId: string, nodeId: string, position: { x: number; y: number }) => void;
   connectNodes: (projectId: string, source: string, target: string) => string | null;
   removeEdge: (projectId: string, edgeId: string) => void;
+  selectNode: (nodeId: string) => void;
+  deselectNode: () => void;
   openIdeaJar: () => void;
   closeIdeaJar: () => void;
   toggleIdeaJar: () => void;
@@ -92,8 +107,6 @@ type ActiveProjectsState = {
   clearRawNotes: () => void;
   resetWorkspace: () => void;
 };
-
-const starterProject = createProject({ name: 'Mi primer proyecto' });
 
 function createId(prefix: string) {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -109,14 +122,17 @@ function now() {
 
 function createProject(input: CreateProjectInput): ForUActiveProject {
   const timestamp = now();
+  const projectId = createId('project');
+  const name = input.name.trim() || 'Proyecto sin nombre';
+  const base = createBaseMap(projectId, name, timestamp);
 
   return {
-    id: createId('project'),
-    name: input.name.trim() || 'Proyecto sin nombre',
+    id: projectId,
+    name,
     status: input.status ?? 'active',
     tasks: [],
-    nodes: [],
-    edges: [],
+    nodes: base.nodes,
+    edges: base.edges,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -127,13 +143,84 @@ function touch(project: ForUActiveProject): ForUActiveProject {
 }
 
 function normalizeProject(project: ForUActiveProject): ForUActiveProject {
+  const timestamp = now();
+  const base = createBaseMap(project.id, project.name, timestamp);
+  const nodes = project.nodes ?? [];
+  const edges = project.edges ?? [];
+  const missingBaseNodes = base.nodes.filter((baseNode) => !nodes.some((node) => node.id === baseNode.id));
+  const missingBaseEdges = base.edges.filter((baseEdge) => !edges.some((edge) => edge.id === baseEdge.id));
+
   return {
     ...project,
     tasks: project.tasks ?? [],
-    nodes: project.nodes ?? [],
-    edges: project.edges ?? [],
+    nodes: [...missingBaseNodes, ...nodes],
+    edges: [...missingBaseEdges, ...edges],
   };
 }
+
+export const baseBranches: Array<{
+  key: ForUBranchKey;
+  title: string;
+  icon: string;
+  x: number;
+  y: number;
+  color: string;
+}> = [
+  { key: 'ideas', title: 'Ideas', icon: '💡', x: 240, y: 210, color: '#FDE68A' },
+  { key: 'actions', title: 'Acciones', icon: '✅', x: 760, y: 210, color: '#6EE7B7' },
+  { key: 'finances', title: 'Finanzas', icon: '💰', x: 830, y: 400, color: '#93C5FD' },
+  { key: 'marketing', title: 'Marketing', icon: '📱', x: 760, y: 590, color: '#C39BD3' },
+  { key: 'resources', title: 'Recursos', icon: '🎨', x: 240, y: 590, color: '#76D7C4' },
+];
+
+export function getCenterNodeId(projectId: string) {
+  return `${projectId}-center`;
+}
+
+export function getBranchNodeId(projectId: string, branchKey: ForUBranchKey) {
+  return `${projectId}-branch-${branchKey}`;
+}
+
+function createBaseMap(projectId: string, projectName: string, timestamp: string) {
+  const centerNode: ForUProjectNode = {
+    id: getCenterNodeId(projectId),
+    title: projectName,
+    kind: 'center',
+    role: 'center',
+    x: 500,
+    y: 400,
+    icon: '✨',
+    locked: true,
+    createdAt: timestamp,
+  };
+
+  const branchNodes: ForUProjectNode[] = baseBranches.map((branch) => ({
+    id: getBranchNodeId(projectId, branch.key),
+    title: branch.title,
+    kind: 'branch',
+    role: 'branch',
+    branchKey: branch.key,
+    x: branch.x,
+    y: branch.y,
+    icon: branch.icon,
+    locked: true,
+    createdAt: timestamp,
+  }));
+
+  const branchEdges: ForUProjectEdge[] = baseBranches.map((branch) => ({
+    id: `${projectId}-edge-center-${branch.key}`,
+    source: centerNode.id,
+    target: getBranchNodeId(projectId, branch.key),
+    createdAt: timestamp,
+  }));
+
+  return {
+    nodes: [centerNode, ...branchNodes],
+    edges: branchEdges,
+  };
+}
+
+const starterProject = createProject({ name: 'Mi primer proyecto' });
 
 export const useActiveProjectsStore = create<ActiveProjectsState>()(
   persist(
@@ -145,6 +232,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
       },
       rawNotes: [],
       isJarOpen: false,
+      selectedNodeId: null,
 
       openProject: (input) => {
         const project = createProject(input);
@@ -152,6 +240,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
         set((state) => ({
           activeProjectIds: [...state.activeProjectIds, project.id],
           activeProjectId: project.id,
+          selectedNodeId: null,
           projectsById: {
             ...state.projectsById,
             [project.id]: project,
@@ -163,7 +252,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
 
       focusProject: (projectId) => {
         if (!get().projectsById[projectId]) return;
-        set({ activeProjectId: projectId });
+        set({ activeProjectId: projectId, selectedNodeId: null });
       },
 
       closeProject: (projectId) => {
@@ -178,6 +267,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           return {
             activeProjectIds: nextActiveIds,
             activeProjectId: nextFocusedId,
+            selectedNodeId: state.activeProjectId === projectId ? null : state.selectedNodeId,
             projectsById: nextProjects,
           };
         });
@@ -185,13 +275,21 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
 
       renameProject: (projectId, name) => {
         set((state) => {
-          const project = state.projectsById[projectId];
-          if (!project) return state;
+          const storedProject = state.projectsById[projectId];
+          if (!storedProject) return state;
+          const project = normalizeProject(storedProject);
+          const nextName = name.trim() || project.name;
 
           return {
             projectsById: {
               ...state.projectsById,
-              [projectId]: touch({ ...project, name: name.trim() || project.name }),
+              [projectId]: touch({
+                ...project,
+                name: nextName,
+                nodes: project.nodes.map((node) =>
+                  node.role === 'center' ? { ...node, title: nextName } : node,
+                ),
+              }),
             },
           };
         });
@@ -265,6 +363,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
 
         const projectNode: ForUProjectNode = {
           ...node,
+          role: node.role ?? 'free',
           id: createId('node'),
           createdAt: now(),
         };
@@ -280,6 +379,88 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
         }));
 
         return projectNode.id;
+      },
+
+      addFreeNodeToBranch: (projectId, branchKey, node) => {
+        const storedProject = get().projectsById[projectId];
+        const project = storedProject ? normalizeProject(storedProject) : null;
+        if (!project) return null;
+
+        const branchNode = project.nodes.find((projectNode) => projectNode.branchKey === branchKey);
+        if (!branchNode) return null;
+
+        const projectNode: ForUProjectNode = {
+          ...node,
+          role: 'free',
+          branchKey,
+          id: createId('node'),
+          createdAt: now(),
+        };
+
+        const edge: ForUProjectEdge = {
+          id: createId('edge'),
+          source: branchNode.id,
+          target: projectNode.id,
+          createdAt: now(),
+        };
+
+        set((state) => ({
+          projectsById: {
+            ...state.projectsById,
+            [projectId]: touch({
+              ...project,
+              nodes: [...project.nodes, projectNode],
+              edges: [...project.edges, edge],
+            }),
+          },
+        }));
+
+        return projectNode.id;
+      },
+
+      addFreeNodesToBranches: (projectId, nodes) => {
+        const storedProject = get().projectsById[projectId];
+        const project = storedProject ? normalizeProject(storedProject) : null;
+        if (!project || nodes.length === 0) return [];
+
+        const timestamp = now();
+        const createdNodes: ForUProjectNode[] = [];
+        const createdEdges: ForUProjectEdge[] = [];
+
+        nodes.forEach((node) => {
+          const branchNode = project.nodes.find((projectNode) => projectNode.branchKey === node.branchKey);
+          if (!branchNode) return;
+
+          const projectNode: ForUProjectNode = {
+            ...node,
+            role: 'free',
+            id: createId('node'),
+            createdAt: timestamp,
+          };
+
+          createdNodes.push(projectNode);
+          createdEdges.push({
+            id: createId('edge'),
+            source: branchNode.id,
+            target: projectNode.id,
+            createdAt: timestamp,
+          });
+        });
+
+        if (createdNodes.length === 0) return [];
+
+        set((state) => ({
+          projectsById: {
+            ...state.projectsById,
+            [projectId]: touch({
+              ...project,
+              nodes: [...project.nodes, ...createdNodes],
+              edges: [...project.edges, ...createdEdges],
+            }),
+          },
+        }));
+
+        return createdNodes.map((node) => node.id);
       },
 
       updateNode: (projectId, nodeId, patch) => {
@@ -313,9 +494,10 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
               ...state.projectsById,
               [projectId]: touch({
                 ...project,
-                nodes: project.nodes.map((node) =>
-                  node.id === nodeId ? { ...node, x: position.x, y: position.y } : node,
-                ),
+                nodes: project.nodes.map((node) => {
+                  if (node.id !== nodeId || node.locked) return node;
+                  return { ...node, x: position.x, y: position.y };
+                }),
               }),
             },
           };
@@ -370,6 +552,10 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
         });
       },
 
+      selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
+
+      deselectNode: () => set({ selectedNodeId: null }),
+
       openIdeaJar: () => set({ isJarOpen: true }),
 
       closeIdeaJar: () => set({ isJarOpen: false }),
@@ -415,12 +601,32 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           },
           rawNotes: [],
           isJarOpen: false,
+          selectedNodeId: null,
         });
       },
     }),
     {
       name: 'foru-active-projects',
-      version: 1,
+      version: 2,
+      migrate: (persistedState) => {
+        const state = persistedState as ActiveProjectsState | undefined;
+        if (!state) return state;
+
+        return {
+          ...state,
+          projectsById: Object.fromEntries(
+            Object.entries(state.projectsById ?? {}).map(([projectId, project]) => [
+              projectId,
+              normalizeProject(project),
+            ]),
+          ),
+          activeProjectIds: state.activeProjectIds ?? [],
+          activeProjectId: state.activeProjectId ?? null,
+          rawNotes: state.rawNotes ?? [],
+          isJarOpen: state.isJarOpen ?? false,
+          selectedNodeId: state.selectedNodeId ?? null,
+        };
+      },
     },
   ),
 );
