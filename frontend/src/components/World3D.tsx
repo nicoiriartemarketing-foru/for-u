@@ -1,10 +1,12 @@
 import { useMemo, useRef, useState } from 'react';
-import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber';
+import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Environment, Float, Html, OrbitControls } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette, N8AO } from '@react-three/postprocessing';
-import { PCFSoftShadowMap, type PointLight } from 'three';
+import { PCFSoftShadowMap, Vector3, type PointLight } from 'three';
+import BuildingInterior from './BuildingInterior';
 import Sailboat from './Sailboat';
-import { type ForUBranchKey, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import TaskProp from './TaskProp';
+import { type ForUBranchKey, type ForUProjectNode, type ForUWorldViewLevel, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
 type World3DProps = {
   onBackToMap: () => void;
@@ -203,11 +205,28 @@ function BuildingGeometry({ shape, color, roofColor }: Pick<BuildingConfig, 'sha
   );
 }
 
-function BranchBuilding({ config, count }: { config: BuildingConfig; count: number }) {
+function BranchBuilding({
+  config,
+  count,
+  viewLevel,
+  isActive,
+  onSelect,
+  onEnter,
+}: {
+  config: BuildingConfig;
+  count: number;
+  viewLevel: ForUWorldViewLevel;
+  isActive: boolean;
+  onSelect: (branchKey: ForUBranchKey) => void;
+  onEnter: () => void;
+}) {
   const [isHovered, setIsHovered] = useState(false);
   const scale = getBuildingScale(count);
   const color = count === 0 ? inactiveColor : config.color;
   const roofColor = count === 0 ? '#ededed' : config.roofColor;
+  const shouldDim = viewLevel === 'exterior' && !isActive;
+
+  if (viewLevel === 'interior' || shouldDim) return null;
 
   function handlePointerOver(event: ThreeEvent<PointerEvent>) {
     event.stopPropagation();
@@ -226,6 +245,15 @@ function BranchBuilding({ config, count }: { config: BuildingConfig; count: numb
         scale={[scale, scale, scale]}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelect(config.branchKey);
+        }}
+        onDoubleClick={(event) => {
+          event.stopPropagation();
+          onSelect(config.branchKey);
+          onEnter();
+        }}
       >
         <BuildingGeometry shape={config.shape} color={color} roofColor={roofColor} />
         <ActivityLight count={count} color={config.color} />
@@ -237,14 +265,26 @@ function BranchBuilding({ config, count }: { config: BuildingConfig; count: numb
             </div>
           </Html>
         ) : null}
+        {viewLevel === 'exterior' && isActive ? (
+          <Html position={[0, 3.05, 0]} center distanceFactor={8}>
+            <button type="button" className="foru-world3d-level-button" onClick={onEnter}>
+              🚪 Entrar
+            </button>
+          </Html>
+        ) : null}
       </group>
     </Float>
   );
 }
 
-function Island() {
+function Island({ onSelect }: { onSelect: () => void }) {
   return (
-    <group>
+    <group
+      onClick={(event) => {
+        event.stopPropagation();
+        onSelect();
+      }}
+    >
       <mesh position={[0, 0, 0]} receiveShadow castShadow>
         <cylinderGeometry args={[3, 3.5, 1, 32]} />
         <meshPhysicalMaterial color="#d5f5e3" {...softClayMaterial} clearcoat={0.18} />
@@ -362,9 +402,54 @@ function Pearls() {
   );
 }
 
-function WorldScene({ branchCounts }: { branchCounts: BranchCounts }) {
+function CameraRig({ viewLevel, selectedBranch }: { viewLevel: ForUWorldViewLevel; selectedBranch: ForUBranchKey }) {
+  const { camera } = useThree();
+  const cameraTarget = useMemo(() => new Vector3(), []);
+  const lookTarget = useMemo(() => new Vector3(), []);
+
+  useFrame(() => {
+    const branchConfig = buildingConfigs.find((config) => config.branchKey === selectedBranch) ?? buildingConfigs[0];
+
+    if (viewLevel === 'archipelago') {
+      cameraTarget.set(15, 15, 15);
+      lookTarget.set(0, 0.6, 0);
+    } else if (viewLevel === 'exterior') {
+      cameraTarget.set(branchConfig.position[0] + 5.8, 6.2, branchConfig.position[2] + 5.8);
+      lookTarget.set(branchConfig.position[0], 1.15, branchConfig.position[2]);
+    } else {
+      cameraTarget.set(3, 2, 5);
+      lookTarget.set(0, 0.95, 0);
+    }
+
+    camera.position.lerp(cameraTarget, 0.045);
+    camera.lookAt(lookTarget);
+  });
+
+  return null;
+}
+
+function WorldScene({
+  branchCounts,
+  selectedBranch,
+  viewLevel,
+  tasks,
+  onSelectBranch,
+  onEnter,
+  onExit,
+}: {
+  branchCounts: BranchCounts;
+  selectedBranch: ForUBranchKey;
+  viewLevel: ForUWorldViewLevel;
+  tasks: ForUProjectNode[];
+  onSelectBranch: (branchKey: ForUBranchKey) => void;
+  onEnter: () => void;
+  onExit: () => void;
+}) {
+  const selectedConfig = buildingConfigs.find((config) => config.branchKey === selectedBranch) ?? buildingConfigs[0];
+
   return (
     <>
+      <CameraRig viewLevel={viewLevel} selectedBranch={selectedBranch} />
       <color attach="background" args={['#f5f0ff']} />
       <fog attach="fog" args={['#f5f0ff', 10, 25]} />
       <Environment preset="sunset" />
@@ -376,20 +461,53 @@ function WorldScene({ branchCounts }: { branchCounts: BranchCounts }) {
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
       />
-      <Water />
-      <Island />
-      {buildingConfigs.map((config) => (
-        <BranchBuilding key={config.branchKey} config={config} count={branchCounts[config.branchKey]} />
-      ))}
-      <Lighthouses />
-      <Trees />
-      <Pearls />
-      <Sailboat />
-      <ContactShadows position={[0, -0.34, 0]} opacity={0.34} scale={8.6} blur={2.4} far={5.8} color="#8d7ca6" />
+      {viewLevel === 'interior' ? (
+        <>
+          <BuildingInterior branchKey={selectedBranch} tasks={tasks} />
+          <Html position={[0, 2.65, -1.35]} center distanceFactor={5}>
+            <button type="button" className="foru-world3d-level-button" onClick={onExit}>
+              🔙 Salir
+            </button>
+          </Html>
+        </>
+      ) : (
+        <>
+          <Water />
+          <Island onSelect={() => onSelectBranch(selectedBranch)} />
+          {buildingConfigs.map((config) => (
+            <BranchBuilding
+              key={config.branchKey}
+              config={config}
+              count={branchCounts[config.branchKey]}
+              viewLevel={viewLevel}
+              isActive={config.branchKey === selectedBranch}
+              onSelect={onSelectBranch}
+              onEnter={onEnter}
+            />
+          ))}
+          {viewLevel === 'exterior'
+            ? tasks.slice(0, 8).map((task, index) => (
+                <TaskProp
+                  key={task.id}
+                  node={task}
+                  index={index}
+                  viewLevel="exterior"
+                  origin={selectedConfig.position}
+                />
+              ))
+            : null}
+          <Lighthouses />
+          <Trees />
+          <Pearls />
+          <Sailboat />
+          <ContactShadows position={[0, -0.34, 0]} opacity={0.34} scale={8.6} blur={2.4} far={5.8} color="#8d7ca6" />
+        </>
+      )}
       <OrbitControls
         enablePan={false}
-        minDistance={5}
-        maxDistance={15}
+        enabled={viewLevel !== 'interior'}
+        minDistance={viewLevel === 'archipelago' ? 8 : 4}
+        maxDistance={viewLevel === 'archipelago' ? 20 : 11}
         minPolarAngle={Math.PI / 4}
         maxPolarAngle={Math.PI / 2.5}
       />
@@ -405,7 +523,12 @@ function WorldScene({ branchCounts }: { branchCounts: BranchCounts }) {
 export default function World3D({ onBackToMap }: World3DProps) {
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
+  const focusedBranch = useActiveProjectsStore((state) => state.focusedBranch);
+  const setFocusBranch = useActiveProjectsStore((state) => state.setFocusBranch);
+  const viewLevel = useActiveProjectsStore((state) => state.viewLevel);
+  const setViewLevel = useActiveProjectsStore((state) => state.setViewLevel);
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
+  const selectedBranch = focusedBranch ?? 'marketing';
 
   const branchCounts = useMemo<BranchCounts>(() => {
     const counts: BranchCounts = {
@@ -425,14 +548,31 @@ export default function World3D({ onBackToMap }: World3DProps) {
     return counts;
   }, [activeProject?.nodes]);
 
+  const selectedBranchTasks = useMemo(() => {
+    return activeProject?.nodes.filter((node) => node.role === 'free' && node.branchKey === selectedBranch) ?? [];
+  }, [activeProject?.nodes, selectedBranch]);
+
+  function selectBranch(branchKey: ForUBranchKey) {
+    setFocusBranch(branchKey);
+    setViewLevel('exterior');
+  }
+
   return (
     <section className="foru-world3d-shell" aria-label="Mundito 3D de proyectos">
       <button type="button" className="foru-world3d-back" onClick={onBackToMap}>
         Volver al Mapa
       </button>
 
-      <Canvas shadows={{ type: PCFSoftShadowMap }} camera={{ position: [8, 8, 8], fov: 45 }} className="foru-world3d-canvas">
-        <WorldScene branchCounts={branchCounts} />
+      <Canvas shadows={{ type: PCFSoftShadowMap }} camera={{ position: [15, 15, 15], fov: 45 }} className="foru-world3d-canvas">
+        <WorldScene
+          branchCounts={branchCounts}
+          selectedBranch={selectedBranch}
+          viewLevel={viewLevel}
+          tasks={selectedBranchTasks}
+          onSelectBranch={selectBranch}
+          onEnter={() => setViewLevel('interior')}
+          onExit={() => setViewLevel('exterior')}
+        />
       </Canvas>
     </section>
   );

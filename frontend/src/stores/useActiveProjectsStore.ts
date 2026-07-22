@@ -8,6 +8,7 @@ export type ForUNodeRole = 'center' | 'branch' | 'free';
 export type ForUBranchKey = 'ideas' | 'actions' | 'finances' | 'marketing' | 'resources';
 export type ForUNodePriority = 'high' | 'medium' | 'low';
 export type ForURawNoteKind = 'text' | 'audio' | 'photo';
+export type ForUWorldViewLevel = 'archipelago' | 'exterior' | 'interior';
 
 export type ForUTask = {
   id: string;
@@ -89,6 +90,7 @@ type ActiveProjectsState = {
   isJarOpen: boolean;
   selectedNodeId: string | null;
   focusedBranch: ForUBranchKey | null;
+  viewLevel: ForUWorldViewLevel;
   openProject: (input: CreateProjectInput) => string;
   focusProject: (projectId: string) => void;
   closeProject: (projectId: string) => void;
@@ -109,6 +111,8 @@ type ActiveProjectsState = {
   deselectNode: () => void;
   setFocusBranch: (branchKey: ForUBranchKey) => void;
   clearFocus: () => void;
+  setViewLevel: (level: ForUWorldViewLevel) => void;
+  toggleView: () => void;
   openIdeaJar: () => void;
   closeIdeaJar: () => void;
   toggleIdeaJar: () => void;
@@ -244,6 +248,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
       isJarOpen: false,
       selectedNodeId: null,
       focusedBranch: null,
+      viewLevel: 'archipelago',
 
       openProject: (input) => {
         const project = createProject(input);
@@ -253,6 +258,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           activeProjectId: project.id,
           selectedNodeId: null,
           focusedBranch: null,
+          viewLevel: 'archipelago',
           projectsById: {
             ...state.projectsById,
             [project.id]: project,
@@ -264,7 +270,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
 
       focusProject: (projectId) => {
         if (!get().projectsById[projectId]) return;
-        set({ activeProjectId: projectId, selectedNodeId: null, focusedBranch: null });
+        set({ activeProjectId: projectId, selectedNodeId: null, focusedBranch: null, viewLevel: 'archipelago' });
       },
 
       closeProject: (projectId) => {
@@ -281,6 +287,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
             activeProjectId: nextFocusedId,
             selectedNodeId: state.activeProjectId === projectId ? null : state.selectedNodeId,
             focusedBranch: state.activeProjectId === projectId ? null : state.focusedBranch,
+            viewLevel: state.activeProjectId === projectId ? 'archipelago' : state.viewLevel,
             projectsById: nextProjects,
           };
         });
@@ -662,6 +669,17 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
 
       clearFocus: () => set({ focusedBranch: null }),
 
+      setViewLevel: (level) => set({ viewLevel: level }),
+
+      toggleView: () => set((state) => ({
+        viewLevel:
+          state.viewLevel === 'archipelago'
+            ? 'exterior'
+            : state.viewLevel === 'exterior'
+              ? 'interior'
+              : 'exterior',
+      })),
+
       openIdeaJar: () => set({ isJarOpen: true }),
 
       closeIdeaJar: () => set({ isJarOpen: false }),
@@ -709,12 +727,13 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           isJarOpen: false,
           selectedNodeId: null,
           focusedBranch: null,
+          viewLevel: 'archipelago',
         });
       },
     }),
     {
       name: 'foru-active-projects',
-      version: 3,
+      version: 4,
       migrate: (persistedState) => {
         const state = persistedState as ActiveProjectsState | undefined;
         if (!state) return state;
@@ -733,6 +752,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           isJarOpen: state.isJarOpen ?? false,
           selectedNodeId: state.selectedNodeId ?? null,
           focusedBranch: state.focusedBranch ?? null,
+          viewLevel: state.viewLevel ?? 'archipelago',
         };
       },
     },
