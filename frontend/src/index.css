@@ -3438,6 +3438,17 @@ body {
   background: transparent;
 }
 
+.foru-canvas-flow-layer {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.28s ease, filter 0.28s ease;
+}
+
+.foru-canvas-flow-layer.is-route-muted {
+  opacity: 0.3;
+  filter: saturate(0.72);
+}
+
 .foru-canvas-shell .react-flow__attribution {
   background: rgba(255, 255, 255, 0.72);
   color: #7a7185;
@@ -3745,6 +3756,36 @@ body {
 .foru-canvas-help:hover {
   transform: translateY(-1px);
   background: #ffffff;
+}
+
+.foru-canvas-route-toggle {
+  position: absolute;
+  right: 4.25rem;
+  top: 1rem;
+  z-index: 11;
+  min-height: 2.75rem;
+  border: 1px solid rgba(244, 180, 0, 0.24);
+  border-radius: 999px;
+  padding: 0.68rem 0.9rem;
+  color: #4a3000;
+  background: rgba(255, 248, 220, 0.94);
+  box-shadow: 0 14px 30px rgba(244, 180, 0, 0.14);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 950;
+  backdrop-filter: blur(18px);
+}
+
+.foru-canvas-route-overlay {
+  position: absolute;
+  inset: 4.8rem 1.25rem 1.25rem;
+  z-index: 9;
+  overflow: auto;
+  border-radius: 24px;
+  border: 1px solid rgba(244, 180, 0, 0.18);
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 24px 68px rgba(46, 41, 64, 0.12);
+  backdrop-filter: blur(20px);
 }
 
 .foru-project-guide {
@@ -5014,6 +5055,14 @@ body {
   box-shadow: 0 12px 28px rgba(46, 41, 64, 0.08);
 }
 
+.foru-view-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
 .foru-archipelago-header {
   display: flex;
   align-items: flex-start;
@@ -5625,6 +5674,277 @@ body {
   font-weight: 800;
 }
 
+.foru-route-path {
+  position: relative;
+  display: grid;
+  gap: 1.1rem;
+  border: 1px solid rgba(244, 180, 0, 0.2);
+  border-radius: 24px;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(244, 180, 0, 0.14), transparent 16rem),
+    radial-gradient(circle at 86% 24%, rgba(118, 215, 196, 0.12), transparent 18rem),
+    linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,248,220,0.72));
+  box-shadow: 0 20px 54px rgba(244, 180, 0, 0.1);
+}
+
+.foru-route-path.is-empty {
+  color: #6b6278;
+  padding: 1.4rem;
+}
+
+.foru-route-path.is-empty strong {
+  color: #342e40;
+  font-weight: 950;
+}
+
+.foru-route-path.is-empty p {
+  margin: 0.35rem 0 0;
+  font-weight: 820;
+}
+
+.foru-route-path-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.foru-route-path-header span {
+  color: #8d6b0f;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.foru-route-path-header h2 {
+  margin: 0.18rem 0;
+  color: #2b2435;
+  font-size: 1.45rem;
+  line-height: 1;
+  font-weight: 950;
+}
+
+.foru-route-path-header p {
+  margin: 0;
+  color: #6b6278;
+  font-weight: 800;
+}
+
+.foru-route-path-header button {
+  min-height: 2.75rem;
+  border: 1px solid rgba(244, 180, 0, 0.25);
+  border-radius: 999px;
+  padding: 0.74rem 1rem;
+  color: #4a3000;
+  background: linear-gradient(135deg, #F4D03F, #F8C471);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 950;
+  box-shadow: 0 12px 28px rgba(244, 180, 0, 0.14);
+}
+
+.foru-route-path-header button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.foru-route-path-track {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.foru-route-path-line {
+  position: absolute;
+  left: 1.2rem;
+  top: 0;
+  bottom: 0;
+  width: 6rem;
+  height: 100%;
+  pointer-events: none;
+}
+
+.foru-route-path-line path {
+  fill: none;
+  stroke: #F4B400;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 14 12;
+  filter: drop-shadow(0 0 10px rgba(244, 180, 0, 0.38));
+  animation: foru-route-flow 1.8s linear infinite;
+}
+
+.foru-route-station {
+  position: relative;
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  min-height: 15.5rem;
+}
+
+.foru-route-station-marker {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+}
+
+.foru-route-station-marker span {
+  width: 3.3rem;
+  height: 3.3rem;
+  display: grid;
+  place-items: center;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  color: #4a3000;
+  background: linear-gradient(135deg, #F4D03F, #F8C471);
+  box-shadow: 0 0 0 8px rgba(244, 180, 0, 0.12), 0 16px 34px rgba(244, 180, 0, 0.18);
+  font-size: 1.1rem;
+  font-weight: 950;
+}
+
+.foru-route-station-card {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) 200px;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid rgba(124, 92, 255, 0.1);
+  border-radius: 24px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 18px 42px rgba(46, 41, 64, 0.08);
+}
+
+.foru-route-station-card small {
+  color: #8d849a;
+  font-size: 0.74rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.foru-route-station-card h3 {
+  margin: 0.22rem 0 0;
+  color: #2b2435;
+  font-size: clamp(1.15rem, 2vw, 1.65rem);
+  line-height: 1.05;
+  font-weight: 950;
+}
+
+.foru-route-station.is-current .foru-route-station-marker span {
+  animation: foru-route-pulse 1.4s ease-in-out infinite;
+}
+
+.foru-route-station.is-current .foru-route-station-card {
+  border-color: rgba(244, 180, 0, 0.38);
+  box-shadow: 0 24px 56px rgba(244, 180, 0, 0.16);
+}
+
+.foru-route-station.is-done .foru-route-station-marker span {
+  color: #14532d;
+  background: linear-gradient(135deg, #BBF7D0, #58D68D);
+  box-shadow: 0 0 0 8px rgba(88, 214, 141, 0.14), 0 16px 34px rgba(22, 101, 52, 0.12);
+}
+
+.foru-route-station.is-done .foru-route-station-card {
+  background: rgba(240, 253, 244, 0.86);
+}
+
+.foru-route-station:not(.is-current):not(.is-done) {
+  opacity: 0.62;
+}
+
+.foru-mini-mind-map {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border: 1px solid rgba(124, 92, 255, 0.08);
+  border-radius: 28px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle, rgba(124, 92, 255, 0.10) 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(135deg, rgba(250,247,255,0.94), rgba(255,255,255,0.8));
+}
+
+.foru-mini-mind-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5.4rem;
+  min-height: 3rem;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  padding: 0.45rem;
+  color: #ffffff;
+  background: linear-gradient(135deg, #F4D03F, #F9A8D4, #76D7C4);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 14px 28px rgba(124, 92, 255, 0.16);
+  text-align: center;
+}
+
+.foru-mini-mind-core strong {
+  max-width: 4.6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #ffffff;
+  font-size: 0.66rem;
+  line-height: 1.05;
+  font-weight: 950;
+}
+
+.foru-mini-mind-branch {
+  position: absolute;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--branch-color);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 10px 22px rgba(46, 41, 64, 0.08);
+}
+
+.foru-mini-mind-node {
+  position: absolute;
+  width: 4.3rem;
+  min-height: 2.05rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.22rem;
+  border: 1px solid color-mix(in srgb, var(--branch-color) 55%, transparent);
+  border-radius: 12px;
+  padding: 0.28rem;
+  color: #342e40;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 10px 22px rgba(46, 41, 64, 0.08);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  font-family: inherit;
+  text-align: left;
+}
+
+.foru-mini-mind-node strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.55rem;
+  font-weight: 900;
+}
+
+.foru-mini-mind-node.is-high {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.foru-mini-mind-node.is-medium {
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
 .foru-kanban-column {
   min-height: 28rem;
   display: flex;
@@ -5849,6 +6169,26 @@ body {
   100% {
     background-position: 4rem 2rem, -3rem 3rem, 0 0;
     filter: saturate(1.05);
+  }
+}
+
+@keyframes foru-route-flow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -52;
+  }
+}
+
+@keyframes foru-route-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(244, 180, 0, 0.12), 0 16px 34px rgba(244, 180, 0, 0.18);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 14px rgba(244, 180, 0, 0.2), 0 20px 42px rgba(244, 180, 0, 0.24);
   }
 }
 

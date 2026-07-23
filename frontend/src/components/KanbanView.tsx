@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import DigitalRoutePath from './DigitalRoutePath';
 import { baseBranches, type ForUTaskStatus, type ForUProjectNode, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
 type KanbanViewProps = {
@@ -14,6 +15,7 @@ const columns: Array<{ key: ForUTaskStatus; title: string }> = [
 
 export default function KanbanView({ includeAllProjectsDefault = false }: KanbanViewProps) {
   const [includeAllProjects, setIncludeAllProjects] = useState(includeAllProjectsDefault);
+  const [isRoutePathOpen, setIsRoutePathOpen] = useState(false);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const activeProjectIds = useActiveProjectsStore((state) => state.activeProjectIds);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
@@ -60,41 +62,50 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
           <span>Kanban</span>
           <h1>Qué va, qué está andando, qué ya salió</h1>
         </div>
-        <button type="button" onClick={() => setIncludeAllProjects((current) => !current)}>
-          {includeAllProjects ? 'Solo proyecto actual' : 'Todos los proyectos'}
-        </button>
-      </header>
-
-      <section className="foru-digital-route" aria-label="Tu Ruta Digital">
-        <div className="foru-digital-route-header">
-          <div>
-            <span>🗺️ Tu Ruta Digital</span>
-            <h2>Misión principal</h2>
-          </div>
-          <button type="button" onClick={completeCurrentRouteStep} disabled={!activeProject?.digitalRoute.length || activeProject.currentRouteIndex >= activeProject.digitalRoute.length}>
-            Completar Paso
+        <div className="foru-view-header-actions">
+          <button type="button" onClick={() => setIsRoutePathOpen((current) => !current)}>
+            {isRoutePathOpen ? 'Ver como Kanban' : '🗺️ Ver como Camino'}
+          </button>
+          <button type="button" onClick={() => setIncludeAllProjects((current) => !current)}>
+            {includeAllProjects ? 'Solo proyecto actual' : 'Todos los proyectos'}
           </button>
         </div>
+      </header>
 
-        {activeProject?.digitalRoute.length ? (
-          <div className="foru-digital-route-steps">
-            {activeProject.digitalRoute.map((step, index) => {
-              const isDone = Boolean(step.completedAt) || index < activeProject.currentRouteIndex;
-              const isCurrent = index === activeProject.currentRouteIndex && !isDone;
-
-              return (
-                <article key={step.id} className={`${isDone ? 'is-done' : ''} ${isCurrent ? 'is-current' : ''}`}>
-                  <span>{isDone ? '✓' : index + 1}</span>
-                  <strong>{step.title}</strong>
-                  <small>{isDone ? 'Completado' : isCurrent ? 'Paso actual' : 'Próximo'}</small>
-                </article>
-              );
-            })}
+      {isRoutePathOpen ? (
+        <DigitalRoutePath project={activeProject} onCompleteStep={completeCurrentRouteStep} />
+      ) : (
+        <section className="foru-digital-route" aria-label="Tu Ruta Digital">
+          <div className="foru-digital-route-header">
+            <div>
+              <span>🗺️ Tu Ruta Digital</span>
+              <h2>Misión principal</h2>
+            </div>
+            <button type="button" onClick={completeCurrentRouteStep} disabled={!activeProject?.digitalRoute.length || activeProject.currentRouteIndex >= activeProject.digitalRoute.length}>
+              Completar Paso
+            </button>
           </div>
-        ) : (
-          <p className="foru-digital-route-empty">Procesa ideas desde el Frasco para que la IA trace tu misión principal.</p>
-        )}
-      </section>
+
+          {activeProject?.digitalRoute.length ? (
+            <div className="foru-digital-route-steps">
+              {activeProject.digitalRoute.map((step, index) => {
+                const isDone = Boolean(step.completedAt) || index < activeProject.currentRouteIndex;
+                const isCurrent = index === activeProject.currentRouteIndex && !isDone;
+
+                return (
+                  <article key={step.id} className={`${isDone ? 'is-done' : ''} ${isCurrent ? 'is-current' : ''}`}>
+                    <span>{isDone ? '✓' : index + 1}</span>
+                    <strong>{step.title}</strong>
+                    <small>{isDone ? 'Completado' : isCurrent ? 'Paso actual' : 'Próximo'}</small>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="foru-digital-route-empty">Procesa ideas desde el Frasco para que la IA trace tu misión principal.</p>
+          )}
+        </section>
+      )}
 
       <div className="foru-kanban-columns">
         {columns.map((column) => {

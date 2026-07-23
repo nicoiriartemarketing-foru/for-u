@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent, WheelEvent } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import MiniMapIsland from './MiniMapIsland';
@@ -21,9 +21,8 @@ export default function ArchipelagoView({ onEnterProject }: ArchipelagoViewProps
   const [boatProjectId, setBoatProjectId] = useState<string | null>(null);
   const [isPanning, setIsPanning] = useState(false);
 
-  const activeProjectIds = useActiveProjectsStore((state) => state.activeProjectIds);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
-  const projectsById = useActiveProjectsStore((state) => state.projectsById);
+  const projects = useActiveProjectsStore((state) => state.getActiveProjects());
   const lastCreatedProjectId = useActiveProjectsStore((state) => state.lastCreatedProjectId);
   const archipelagoZoom = useActiveProjectsStore((state) => state.archipelagoZoom);
   const archipelagoOffset = useActiveProjectsStore((state) => state.archipelagoOffset);
@@ -34,10 +33,6 @@ export default function ArchipelagoView({ onEnterProject }: ArchipelagoViewProps
   const panToIsland = useActiveProjectsStore((state) => state.panToIsland);
   const resetArchipelagoView = useActiveProjectsStore((state) => state.resetArchipelagoView);
   const clearLastCreatedProject = useActiveProjectsStore((state) => state.clearLastCreatedProject);
-
-  const projects = useMemo(() => {
-    return activeProjectIds.map((projectId) => projectsById[projectId]).filter(Boolean);
-  }, [activeProjectIds, projectsById]);
 
   const selectedProjectId = boatProjectId ?? activeProjectId ?? projects[0]?.id ?? null;
   const selectedIndex = Math.max(0, projects.findIndex((project) => project.id === selectedProjectId));

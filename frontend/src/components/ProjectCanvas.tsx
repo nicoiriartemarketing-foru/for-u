@@ -17,6 +17,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import BranchNode, { type BranchNodeData } from './BranchNode';
 import CenterNode, { type CenterNodeData } from './CenterNode';
+import DigitalRoutePath from './DigitalRoutePath';
 import IdeaNode, { type IdeaNodeData } from './IdeaNode';
 import { Plus } from '../lib/icons';
 import {
@@ -113,6 +114,7 @@ export default function ProjectCanvas() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<{ kind: ForUNodeKind; title: string } | null>(null);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isRouteViewOpen, setIsRouteViewOpen] = useState(false);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
   const addFreeNodeToBranch = useActiveProjectsStore((state) => state.addFreeNodeToBranch);
@@ -235,7 +237,8 @@ export default function ProjectCanvas() {
 
   return (
     <section className="foru-canvas-shell" aria-label="Lienzo radial del proyecto">
-      <ReactFlow
+      <div className={`foru-canvas-flow-layer ${isRouteViewOpen ? 'is-route-muted' : ''}`}>
+        <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
@@ -257,7 +260,14 @@ export default function ProjectCanvas() {
         <Background variant={BackgroundVariant.Dots} gap={28} size={1.2} color="#ddd6ea" />
         <MiniMap pannable zoomable nodeColor="#c39bd3" maskColor="rgba(250, 247, 255, 0.68)" />
         <Controls showInteractive={false} />
-      </ReactFlow>
+        </ReactFlow>
+      </div>
+
+      {isRouteViewOpen ? (
+        <div className="foru-canvas-route-overlay">
+          <DigitalRoutePath project={activeProject} />
+        </div>
+      ) : null}
 
       <div className="foru-canvas-legend" aria-label="Leyenda de areas del proyecto">
         {baseBranches.map((branch) => (
@@ -269,6 +279,10 @@ export default function ProjectCanvas() {
 
       <button type="button" className="foru-canvas-help" onClick={() => setIsGuideOpen(true)} aria-label="Mostrar guia del mapa">
         ?
+      </button>
+
+      <button type="button" className="foru-canvas-route-toggle" onClick={() => setIsRouteViewOpen((current) => !current)}>
+        {isRouteViewOpen ? 'Volver al mapa' : '🗺️ Ver Ruta'}
       </button>
 
       {isGuideOpen ? (

@@ -190,6 +190,10 @@ function clampZoom(level: number) {
 const DUST_THRESHOLD_MS = 48 * 60 * 60 * 1000;
 const WEEKLY_MILESTONE_GOAL = 5;
 
+function getProjectOrder(state: Pick<ActiveProjectsState, 'activeProjectIds' | 'projectsById'>) {
+  return Array.from(new Set([...(state.activeProjectIds ?? []), ...Object.keys(state.projectsById ?? {})]));
+}
+
 function createProject(input: CreateProjectInput): ForUActiveProject {
   const timestamp = now();
   const projectId = createId('project');
@@ -325,7 +329,9 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
 
       getAllProjects: () => {
         const state = get();
-        return state.activeProjectIds
+        const projectIds = getProjectOrder(state);
+
+        return projectIds
           .map((projectId) => state.projectsById[projectId])
           .filter(Boolean)
           .map((project) => normalizeProject(project));
@@ -333,7 +339,9 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
 
       getActiveProjects: () => {
         const state = get();
-        return state.activeProjectIds
+        const projectIds = getProjectOrder(state);
+
+        return projectIds
           .map((projectId) => state.projectsById[projectId])
           .filter((project): project is ForUActiveProject => Boolean(project) && project.status === 'active')
           .map((project) => normalizeProject(project));
@@ -380,7 +388,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
 
       panToIsland: (projectId) => {
         const state = get();
-        const index = Math.max(0, state.activeProjectIds.indexOf(projectId));
+        const index = Math.max(0, getProjectOrder(state).indexOf(projectId));
         const columns = 3;
         const column = index % columns;
         const row = Math.floor(index / columns);
@@ -1051,7 +1059,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
     createActiveProjectsState,
     {
       name: 'foru-active-projects',
-      version: 7,
+      version: 8,
       migrate: (persistedState) => {
         const state = persistedState as ActiveProjectsState | undefined;
         if (!state) return state;
@@ -1064,7 +1072,10 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
               normalizeProject(project),
             ]),
           ),
-          activeProjectIds: state.activeProjectIds ?? [],
+          activeProjectIds: getProjectOrder({
+            activeProjectIds: state.activeProjectIds ?? [],
+            projectsById: state.projectsById ?? {},
+          }),
           activeProjectId: state.activeProjectId ?? null,
           currentProjectId: state.currentProjectId ?? state.activeProjectId ?? null,
           lastCreatedProjectId: state.lastCreatedProjectId ?? null,
