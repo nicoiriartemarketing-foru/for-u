@@ -1,8 +1,9 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import ArchipelagoView from '../components/ArchipelagoView';
+import DailyRewardsModal from '../components/DailyRewardsModal';
 import GanttView from '../components/GanttView';
 import IdeaJarFab from '../components/IdeaJarFab';
 import KanbanView from '../components/KanbanView';
@@ -17,6 +18,7 @@ const World3D = lazy(() => import('../components/World3D'));
 
 export default function ForUWorkspace() {
   const [isWorldOpen, setIsWorldOpen] = useState(false);
+  const [isDailyRewardOpen, setIsDailyRewardOpen] = useState(false);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
   const rawNotes = useActiveProjectsStore((state) => state.rawNotes);
@@ -26,8 +28,16 @@ export default function ForUWorkspace() {
   const currentView = useActiveProjectsStore((state) => state.currentView);
   const setView = useActiveProjectsStore((state) => state.setView);
   const panToIsland = useActiveProjectsStore((state) => state.panToIsland);
+  const dailyStreak = useActiveProjectsStore((state) => state.dailyStreak);
+  const checkDailyReward = useActiveProjectsStore((state) => state.checkDailyReward);
 
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
+
+  useEffect(() => {
+    if (checkDailyReward().shouldShow) {
+      setIsDailyRewardOpen(true);
+    }
+  }, [checkDailyReward]);
 
   function openProjectIsland(projectId: string) {
     panToIsland(projectId);
@@ -71,6 +81,9 @@ export default function ForUWorkspace() {
             </button>
           ))}
         </div>
+        <button type="button" className="foru-daily-streak-badge" onClick={() => setIsDailyRewardOpen(true)}>
+          🔥 Racha: {dailyStreak} días
+        </button>
         <button
           type="button"
           className="foru-world3d-toggle"
@@ -107,7 +120,7 @@ export default function ForUWorkspace() {
           <RouteProgressBar project={activeProject} />
           {isWorldOpen ? (
             <Suspense fallback={<World3DSkeleton />}>
-              <World3D onBackToMap={() => setIsWorldOpen(false)} />
+              <World3D onBackToMap={() => setIsWorldOpen(false)} onOpenProject={openProjectIsland} />
             </Suspense>
           ) : currentView === 'dashboard' ? (
             <ProjectDashboard onEnterProject={openProjectIsland} />
@@ -129,6 +142,7 @@ export default function ForUWorkspace() {
       </section>
 
       {!isWorldOpen && currentView === 'archipelago' ? <IdeaJarFab /> : null}
+      <DailyRewardsModal isOpen={isDailyRewardOpen} onClose={() => setIsDailyRewardOpen(false)} />
     </main>
   );
 }

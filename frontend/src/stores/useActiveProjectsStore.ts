@@ -105,6 +105,12 @@ export type WeeklyMilestoneResult = {
   milestoneAchieved: boolean;
 };
 
+export type DailyRewardStatus = {
+  shouldShow: boolean;
+  currentDay: number;
+  reward: number;
+};
+
 type ActiveProjectsState = {
   activeProjectIds: string[];
   activeProjectId: string | null;
@@ -124,6 +130,9 @@ type ActiveProjectsState = {
   xpToNextLevel: number;
   coins: number;
   weeklyMilestoneProgress: number;
+  lastLoginDate: string | null;
+  dailyStreak: number;
+  claimedDays: number[];
   getAllProjects: () => ForUActiveProject[];
   getActiveProjects: () => ForUActiveProject[];
   getProjectById: (projectId: string) => ForUActiveProject | null;
@@ -138,6 +147,8 @@ type ActiveProjectsState = {
   addXP: (amount: number) => void;
   addCoins: (amount: number) => void;
   checkWeeklyMilestone: () => WeeklyMilestoneResult;
+  checkDailyReward: () => DailyRewardStatus;
+  claimDailyReward: (day: number) => boolean;
   openProject: (input: CreateProjectInput) => string;
   focusProject: (projectId: string) => void;
   closeProject: (projectId: string) => void;
@@ -189,9 +200,20 @@ function clampZoom(level: number) {
 
 const DUST_THRESHOLD_MS = 48 * 60 * 60 * 1000;
 const WEEKLY_MILESTONE_GOAL = 5;
+export const dailyRewards = [10, 20, 50, 50, 100] as const;
 
 function getProjectOrder(state: Pick<ActiveProjectsState, 'activeProjectIds' | 'projectsById'>) {
   return Array.from(new Set([...(state.activeProjectIds ?? []), ...Object.keys(state.projectsById ?? {})]));
+}
+
+function getDayStamp(date = new Date()) {
+  return date.toISOString().slice(0, 10);
+}
+
+function getPreviousDayStamp(date = new Date()) {
+  const previous = new Date(date);
+  previous.setDate(previous.getDate() - 1);
+  return getDayStamp(previous);
 }
 
 function createProject(input: CreateProjectInput): ForUActiveProject {
@@ -326,6 +348,9 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
       xpToNextLevel: 100,
       coins: 0,
       weeklyMilestoneProgress: 0,
+      lastLoginDate: null,
+      dailyStreak: 0,
+      claimedDays: [],
 
       getAllProjects: () => {
         const state = get();
@@ -455,6 +480,46 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
         }
 
         return { milestoneAchieved };
+      },
+
+      checkDailyReward: () => {
+        const state = get();
+        const today = getDayStamp();
+        const alreadyClaimedToday = state.lastLoginDate === today;
+        const cleanStreak = state.lastLoginDate === getPreviousDayStamp() || alreadyClaimedToday ? state.dailyStreak : 0;
+        const currentDay = alreadyClaimedToday
+          ? Math.max(1, Math.min(cleanStreak, dailyRewards.length))
+          : cleanStreak >= dailyRewards.length
+            ? 1
+            : cleanStreak + 1;
+
+        return {
+          shouldShow: !alreadyClaimedToday,
+          currentDay,
+          reward: dailyRewards[currentDay - 1] ?? dailyRewards[dailyRewards.length - 1],
+        };
+      },
+
+      claimDailyReward: (day) => {
+        const reward = dailyRewards[day - 1];
+        if (!reward) return false;
+
+        const today = getDayStamp();
+        const state = get();
+        const continuedStreak = state.lastLoginDate === getPreviousDayStamp();
+        const cycleFinished = continuedStreak && state.dailyStreak >= dailyRewards.length;
+        if (state.lastLoginDate === today || (!cycleFinished && state.claimedDays.includes(day))) return false;
+        const nextStreak = continuedStreak && !cycleFinished ? state.dailyStreak + 1 : 1;
+        const cleanDay = Math.min(day, dailyRewards.length);
+
+        set({
+          coins: state.coins + reward,
+          lastLoginDate: today,
+          dailyStreak: nextStreak,
+          claimedDays: Array.from(new Set([...(continuedStreak && !cycleFinished ? state.claimedDays : []), cleanDay])).slice(0, dailyRewards.length),
+        });
+
+        return true;
       },
 
       openProject: (input) => {
@@ -1050,6 +1115,9 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           xpToNextLevel: 100,
           coins: 0,
           weeklyMilestoneProgress: 0,
+          lastLoginDate: null,
+          dailyStreak: 0,
+          claimedDays: [],
         });
       },
 });
@@ -1059,7 +1127,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
     createActiveProjectsState,
     {
       name: 'foru-active-projects',
-      version: 8,
+      version: 9,
       migrate: (persistedState) => {
         const state = persistedState as ActiveProjectsState | undefined;
         if (!state) return state;
@@ -1092,6 +1160,9 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           xpToNextLevel: state.xpToNextLevel ?? 100,
           coins: state.coins ?? 0,
           weeklyMilestoneProgress: state.weeklyMilestoneProgress ?? 0,
+          lastLoginDate: state.lastLoginDate ?? null,
+          dailyStreak: state.dailyStreak ?? 0,
+          claimedDays: state.claimedDays ?? [],
         };
       },
     },

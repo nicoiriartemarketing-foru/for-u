@@ -4,12 +4,14 @@ import { ContactShadows, Environment, Float, Html, OrbitControls } from '@react-
 import { EffectComposer, Bloom, Vignette, N8AO } from '@react-three/postprocessing';
 import { PCFSoftShadowMap, Vector3, type PointLight } from 'three';
 import BuildingInterior from './BuildingInterior';
+import Island3D from './Island3D';
 import Sailboat from './Sailboat';
 import TaskProp from './TaskProp';
-import { type ForUBranchKey, type ForUProjectNode, type ForUWorldViewLevel, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import { type ForUActiveProject, type ForUBranchKey, type ForUProjectNode, type ForUWorldViewLevel, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
 type World3DProps = {
   onBackToMap: () => void;
+  onOpenProject: (projectId: string) => void;
 };
 
 type BranchCounts = Record<ForUBranchKey, number>;
@@ -402,7 +404,15 @@ function Pearls() {
   );
 }
 
-function CameraRig({ viewLevel, selectedBranch }: { viewLevel: ForUWorldViewLevel; selectedBranch: ForUBranchKey }) {
+function CameraRig({
+  viewLevel,
+  selectedBranch,
+  selectedIslandPosition,
+}: {
+  viewLevel: ForUWorldViewLevel;
+  selectedBranch: ForUBranchKey;
+  selectedIslandPosition: [number, number, number];
+}) {
   const { camera } = useThree();
   const cameraTarget = useMemo(() => new Vector3(), []);
   const lookTarget = useMemo(() => new Vector3(), []);
@@ -411,13 +421,13 @@ function CameraRig({ viewLevel, selectedBranch }: { viewLevel: ForUWorldViewLeve
     const branchConfig = buildingConfigs.find((config) => config.branchKey === selectedBranch) ?? buildingConfigs[0];
 
     if (viewLevel === 'archipelago') {
-      cameraTarget.set(15, 15, 15);
+      cameraTarget.set(0, 20, 30);
       lookTarget.set(0, 0.6, 0);
     } else if (viewLevel === 'exterior') {
-      cameraTarget.set(branchConfig.position[0] + 5.8, 6.2, branchConfig.position[2] + 5.8);
-      lookTarget.set(branchConfig.position[0], 1.15, branchConfig.position[2]);
+      cameraTarget.set(selectedIslandPosition[0] + branchConfig.position[0] + 6.4, 7.2, selectedIslandPosition[2] + branchConfig.position[2] + 6.4);
+      lookTarget.set(selectedIslandPosition[0] + branchConfig.position[0], 1.15, selectedIslandPosition[2] + branchConfig.position[2]);
     } else {
-      cameraTarget.set(3, 2, 5);
+      cameraTarget.set(selectedIslandPosition[0] + 3, 2, selectedIslandPosition[2] + 5);
       lookTarget.set(0, 0.95, 0);
     }
 
@@ -429,29 +439,38 @@ function CameraRig({ viewLevel, selectedBranch }: { viewLevel: ForUWorldViewLeve
 }
 
 function WorldScene({
-  branchCounts,
+  projects,
+  selectedProjectId,
   selectedBranch,
   viewLevel,
   tasks,
+  onSelectProject,
+  onOpenProject,
   onSelectBranch,
   onEnter,
   onExit,
 }: {
-  branchCounts: BranchCounts;
+  projects: ForUActiveProject[];
+  selectedProjectId: string | null;
   selectedBranch: ForUBranchKey;
   viewLevel: ForUWorldViewLevel;
   tasks: ForUProjectNode[];
+  onSelectProject: (projectId: string) => void;
+  onOpenProject: (projectId: string) => void;
   onSelectBranch: (branchKey: ForUBranchKey) => void;
   onEnter: () => void;
   onExit: () => void;
 }) {
+  const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? projects[0];
+  const selectedIslandPosition = selectedProject ? getIslandPosition(projects.findIndex((project) => project.id === selectedProject.id), projects.length) : [0, 0, 0] as [number, number, number];
   const selectedConfig = buildingConfigs.find((config) => config.branchKey === selectedBranch) ?? buildingConfigs[0];
+  const visibleProjects = viewLevel === 'archipelago' ? projects : selectedProject ? [selectedProject] : [];
 
   return (
     <>
-      <CameraRig viewLevel={viewLevel} selectedBranch={selectedBranch} />
+      <CameraRig viewLevel={viewLevel} selectedBranch={selectedBranch} selectedIslandPosition={selectedIslandPosition} />
       <color attach="background" args={['#f5f0ff']} />
-      <fog attach="fog" args={['#f5f0ff', 10, 25]} />
+      <fog attach="fog" args={['#f5f0ff', 18, 60]} />
       <Environment preset="sunset" />
       <ambientLight intensity={0.42} />
       <directionalLight
@@ -463,8 +482,10 @@ function WorldScene({
       />
       {viewLevel === 'interior' ? (
         <>
-          <BuildingInterior branchKey={selectedBranch} tasks={tasks} />
-          <Html position={[0, 2.65, -1.35]} center distanceFactor={5}>
+          <group position={selectedIslandPosition}>
+            <BuildingInterior branchKey={selectedBranch} tasks={tasks} />
+          </group>
+          <Html position={[selectedIslandPosition[0], 2.65, selectedIslandPosition[2] - 1.35]} center distanceFactor={5}>
             <button type="button" className="foru-world3d-level-button" onClick={onExit}>
               🔙 Salir
             </button>
@@ -472,42 +493,61 @@ function WorldScene({
         </>
       ) : (
         <>
-          <Water />
-          <Island onSelect={() => onSelectBranch(selectedBranch)} />
-          {buildingConfigs.map((config) => (
-            <BranchBuilding
-              key={config.branchKey}
-              config={config}
-              count={branchCounts[config.branchKey]}
-              viewLevel={viewLevel}
-              isActive={config.branchKey === selectedBranch}
-              onSelect={onSelectBranch}
-              onEnter={onEnter}
-            />
-          ))}
-          {viewLevel === 'exterior'
-            ? tasks.slice(0, 8).map((task, index) => (
-                <TaskProp
-                  key={task.id}
-                  node={task}
-                  index={index}
-                  viewLevel="exterior"
-                  origin={selectedConfig.position}
-                />
-              ))
-            : null}
-          <Lighthouses />
-          <Trees />
-          <Pearls />
+          {visibleProjects.map((project, index) => {
+            const islandPosition = viewLevel === 'archipelago' ? getIslandPosition(index, projects.length) : selectedIslandPosition;
+            const branchCounts = getBranchCounts(project);
+            const isSelected = project.id === selectedProject?.id;
+
+            return (
+              <Island3D
+                key={project.id}
+                project={project}
+                position={islandPosition}
+                isSelected={isSelected}
+                onSelect={() => {
+                  onSelectProject(project.id);
+                  if (viewLevel === 'archipelago') {
+                    window.setTimeout(() => onOpenProject(project.id), 520);
+                  }
+                }}
+              >
+                {buildingConfigs.map((config) => (
+                  <BranchBuilding
+                    key={config.branchKey}
+                    config={config}
+                    count={branchCounts[config.branchKey]}
+                    viewLevel={viewLevel}
+                    isActive={config.branchKey === selectedBranch}
+                    onSelect={onSelectBranch}
+                    onEnter={onEnter}
+                  />
+                ))}
+                {viewLevel === 'exterior' && isSelected
+                  ? tasks.slice(0, 8).map((task, taskIndex) => (
+                      <TaskProp
+                        key={task.id}
+                        node={task}
+                        index={taskIndex}
+                        viewLevel="exterior"
+                        origin={selectedConfig.position}
+                      />
+                    ))
+                  : null}
+                <Lighthouses />
+                <Trees />
+                <Pearls />
+              </Island3D>
+            );
+          })}
           <Sailboat />
-          <ContactShadows position={[0, -0.34, 0]} opacity={0.34} scale={8.6} blur={2.4} far={5.8} color="#8d7ca6" />
+          <ContactShadows position={[0, -0.34, 0]} opacity={0.34} scale={Math.max(12, projects.length * 8)} blur={2.4} far={10} color="#8d7ca6" />
         </>
       )}
       <OrbitControls
         enablePan={false}
         enabled={viewLevel !== 'interior'}
-        minDistance={viewLevel === 'archipelago' ? 8 : 4}
-        maxDistance={viewLevel === 'archipelago' ? 20 : 11}
+        minDistance={viewLevel === 'archipelago' ? 14 : 4}
+        maxDistance={viewLevel === 'archipelago' ? 48 : 13}
         minPolarAngle={Math.PI / 4}
         maxPolarAngle={Math.PI / 2.5}
       />
@@ -520,33 +560,19 @@ function WorldScene({
   );
 }
 
-export default function World3D({ onBackToMap }: World3DProps) {
+export default function World3D({ onBackToMap, onOpenProject }: World3DProps) {
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
+  const getActiveProjects = useActiveProjectsStore((state) => state.getActiveProjects);
+  const switchProject = useActiveProjectsStore((state) => state.switchProject);
   const focusedBranch = useActiveProjectsStore((state) => state.focusedBranch);
   const setFocusBranch = useActiveProjectsStore((state) => state.setFocusBranch);
   const viewLevel = useActiveProjectsStore((state) => state.viewLevel);
   const setViewLevel = useActiveProjectsStore((state) => state.setViewLevel);
+  const clearFocus = useActiveProjectsStore((state) => state.clearFocus);
+  const projects = getActiveProjects();
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
   const selectedBranch = focusedBranch ?? 'marketing';
-
-  const branchCounts = useMemo<BranchCounts>(() => {
-    const counts: BranchCounts = {
-      ideas: 0,
-      actions: 0,
-      finances: 0,
-      marketing: 0,
-      resources: 0,
-    };
-
-    activeProject?.nodes.forEach((node) => {
-      if (node.role === 'free' && node.branchKey) {
-        counts[node.branchKey] += 1;
-      }
-    });
-
-    return counts;
-  }, [activeProject?.nodes]);
 
   const selectedBranchTasks = useMemo(() => {
     return activeProject?.nodes.filter((node) => node.role === 'free' && node.branchKey === selectedBranch) ?? [];
@@ -557,18 +583,34 @@ export default function World3D({ onBackToMap }: World3DProps) {
     setViewLevel('exterior');
   }
 
+  function resetCamera() {
+    clearFocus();
+    setViewLevel('archipelago');
+  }
+
+  function selectProject(projectId: string) {
+    switchProject(projectId);
+    setViewLevel('exterior');
+  }
+
   return (
     <section className="foru-world3d-shell" aria-label="Mundito 3D de proyectos">
       <button type="button" className="foru-world3d-back" onClick={onBackToMap}>
         Volver al Mapa
       </button>
+      <button type="button" className="foru-world3d-archipelago-reset" onClick={resetCamera}>
+        🏝️ Volver al Archipiélago
+      </button>
 
-      <Canvas shadows={{ type: PCFSoftShadowMap }} camera={{ position: [15, 15, 15], fov: 45 }} className="foru-world3d-canvas">
+      <Canvas shadows={{ type: PCFSoftShadowMap }} camera={{ position: [0, 20, 30], fov: 45 }} className="foru-world3d-canvas">
         <WorldScene
-          branchCounts={branchCounts}
+          projects={projects}
+          selectedProjectId={activeProjectId}
           selectedBranch={selectedBranch}
           viewLevel={viewLevel}
           tasks={selectedBranchTasks}
+          onSelectProject={selectProject}
+          onOpenProject={onOpenProject}
           onSelectBranch={selectBranch}
           onEnter={() => setViewLevel('interior')}
           onExit={() => setViewLevel('exterior')}
@@ -576,4 +618,40 @@ export default function World3D({ onBackToMap }: World3DProps) {
       </Canvas>
     </section>
   );
+}
+
+function getIslandPosition(index: number, total: number): [number, number, number] {
+  if (total <= 1) return [0, 0, 0];
+
+  const fixedPositions: Array<[number, number, number]> = [
+    [0, 0, 0],
+    [12, 0, 0],
+    [-12, 0, 0],
+    [0, 0, 12],
+    [0, 0, -12],
+  ];
+
+  if (index < fixedPositions.length) return fixedPositions[index];
+
+  const angle = (index / total) * Math.PI * 2;
+  const radius = 15 + Math.floor(index / 8) * 6;
+  return [Math.cos(angle) * radius, 0, Math.sin(angle) * radius];
+}
+
+function getBranchCounts(project: ForUActiveProject): BranchCounts {
+  const counts: BranchCounts = {
+    ideas: 0,
+    actions: 0,
+    finances: 0,
+    marketing: 0,
+    resources: 0,
+  };
+
+  project.nodes.forEach((node) => {
+    if (node.role === 'free' && node.branchKey) {
+      counts[node.branchKey] += 1;
+    }
+  });
+
+  return counts;
 }

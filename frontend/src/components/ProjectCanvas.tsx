@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
+import type { MouseEvent } from 'react';
 import toast from 'react-hot-toast';
 import ReactFlow, {
   Background,
@@ -18,6 +19,7 @@ import 'reactflow/dist/style.css';
 import BranchNode, { type BranchNodeData } from './BranchNode';
 import CenterNode, { type CenterNodeData } from './CenterNode';
 import DigitalRoutePath from './DigitalRoutePath';
+import FloatingReward, { type FloatingRewardBurst } from './FloatingReward';
 import IdeaNode, { type IdeaNodeData } from './IdeaNode';
 import { Plus } from '../lib/icons';
 import {
@@ -121,6 +123,7 @@ export default function ProjectCanvas() {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isRouteViewOpen, setIsRouteViewOpen] = useState(false);
   const [isStepFocusOpen, setIsStepFocusOpen] = useState(false);
+  const [rewardBurst, setRewardBurst] = useState<FloatingRewardBurst | null>(null);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
   const addFreeNodeToBranch = useActiveProjectsStore((state) => state.addFreeNodeToBranch);
@@ -131,6 +134,7 @@ export default function ProjectCanvas() {
   const deselectNode = useActiveProjectsStore((state) => state.deselectNode);
   const focusedBranch = useActiveProjectsStore((state) => state.focusedBranch);
   const reassignNodeBranch = useActiveProjectsStore((state) => state.reassignNodeBranch);
+  const completeRouteStep = useActiveProjectsStore((state) => state.completeRouteStep);
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
   const routeStepByNodeId = useMemo(() => {
     return new Map((activeProject?.digitalRoute ?? []).map((step, index) => [step.linkedNodeId, index + 1]));
@@ -249,6 +253,23 @@ export default function ProjectCanvas() {
     setIsMenuOpen(false);
   }
 
+  function showRewardBurst(x: number, y: number, coins = 20, xp = 50) {
+    setRewardBurst({ id: `${Date.now()}-${Math.random()}`, x, y, coins, xp });
+    window.setTimeout(() => setRewardBurst(null), 1100);
+  }
+
+  function completeCurrentRouteStep(event: MouseEvent<HTMLButtonElement>) {
+    if (!activeProjectId) return;
+
+    const didAdvance = completeRouteStep(activeProjectId);
+    if (didAdvance) {
+      toast.success('¡Ruta Avanzada! +50 XP');
+      showRewardBurst(event.clientX, event.clientY, 20, 50);
+    } else {
+      toast('La Ruta Digital ya está completa.');
+    }
+  }
+
   return (
     <section className="foru-canvas-shell" aria-label="Lienzo radial del proyecto">
       <div className={`foru-canvas-flow-layer ${isRouteViewOpen ? 'is-route-muted' : ''}`}>
@@ -279,7 +300,7 @@ export default function ProjectCanvas() {
 
       {isRouteViewOpen ? (
         <div className="foru-canvas-route-overlay">
-          <DigitalRoutePath project={activeProject} />
+          <DigitalRoutePath project={activeProject} onCompleteStep={completeCurrentRouteStep} />
         </div>
       ) : null}
 
@@ -369,6 +390,7 @@ export default function ProjectCanvas() {
           <Plus size={22} />
         </button>
       </div>
+      <FloatingReward burst={rewardBurst} />
     </section>
   );
 }

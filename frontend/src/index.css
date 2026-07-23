@@ -2897,6 +2897,27 @@ body {
   box-shadow: 0 18px 38px rgba(124, 92, 255, 0.15);
 }
 
+.foru-daily-streak-badge {
+  min-height: 2.35rem;
+  flex: 0 0 auto;
+  border: 1px solid rgba(244, 180, 0, 0.24);
+  border-radius: 999px;
+  padding: 0.58rem 0.82rem;
+  color: #4a3000;
+  background: rgba(255, 248, 220, 0.92);
+  box-shadow: 0 12px 28px rgba(244, 180, 0, 0.12);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.foru-daily-streak-badge:hover {
+  transform: translateY(-1px);
+  background: #fff8dc;
+}
+
 .foru-shell-main {
   min-height: calc(100vh - 5.25rem);
   display: flex;
@@ -4063,9 +4084,67 @@ body {
   backdrop-filter: blur(18px);
 }
 
+.foru-world3d-archipelago-reset {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  min-height: 2.65rem;
+  border: 1px solid rgba(244, 180, 0, 0.24);
+  border-radius: 999px;
+  padding: 0.72rem 1rem;
+  color: #4a3000;
+  background: rgba(255, 248, 220, 0.88);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 950;
+  box-shadow: 0 14px 30px rgba(244, 180, 0, 0.12);
+  backdrop-filter: blur(18px);
+}
+
 .foru-world3d-back:hover {
   background: #ffffff;
   transform: translateY(-1px);
+}
+
+.foru-world3d-archipelago-reset:hover {
+  transform: translateY(-1px);
+  background: #fff8dc;
+}
+
+.foru-world3d-island-label {
+  min-width: 10rem;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 18px;
+  padding: 0.65rem 0.78rem;
+  color: #342e40;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 16px 34px rgba(46, 41, 64, 0.13);
+  backdrop-filter: blur(18px);
+  text-align: center;
+}
+
+.foru-world3d-island-label.is-selected {
+  border-color: rgba(244, 180, 0, 0.35);
+  background: rgba(255, 248, 220, 0.9);
+  box-shadow: 0 18px 40px rgba(244, 180, 0, 0.18);
+}
+
+.foru-world3d-island-label strong,
+.foru-world3d-island-label span {
+  display: block;
+}
+
+.foru-world3d-island-label strong {
+  font-weight: 950;
+}
+
+.foru-world3d-island-label span {
+  margin-top: 0.16rem;
+  color: #7a7185;
+  font-size: 0.74rem;
+  font-weight: 850;
 }
 
 .foru-world3d-tooltip {
@@ -5197,6 +5276,191 @@ body {
   font-family: inherit;
   font-size: 1rem;
   font-weight: 950;
+}
+
+.foru-daily-reward-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(244, 180, 0, 0.18), transparent 24rem),
+    rgba(36, 33, 43, 0.24);
+  backdrop-filter: blur(18px);
+}
+
+.foru-daily-reward-modal {
+  position: relative;
+  width: min(96vw, 44rem);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 30px;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  color: #342e40;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(255,255,255,0.96), transparent 10rem),
+    linear-gradient(135deg, rgba(255,255,255,0.94), rgba(255,248,220,0.86), rgba(250,247,255,0.88));
+  box-shadow: 0 30px 90px rgba(46, 41, 64, 0.22);
+  text-align: center;
+}
+
+.foru-daily-reward-modal header span {
+  color: #8d6b0f;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.foru-daily-reward-modal h2 {
+  margin: 0.22rem 0;
+  color: #2b2435;
+  font-size: clamp(1.75rem, 4vw, 2.6rem);
+  line-height: 1;
+  font-weight: 950;
+}
+
+.foru-daily-reward-modal p {
+  max-width: 32rem;
+  margin: 0 auto;
+  color: #6b6278;
+  font-weight: 820;
+}
+
+.foru-daily-reward-days {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 1.25rem 0;
+}
+
+.foru-daily-reward-days article {
+  min-height: 8.5rem;
+  display: grid;
+  place-items: center;
+  gap: 0.28rem;
+  border: 1px solid rgba(124, 92, 255, 0.1);
+  border-radius: 22px;
+  padding: 0.8rem 0.5rem;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 14px 30px rgba(46, 41, 64, 0.08);
+}
+
+.foru-daily-reward-days article small {
+  color: #8d849a;
+  font-weight: 950;
+}
+
+.foru-daily-reward-days article strong {
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(250, 247, 255, 0.96);
+  font-size: 1.35rem;
+}
+
+.foru-daily-reward-days article span {
+  color: #342e40;
+  font-weight: 950;
+}
+
+.foru-daily-reward-days article.is-current {
+  border-color: rgba(244, 180, 0, 0.44);
+  background: rgba(255, 248, 220, 0.94);
+  box-shadow: 0 20px 44px rgba(244, 180, 0, 0.16);
+  animation: foru-daily-glow 1.4s ease-in-out infinite;
+}
+
+.foru-daily-reward-days article.is-current strong {
+  color: #4a3000;
+  background: linear-gradient(135deg, #F4D03F, #F8C471);
+}
+
+.foru-daily-reward-days article.is-claimed {
+  background: rgba(220, 252, 231, 0.82);
+}
+
+.foru-daily-reward-days article.is-claimed strong {
+  color: #14532d;
+  background: linear-gradient(135deg, #BBF7D0, #58D68D);
+}
+
+.foru-daily-reward-days article.is-future {
+  opacity: 0.48;
+  filter: grayscale(0.35);
+}
+
+.foru-daily-reward-modal > button {
+  width: min(100%, 22rem);
+  min-height: 3.25rem;
+  border: 0;
+  border-radius: 999px;
+  color: #2b2435;
+  background: linear-gradient(135deg, #F4D03F, #F9A8D4, #76D7C4);
+  box-shadow: 0 18px 44px rgba(244, 180, 0, 0.2);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.foru-daily-reward-modal > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.foru-coin-rain {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.foru-coin-rain i {
+  position: absolute;
+  top: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 28%, #fff8dc, #F4D03F 48%, #D99A00);
+  box-shadow: 0 8px 18px rgba(244, 180, 0, 0.24);
+}
+
+.foru-floating-reward {
+  position: fixed;
+  z-index: 140;
+  display: grid;
+  gap: 0.12rem;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.foru-floating-reward strong,
+.foru-floating-reward span {
+  display: block;
+  border-radius: 999px;
+  padding: 0.35rem 0.55rem;
+  color: #4a3000;
+  background: rgba(255, 248, 220, 0.96);
+  box-shadow: 0 12px 28px rgba(244, 180, 0, 0.18);
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.foru-floating-reward i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.46rem;
+  height: 0.46rem;
+  border-radius: 999px;
+  background: #F4D03F;
+  animation: foru-reward-particle 0.72s ease-out both;
+  animation-delay: calc(var(--particle-index) * 18ms);
 }
 
 .foru-view-switcher {
@@ -6498,6 +6762,33 @@ body {
   100% {
     opacity: 1;
     transform: scale(1.02);
+  }
+}
+
+@keyframes foru-daily-glow {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 20px 44px rgba(244, 180, 0, 0.16);
+  }
+  50% {
+    transform: translateY(-0.28rem);
+    box-shadow: 0 24px 52px rgba(244, 180, 0, 0.24);
+  }
+}
+
+@keyframes foru-reward-particle {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform:
+      translate(
+        calc(-50% + (var(--particle-index) - 5) * 0.45rem),
+        calc(-50% - 2.4rem + (var(--particle-index) % 3) * 0.35rem)
+      )
+      scale(0.45);
   }
 }
 

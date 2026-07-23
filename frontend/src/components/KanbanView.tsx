@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
+import type { MouseEvent } from 'react';
 import toast from 'react-hot-toast';
 import DigitalRoutePath from './DigitalRoutePath';
+import FloatingReward, { type FloatingRewardBurst } from './FloatingReward';
 import { baseBranches, type ForUTaskStatus, type ForUProjectNode, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
 type KanbanViewProps = {
@@ -17,6 +19,7 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
   const [includeAllProjects, setIncludeAllProjects] = useState(includeAllProjectsDefault);
   const [isRoutePathOpen, setIsRoutePathOpen] = useState(false);
   const [isStepFocusOpen, setIsStepFocusOpen] = useState(false);
+  const [rewardBurst, setRewardBurst] = useState<FloatingRewardBurst | null>(null);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const activeProjectIds = useActiveProjectsStore((state) => state.activeProjectIds);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
@@ -46,19 +49,31 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
     });
   }, [activeProjectId, activeProjectIds, includeAllProjects, projectsById]);
 
-  function moveCard(projectId: string, node: ForUProjectNode, status: ForUTaskStatus) {
+  function showRewardBurst(x: number, y: number, coins = 20, xp = 0) {
+    setRewardBurst({ id: `${Date.now()}-${Math.random()}`, x, y, coins, xp });
+    window.setTimeout(() => setRewardBurst(null), 1100);
+  }
+
+  function moveCard(projectId: string, node: ForUProjectNode, status: ForUTaskStatus, point?: { x: number; y: number }) {
+    const wasCompleted = Boolean(node.completedAt || node.taskStatus === 'done');
     updateNode(projectId, node.id, {
       taskStatus: status,
       completedAt: status === 'done' ? new Date().toISOString() : undefined,
+      rewardCoins: status === 'done' && !wasCompleted ? (node.rewardCoins ?? 0) + 20 : node.rewardCoins,
     });
+
+    if (status === 'done' && !wasCompleted && point) {
+      showRewardBurst(point.x, point.y, 20, 0);
+    }
   }
 
-  function completeCurrentRouteStep() {
+  function completeCurrentRouteStep(event?: MouseEvent<HTMLButtonElement>) {
     if (!activeProjectId) return;
 
     const didAdvance = completeRouteStep(activeProjectId);
     if (didAdvance) {
       toast.success('¡Ruta Avanzada! +50 XP');
+      showRewardBurst(event?.clientX ?? window.innerWidth / 2, event?.clientY ?? 180, 20, 50);
     } else {
       toast('La Ruta Digital ya está completa.');
     }
@@ -139,7 +154,7 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
                 const parsed = JSON.parse(payload) as { projectId: string; nodeId: string };
                 const project = projectsById[parsed.projectId];
                 const node = project?.nodes.find((item) => item.id === parsed.nodeId);
-                if (node) moveCard(parsed.projectId, node, column.key);
+                if (node) moveCard(parsed.projectId, node, column.key, { x: event.clientX, y: event.clientY });
               }}
             >
               <header>
@@ -176,6 +191,7 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
           );
         })}
       </div>
+      <FloatingReward burst={rewardBurst} />
     </section>
   );
 }

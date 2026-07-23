@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
+import type { MouseEvent } from 'react';
 import { motion } from 'framer-motion';
 import RouteStepStation from './RouteStepStation';
 import type { ForUActiveProject, ForUProjectNode } from '../stores/useActiveProjectsStore';
 
 type DigitalRoutePathProps = {
   project: ForUActiveProject | null;
-  onCompleteStep?: () => void;
+  onCompleteStep?: (event: MouseEvent<HTMLButtonElement>) => void;
 };
 
 export default function DigitalRoutePath({ project, onCompleteStep }: DigitalRoutePathProps) {
