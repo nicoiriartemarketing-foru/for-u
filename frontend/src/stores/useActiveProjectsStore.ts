@@ -11,6 +11,11 @@ export type ForURawNoteKind = 'text' | 'audio' | 'photo';
 export type ForUWorldViewLevel = 'archipelago' | 'exterior' | 'interior';
 export type ForUWorkspaceView = 'map' | 'kanban' | 'gantt' | 'archipelago' | 'dashboard';
 
+export type ForUArchipelagoOffset = {
+  x: number;
+  y: number;
+};
+
 export type ForUTask = {
   id: string;
   title: string;
@@ -112,6 +117,8 @@ type ActiveProjectsState = {
   focusedBranch: ForUBranchKey | null;
   viewLevel: ForUWorldViewLevel;
   currentView: ForUWorkspaceView;
+  archipelagoZoom: number;
+  archipelagoOffset: ForUArchipelagoOffset;
   userLevel: number;
   userXP: number;
   xpToNextLevel: number;
@@ -124,6 +131,10 @@ type ActiveProjectsState = {
   clearLastCreatedProject: () => void;
   switchProject: (projectId: string) => void;
   setView: (view: ForUWorkspaceView) => void;
+  setZoom: (level: number) => void;
+  setArchipelagoOffset: (offset: ForUArchipelagoOffset) => void;
+  panToIsland: (projectId: string) => void;
+  resetArchipelagoView: () => void;
   addXP: (amount: number) => void;
   addCoins: (amount: number) => void;
   checkWeeklyMilestone: () => WeeklyMilestoneResult;
@@ -170,6 +181,10 @@ function createId(prefix: string) {
 
 function now() {
   return new Date().toISOString();
+}
+
+function clampZoom(level: number) {
+  return Math.min(2, Math.max(0.3, Number.isFinite(level) ? level : 0.45));
 }
 
 const DUST_THRESHOLD_MS = 48 * 60 * 60 * 1000;
@@ -300,6 +315,8 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
       focusedBranch: null,
       viewLevel: 'archipelago',
       currentView: 'dashboard',
+      archipelagoZoom: 0.45,
+      archipelagoOffset: { x: 80, y: 80 },
       userLevel: 1,
       userXP: 0,
       xpToNextLevel: 100,
@@ -357,6 +374,39 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
 
       setView: (view) => set({ currentView: view, selectedNodeId: null }),
 
+      setZoom: (level) => set({ archipelagoZoom: clampZoom(level) }),
+
+      setArchipelagoOffset: (offset) => set({ archipelagoOffset: offset }),
+
+      panToIsland: (projectId) => {
+        const state = get();
+        const index = Math.max(0, state.activeProjectIds.indexOf(projectId));
+        const columns = 3;
+        const column = index % columns;
+        const row = Math.floor(index / columns);
+
+        set({
+          activeProjectId: projectId,
+          currentProjectId: projectId,
+          currentView: 'archipelago',
+          selectedNodeId: null,
+          focusedBranch: null,
+          archipelagoZoom: 1.45,
+          archipelagoOffset: {
+            x: 150 - column * 860,
+            y: 110 - row * 660,
+          },
+        });
+      },
+
+      resetArchipelagoView: () => set({
+        currentView: 'archipelago',
+        archipelagoZoom: 0.45,
+        archipelagoOffset: { x: 80, y: 80 },
+        selectedNodeId: null,
+        focusedBranch: null,
+      }),
+
       addXP: (amount) => {
         const cleanAmount = Math.max(0, Math.floor(amount));
         if (cleanAmount === 0) return;
@@ -410,6 +460,9 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           selectedNodeId: null,
           focusedBranch: null,
           viewLevel: 'archipelago',
+          currentView: 'archipelago',
+          archipelagoZoom: 0.45,
+          archipelagoOffset: { x: 80, y: 80 },
           projectsById: {
             ...state.projectsById,
             [project.id]: project,
@@ -982,6 +1035,8 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           focusedBranch: null,
           viewLevel: 'archipelago',
           currentView: 'dashboard',
+          archipelagoZoom: 0.45,
+          archipelagoOffset: { x: 80, y: 80 },
           userLevel: 1,
           userXP: 0,
           xpToNextLevel: 100,
@@ -1018,7 +1073,9 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           selectedNodeId: state.selectedNodeId ?? null,
           focusedBranch: state.focusedBranch ?? null,
           viewLevel: state.viewLevel ?? 'archipelago',
-          currentView: state.currentView ?? 'dashboard',
+          currentView: state.currentView === 'map' ? 'archipelago' : state.currentView ?? 'dashboard',
+          archipelagoZoom: state.archipelagoZoom ?? 0.45,
+          archipelagoOffset: state.archipelagoOffset ?? { x: 80, y: 80 },
           userLevel: state.userLevel ?? 1,
           userXP: state.userXP ?? 0,
           xpToNextLevel: state.xpToNextLevel ?? 100,

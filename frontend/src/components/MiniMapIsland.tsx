@@ -1,16 +1,15 @@
 import type { CSSProperties } from 'react';
-import { baseBranches, type ForUActiveProject, type ForUBranchKey } from '../stores/useActiveProjectsStore';
+import { baseBranches, type ForUActiveProject, type ForUBranchKey, type ForUProjectNode } from '../stores/useActiveProjectsStore';
 
 type MiniMapIslandProps = {
   project: ForUActiveProject;
-  position: { column: number; row: number };
   isActive?: boolean;
   isNew?: boolean;
+  isZoomed?: boolean;
   onEnter: () => void;
 };
 
-export default function MiniMapIsland({ project, position, isActive = false, isNew = false, onEnter }: MiniMapIslandProps) {
-  const branchCounts = getBranchCounts(project);
+export default function MiniMapIsland({ project, isActive = false, isNew = false, isZoomed = false, onEnter }: MiniMapIslandProps) {
   const freeNodes = project.nodes.filter((node) => node.role === 'free');
   const completedCount = freeNodes.filter((node) => node.completedAt || node.taskStatus === 'done').length;
   const pendingCount = Math.max(0, freeNodes.length - completedCount);
@@ -18,8 +17,7 @@ export default function MiniMapIsland({ project, position, isActive = false, isN
 
   return (
     <article
-      className={`foru-mini-island ${isActive ? 'is-active' : ''} ${isNew ? 'is-new' : ''}`}
-      style={{ '--island-column': position.column, '--island-row': position.row } as CSSProperties}
+      className={`foru-mini-island ${isActive ? 'is-active' : ''} ${isNew ? 'is-new' : ''} ${isZoomed ? 'is-zoomed' : ''}`}
       aria-label={`Isla de proyecto ${project.name}`}
     >
       <header className="foru-mini-island-header">
@@ -27,13 +25,32 @@ export default function MiniMapIsland({ project, position, isActive = false, isN
           {project.status === 'active' ? '🟢 Activo' : '⏸️ Pausado'}
         </span>
         <strong>{project.name}</strong>
+        <small>{pendingCount} pendientes · {completedCount} completas · {progress}% avance</small>
       </header>
 
       <div className="foru-mini-island-map" aria-hidden="true">
         <div className="foru-mini-island-core">
-          <span>{project.name.slice(0, 2).toUpperCase()}</span>
+          <span>✨</span>
+          <strong>{project.name}</strong>
         </div>
-        {baseBranches.map((branch, branchIndex) => {
+
+        {project.digitalRoute.slice(0, -1).map((step, index) => {
+          const sourceNode = project.nodes.find((node) => node.id === step.linkedNodeId);
+          const targetNode = project.nodes.find((node) => node.id === project.digitalRoute[index + 1]?.linkedNodeId);
+          if (!sourceNode || !targetNode) return null;
+          const source = getMiniNodePosition(sourceNode);
+          const target = getMiniNodePosition(targetNode);
+
+          return (
+            <svg key={step.id} className="foru-mini-route-line" viewBox="0 0 760 460">
+              <path
+                d={`M ${source.x} ${source.y} C ${(source.x + target.x) / 2} ${source.y - 30}, ${(source.x + target.x) / 2} ${target.y + 30}, ${target.x} ${target.y}`}
+              />
+            </svg>
+          );
+        })}
+
+        {baseBranches.map((branch) => {
           const branchNodes = project.nodes.filter((node) => node.role === 'free' && node.branchKey === branch.key);
           const position = branchPositions[branch.key];
 
@@ -43,62 +60,72 @@ export default function MiniMapIsland({ project, position, isActive = false, isN
               className="foru-mini-island-branch"
               style={{
                 '--branch-color': branch.color,
-                left: `${position.x}%`,
-                top: `${position.y}%`,
+                left: `${position.x}px`,
+                top: `${position.y}px`,
               } as CSSProperties}
-              title={`${branch.title}: ${branchNodes.length}`}
             >
               <span>{branch.icon}</span>
+              <strong>{branch.title}</strong>
               <small>{branchNodes.length}</small>
-              {branchNodes.slice(0, 6).map((node, nodeIndex) => (
-                <i
-                  key={node.id}
-                  className={node.completedAt || node.taskStatus === 'done' ? 'is-done' : ''}
-                  style={{
-                    transform: `translate(${Math.cos(branchIndex + nodeIndex * 0.9) * (18 + nodeIndex * 1.8)}px, ${Math.sin(branchIndex + nodeIndex * 0.9) * (15 + nodeIndex * 1.4)}px)`,
-                  }}
-                />
-              ))}
+            </div>
+          );
+        })}
+
+        {freeNodes.map((node, index) => {
+          const position = getMiniNodePosition(node, index);
+          const routeIndex = project.digitalRoute.findIndex((step) => step.linkedNodeId === node.id);
+
+          return (
+            <div
+              key={node.id}
+              className={`foru-mini-map-node is-${node.priority ?? 'low'} ${node.completedAt || node.taskStatus === 'done' ? 'is-done' : ''} ${routeIndex >= 0 ? 'is-route' : ''}`}
+              style={{ left: position.x, top: position.y } as CSSProperties}
+              title={node.title}
+            >
+              {routeIndex >= 0 ? <em>{routeIndex + 1}</em> : null}
+              <span>{node.icon ?? getBranchIcon(node.branchKey)}</span>
+              <strong>{node.title}</strong>
             </div>
           );
         })}
       </div>
 
-      <div className="foru-mini-island-stats">
-        <span>{pendingCount} pendientes</span>
-        <span>{completedCount} completas</span>
-        <span>{progress}% avance</span>
+      <div className="foru-mini-island-footer">
+        <div>
+          {baseBranches.map((branch) => (
+            <span key={branch.key} style={{ '--branch-color': branch.color } as CSSProperties}>
+              {branch.icon} {freeNodes.filter((node) => node.branchKey === branch.key).length}
+            </span>
+          ))}
+        </div>
+        <button type="button" className="foru-mini-island-enter" onClick={onEnter}>
+          Zoom a esta isla
+        </button>
       </div>
-
-      <div className="foru-mini-island-branches">
-        {baseBranches.map((branch) => (
-          <span key={branch.key} style={{ '--branch-color': branch.color } as CSSProperties}>
-            {branch.icon} {branchCounts[branch.key]}
-          </span>
-        ))}
-      </div>
-
-      <button type="button" className="foru-mini-island-enter" onClick={onEnter}>
-        Entrar
-      </button>
     </article>
   );
 }
 
-function getBranchCounts(project: ForUActiveProject) {
-  const counts = Object.fromEntries(baseBranches.map((branch) => [branch.key, 0])) as Record<ForUBranchKey, number>;
+function getMiniNodePosition(node: ForUProjectNode, fallbackIndex = 0) {
+  const branch = node.branchKey ? branchPositions[node.branchKey] : { x: 380, y: 230 };
+  const angle = fallbackIndex * 0.85;
+  const x = branch.x + Math.cos(angle) * (68 + (fallbackIndex % 3) * 16);
+  const y = branch.y + Math.sin(angle) * (58 + (fallbackIndex % 4) * 12);
 
-  project.nodes.forEach((node) => {
-    if (node.role === 'free' && node.branchKey) counts[node.branchKey] += 1;
-  });
+  return {
+    x: Math.max(40, Math.min(710, x)),
+    y: Math.max(40, Math.min(420, y)),
+  };
+}
 
-  return counts;
+function getBranchIcon(branchKey?: ForUBranchKey) {
+  return baseBranches.find((branch) => branch.key === branchKey)?.icon ?? '•';
 }
 
 const branchPositions: Record<ForUBranchKey, { x: number; y: number }> = {
-  ideas: { x: 25, y: 25 },
-  actions: { x: 75, y: 25 },
-  finances: { x: 84, y: 51 },
-  marketing: { x: 72, y: 77 },
-  resources: { x: 25, y: 77 },
+  ideas: { x: 190, y: 105 },
+  actions: { x: 570, y: 105 },
+  finances: { x: 635, y: 235 },
+  marketing: { x: 555, y: 365 },
+  resources: { x: 190, y: 365 },
 };

@@ -8,37 +8,31 @@ import IdeaJarFab from '../components/IdeaJarFab';
 import KanbanView from '../components/KanbanView';
 import Logo from '../components/Logo';
 import NodeDetailPanel from '../components/NodeDetailPanel';
-import ProjectCanvas from '../components/ProjectCanvas';
 import ProjectDashboard from '../components/ProjectDashboard';
 import ProjectNavigator from '../components/ProjectNavigator';
-import TaskBoard from '../components/TaskBoard';
 import World3D from '../components/World3D';
 import { Sparkles } from '../lib/icons';
-import { baseBranches, type ForUBranchKey, type ForUWorkspaceView, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import { type ForUWorkspaceView, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
 export default function ForUWorkspace() {
   const [isWorldOpen, setIsWorldOpen] = useState(false);
-  const [isFocusMenuOpen, setIsFocusMenuOpen] = useState(false);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
   const rawNotes = useActiveProjectsStore((state) => state.rawNotes);
   const selectedNodeId = useActiveProjectsStore((state) => state.selectedNodeId);
   const deselectNode = useActiveProjectsStore((state) => state.deselectNode);
-  const focusedBranch = useActiveProjectsStore((state) => state.focusedBranch);
-  const setFocusBranch = useActiveProjectsStore((state) => state.setFocusBranch);
   const clearFocus = useActiveProjectsStore((state) => state.clearFocus);
-  const switchProject = useActiveProjectsStore((state) => state.switchProject);
   const currentView = useActiveProjectsStore((state) => state.currentView);
   const setView = useActiveProjectsStore((state) => state.setView);
+  const panToIsland = useActiveProjectsStore((state) => state.panToIsland);
 
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
-  const isTaskBoardOpen = !isWorldOpen && currentView === 'map' && focusedBranch;
 
-  function openProjectMap(projectId: string) {
-    switchProject(projectId);
+  function openProjectIsland(projectId: string) {
+    panToIsland(projectId);
     deselectNode();
     clearFocus();
-    setView('map');
+    setView('archipelago');
     setIsWorldOpen(false);
   }
 
@@ -51,7 +45,7 @@ export default function ForUWorkspace() {
 
   function changeView(view: ForUWorkspaceView) {
     deselectNode();
-    if (view !== 'map') clearFocus();
+    clearFocus();
     setIsWorldOpen(false);
     setView(view);
   }
@@ -63,7 +57,7 @@ export default function ForUWorkspace() {
         <Link to="/" className="foru-shell-logo" aria-label="FOR U">
           <Logo />
         </Link>
-        <ProjectNavigator onOpenProject={openProjectMap} onOpenDashboard={openDashboard} />
+        <ProjectNavigator onOpenProject={openProjectIsland} onOpenDashboard={openDashboard} />
         <div className="foru-view-switcher" aria-label="Selector de vistas">
           {workspaceViews.map((view) => (
             <button
@@ -76,44 +70,6 @@ export default function ForUWorkspace() {
             </button>
           ))}
         </div>
-        {!isWorldOpen && currentView === 'map' ? (
-          <div className="foru-focus-control">
-            <button
-              type="button"
-              className={focusedBranch ? 'is-active' : ''}
-              onClick={() => setIsFocusMenuOpen((current) => !current)}
-            >
-              {focusedBranch ? '👁️ Ver Todo' : '🔍 Modo Enfoque'}
-            </button>
-            <AnimatePresence>
-              {isFocusMenuOpen ? (
-                <div className="foru-focus-menu">
-                  {baseBranches.map((branch) => (
-                    <button
-                      key={branch.key}
-                      type="button"
-                      onClick={() => {
-                        setFocusBranch(branch.key as ForUBranchKey);
-                        setIsFocusMenuOpen(false);
-                      }}
-                    >
-                      {branch.icon} {branch.title}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      clearFocus();
-                      setIsFocusMenuOpen(false);
-                    }}
-                  >
-                    Volver a ver todo
-                  </button>
-                </div>
-              ) : null}
-            </AnimatePresence>
-          </div>
-        ) : null}
         <button
           type="button"
           className="foru-world3d-toggle"
@@ -140,9 +96,7 @@ export default function ForUWorkspace() {
                 ? 'Kanban · Ejecución por estado'
                 : currentView === 'gantt'
                 ? 'Gantt · Línea de tiempo'
-                : focusedBranch
-                  ? 'Modo Enfoque · Ejecutar sin ruido'
-                  : 'Fase 6 · Mapa Mental Radial'}
+                : 'Archipiélago · Zoom continuo'}
             </span>
             <div className="foru-shell-metrics">
               <span><Sparkles size={16} /> {rawNotes.length} notas crudas</span>
@@ -152,9 +106,9 @@ export default function ForUWorkspace() {
           {isWorldOpen ? (
             <World3D onBackToMap={() => setIsWorldOpen(false)} />
           ) : currentView === 'dashboard' ? (
-            <ProjectDashboard onEnterProject={openProjectMap} />
+            <ProjectDashboard onEnterProject={openProjectIsland} />
           ) : currentView === 'archipelago' ? (
-            <ArchipelagoView onEnterProject={openProjectMap} />
+            <ArchipelagoView onEnterProject={openProjectIsland} />
           ) : currentView === 'kanban' ? (
             <>
               <KanbanView />
@@ -164,42 +118,20 @@ export default function ForUWorkspace() {
             </>
           ) : currentView === 'gantt' ? (
             <GanttView />
-          ) : isTaskBoardOpen ? (
-            <>
-              <TaskBoard
-                branchKey={focusedBranch}
-                onBackToMap={() => {
-                  clearFocus();
-                  deselectNode();
-                }}
-              />
-              <AnimatePresence>
-                {selectedNodeId ? <NodeDetailPanel key={selectedNodeId} /> : null}
-              </AnimatePresence>
-            </>
           ) : (
-            <>
-              <button type="button" className="foru-back-archipelago" onClick={() => changeView('archipelago')}>
-                Volver al Archipiélago
-              </button>
-              <ProjectCanvas />
-              <AnimatePresence>
-                {selectedNodeId ? <NodeDetailPanel key={selectedNodeId} /> : null}
-              </AnimatePresence>
-            </>
+            <ArchipelagoView onEnterProject={openProjectIsland} />
           )}
         </div>
       </section>
 
-      {!isWorldOpen && currentView === 'map' ? <IdeaJarFab /> : null}
+      {!isWorldOpen && currentView === 'archipelago' ? <IdeaJarFab /> : null}
     </main>
   );
 }
 
 const workspaceViews: Array<{ key: ForUWorkspaceView; label: string }> = [
-  { key: 'map', label: '🗺️ Mapa' },
+  { key: 'archipelago', label: '🗺️ Archipiélago' },
   { key: 'kanban', label: '📋 Kanban' },
   { key: 'gantt', label: '📊 Gantt' },
-  { key: 'archipelago', label: '🏝️ Archipiélago' },
   { key: 'dashboard', label: '📊 Dashboard' },
 ];
