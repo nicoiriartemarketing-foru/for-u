@@ -12,7 +12,7 @@ import ProjectDashboard from '../components/ProjectDashboard';
 import ProjectNavigator from '../components/ProjectNavigator';
 import World3D from '../components/World3D';
 import { Sparkles } from '../lib/icons';
-import { type ForUWorkspaceView, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import { type ForUActiveProject, type ForUWorkspaceView, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
 export default function ForUWorkspace() {
   const [isWorldOpen, setIsWorldOpen] = useState(false);
@@ -103,6 +103,7 @@ export default function ForUWorkspace() {
               <span>{activeProject?.name ?? 'sin proyecto'}</span>
             </div>
           </div>
+          <RouteProgressBar project={activeProject} />
           {isWorldOpen ? (
             <World3D onBackToMap={() => setIsWorldOpen(false)} />
           ) : currentView === 'dashboard' ? (
@@ -135,3 +136,28 @@ const workspaceViews: Array<{ key: ForUWorkspaceView; label: string }> = [
   { key: 'gantt', label: '📊 Gantt' },
   { key: 'dashboard', label: '📊 Dashboard' },
 ];
+
+function RouteProgressBar({ project }: { project: ForUActiveProject | null }) {
+  if (!project?.digitalRoute.length) return null;
+
+  const totalSteps = project.digitalRoute.length;
+  const safeIndex = Math.min(project.currentRouteIndex, totalSteps - 1);
+  const currentStep = project.digitalRoute[safeIndex];
+  const completedSteps = project.digitalRoute.filter((step, index) => step.completedAt || index < project.currentRouteIndex).length;
+  const progress = Math.round((completedSteps / totalSteps) * 100);
+
+  return (
+    <section className="foru-route-progress-bar" aria-label="Progreso de la Ruta Digital">
+      <div>
+        <span>Ruta Digital</span>
+        <strong>
+          Paso {Math.min(safeIndex + 1, totalSteps)} de {totalSteps}: {currentStep?.title ?? 'Ruta completa'}
+        </strong>
+      </div>
+      <div className="foru-route-progress-track" aria-hidden="true">
+        <i style={{ width: `${progress}%` }} />
+      </div>
+      <small>{progress}% completado</small>
+    </section>
+  );
+}

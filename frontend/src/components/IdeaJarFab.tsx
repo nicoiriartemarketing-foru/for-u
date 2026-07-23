@@ -15,6 +15,7 @@ export default function IdeaJarFab() {
   const [content, setContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [toast, setToast] = useState('');
+  const [routeSummary, setRouteSummary] = useState<ForURouteStep[]>([]);
   const isJarOpen = useActiveProjectsStore((state) => state.isJarOpen);
   const rawNotes = useActiveProjectsStore((state) => state.rawNotes);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
@@ -24,6 +25,8 @@ export default function IdeaJarFab() {
   const addRawNote = useActiveProjectsStore((state) => state.addRawNote);
   const addFreeNodesToBranches = useActiveProjectsStore((state) => state.addFreeNodesToBranches);
   const setDigitalRoute = useActiveProjectsStore((state) => state.setDigitalRoute);
+  const setView = useActiveProjectsStore((state) => state.setView);
+  const selectNode = useActiveProjectsStore((state) => state.selectNode);
   const clearRawNotes = useActiveProjectsStore((state) => state.clearRawNotes);
 
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
@@ -75,6 +78,7 @@ export default function IdeaJarFab() {
 
       if (route.length > 0) {
         setDigitalRoute(activeProjectId, route);
+        setRouteSummary(route);
       }
 
       clearRawNotes();
@@ -92,6 +96,13 @@ export default function IdeaJarFab() {
   function showToast(message: string) {
     setToast(message);
     window.setTimeout(() => setToast(''), 4200);
+  }
+
+  function startRoute() {
+    const firstStep = routeSummary[0];
+    if (firstStep) selectNode(firstStep.linkedNodeId);
+    setView('kanban');
+    setRouteSummary([]);
   }
 
   return (
@@ -191,6 +202,43 @@ export default function IdeaJarFab() {
             {toast}
           </motion.div>
         )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {routeSummary.length > 0 ? (
+          <motion.div
+            className="foru-route-ready-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.section
+              className="foru-route-ready-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="route-ready-title"
+              initial={{ opacity: 0, y: 34, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            >
+              <span className="foru-route-ready-orb">✨</span>
+              <h2 id="route-ready-title">¡🎉 Tu Ruta Digital está lista!</h2>
+              <p>For U convirtió tus ideas en un camino concreto. Ahora solo necesitas seguir la primera estación.</p>
+              <div className="foru-route-ready-steps">
+                {routeSummary.map((step, index) => (
+                  <article key={step.id}>
+                    <span>{index + 1}</span>
+                    <strong>{step.title}</strong>
+                  </article>
+                ))}
+              </div>
+              <button type="button" onClick={startRoute}>
+                🚀 Empezar mi Ruta
+              </button>
+            </motion.section>
+          </motion.div>
+        ) : null}
       </AnimatePresence>
     </>
   );

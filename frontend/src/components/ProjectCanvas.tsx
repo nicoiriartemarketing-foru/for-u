@@ -44,15 +44,20 @@ const addOptions: Array<{ kind: ForUNodeKind; label: string; title: string }> = 
 
 type ForUCanvasNodeData = IdeaNodeData | BranchNodeData | CenterNodeData;
 
-function getFocusOpacity(node: ForUProjectNode, focusedBranch: ForUBranchKey | null) {
+function getFocusOpacity(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null) {
+  if (focusedStepNodeIds) {
+    if (node.role === 'free' && focusedStepNodeIds.has(node.id)) return 1;
+    return 0.2;
+  }
+
   if (!focusedBranch) return 1;
   if (node.branchKey === focusedBranch) return 1;
 
   return 0.2;
 }
 
-function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, nextActionIds: Set<string>, routeStepByNodeId: Map<string, number>): Node<ForUCanvasNodeData> {
-  const opacity = getFocusOpacity(node, focusedBranch);
+function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null, nextActionIds: Set<string>, routeStepByNodeId: Map<string, number>): Node<ForUCanvasNodeData> {
+  const opacity = getFocusOpacity(node, focusedBranch, focusedStepNodeIds);
   const style: CSSProperties = {
     opacity,
     transition: 'opacity 0.3s ease',
@@ -115,6 +120,7 @@ export default function ProjectCanvas() {
   const [selectedOption, setSelectedOption] = useState<{ kind: ForUNodeKind; title: string } | null>(null);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isRouteViewOpen, setIsRouteViewOpen] = useState(false);
+  const [isStepFocusOpen, setIsStepFocusOpen] = useState(false);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
   const addFreeNodeToBranch = useActiveProjectsStore((state) => state.addFreeNodeToBranch);
@@ -132,6 +138,14 @@ export default function ProjectCanvas() {
   const nextActionIds = useMemo(() => {
     return getNextActionIds(activeProject?.nodes ?? []);
   }, [activeProject?.nodes]);
+  const focusedStepNodeIds = useMemo(() => {
+    if (!isStepFocusOpen || !activeProject?.digitalRoute.length) return null;
+
+    const currentStep = activeProject.digitalRoute[activeProject.currentRouteIndex];
+    if (!currentStep) return null;
+
+    return getStepNodeIds(activeProject.nodes, currentStep.linkedNodeId);
+  }, [activeProject?.currentRouteIndex, activeProject?.digitalRoute, activeProject?.nodes, isStepFocusOpen]);
 
   const branchCounts = useMemo(() => {
     return Object.fromEntries(baseBranches.map((branch) => [
@@ -155,8 +169,8 @@ export default function ProjectCanvas() {
   }, [activeProjectId]);
 
   const nodes = useMemo<Node<ForUCanvasNodeData>[]>(() => {
-    return activeProject?.nodes?.map((node) => toFlowNode(node, focusedBranch, nextActionIds, routeStepByNodeId)) ?? [];
-  }, [activeProject?.nodes, focusedBranch, nextActionIds, routeStepByNodeId]);
+    return activeProject?.nodes?.map((node) => toFlowNode(node, focusedBranch, focusedStepNodeIds, nextActionIds, routeStepByNodeId)) ?? [];
+  }, [activeProject?.nodes, focusedBranch, focusedStepNodeIds, nextActionIds, routeStepByNodeId]);
 
   const edges = useMemo<Edge[]>(() => {
     const centerNodeId = activeProject ? getCenterNodeId(activeProject.id) : '';
@@ -169,13 +183,13 @@ export default function ProjectCanvas() {
       animated: edge.source === centerNodeId,
       markerEnd: undefined,
       style: edge.source === centerNodeId
-        ? { stroke: getEdgeColor(edge.source, edge.target, activeProject.nodes), strokeWidth: 3, strokeDasharray: '8 8', opacity: getEdgeOpacity(edge.source, edge.target, activeProject.nodes, focusedBranch) }
-        : { stroke: getEdgeColor(edge.source, edge.target, activeProject?.nodes ?? []), strokeWidth: 2, opacity: getEdgeOpacity(edge.source, edge.target, activeProject?.nodes ?? [], focusedBranch), transition: 'opacity 0.3s ease' },
+        ? { stroke: getEdgeColor(edge.source, edge.target, activeProject.nodes), strokeWidth: 3, strokeDasharray: '8 8', opacity: getEdgeOpacity(edge.source, edge.target, activeProject.nodes, focusedBranch, focusedStepNodeIds) }
+        : { stroke: getEdgeColor(edge.source, edge.target, activeProject?.nodes ?? []), strokeWidth: 2, opacity: getEdgeOpacity(edge.source, edge.target, activeProject?.nodes ?? [], focusedBranch, focusedStepNodeIds), transition: 'opacity 0.3s ease' },
     }));
 
     const routeEdges = getRouteEdges(activeProject?.digitalRoute ?? []);
     return [...projectEdges, ...routeEdges];
-  }, [activeProject, focusedBranch]);
+  }, [activeProject, focusedBranch, focusedStepNodeIds]);
 
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
     if (!activeProjectId) return;
@@ -285,6 +299,15 @@ export default function ProjectCanvas() {
         {isRouteViewOpen ? 'Volver al mapa' : '🗺️ Ver Ruta'}
       </button>
 
+      <button
+        type="button"
+        className={`foru-step-focus-toggle ${isStepFocusOpen ? 'is-active' : ''}`}
+        onClick={() => setIsStepFocusOpen((current) => !current)}
+        disabled={!activeProject?.digitalRoute.length}
+      >
+        {isStepFocusOpen ? 'Salir del Enfoque' : '🔍 Enfocar Paso Actual'}
+      </button>
+
       {isGuideOpen ? (
         <div className="foru-project-guide" role="dialog" aria-modal="true" aria-label="Guia del mapa mental">
           <div className="foru-project-guide-card">
@@ -361,7 +384,11 @@ function getNearestBranch(x: number, y: number) {
   return nearest && nearest.distance < 260 ? nearest : null;
 }
 
-function getEdgeOpacity(source: string, target: string, nodes: ForUProjectNode[], focusedBranch: ForUBranchKey | null) {
+function getEdgeOpacity(source: string, target: string, nodes: ForUProjectNode[], focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null) {
+  if (focusedStepNodeIds) {
+    return focusedStepNodeIds.has(source) || focusedStepNodeIds.has(target) ? 1 : 0.12;
+  }
+
   if (!focusedBranch) return 1;
 
   const sourceNode = nodes.find((node) => node.id === source);
@@ -377,6 +404,15 @@ function getEdgeColor(source: string, target: string, nodes: ForUProjectNode[]) 
   const branch = baseBranches.find((item) => item.key === branchKey);
 
   return branch?.color ?? '#A8A1B5';
+}
+
+function getStepNodeIds(nodes: ForUProjectNode[], linkedNodeId: string) {
+  const ids = new Set<string>([linkedNodeId]);
+  nodes
+    .filter((node) => node.parentNodeId === linkedNodeId)
+    .forEach((node) => ids.add(node.id));
+
+  return ids;
 }
 
 function getNextActionIds(nodes: ForUProjectNode[]) {

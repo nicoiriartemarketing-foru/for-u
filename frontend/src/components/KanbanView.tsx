@@ -16,6 +16,7 @@ const columns: Array<{ key: ForUTaskStatus; title: string }> = [
 export default function KanbanView({ includeAllProjectsDefault = false }: KanbanViewProps) {
   const [includeAllProjects, setIncludeAllProjects] = useState(includeAllProjectsDefault);
   const [isRoutePathOpen, setIsRoutePathOpen] = useState(false);
+  const [isStepFocusOpen, setIsStepFocusOpen] = useState(false);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const activeProjectIds = useActiveProjectsStore((state) => state.activeProjectIds);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
@@ -23,6 +24,14 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
   const selectNode = useActiveProjectsStore((state) => state.selectNode);
   const completeRouteStep = useActiveProjectsStore((state) => state.completeRouteStep);
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
+  const focusedStepNodeIds = useMemo(() => {
+    if (!isStepFocusOpen || !activeProject?.digitalRoute.length) return null;
+
+    const currentStep = activeProject.digitalRoute[activeProject.currentRouteIndex];
+    if (!currentStep) return null;
+
+    return getStepNodeIds(activeProject.nodes, currentStep.linkedNodeId);
+  }, [activeProject?.currentRouteIndex, activeProject?.digitalRoute, activeProject?.nodes, isStepFocusOpen]);
 
   const cards = useMemo(() => {
     const projectIds = includeAllProjects ? activeProjectIds : activeProjectId ? [activeProjectId] : [];
@@ -65,6 +74,14 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
         <div className="foru-view-header-actions">
           <button type="button" onClick={() => setIsRoutePathOpen((current) => !current)}>
             {isRoutePathOpen ? 'Ver como Kanban' : '🗺️ Ver como Camino'}
+          </button>
+          <button
+            type="button"
+            className={isStepFocusOpen ? 'is-active' : ''}
+            onClick={() => setIsStepFocusOpen((current) => !current)}
+            disabled={!activeProject?.digitalRoute.length}
+          >
+            {isStepFocusOpen ? 'Salir del Enfoque' : '🔍 Enfocar Paso Actual'}
           </button>
           <button type="button" onClick={() => setIncludeAllProjects((current) => !current)}>
             {includeAllProjects ? 'Solo proyecto actual' : 'Todos los proyectos'}
@@ -133,11 +150,12 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
               <div className="foru-kanban-cards">
                 {columnCards.map(({ projectId, projectName, node }) => {
                   const branch = baseBranches.find((item) => item.key === node.branchKey);
+                  const belongsToFocusedStep = !focusedStepNodeIds || (projectId === activeProjectId && focusedStepNodeIds.has(node.id));
 
                   return (
                     <article
                       key={`${projectId}-${node.id}`}
-                      className={`foru-kanban-card is-${node.priority ?? 'low'}`}
+                      className={`foru-kanban-card is-${node.priority ?? 'low'} ${belongsToFocusedStep ? 'is-step-current' : 'is-step-muted'}`}
                       draggable
                       onDragStart={(event) => {
                         event.dataTransfer.setData('application/foru-node', JSON.stringify({ projectId, nodeId: node.id }));
@@ -166,6 +184,15 @@ function getNodeStatus(node: ForUProjectNode): ForUTaskStatus {
   if (node.taskStatus) return node.taskStatus;
   if (node.completedAt) return 'done';
   return 'todo';
+}
+
+function getStepNodeIds(nodes: ForUProjectNode[], linkedNodeId: string) {
+  const ids = new Set<string>([linkedNodeId]);
+  nodes
+    .filter((node) => node.parentNodeId === linkedNodeId)
+    .forEach((node) => ids.add(node.id));
+
+  return ids;
 }
 
 const priorityLabel = {
