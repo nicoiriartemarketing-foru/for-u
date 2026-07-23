@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
@@ -10,9 +10,10 @@ import Logo from '../components/Logo';
 import NodeDetailPanel from '../components/NodeDetailPanel';
 import ProjectDashboard from '../components/ProjectDashboard';
 import ProjectNavigator from '../components/ProjectNavigator';
-import World3D from '../components/World3D';
 import { Sparkles } from '../lib/icons';
 import { type ForUActiveProject, type ForUWorkspaceView, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+
+const World3D = lazy(() => import('../components/World3D'));
 
 export default function ForUWorkspace() {
   const [isWorldOpen, setIsWorldOpen] = useState(false);
@@ -105,7 +106,9 @@ export default function ForUWorkspace() {
           </div>
           <RouteProgressBar project={activeProject} />
           {isWorldOpen ? (
-            <World3D onBackToMap={() => setIsWorldOpen(false)} />
+            <Suspense fallback={<World3DSkeleton />}>
+              <World3D onBackToMap={() => setIsWorldOpen(false)} />
+            </Suspense>
           ) : currentView === 'dashboard' ? (
             <ProjectDashboard onEnterProject={openProjectIsland} />
           ) : currentView === 'archipelago' ? (
@@ -127,6 +130,22 @@ export default function ForUWorkspace() {
 
       {!isWorldOpen && currentView === 'archipelago' ? <IdeaJarFab /> : null}
     </main>
+  );
+}
+
+function World3DSkeleton() {
+  return (
+    <section className="foru-world3d-skeleton" aria-label="Cargando Mundito 3D">
+      <div className="foru-world3d-skeleton-island">
+        <i />
+        <i />
+        <i />
+      </div>
+      <div>
+        <span>Cargando Mundito 3D</span>
+        <strong>Preparando islas, luces y perlitas...</strong>
+      </div>
+    </section>
   );
 }
 

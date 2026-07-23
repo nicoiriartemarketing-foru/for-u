@@ -3969,6 +3969,81 @@ body {
   min-height: 36rem;
 }
 
+.foru-world3d-skeleton {
+  flex: 1;
+  min-height: 36rem;
+  display: grid;
+  place-items: center;
+  gap: 1rem;
+  border-radius: 24px;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  padding: 1.5rem;
+  color: #342e40;
+  background:
+    radial-gradient(circle at 30% 24%, rgba(244, 208, 63, 0.16), transparent 14rem),
+    radial-gradient(circle at 70% 70%, rgba(118, 215, 196, 0.16), transparent 16rem),
+    linear-gradient(135deg, #f5f0ff, rgba(255,255,255,0.92));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.82), 0 24px 68px rgba(46, 41, 64, 0.08);
+  text-align: center;
+}
+
+.foru-world3d-skeleton-island {
+  position: relative;
+  width: min(18rem, 70vw);
+  height: 10rem;
+  border-radius: 48% 52% 45% 55% / 58% 48% 52% 42%;
+  background:
+    radial-gradient(circle at 35% 20%, rgba(255,255,255,0.85), transparent 3rem),
+    linear-gradient(135deg, #d5f5e3, #fef5e7, #e8daef);
+  box-shadow: 0 24px 52px rgba(46, 41, 64, 0.12);
+  animation: foru-skeleton-float 1.6s ease-in-out infinite;
+}
+
+.foru-world3d-skeleton-island i {
+  position: absolute;
+  bottom: 2.4rem;
+  width: 2.6rem;
+  height: 3.4rem;
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12px 24px rgba(46, 41, 64, 0.08);
+  animation: foru-skeleton-shimmer 1.1s ease-in-out infinite alternate;
+}
+
+.foru-world3d-skeleton-island i:nth-child(1) {
+  left: 4.3rem;
+  background: #fadbd8;
+}
+
+.foru-world3d-skeleton-island i:nth-child(2) {
+  left: 7.6rem;
+  height: 4.7rem;
+  background: #fef5e7;
+  animation-delay: 0.16s;
+}
+
+.foru-world3d-skeleton-island i:nth-child(3) {
+  right: 4.5rem;
+  background: #76d7c4;
+  animation-delay: 0.32s;
+}
+
+.foru-world3d-skeleton span {
+  display: block;
+  color: #8d849a;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.foru-world3d-skeleton strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: #2b2435;
+  font-size: clamp(1.15rem, 3vw, 1.8rem);
+  font-weight: 950;
+}
+
 .foru-world3d-back {
   position: absolute;
   top: 1rem;
@@ -6403,6 +6478,26 @@ body {
   50% {
     transform: scale(1.08);
     box-shadow: 0 0 0 14px rgba(244, 180, 0, 0.2), 0 20px 42px rgba(244, 180, 0, 0.24);
+  }
+}
+
+@keyframes foru-skeleton-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.45rem);
+  }
+}
+
+@keyframes foru-skeleton-shimmer {
+  0% {
+    opacity: 0.58;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.02);
   }
 }
 
