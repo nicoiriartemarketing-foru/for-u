@@ -162,6 +162,23 @@ export default function NodeDetailPanel() {
           </div>
         ) : null}
 
+        {selectedNode.role === 'free' ? (
+          <section className="foru-node-guidance" aria-label="Guia de ejecucion">
+            <div>
+              <strong>Pasos para completar</strong>
+              <ol>
+                {getCompletionSteps(selectedNode).map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            </div>
+            <div>
+              <strong>Recomendación de IA</strong>
+              <p>{getAiRecommendation(selectedNode)}</p>
+            </div>
+          </section>
+        ) : null}
+
         <label className="foru-node-panel-field">
           <span>Descripcion / notas</span>
           <textarea
@@ -218,3 +235,24 @@ const priorityLabel: Record<ForUNodePriority, string> = {
   medium: 'Prioridad media',
   low: 'Baja presión',
 };
+
+function getCompletionSteps(node: ForUProjectNode) {
+  if (node.subtasks?.length) return node.subtasks;
+
+  if (node.kind === 'resource') {
+    return ['Abre el recurso.', 'Extrae una idea util.', 'Conviertela en una micro-accion.'];
+  }
+
+  if (node.kind === 'idea') {
+    return ['Escribe la idea en una frase.', 'Elige el resultado deseado.', 'Crea una accion de 15 minutos.'];
+  }
+
+  return ['Prepara lo minimo necesario.', 'Haz una version simple.', 'Cierra con un envio, guardado o siguiente paso claro.'];
+}
+
+function getAiRecommendation(node: ForUProjectNode) {
+  if (node.reasoning) return node.reasoning;
+  if (node.priority === 'high') return 'Empieza por una version pequeña y visible. Hoy gana el avance, no la perfeccion.';
+  if (node.kind === 'resource') return 'Usa este recurso solo como apoyo: rescata una pieza y vuelve a ejecutar.';
+  return 'Trabaja en bloques de 15 minutos y deja una pista clara para retomarlo despues.';
+}

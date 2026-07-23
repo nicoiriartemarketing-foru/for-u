@@ -25,6 +25,7 @@ import {
   type ForUNodeKind,
   type ForUBranchKey,
   type ForUProjectNode,
+  type ForURouteStep,
   useActiveProjectsStore,
 } from '../stores/useActiveProjectsStore';
 
@@ -49,7 +50,7 @@ function getFocusOpacity(node: ForUProjectNode, focusedBranch: ForUBranchKey | n
   return 0.2;
 }
 
-function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null): Node<ForUCanvasNodeData> {
+function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, nextActionIds: Set<string>, routeStepByNodeId: Map<string, number>): Node<ForUCanvasNodeData> {
   const opacity = getFocusOpacity(node, focusedBranch);
   const style: CSSProperties = {
     opacity,
@@ -102,6 +103,8 @@ function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null):
       kind: node.kind,
       icon: node.icon,
       priority: node.priority,
+      isNextAction: nextActionIds.has(node.id),
+      routeStepNumber: routeStepByNodeId.get(node.id),
     },
   };
 }
@@ -109,6 +112,7 @@ function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null):
 export default function ProjectCanvas() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<{ kind: ForUNodeKind; title: string } | null>(null);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
   const addFreeNodeToBranch = useActiveProjectsStore((state) => state.addFreeNodeToBranch);
@@ -120,19 +124,42 @@ export default function ProjectCanvas() {
   const focusedBranch = useActiveProjectsStore((state) => state.focusedBranch);
   const reassignNodeBranch = useActiveProjectsStore((state) => state.reassignNodeBranch);
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
+  const routeStepByNodeId = useMemo(() => {
+    return new Map((activeProject?.digitalRoute ?? []).map((step, index) => [step.linkedNodeId, index + 1]));
+  }, [activeProject?.digitalRoute]);
+  const nextActionIds = useMemo(() => {
+    return getNextActionIds(activeProject?.nodes ?? []);
+  }, [activeProject?.nodes]);
+
+  const branchCounts = useMemo(() => {
+    return Object.fromEntries(baseBranches.map((branch) => [
+      branch.key,
+      activeProject?.nodes.filter((node) => node.role === 'free' && node.branchKey === branch.key).length ?? 0,
+    ])) as Record<ForUBranchKey, number>;
+  }, [activeProject?.nodes]);
 
   useEffect(() => {
     setSelectedOption(null);
   }, [activeProjectId]);
 
+  useEffect(() => {
+    if (!activeProjectId) return;
+
+    const guideKey = `foru-project-guide-seen-${activeProjectId}`;
+    if (window.localStorage.getItem(guideKey)) return;
+
+    setIsGuideOpen(true);
+    window.localStorage.setItem(guideKey, 'true');
+  }, [activeProjectId]);
+
   const nodes = useMemo<Node<ForUCanvasNodeData>[]>(() => {
-    return activeProject?.nodes?.map((node) => toFlowNode(node, focusedBranch)) ?? [];
-  }, [activeProject?.nodes, focusedBranch]);
+    return activeProject?.nodes?.map((node) => toFlowNode(node, focusedBranch, nextActionIds, routeStepByNodeId)) ?? [];
+  }, [activeProject?.nodes, focusedBranch, nextActionIds, routeStepByNodeId]);
 
   const edges = useMemo<Edge[]>(() => {
     const centerNodeId = activeProject ? getCenterNodeId(activeProject.id) : '';
 
-    return (activeProject?.edges ?? []).map((edge) => ({
+    const projectEdges = (activeProject?.edges ?? []).map((edge) => ({
       id: edge.id,
       source: edge.source,
       target: edge.target,
@@ -140,9 +167,12 @@ export default function ProjectCanvas() {
       animated: edge.source === centerNodeId,
       markerEnd: undefined,
       style: edge.source === centerNodeId
-        ? { stroke: '#C39BD3', strokeWidth: 3, strokeDasharray: '8 8', opacity: getEdgeOpacity(edge.source, edge.target, activeProject.nodes, focusedBranch) }
-        : { stroke: '#A8A1B5', strokeWidth: 2, opacity: getEdgeOpacity(edge.source, edge.target, activeProject?.nodes ?? [], focusedBranch), transition: 'opacity 0.3s ease' },
+        ? { stroke: getEdgeColor(edge.source, edge.target, activeProject.nodes), strokeWidth: 3, strokeDasharray: '8 8', opacity: getEdgeOpacity(edge.source, edge.target, activeProject.nodes, focusedBranch) }
+        : { stroke: getEdgeColor(edge.source, edge.target, activeProject?.nodes ?? []), strokeWidth: 2, opacity: getEdgeOpacity(edge.source, edge.target, activeProject?.nodes ?? [], focusedBranch), transition: 'opacity 0.3s ease' },
     }));
+
+    const routeEdges = getRouteEdges(activeProject?.digitalRoute ?? []);
+    return [...projectEdges, ...routeEdges];
   }, [activeProject, focusedBranch]);
 
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
@@ -229,6 +259,37 @@ export default function ProjectCanvas() {
         <Controls showInteractive={false} />
       </ReactFlow>
 
+      <div className="foru-canvas-legend" aria-label="Leyenda de areas del proyecto">
+        {baseBranches.map((branch) => (
+          <span key={branch.key} style={{ '--branch-color': branch.color } as CSSProperties}>
+            {branch.icon} {branch.title} · {branchCounts[branch.key]}
+          </span>
+        ))}
+      </div>
+
+      <button type="button" className="foru-canvas-help" onClick={() => setIsGuideOpen(true)} aria-label="Mostrar guia del mapa">
+        ?
+      </button>
+
+      {isGuideOpen ? (
+        <div className="foru-project-guide" role="dialog" aria-modal="true" aria-label="Guia del mapa mental">
+          <div className="foru-project-guide-card">
+            <span>Guía rápida</span>
+            <h2>Así se ordena tu proyecto</h2>
+            <div className="foru-project-guide-grid">
+              <p><strong>💡 Ideas</strong> Aquí van tus ideas sueltas, chispazos y posibilidades.</p>
+              <p><strong>✅ Acciones</strong> Aquí aterrizan las tareas concretas para ejecutar.</p>
+              <p><strong>💰 Finanzas</strong> Finanzas, presupuesto, precios y números.</p>
+              <p><strong>📱 Marketing</strong> Contenido, campañas, redes y promoción.</p>
+              <p><strong>📚 Recursos</strong> Links, archivos, plantillas y material útil.</p>
+            </div>
+            <button type="button" onClick={() => setIsGuideOpen(false)}>
+              Entendido, comenzar
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <div className="foru-canvas-add">
         {selectedOption ? (
           <div className="foru-canvas-add-menu foru-canvas-branch-picker">
@@ -293,4 +354,53 @@ function getEdgeOpacity(source: string, target: string, nodes: ForUProjectNode[]
   const targetNode = nodes.find((node) => node.id === target);
 
   return sourceNode?.branchKey === focusedBranch || targetNode?.branchKey === focusedBranch ? 1 : 0.18;
+}
+
+function getEdgeColor(source: string, target: string, nodes: ForUProjectNode[]) {
+  const sourceNode = nodes.find((node) => node.id === source);
+  const targetNode = nodes.find((node) => node.id === target);
+  const branchKey = targetNode?.branchKey ?? sourceNode?.branchKey;
+  const branch = baseBranches.find((item) => item.key === branchKey);
+
+  return branch?.color ?? '#A8A1B5';
+}
+
+function getNextActionIds(nodes: ForUProjectNode[]) {
+  const priorityScore = { high: 0, medium: 1, low: 2 } as const;
+  const ids = new Set<string>();
+
+  baseBranches.forEach((branch) => {
+    nodes
+      .filter((node) => node.role === 'free' && node.branchKey === branch.key && !node.completedAt)
+      .sort((a, b) => {
+        const priorityDelta = priorityScore[a.priority ?? 'low'] - priorityScore[b.priority ?? 'low'];
+        if (priorityDelta !== 0) return priorityDelta;
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      })
+      .slice(0, 3)
+      .forEach((node) => ids.add(node.id));
+  });
+
+  return ids;
+}
+
+function getRouteEdges(route: ForURouteStep[]): Edge[] {
+  return route.slice(0, -1).map((step, index) => {
+    const nextStep = route[index + 1];
+
+    return {
+      id: `digital-route-${step.id}-${nextStep.id}`,
+      source: step.linkedNodeId,
+      target: nextStep.linkedNodeId,
+      type: 'smoothstep',
+      animated: true,
+      selectable: false,
+      deletable: false,
+      style: {
+        stroke: '#F4B400',
+        strokeWidth: 5,
+        filter: 'drop-shadow(0 0 8px rgba(244, 180, 0, 0.55))',
+      },
+    };
+  });
 }

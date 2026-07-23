@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create, type StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export type ForUProjectStatus = 'active' | 'paused' | 'blocked' | 'completed';
@@ -9,6 +9,7 @@ export type ForUBranchKey = 'ideas' | 'actions' | 'finances' | 'marketing' | 're
 export type ForUNodePriority = 'high' | 'medium' | 'low';
 export type ForURawNoteKind = 'text' | 'audio' | 'photo';
 export type ForUWorldViewLevel = 'archipelago' | 'exterior' | 'interior';
+export type ForUWorkspaceView = 'map' | 'kanban' | 'gantt' | 'archipelago' | 'dashboard';
 
 export type ForUTask = {
   id: string;
@@ -32,9 +33,13 @@ export type ForUProjectNode = {
   subtasks?: string[];
   reasoning?: string;
   parentNodeId?: string;
+  completedAt?: string;
+  rewardCoins?: number;
+  taskStatus?: ForUTaskStatus;
   locked?: boolean;
   linkedTaskId?: string;
   externalUrl?: string;
+  lastActiveDate: string;
   createdAt: string;
 };
 
@@ -45,6 +50,13 @@ export type ForUProjectEdge = {
   createdAt: string;
 };
 
+export type ForURouteStep = {
+  id: string;
+  title: string;
+  linkedNodeId: string;
+  completedAt?: string;
+};
+
 export type ForUActiveProject = {
   id: string;
   name: string;
@@ -52,6 +64,8 @@ export type ForUActiveProject = {
   tasks: ForUTask[];
   nodes: ForUProjectNode[];
   edges: ForUProjectEdge[];
+  digitalRoute: ForURouteStep[];
+  currentRouteIndex: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -78,19 +92,41 @@ type CreateRawNoteInput = {
   previewUrl?: string;
 };
 
-export type CreateFreeNodeForBranchInput = Omit<ForUProjectNode, 'id' | 'createdAt' | 'role'> & {
+export type CreateFreeNodeForBranchInput = Omit<ForUProjectNode, 'id' | 'createdAt' | 'lastActiveDate' | 'role'> & {
   branchKey: ForUBranchKey;
+};
+
+export type WeeklyMilestoneResult = {
+  milestoneAchieved: boolean;
 };
 
 type ActiveProjectsState = {
   activeProjectIds: string[];
   activeProjectId: string | null;
+  currentProjectId: string | null;
+  lastCreatedProjectId: string | null;
   projectsById: Record<string, ForUActiveProject>;
   rawNotes: ForURawNote[];
   isJarOpen: boolean;
   selectedNodeId: string | null;
   focusedBranch: ForUBranchKey | null;
   viewLevel: ForUWorldViewLevel;
+  currentView: ForUWorkspaceView;
+  userLevel: number;
+  userXP: number;
+  xpToNextLevel: number;
+  coins: number;
+  weeklyMilestoneProgress: number;
+  getAllProjects: () => ForUActiveProject[];
+  getActiveProjects: () => ForUActiveProject[];
+  getProjectById: (projectId: string) => ForUActiveProject | null;
+  getDustyNodes: () => ForUProjectNode[];
+  clearLastCreatedProject: () => void;
+  switchProject: (projectId: string) => void;
+  setView: (view: ForUWorkspaceView) => void;
+  addXP: (amount: number) => void;
+  addCoins: (amount: number) => void;
+  checkWeeklyMilestone: () => WeeklyMilestoneResult;
   openProject: (input: CreateProjectInput) => string;
   focusProject: (projectId: string) => void;
   closeProject: (projectId: string) => void;
@@ -98,12 +134,14 @@ type ActiveProjectsState = {
   updateProjectStatus: (projectId: string, status: ForUProjectStatus) => void;
   addTask: (projectId: string, title: string) => string | null;
   updateTaskStatus: (projectId: string, taskId: string, status: ForUTaskStatus) => void;
-  addNode: (projectId: string, node: Omit<ForUProjectNode, 'id' | 'createdAt'>) => string | null;
-  addFreeNodeToBranch: (projectId: string, branchKey: ForUBranchKey, node: Omit<ForUProjectNode, 'id' | 'createdAt' | 'role'>) => string | null;
+  addNode: (projectId: string, node: Omit<ForUProjectNode, 'id' | 'createdAt' | 'lastActiveDate'>) => string | null;
+  addFreeNodeToBranch: (projectId: string, branchKey: ForUBranchKey, node: Omit<ForUProjectNode, 'id' | 'createdAt' | 'lastActiveDate' | 'role'>) => string | null;
   addFreeNodesToBranches: (projectId: string, nodes: CreateFreeNodeForBranchInput[]) => string[];
   updateNode: (projectId: string, nodeId: string, patch: Partial<Omit<ForUProjectNode, 'id'>>) => void;
   reassignNodeBranch: (projectId: string, nodeId: string, branchKey: ForUBranchKey) => void;
   splitNodeIntoSubtasks: (projectId: string, nodeId: string, subtasks: string[]) => string[];
+  setDigitalRoute: (projectId: string, route: ForURouteStep[]) => void;
+  completeRouteStep: (projectId: string) => boolean;
   moveNode: (projectId: string, nodeId: string, position: { x: number; y: number }) => void;
   connectNodes: (projectId: string, source: string, target: string) => string | null;
   removeEdge: (projectId: string, edgeId: string) => void;
@@ -134,6 +172,9 @@ function now() {
   return new Date().toISOString();
 }
 
+const DUST_THRESHOLD_MS = 48 * 60 * 60 * 1000;
+const WEEKLY_MILESTONE_GOAL = 5;
+
 function createProject(input: CreateProjectInput): ForUActiveProject {
   const timestamp = now();
   const projectId = createId('project');
@@ -147,6 +188,8 @@ function createProject(input: CreateProjectInput): ForUActiveProject {
     tasks: [],
     nodes: base.nodes,
     edges: base.edges,
+    digitalRoute: [],
+    currentRouteIndex: 0,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -159,7 +202,10 @@ function touch(project: ForUActiveProject): ForUActiveProject {
 function normalizeProject(project: ForUActiveProject): ForUActiveProject {
   const timestamp = now();
   const base = createBaseMap(project.id, project.name, timestamp);
-  const nodes = project.nodes ?? [];
+  const nodes = (project.nodes ?? []).map((node) => ({
+    ...node,
+    lastActiveDate: node.lastActiveDate ?? node.createdAt ?? project.updatedAt ?? timestamp,
+  }));
   const edges = project.edges ?? [];
   const missingBaseNodes = base.nodes.filter((baseNode) => !nodes.some((node) => node.id === baseNode.id));
   const missingBaseEdges = base.edges.filter((baseEdge) => !edges.some((edge) => edge.id === baseEdge.id));
@@ -169,6 +215,8 @@ function normalizeProject(project: ForUActiveProject): ForUActiveProject {
     tasks: project.tasks ?? [],
     nodes: [...missingBaseNodes, ...nodes],
     edges: [...missingBaseEdges, ...edges],
+    digitalRoute: project.digitalRoute ?? [],
+    currentRouteIndex: project.currentRouteIndex ?? 0,
   };
 }
 
@@ -180,11 +228,11 @@ export const baseBranches: Array<{
   y: number;
   color: string;
 }> = [
-  { key: 'ideas', title: 'Ideas', icon: '💡', x: 240, y: 210, color: '#FDE68A' },
-  { key: 'actions', title: 'Acciones', icon: '✅', x: 760, y: 210, color: '#6EE7B7' },
-  { key: 'finances', title: 'Finanzas', icon: '💰', x: 830, y: 400, color: '#93C5FD' },
-  { key: 'marketing', title: 'Marketing', icon: '📱', x: 760, y: 590, color: '#C39BD3' },
-  { key: 'resources', title: 'Recursos', icon: '🎨', x: 240, y: 590, color: '#76D7C4' },
+  { key: 'ideas', title: 'Ideas', icon: '💡', x: 240, y: 210, color: '#F4D03F' },
+  { key: 'actions', title: 'Acciones', icon: '✅', x: 760, y: 210, color: '#58D68D' },
+  { key: 'finances', title: 'Finanzas', icon: '💰', x: 830, y: 400, color: '#8E7CC3' },
+  { key: 'marketing', title: 'Marketing', icon: '📱', x: 760, y: 590, color: '#F9A8D4' },
+  { key: 'resources', title: 'Recursos', icon: '📚', x: 240, y: 590, color: '#F5B041' },
 ];
 
 export function getCenterNodeId(projectId: string) {
@@ -205,6 +253,7 @@ function createBaseMap(projectId: string, projectName: string, timestamp: string
     y: 400,
     icon: '✨',
     locked: true,
+    lastActiveDate: timestamp,
     createdAt: timestamp,
   };
 
@@ -218,6 +267,7 @@ function createBaseMap(projectId: string, projectName: string, timestamp: string
     y: branch.y,
     icon: branch.icon,
     locked: true,
+    lastActiveDate: timestamp,
     createdAt: timestamp,
   }));
 
@@ -236,11 +286,11 @@ function createBaseMap(projectId: string, projectName: string, timestamp: string
 
 const starterProject = createProject({ name: 'Mi primer proyecto' });
 
-export const useActiveProjectsStore = create<ActiveProjectsState>()(
-  persist(
-    (set, get) => ({
+const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => ({
       activeProjectIds: [starterProject.id],
       activeProjectId: starterProject.id,
+      currentProjectId: starterProject.id,
+      lastCreatedProjectId: null,
       projectsById: {
         [starterProject.id]: starterProject,
       },
@@ -249,6 +299,105 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
       selectedNodeId: null,
       focusedBranch: null,
       viewLevel: 'archipelago',
+      currentView: 'dashboard',
+      userLevel: 1,
+      userXP: 0,
+      xpToNextLevel: 100,
+      coins: 0,
+      weeklyMilestoneProgress: 0,
+
+      getAllProjects: () => {
+        const state = get();
+        return state.activeProjectIds
+          .map((projectId) => state.projectsById[projectId])
+          .filter(Boolean)
+          .map((project) => normalizeProject(project));
+      },
+
+      getActiveProjects: () => {
+        const state = get();
+        return state.activeProjectIds
+          .map((projectId) => state.projectsById[projectId])
+          .filter((project): project is ForUActiveProject => Boolean(project) && project.status === 'active')
+          .map((project) => normalizeProject(project));
+      },
+
+      getProjectById: (projectId) => {
+        const project = get().projectsById[projectId];
+        return project ? normalizeProject(project) : null;
+      },
+
+      getDustyNodes: () => {
+        const state = get();
+        const cutoff = Date.now() - DUST_THRESHOLD_MS;
+
+        return state.activeProjectIds
+          .flatMap((projectId) => {
+            const project = state.projectsById[projectId];
+            return project ? normalizeProject(project).nodes : [];
+          })
+          .filter((node) => {
+            if (node.locked || node.completedAt) return false;
+            return new Date(node.lastActiveDate).getTime() < cutoff;
+          });
+      },
+
+      switchProject: (projectId) => {
+        if (!get().projectsById[projectId]) return;
+        set({
+          activeProjectId: projectId,
+          currentProjectId: projectId,
+          selectedNodeId: null,
+          focusedBranch: null,
+          viewLevel: 'archipelago',
+        });
+      },
+
+      clearLastCreatedProject: () => set({ lastCreatedProjectId: null }),
+
+      setView: (view) => set({ currentView: view, selectedNodeId: null }),
+
+      addXP: (amount) => {
+        const cleanAmount = Math.max(0, Math.floor(amount));
+        if (cleanAmount === 0) return;
+
+        set((state) => {
+          let nextLevel = state.userLevel;
+          let nextXP = state.userXP + cleanAmount;
+          const xpToNextLevel = state.xpToNextLevel || 100;
+
+          while (nextXP >= xpToNextLevel) {
+            nextLevel += 1;
+            nextXP -= xpToNextLevel;
+          }
+
+          return {
+            userLevel: nextLevel,
+            userXP: nextXP,
+            xpToNextLevel,
+          };
+        });
+      },
+
+      addCoins: (amount) => {
+        const cleanAmount = Math.max(0, Math.floor(amount));
+        if (cleanAmount === 0) return;
+
+        set((state) => ({
+          coins: state.coins + cleanAmount,
+        }));
+      },
+
+      checkWeeklyMilestone: () => {
+        const progress = get().weeklyMilestoneProgress;
+        const milestoneAchieved = progress >= WEEKLY_MILESTONE_GOAL;
+
+        if (milestoneAchieved) {
+          set({ weeklyMilestoneProgress: 0 });
+        }
+
+        return { milestoneAchieved };
+      },
 
       openProject: (input) => {
         const project = createProject(input);
@@ -256,6 +405,8 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
         set((state) => ({
           activeProjectIds: [...state.activeProjectIds, project.id],
           activeProjectId: project.id,
+          currentProjectId: project.id,
+          lastCreatedProjectId: project.id,
           selectedNodeId: null,
           focusedBranch: null,
           viewLevel: 'archipelago',
@@ -270,7 +421,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
 
       focusProject: (projectId) => {
         if (!get().projectsById[projectId]) return;
-        set({ activeProjectId: projectId, selectedNodeId: null, focusedBranch: null, viewLevel: 'archipelago' });
+        set({ activeProjectId: projectId, currentProjectId: projectId, selectedNodeId: null, focusedBranch: null, viewLevel: 'archipelago' });
       },
 
       closeProject: (projectId) => {
@@ -283,9 +434,11 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
               : state.activeProjectId;
 
           return {
-            activeProjectIds: nextActiveIds,
-            activeProjectId: nextFocusedId,
-            selectedNodeId: state.activeProjectId === projectId ? null : state.selectedNodeId,
+          activeProjectIds: nextActiveIds,
+          activeProjectId: nextFocusedId,
+          currentProjectId: nextFocusedId,
+          lastCreatedProjectId: state.lastCreatedProjectId === projectId ? null : state.lastCreatedProjectId,
+          selectedNodeId: state.activeProjectId === projectId ? null : state.selectedNodeId,
             focusedBranch: state.activeProjectId === projectId ? null : state.focusedBranch,
             viewLevel: state.activeProjectId === projectId ? 'archipelago' : state.viewLevel,
             projectsById: nextProjects,
@@ -385,6 +538,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           ...node,
           role: node.role ?? 'free',
           id: createId('node'),
+          lastActiveDate: now(),
           createdAt: now(),
         };
 
@@ -414,6 +568,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           role: 'free',
           branchKey,
           id: createId('node'),
+          lastActiveDate: now(),
           createdAt: now(),
         };
 
@@ -455,6 +610,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
             ...node,
             role: 'free',
             id: createId('node'),
+            lastActiveDate: timestamp,
             createdAt: timestamp,
           };
 
@@ -488,14 +644,21 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           const storedProject = state.projectsById[projectId];
           if (!storedProject) return state;
           const project = normalizeProject(storedProject);
+          const currentNode = project.nodes.find((node) => node.id === nodeId);
+          const rewardDelta = currentNode
+            ? Math.max(0, (patch.rewardCoins ?? currentNode.rewardCoins ?? 0) - (currentNode.rewardCoins ?? 0))
+            : 0;
+          const completedNow = Boolean(currentNode && !currentNode.completedAt && patch.completedAt);
 
           return {
+            coins: state.coins + rewardDelta,
+            weeklyMilestoneProgress: completedNow ? state.weeklyMilestoneProgress + 1 : state.weeklyMilestoneProgress,
             projectsById: {
               ...state.projectsById,
               [projectId]: touch({
                 ...project,
                 nodes: project.nodes.map((node) =>
-                  node.id === nodeId ? { ...node, ...patch } : node,
+                  node.id === nodeId ? { ...node, ...patch, lastActiveDate: patch.lastActiveDate ?? now() } : node,
                 ),
               }),
             },
@@ -527,7 +690,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
               [projectId]: touch({
                 ...project,
                 nodes: project.nodes.map((node) =>
-                  node.id === nodeId ? { ...node, branchKey } : node,
+                  node.id === nodeId ? { ...node, branchKey, lastActiveDate: now() } : node,
                 ),
                 edges: nextEdges,
               }),
@@ -558,6 +721,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           description: `Subtarea creada desde: ${parentNode.title}`,
           x: parentNode.x + 190 + index * 36,
           y: parentNode.y + (index - (cleanSubtasks.length - 1) / 2) * 92,
+          lastActiveDate: timestamp,
           createdAt: timestamp,
         }));
 
@@ -579,7 +743,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
                 nodes: currentProject.nodes
                   .map((node) =>
                     node.id === parentNode.id
-                      ? { ...node, subtasks: cleanSubtasks, kind: 'task' as const, icon: node.icon ?? '✅' }
+                      ? { ...node, subtasks: cleanSubtasks, kind: 'task' as const, icon: node.icon ?? '✅', lastActiveDate: timestamp }
                       : node,
                   )
                   .concat(createdNodes),
@@ -590,6 +754,67 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
         });
 
         return createdNodes.map((node) => node.id);
+      },
+
+      setDigitalRoute: (projectId, route) => {
+        set((state) => {
+          const storedProject = state.projectsById[projectId];
+          if (!storedProject) return state;
+          const project = normalizeProject(storedProject);
+          const nodeIds = new Set(project.nodes.map((node) => node.id));
+          const cleanRoute = route.filter((step) => nodeIds.has(step.linkedNodeId)).slice(0, 5);
+
+          return {
+            projectsById: {
+              ...state.projectsById,
+              [projectId]: touch({
+                ...project,
+                digitalRoute: cleanRoute,
+                currentRouteIndex: 0,
+              }),
+            },
+          };
+        });
+      },
+
+      completeRouteStep: (projectId) => {
+        const storedProject = get().projectsById[projectId];
+        const project = storedProject ? normalizeProject(storedProject) : null;
+        if (!project || project.digitalRoute.length === 0) return false;
+
+        const currentIndex = Math.min(project.currentRouteIndex, project.digitalRoute.length - 1);
+        const currentStep = project.digitalRoute[currentIndex];
+        if (!currentStep || currentStep.completedAt) return false;
+
+        const timestamp = now();
+
+        set((state) => {
+          const currentProject = normalizeProject(state.projectsById[projectId]);
+          const nextRoute = currentProject.digitalRoute.map((step, index) =>
+            index === currentIndex ? { ...step, completedAt: timestamp } : step,
+          );
+
+          return {
+            userXP: state.userXP,
+            coins: state.coins + 20,
+            projectsById: {
+              ...state.projectsById,
+              [projectId]: touch({
+                ...currentProject,
+                digitalRoute: nextRoute,
+                currentRouteIndex: Math.min(currentIndex + 1, nextRoute.length),
+                nodes: currentProject.nodes.map((node) =>
+                  node.id === currentStep.linkedNodeId
+                    ? { ...node, taskStatus: 'done' as const, completedAt: node.completedAt ?? timestamp, rewardCoins: (node.rewardCoins ?? 0) + 20, lastActiveDate: timestamp }
+                    : node,
+                ),
+              }),
+            },
+          };
+        });
+
+        get().addXP(50);
+        return true;
       },
 
       moveNode: (projectId, nodeId, position) => {
@@ -605,7 +830,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
                 ...project,
                 nodes: project.nodes.map((node) => {
                   if (node.id !== nodeId || node.locked) return node;
-                  return { ...node, x: position.x, y: position.y };
+                  return { ...node, x: position.x, y: position.y, lastActiveDate: now() };
                 }),
               }),
             },
@@ -661,7 +886,33 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
         });
       },
 
-      selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
+      selectNode: (nodeId) => {
+        const activeProjectId = get().activeProjectId;
+
+        if (!activeProjectId) {
+          set({ selectedNodeId: nodeId });
+          return;
+        }
+
+        set((state) => {
+          const storedProject = state.projectsById[activeProjectId];
+          if (!storedProject) return { selectedNodeId: nodeId };
+          const project = normalizeProject(storedProject);
+
+          return {
+            selectedNodeId: nodeId,
+            projectsById: {
+              ...state.projectsById,
+              [activeProjectId]: touch({
+                ...project,
+                nodes: project.nodes.map((node) =>
+                  node.id === nodeId ? { ...node, lastActiveDate: now() } : node,
+                ),
+              }),
+            },
+          };
+        });
+      },
 
       deselectNode: () => set({ selectedNodeId: null }),
 
@@ -720,6 +971,8 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
         set({
           activeProjectIds: [project.id],
           activeProjectId: project.id,
+          currentProjectId: project.id,
+          lastCreatedProjectId: null,
           projectsById: {
             [project.id]: project,
           },
@@ -728,12 +981,22 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           selectedNodeId: null,
           focusedBranch: null,
           viewLevel: 'archipelago',
+          currentView: 'dashboard',
+          userLevel: 1,
+          userXP: 0,
+          xpToNextLevel: 100,
+          coins: 0,
+          weeklyMilestoneProgress: 0,
         });
       },
-    }),
+});
+
+export const useActiveProjectsStore = create<ActiveProjectsState>()(
+  persist(
+    createActiveProjectsState,
     {
       name: 'foru-active-projects',
-      version: 4,
+      version: 7,
       migrate: (persistedState) => {
         const state = persistedState as ActiveProjectsState | undefined;
         if (!state) return state;
@@ -748,13 +1011,21 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           ),
           activeProjectIds: state.activeProjectIds ?? [],
           activeProjectId: state.activeProjectId ?? null,
+          currentProjectId: state.currentProjectId ?? state.activeProjectId ?? null,
+          lastCreatedProjectId: state.lastCreatedProjectId ?? null,
           rawNotes: state.rawNotes ?? [],
           isJarOpen: state.isJarOpen ?? false,
           selectedNodeId: state.selectedNodeId ?? null,
           focusedBranch: state.focusedBranch ?? null,
           viewLevel: state.viewLevel ?? 'archipelago',
+          currentView: state.currentView ?? 'dashboard',
+          userLevel: state.userLevel ?? 1,
+          userXP: state.userXP ?? 0,
+          xpToNextLevel: state.xpToNextLevel ?? 100,
+          coins: state.coins ?? 0,
+          weeklyMilestoneProgress: state.weeklyMilestoneProgress ?? 0,
         };
       },
     },
-  ),
+  ) as unknown as StateCreator<ActiveProjectsState>,
 );

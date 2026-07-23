@@ -11,16 +11,24 @@ export interface ProcessedNode {
   priority?: ForUNodePriority;
   subtasks?: string[];
   reasoning?: string;
+  lastActiveDate: string;
   position: { x: number; y: number };
 }
 
+export type DigitalRouteStep = {
+  id: string;
+  title: string;
+  linkedNodeId: string;
+};
+
 export type AiProcessResponse = {
   nodos: ProcessedNode[];
+  digitalRoute: DigitalRouteStep[];
   mensaje: string;
 };
 
 export const FOR_U_AI_SYSTEM_PROMPT = `Eres For U, un asistente empático y juguetón para emprendedores con TDAH. Usas analogías de mar y navegación. Recibes notas crudas y desordenadas. Tu tarea es priorizarlas, detectar rama, dividir tareas complejas en micro-subtareas de maximo 15 minutos y responder SOLO JSON:
-{ "nodos": [ { "id": "string", "label": "string", "type": "Idea" | "Acción" | "Recurso", "branchKey": "ideas" | "actions" | "finances" | "marketing" | "resources", "description": "string", "priority": "high" | "medium" | "low", "subtasks": ["string"], "reasoning": "string", "position": { "x": number, "y": number } } ], "mensaje": "string" }`;
+{ "nodos": [ { "id": "string", "label": "string", "type": "Idea" | "Acción" | "Recurso", "branchKey": "ideas" | "actions" | "finances" | "marketing" | "resources", "description": "string", "priority": "high" | "medium" | "low", "subtasks": ["string"], "reasoning": "string", "lastActiveDate": "string ISO", "position": { "x": number, "y": number } } ], "digitalRoute": [ { "id": "string", "title": "string", "linkedNodeId": "string" } ], "mensaje": "string" }`;
 
 const mockDelayMs = 1200;
 
@@ -53,6 +61,7 @@ export async function processRawNotes(rawNotes: string[], projectName: string): 
       priority,
       subtasks,
       reasoning: branch.reasoning,
+      lastActiveDate: new Date().toISOString(),
       position: {
         x: Math.round(branchOrigin.x + Math.cos(angle) * radius),
         y: Math.round(branchOrigin.y + Math.sin(angle) * radius),
@@ -61,9 +70,11 @@ export async function processRawNotes(rawNotes: string[], projectName: string): 
   });
 
   const highPriorityCount = nodos.filter((node) => node.priority === 'high').length;
+  const digitalRoute = createDigitalRoute(projectName, notes, nodos);
 
   return {
     nodos,
+    digitalRoute,
     mensaje: `⛵ Listo: organicé ${nodos.length} ideas para "${projectName}"${highPriorityCount ? ` y marqué ${highPriorityCount} como prioridad alta` : ''}.`,
   };
 }
@@ -150,6 +161,67 @@ function toMicroTaskLabel(note: string, type: AiNodeType, subtasks: string[]) {
   if (type === 'Recurso') return `Recurso: ${shortNote}`;
 
   return `Idea: ${shortNote}`;
+}
+
+function createDigitalRoute(projectName: string, notes: string[], nodos: ProcessedNode[]): DigitalRouteStep[] {
+  const text = `${projectName} ${notes.join(' ')}`.toLowerCase();
+  const routeTitles = inferRouteTitles(text);
+  const fallbackNode = nodos[0];
+
+  return routeTitles
+    .map((title, index) => {
+      const preferredNode = findRouteNode(title, nodos) ?? nodos[index] ?? fallbackNode;
+      if (!preferredNode) return null;
+
+      return {
+        id: `route-step-${Date.now()}-${index}`,
+        title,
+        linkedNodeId: preferredNode.id,
+      };
+    })
+    .filter((step): step is DigitalRouteStep => Boolean(step));
+}
+
+function inferRouteTitles(text: string) {
+  if (/(marketing|instagram|tiktok|contenido|campaña|campana|reel|redes|audiencia)/.test(text)) {
+    return ['Estrategia', 'Contenido', 'Publicación', 'Medición'];
+  }
+
+  if (/(finanza|finanzas|presupuesto|precio|costos|ventas|dinero|pago)/.test(text)) {
+    return ['Diagnóstico', 'Presupuesto', 'Oferta', 'Seguimiento'];
+  }
+
+  if (/(curso|clase|taller|ebook|aprendizaje|formación|formacion)/.test(text)) {
+    return ['Investigación', 'Currículo', 'Producción', 'Lanzamiento'];
+  }
+
+  if (/(web|landing|sitio|app|plataforma|software)/.test(text)) {
+    return ['Descubrimiento', 'Arquitectura', 'Construcción', 'Prueba', 'Lanzamiento'];
+  }
+
+  return ['Investigación', 'Planificación', 'Ejecución', 'Revisión'];
+}
+
+function findRouteNode(routeTitle: string, nodos: ProcessedNode[]) {
+  const title = routeTitle.toLowerCase();
+
+  if (/(estrategia|investigación|investigacion|descubrimiento|diagnóstico|diagnostico)/.test(title)) {
+    return nodos.find((node) => node.branchKey === 'ideas') ?? nodos.find((node) => node.type === 'Idea');
+  }
+
+  if (/(contenido|producción|produccion|construcción|construccion|ejecución|ejecucion)/.test(title)) {
+    return nodos.find((node) => node.branchKey === 'actions') ?? nodos.find((node) => node.type === 'Acción');
+  }
+
+  if (/(publicación|publicacion|lanzamiento|medición|medicion)/.test(title)) {
+    return nodos.find((node) => node.branchKey === 'marketing') ?? nodos.find((node) => node.branchKey === 'actions');
+  }
+
+  if (/(presupuesto|oferta|seguimiento)/.test(title)) {
+    return nodos.find((node) => node.branchKey === 'finances') ?? nodos.find((node) => node.branchKey === 'actions');
+  }
+
+  return nodos.find((node) => node.branchKey === 'actions') ?? nodos[0];
 }
 
 const branchOrigins: Record<ForUBranchKey, { x: number; y: number; angle: number }> = {

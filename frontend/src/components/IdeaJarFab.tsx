@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Camera, FileText, Mic2, Sparkles, X } from '../lib/icons';
 import { processRawNotes, type AiNodeType } from '../services/aiProcessor';
-import { type ForUNodeKind, type ForURawNoteKind, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import { type ForUNodeKind, type ForURawNoteKind, type ForURouteStep, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
 const noteModes: Array<{ kind: ForURawNoteKind; label: string; icon: typeof FileText }> = [
   { kind: 'text', label: 'Texto', icon: FileText },
@@ -23,6 +23,7 @@ export default function IdeaJarFab() {
   const closeIdeaJar = useActiveProjectsStore((state) => state.closeIdeaJar);
   const addRawNote = useActiveProjectsStore((state) => state.addRawNote);
   const addFreeNodesToBranches = useActiveProjectsStore((state) => state.addFreeNodesToBranches);
+  const setDigitalRoute = useActiveProjectsStore((state) => state.setDigitalRoute);
   const clearRawNotes = useActiveProjectsStore((state) => state.clearRawNotes);
 
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
@@ -59,6 +60,22 @@ export default function IdeaJarFab() {
           y: node.position.y,
         })),
       );
+      const tempToRealNodeId = new Map(response.nodos.map((node, index) => [node.id, createdNodeIds[index]]));
+      const route: ForURouteStep[] = response.digitalRoute
+        .map((step) => {
+          const linkedNodeId = tempToRealNodeId.get(step.linkedNodeId);
+          if (!linkedNodeId) return null;
+
+          return {
+            ...step,
+            linkedNodeId,
+          };
+        })
+        .filter((step): step is ForURouteStep => Boolean(step));
+
+      if (route.length > 0) {
+        setDigitalRoute(activeProjectId, route);
+      }
 
       clearRawNotes();
       closeIdeaJar();
