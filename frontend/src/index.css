@@ -2949,6 +2949,7 @@ body {
 
 .foru-daily-streak-badge,
 .foru-coins-badge {
+  position: relative;
   min-height: 2.35rem;
   flex: 0 0 auto;
   border: 1px solid rgba(244, 180, 0, 0.24);
@@ -2990,6 +2991,37 @@ body {
 .foru-coins-badge:hover {
   transform: translateY(-1px);
   background: #fff8dc;
+}
+
+.foru-daily-streak-badge::after,
+.foru-coins-badge::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 0.55rem);
+  z-index: 40;
+  width: max-content;
+  max-width: 14rem;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  border-radius: 12px;
+  padding: 0.48rem 0.62rem;
+  color: #342e40;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 34px rgba(46, 41, 64, 0.14);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -0.25rem);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  white-space: normal;
+  font-size: 0.74rem;
+  line-height: 1.25;
+  font-weight: 850;
+}
+
+.foru-daily-streak-badge:hover::after,
+.foru-coins-badge:hover::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .foru-shell-main {

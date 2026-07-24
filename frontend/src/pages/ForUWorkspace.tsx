@@ -114,12 +114,22 @@ export default function ForUWorkspace() {
             <strong>Mi Mundo</strong>
           </button>
         </div>
-        {mainView === 'objectives' ? <span className="foru-header-step-pill">Paso {guideStep.index}/5</span> : null}
-        <button type="button" className="foru-daily-streak-badge" onClick={() => setIsDailyRewardOpen(true)}>
-          🔥 {dailyStreak}
+        {mainView === 'objectives' ? <span className="foru-header-step-pill">🎯 Paso {guideStep.index}/5: {guideStep.label}</span> : null}
+        <button
+          type="button"
+          className="foru-daily-streak-badge"
+          data-tooltip="Inicia sesión cada día para mantener tu racha"
+          onClick={() => setIsDailyRewardOpen(true)}
+        >
+          📅 Racha: {dailyStreak} {dailyStreak === 1 ? 'día' : 'días'}
         </button>
-        <button type="button" className="foru-coins-badge" onClick={() => setIsDailyRewardOpen(true)}>
-          🪙 {coins}
+        <button
+          type="button"
+          className="foru-coins-badge"
+          data-tooltip="Gana monedas completando tareas"
+          onClick={() => setIsDailyRewardOpen(true)}
+        >
+          🪙 {coins} monedas
         </button>
       </header>
 
