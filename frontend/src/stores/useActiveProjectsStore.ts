@@ -10,6 +10,7 @@ export type ForUNodePriority = 'high' | 'medium' | 'low';
 export type ForURawNoteKind = 'text' | 'audio' | 'photo';
 export type ForUWorldViewLevel = 'archipelago' | 'exterior' | 'interior';
 export type ForUWorkspaceView = 'map' | 'kanban' | 'gantt' | 'archipelago' | 'dashboard';
+export type ForUProjectGuideState = 'empty' | 'raw' | 'organized' | 'planned' | 'active' | 'completed';
 
 export type ForUArchipelagoOffset = {
   x: number;
@@ -136,6 +137,7 @@ type ActiveProjectsState = {
   getAllProjects: () => ForUActiveProject[];
   getActiveProjects: () => ForUActiveProject[];
   getProjectById: (projectId: string) => ForUActiveProject | null;
+  getProjectState: (projectId: string) => ForUProjectGuideState;
   getDustyNodes: () => ForUProjectNode[];
   clearLastCreatedProject: () => void;
   switchProject: (projectId: string) => void;
@@ -340,7 +342,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
       selectedNodeId: null,
       focusedBranch: null,
       viewLevel: 'archipelago',
-      currentView: 'dashboard',
+      currentView: 'archipelago',
       archipelagoZoom: 0.45,
       archipelagoOffset: { x: 80, y: 80 },
       userLevel: 1,
@@ -375,6 +377,30 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
       getProjectById: (projectId) => {
         const project = get().projectsById[projectId];
         return project ? normalizeProject(project) : null;
+      },
+
+      getProjectState: (projectId) => {
+        const state = get();
+        const storedProject = state.projectsById[projectId];
+        if (!storedProject) return 'empty';
+
+        const project = normalizeProject(storedProject);
+        const rawNotesForProject = state.rawNotes.filter((note) =>
+          !note.processedAt && (note.projectId === projectId || (!note.projectId && projectId === state.activeProjectId)),
+        );
+        const freeNodes = project.nodes.filter((node) => node.role === 'free');
+        const completedNodes = freeNodes.filter((node) => node.completedAt || node.taskStatus === 'done');
+        const routeIsComplete = project.digitalRoute.length > 0
+          && project.digitalRoute.every((step) => Boolean(step.completedAt))
+          && project.currentRouteIndex >= project.digitalRoute.length;
+
+        if (routeIsComplete) return 'completed';
+        if (rawNotesForProject.length > 0) return 'raw';
+        if (freeNodes.length === 0) return 'empty';
+        if (project.digitalRoute.length === 0) return 'organized';
+        if (completedNodes.length === 0) return 'planned';
+
+        return 'active';
       },
 
       getDustyNodes: () => {
@@ -1116,7 +1142,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           selectedNodeId: null,
           focusedBranch: null,
           viewLevel: 'archipelago',
-          currentView: 'dashboard',
+          currentView: 'archipelago',
           archipelagoZoom: 0.45,
           archipelagoOffset: { x: 80, y: 80 },
           userLevel: 1,
@@ -1161,7 +1187,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           selectedNodeId: state.selectedNodeId ?? null,
           focusedBranch: state.focusedBranch ?? null,
           viewLevel: state.viewLevel ?? 'archipelago',
-          currentView: state.currentView === 'map' ? 'archipelago' : state.currentView ?? 'dashboard',
+          currentView: state.currentView ?? 'archipelago',
           archipelagoZoom: state.archipelagoZoom ?? 0.45,
           archipelagoOffset: state.archipelagoOffset ?? { x: 80, y: 80 },
           userLevel: state.userLevel ?? 1,

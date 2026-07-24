@@ -2815,6 +2815,56 @@ body {
   min-height: 4.2rem;
 }
 
+.foru-main-mode-switcher {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0.42rem;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.32rem;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 14px 32px rgba(46, 41, 64, 0.08);
+}
+
+.foru-main-mode-switcher button {
+  min-height: 3rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.64rem 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #5a5266;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 950;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.foru-main-mode-switcher button span {
+  font-size: 1.05rem;
+}
+
+.foru-main-mode-switcher button strong {
+  font-weight: 950;
+}
+
+.foru-main-mode-switcher button:hover {
+  transform: translateY(-1px);
+  background: rgba(250, 247, 255, 0.88);
+}
+
+.foru-main-mode-switcher button.is-active {
+  color: #2b2435;
+  border-color: rgba(124, 92, 255, 0.14);
+  background:
+    linear-gradient(rgba(255,255,255,0.82), rgba(255,255,255,0.82)) padding-box,
+    linear-gradient(135deg, #FDE68A, #6EE7B7, #F9A8D4, #93C5FD) border-box;
+  box-shadow: 0 12px 28px rgba(124, 92, 255, 0.11);
+}
+
 .foru-logo-lockup {
   display: inline-flex;
   align-items: center;
@@ -2897,7 +2947,8 @@ body {
   box-shadow: 0 18px 38px rgba(124, 92, 255, 0.15);
 }
 
-.foru-daily-streak-badge {
+.foru-daily-streak-badge,
+.foru-coins-badge {
   min-height: 2.35rem;
   flex: 0 0 auto;
   border: 1px solid rgba(244, 180, 0, 0.24);
@@ -2913,7 +2964,15 @@ body {
   white-space: nowrap;
 }
 
-.foru-daily-streak-badge:hover {
+.foru-coins-badge {
+  border-color: rgba(118, 215, 196, 0.28);
+  color: #135e55;
+  background: rgba(213, 245, 227, 0.82);
+  box-shadow: 0 12px 28px rgba(118, 215, 196, 0.12);
+}
+
+.foru-daily-streak-badge:hover,
+.foru-coins-badge:hover {
   transform: translateY(-1px);
   background: #fff8dc;
 }
@@ -2921,6 +2980,8 @@ body {
 .foru-shell-main {
   min-height: calc(100vh - 5.25rem);
   display: flex;
+  overflow: visible;
+  overscroll-behavior: auto;
   padding: clamp(1.25rem, 4vw, 3rem);
   background:
     radial-gradient(circle at 48% 32%, rgba(255,255,255,0.86), transparent 18rem),
@@ -2975,6 +3036,236 @@ body {
   border: 1px solid rgba(124, 92, 255, 0.1);
   font-size: 0.82rem;
   font-weight: 800;
+}
+
+.foru-first-use-tip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid rgba(118, 215, 196, 0.22);
+  border-radius: 18px;
+  padding: 0.72rem 0.85rem;
+  color: #35504d;
+  background:
+    radial-gradient(circle at 4% 20%, rgba(118, 215, 196, 0.18), transparent 8rem),
+    rgba(255, 255, 255, 0.82);
+  box-shadow: 0 14px 34px rgba(46, 41, 64, 0.07);
+}
+
+.foru-first-use-tip strong {
+  color: #135e55;
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.foru-first-use-tip span {
+  flex: 1;
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.foru-first-use-tip button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.44rem 0.68rem;
+  color: #342e40;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 950;
+}
+
+.foru-project-flow {
+  display: grid;
+  grid-template-columns: minmax(18rem, 1fr) minmax(13rem, 18rem) auto;
+  align-items: center;
+  gap: 0.8rem;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  border-radius: 22px;
+  padding: 0.78rem;
+  color: #342e40;
+  background:
+    radial-gradient(circle at 7% 18%, rgba(244, 208, 63, 0.14), transparent 13rem),
+    linear-gradient(135deg, rgba(255,255,255,0.92), rgba(250,247,255,0.82));
+  box-shadow: 0 16px 38px rgba(46, 41, 64, 0.07);
+}
+
+.foru-project-flow-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.38rem;
+}
+
+.foru-project-flow-steps article {
+  min-height: 3.3rem;
+  display: grid;
+  place-items: center;
+  gap: 0.18rem;
+  border: 1px solid rgba(124, 92, 255, 0.08);
+  border-radius: 15px;
+  padding: 0.38rem;
+  background: rgba(255, 255, 255, 0.62);
+  text-align: center;
+}
+
+.foru-project-flow-steps article span {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #6b6278;
+  background: rgba(250, 247, 255, 0.96);
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.foru-project-flow-steps article strong {
+  color: #8d849a;
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.foru-project-flow-steps article.is-done {
+  background: rgba(220, 252, 231, 0.72);
+}
+
+.foru-project-flow-steps article.is-done span {
+  color: #14532d;
+  background: #bbf7d0;
+}
+
+.foru-project-flow-steps article.is-current {
+  border-color: rgba(244, 180, 0, 0.34);
+  background: rgba(255, 248, 220, 0.9);
+  box-shadow: 0 10px 24px rgba(244, 180, 0, 0.12);
+}
+
+.foru-project-flow-steps article.is-current span {
+  color: #4a3000;
+  background: linear-gradient(135deg, #F4D03F, #F8C471);
+}
+
+.foru-project-flow-now {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.foru-project-flow-now small {
+  color: #8d849a;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.foru-project-flow-now strong {
+  color: #2b2435;
+  font-size: 0.95rem;
+  font-weight: 950;
+}
+
+.foru-project-flow > button {
+  min-height: 2.85rem;
+  border: 1px solid rgba(244, 180, 0, 0.28);
+  border-radius: 999px;
+  padding: 0.74rem 1rem;
+  color: #2b2435;
+  background: linear-gradient(135deg, #F4D03F, #F9A8D4, #76D7C4);
+  box-shadow: 0 16px 36px rgba(244, 180, 0, 0.16);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.foru-first-steps-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(36, 33, 43, 0.22);
+  backdrop-filter: blur(16px);
+}
+
+.foru-first-steps-modal {
+  width: min(94vw, 34rem);
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 28px;
+  padding: clamp(1.35rem, 4vw, 2.2rem);
+  color: #342e40;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(244, 208, 63, 0.16), transparent 12rem),
+    radial-gradient(circle at 84% 16%, rgba(118, 215, 196, 0.14), transparent 14rem),
+    rgba(255, 255, 255, 0.92);
+  box-shadow: 0 30px 80px rgba(46, 41, 64, 0.18);
+  text-align: center;
+}
+
+.foru-first-steps-modal > span {
+  width: 4.8rem;
+  height: 4.8rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #F4D03F, #F9A8D4, #76D7C4);
+  box-shadow: 0 20px 46px rgba(124, 92, 255, 0.16);
+  font-size: 2rem;
+}
+
+.foru-first-steps-modal small {
+  color: #8d849a;
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.foru-first-steps-modal h2 {
+  margin: 0;
+  color: #2b2435;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  line-height: 1;
+  font-weight: 950;
+}
+
+.foru-first-steps-modal p {
+  max-width: 27rem;
+  margin: 0;
+  color: #6b6278;
+  line-height: 1.6;
+  font-weight: 820;
+}
+
+.foru-first-steps-modal div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+}
+
+.foru-first-steps-modal button {
+  min-height: 2.85rem;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.74rem 1rem;
+  color: #342e40;
+  background: rgba(255, 255, 255, 0.86);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 950;
+}
+
+.foru-first-steps-modal button:first-child {
+  border-color: rgba(244, 180, 0, 0.26);
+  background: linear-gradient(135deg, #F4D03F, #F9A8D4, #76D7C4);
+  box-shadow: 0 16px 36px rgba(244, 180, 0, 0.16);
 }
 
 .foru-focus-control {
@@ -3439,6 +3730,49 @@ body {
   justify-content: space-between;
   gap: 1rem;
   width: 100%;
+  flex-wrap: wrap;
+}
+
+.foru-subview-switcher,
+.foru-world-subnav {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  border: 1px solid rgba(124, 92, 255, 0.08);
+  border-radius: 999px;
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 10px 24px rgba(46, 41, 64, 0.05);
+}
+
+.foru-subview-switcher button,
+.foru-world-subnav span {
+  min-height: 2.25rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 0.68rem;
+  color: #7a7185;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.foru-subview-switcher button {
+  cursor: pointer;
+}
+
+.foru-subview-switcher button:hover {
+  color: #342e40;
+  background: rgba(250, 247, 255, 0.9);
+}
+
+.foru-subview-switcher button.is-active,
+.foru-world-subnav span:first-child {
+  color: #342e40;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 18px rgba(46, 41, 64, 0.07);
 }
 
 .foru-route-progress-bar {
@@ -3504,17 +3838,26 @@ body {
   flex: 1;
   min-height: 36rem;
   overflow: hidden;
-  border-radius: 24px;
-  border: 1px solid rgba(124, 92, 255, 0.12);
+  border-radius: 26px;
+  border: 2px solid rgba(124, 92, 255, 0.15);
   background:
     radial-gradient(circle at 18% 18%, rgba(253, 230, 138, 0.12), transparent 16rem),
     radial-gradient(circle at 82% 22%, rgba(147, 197, 253, 0.1), transparent 18rem),
     linear-gradient(135deg, rgba(255,255,255,0.94), rgba(250,247,255,0.82));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.82), 0 24px 68px rgba(46, 41, 64, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.82),
+    0 0 0 0.45rem rgba(250, 247, 255, 0.72),
+    0 24px 68px rgba(46, 41, 64, 0.1);
+  isolation: isolate;
 }
 
 .foru-canvas-shell .react-flow {
   background: transparent;
+  overscroll-behavior: auto;
+}
+
+.foru-canvas-shell .react-flow__pane {
+  cursor: default;
 }
 
 .foru-canvas-flow-layer {
@@ -3552,6 +3895,236 @@ body {
   overflow: hidden;
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 14px 30px rgba(46, 41, 64, 0.08);
+}
+
+.foru-map-lock-toggle {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 12;
+  min-height: 2.8rem;
+  border: 1px solid rgba(124, 92, 255, 0.16);
+  border-radius: 999px;
+  padding: 0.72rem 1rem;
+  color: #342e40;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 16px 36px rgba(46, 41, 64, 0.12);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 950;
+  backdrop-filter: blur(18px);
+}
+
+.foru-map-lock-toggle.is-unlocked {
+  border-color: rgba(244, 180, 0, 0.38);
+  color: #4a3000;
+  background: rgba(255, 248, 220, 0.96);
+  box-shadow: 0 18px 42px rgba(244, 180, 0, 0.18);
+}
+
+.foru-empty-project-guide {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.85rem;
+  padding: clamp(1.2rem, 4vw, 2.5rem);
+  text-align: center;
+}
+
+.foru-empty-project-orb {
+  width: 5.2rem;
+  height: 5.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #F4D03F, #F9A8D4, #76D7C4);
+  box-shadow: 0 24px 56px rgba(124, 92, 255, 0.16);
+  font-size: 2rem;
+}
+
+.foru-empty-project-guide h2,
+.foru-kanban-empty-guide h2 {
+  margin: 0;
+  color: #2b2435;
+  font-size: clamp(1.7rem, 4vw, 2.7rem);
+  line-height: 1;
+  font-weight: 950;
+}
+
+.foru-empty-project-guide p,
+.foru-kanban-empty-guide p {
+  max-width: 34rem;
+  margin: 0;
+  color: #6b6278;
+  line-height: 1.55;
+  font-weight: 800;
+}
+
+.foru-empty-project-actions,
+.foru-kanban-empty-guide div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 0.45rem;
+}
+
+.foru-empty-project-actions button,
+.foru-kanban-empty-guide button {
+  min-height: 3rem;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.78rem 1rem;
+  color: #342e40;
+  background: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 950;
+  box-shadow: 0 14px 32px rgba(46, 41, 64, 0.08);
+}
+
+.foru-empty-project-actions button:first-child,
+.foru-kanban-empty-guide button:first-child {
+  background:
+    linear-gradient(rgba(255,255,255,0.76), rgba(255,255,255,0.76)) padding-box,
+    linear-gradient(135deg, #F4D03F, #F9A8D4, #76D7C4) border-box;
+}
+
+.foru-centered-idea-jar {
+  flex: 1;
+  min-height: 36rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.85rem;
+  border: 2px solid rgba(124, 92, 255, 0.14);
+  border-radius: 28px;
+  padding: clamp(1.25rem, 4vw, 2.7rem);
+  color: #342e40;
+  background:
+    radial-gradient(circle at 22% 18%, rgba(244, 208, 63, 0.18), transparent 18rem),
+    radial-gradient(circle at 78% 22%, rgba(249, 168, 212, 0.16), transparent 20rem),
+    linear-gradient(135deg, rgba(255,255,255,0.94), rgba(250,247,255,0.86));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.82),
+    0 0 0 0.45rem rgba(250, 247, 255, 0.72),
+    0 24px 68px rgba(46, 41, 64, 0.09);
+  text-align: center;
+}
+
+.foru-centered-idea-jar-orb {
+  width: 5.4rem;
+  height: 5.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #342e40;
+  background: linear-gradient(135deg, #F4D03F, #F9A8D4, #76D7C4);
+  box-shadow: 0 24px 56px rgba(124, 92, 255, 0.16);
+}
+
+.foru-centered-idea-jar h2 {
+  margin: 0;
+  color: #2b2435;
+  font-size: clamp(1.9rem, 5vw, 3.2rem);
+  line-height: 1;
+  font-weight: 950;
+}
+
+.foru-centered-idea-jar p {
+  max-width: 34rem;
+  margin: 0;
+  color: #6b6278;
+  line-height: 1.6;
+  font-weight: 820;
+}
+
+.foru-centered-idea-jar strong {
+  border-radius: 999px;
+  padding: 0.48rem 0.72rem;
+  color: #4a3000;
+  background: rgba(255, 248, 220, 0.9);
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
+.foru-centered-idea-jar > button {
+  min-height: 3.15rem;
+  border: 1px solid rgba(244, 180, 0, 0.26);
+  border-radius: 999px;
+  padding: 0.86rem 1.2rem;
+  color: #2b2435;
+  background: linear-gradient(135deg, #F4D03F, #F9A8D4, #76D7C4);
+  box-shadow: 0 18px 42px rgba(244, 180, 0, 0.16);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 950;
+}
+
+.foru-focus-popover {
+  position: absolute;
+  right: 1rem;
+  top: 4.25rem;
+  z-index: 12;
+}
+
+.foru-focus-menu-toggle {
+  min-height: 2.75rem;
+  border: 1px solid rgba(124, 92, 255, 0.13);
+  border-radius: 999px;
+  padding: 0.68rem 0.9rem;
+  color: #342e40;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 30px rgba(46, 41, 64, 0.1);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 950;
+  backdrop-filter: blur(18px);
+}
+
+.foru-focus-menu-toggle.is-active {
+  color: #4a3000;
+  border-color: rgba(244, 180, 0, 0.28);
+  background: rgba(255, 248, 220, 0.96);
+}
+
+.foru-focus-menu-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.foru-focus-menu-card {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: 12rem;
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  border-radius: 16px;
+  padding: 0.45rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 20px 48px rgba(46, 41, 64, 0.14);
+  backdrop-filter: blur(20px);
+}
+
+.foru-focus-menu-card button {
+  min-height: 2.45rem;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.58rem 0.7rem;
+  color: #342e40;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 900;
+  text-align: left;
+}
+
+.foru-focus-menu-card button:hover {
+  background: rgba(250, 247, 255, 0.96);
 }
 
 .foru-center-node {
@@ -4035,16 +4608,23 @@ body {
   flex: 1;
   min-height: 36rem;
   overflow: hidden;
-  border-radius: 24px;
-  border: 1px solid rgba(124, 92, 255, 0.12);
-  background: #f5f0ff;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.82), 0 24px 68px rgba(46, 41, 64, 0.08);
+  border-radius: 26px;
+  border: 2px solid rgba(124, 92, 255, 0.15);
+  background:
+    radial-gradient(circle at 50% 18%, rgba(118, 215, 196, 0.12), transparent 18rem),
+    #f5f0ff;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.82),
+    0 0 0 0.45rem rgba(250, 247, 255, 0.72),
+    0 24px 68px rgba(46, 41, 64, 0.1);
+  isolation: isolate;
 }
 
 .foru-world3d-canvas {
   width: 100%;
   height: 100%;
   min-height: 36rem;
+  overscroll-behavior: auto;
 }
 
 .foru-world3d-skeleton {
@@ -4160,12 +4740,39 @@ body {
   backdrop-filter: blur(18px);
 }
 
+.foru-world3d-lock-toggle {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 2;
+  min-height: 2.75rem;
+  border: 1px solid rgba(124, 92, 255, 0.16);
+  border-radius: 999px;
+  padding: 0.72rem 1rem;
+  color: #342e40;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 950;
+  box-shadow: 0 14px 30px rgba(46, 41, 64, 0.1);
+  backdrop-filter: blur(18px);
+}
+
+.foru-world3d-lock-toggle.is-unlocked {
+  border-color: rgba(244, 180, 0, 0.32);
+  color: #4a3000;
+  background: rgba(255, 248, 220, 0.94);
+  box-shadow: 0 18px 42px rgba(244, 180, 0, 0.16);
+}
+
 .foru-world3d-back:hover {
   background: #ffffff;
   transform: translateY(-1px);
 }
 
-.foru-world3d-archipelago-reset:hover {
+.foru-world3d-archipelago-reset:hover,
+.foru-world3d-lock-toggle:hover {
   transform: translateY(-1px);
   background: #fff8dc;
 }
@@ -6690,6 +7297,34 @@ body {
   transform: rotate(35deg);
 }
 
+.foru-kanban-empty-guide {
+  min-height: 28rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.8rem;
+  border: 1px solid rgba(124, 92, 255, 0.1);
+  border-radius: 24px;
+  padding: clamp(1.2rem, 4vw, 2.5rem);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(253, 230, 138, 0.16), transparent 16rem),
+    radial-gradient(circle at 82% 22%, rgba(118, 215, 196, 0.14), transparent 18rem),
+    rgba(255, 255, 255, 0.86);
+  box-shadow: 0 18px 44px rgba(46, 41, 64, 0.07);
+  text-align: center;
+}
+
+.foru-kanban-empty-guide > span {
+  width: 4.4rem;
+  height: 4.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(250, 247, 255, 0.96);
+  box-shadow: 0 16px 34px rgba(46, 41, 64, 0.08);
+  font-size: 1.8rem;
+}
+
 .foru-kanban-card strong {
   display: block;
   color: #2b2435;
@@ -7052,6 +7687,16 @@ body {
     flex-direction: column;
   }
 
+  .foru-main-mode-switcher {
+    width: 100%;
+    border-radius: 18px;
+  }
+
+  .foru-main-mode-switcher button {
+    flex: 1 1 10rem;
+    justify-content: center;
+  }
+
   .foru-shell-tabs {
     max-width: none;
   }
@@ -7067,6 +7712,19 @@ body {
 
   .foru-view-switcher button {
     flex: 1 1 8rem;
+  }
+
+  .foru-subview-switcher,
+  .foru-world-subnav {
+    width: 100%;
+    border-radius: 18px;
+  }
+
+  .foru-subview-switcher button,
+  .foru-world-subnav span {
+    flex: 1 1 8rem;
+    justify-content: center;
+    text-align: center;
   }
 
   .foru-back-archipelago {

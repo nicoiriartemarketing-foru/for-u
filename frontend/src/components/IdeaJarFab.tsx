@@ -10,7 +10,13 @@ const noteModes: Array<{ kind: ForURawNoteKind; label: string; icon: typeof File
   { kind: 'photo', label: 'Foto', icon: Camera },
 ];
 
-export default function IdeaJarFab() {
+type IdeaJarFabProps = {
+  centered?: boolean;
+  title?: string;
+  description?: string;
+};
+
+export default function IdeaJarFab({ centered = false, title = 'Captura primero', description = 'Suelta ideas desordenadas. For U las ordena después contigo.' }: IdeaJarFabProps) {
   const [kind, setKind] = useState<ForURawNoteKind>('text');
   const [content, setContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -107,18 +113,32 @@ export default function IdeaJarFab() {
 
   return (
     <>
-      <motion.button
-        type="button"
-        className="foru-idea-jar-fab"
-        onClick={openIdeaJar}
-        whileHover={{ y: -4, scale: 1.04 }}
-        whileTap={{ scale: 0.96 }}
-        aria-label="Abrir Frasco de Ideas"
-      >
-        <Sparkles size={26} />
-        <span>{rawNotes.length}</span>
-        <small>Frasco</small>
-      </motion.button>
+      {centered ? (
+        <section className="foru-centered-idea-jar">
+          <div className="foru-centered-idea-jar-orb">
+            <Sparkles size={34} />
+          </div>
+          <h2>{title}</h2>
+          <p>{description}</p>
+          {rawNotes.length > 0 ? <strong>{rawNotes.length} ideas esperando organización</strong> : null}
+          <button type="button" onClick={openIdeaJar}>
+            {rawNotes.length > 0 ? '✨ Organizar o agregar más ideas' : '✨ Echar ideas al frasco'}
+          </button>
+        </section>
+      ) : (
+        <motion.button
+          type="button"
+          className="foru-idea-jar-fab"
+          onClick={openIdeaJar}
+          whileHover={{ y: -4, scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          aria-label="Abrir Frasco de Ideas"
+        >
+          <Sparkles size={26} />
+          <span>{rawNotes.length}</span>
+          <small>Frasco</small>
+        </motion.button>
+      )}
 
       <AnimatePresence>
         {isJarOpen && (

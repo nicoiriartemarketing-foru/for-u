@@ -138,6 +138,8 @@ export default function ProjectCanvas() {
   const [isRouteViewOpen, setIsRouteViewOpen] = useState(false);
   const [isStepFocusOpen, setIsStepFocusOpen] = useState(false);
   const [isRouteFocusOpen, setIsRouteFocusOpen] = useState(false);
+  const [isFocusMenuOpen, setIsFocusMenuOpen] = useState(false);
+  const [isMapMovementUnlocked, setIsMapMovementUnlocked] = useState(false);
   const [rewardBurst, setRewardBurst] = useState<FloatingRewardBurst | null>(null);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
@@ -150,6 +152,7 @@ export default function ProjectCanvas() {
   const focusedBranch = useActiveProjectsStore((state) => state.focusedBranch);
   const reassignNodeBranch = useActiveProjectsStore((state) => state.reassignNodeBranch);
   const completeRouteStep = useActiveProjectsStore((state) => state.completeRouteStep);
+  const openIdeaJar = useActiveProjectsStore((state) => state.openIdeaJar);
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
   const routeStepByNodeId = useMemo(() => {
     return new Map((activeProject?.digitalRoute ?? []).map((step, index) => [step.linkedNodeId, index + 1]));
@@ -176,6 +179,10 @@ export default function ProjectCanvas() {
       activeProject?.nodes.filter((node) => node.role === 'free' && node.branchKey === branch.key).length ?? 0,
     ])) as Record<ForUBranchKey, number>;
   }, [activeProject?.nodes]);
+  const freeNodes = useMemo(() => {
+    return activeProject?.nodes.filter((node) => node.role === 'free') ?? [];
+  }, [activeProject?.nodes]);
+  const isProjectEmpty = freeNodes.length === 0;
 
   useEffect(() => {
     setSelectedOption(null);
@@ -272,6 +279,25 @@ export default function ProjectCanvas() {
     setIsMenuOpen(false);
   }
 
+  function createManualStarterTask() {
+    if (!activeProjectId) return;
+
+    addFreeNodeToBranch(activeProjectId, 'actions', {
+      title: 'Mi primera tarea',
+      kind: 'task',
+      icon: '✅',
+      priority: 'low',
+      x: 690,
+      y: 250,
+    });
+    toast.success('Tarea agregada en Acciones');
+  }
+
+  function askAiToStart() {
+    openIdeaJar();
+    toast('Escribe 2 o 3 ideas crudas y toca “Organizar mi Cerebro con IA”.');
+  }
+
   function showRewardBurst(x: number, y: number, coins = 20, xp = 50) {
     setRewardBurst({ id: `${Date.now()}-${Math.random()}`, x, y, coins, xp });
     window.setTimeout(() => setRewardBurst(null), 1600);
@@ -295,33 +321,48 @@ export default function ProjectCanvas() {
 
   return (
     <section className="foru-canvas-shell" aria-label="Lienzo radial del proyecto">
-      <div className={`foru-canvas-flow-layer ${isRouteViewOpen ? 'is-route-muted' : ''}`}>
-        <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        onNodesChange={handleNodesChange}
-        onNodeClick={handleNodeClick}
-        onNodeDragStop={handleNodeDragStop}
-        onPaneClick={deselectNode}
-        onConnect={handleConnect}
-        onEdgesDelete={handleEdgesDelete}
-        fitView
-        fitViewOptions={{ padding: 0.28 }}
-        panOnDrag
-        zoomOnScroll
-        zoomOnPinch
-        zoomOnDoubleClick
-        deleteKeyCode={['Backspace', 'Delete']}
-        defaultEdgeOptions={{ type: 'default' }}
-      >
-        <Background variant={BackgroundVariant.Dots} gap={28} size={1.2} color="#ddd6ea" />
-        <MiniMap pannable zoomable nodeColor="#c39bd3" maskColor="rgba(250, 247, 255, 0.68)" />
-        <Controls showInteractive={false} />
-        </ReactFlow>
-      </div>
+      {isProjectEmpty ? (
+        <div className="foru-empty-project-guide">
+          <span className="foru-empty-project-orb">✨</span>
+          <h2>¡Hola! Este proyecto está vacío.</h2>
+          <p>Empecemos suave. Puedes soltar ideas desordenadas, crear una primera tarea o pedirle a la IA que arme el punto de partida.</p>
+          <div className="foru-empty-project-actions">
+            <button type="button" onClick={openIdeaJar}>✨ Echar ideas al frasco</button>
+            <button type="button" onClick={createManualStarterTask}>Agregar tarea manualmente</button>
+            <button type="button" onClick={askAiToStart}>🤖 Que la IA me ayude a empezar</button>
+          </div>
+        </div>
+      ) : (
+        <div className={`foru-canvas-flow-layer ${isRouteViewOpen ? 'is-route-muted' : ''}`}>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            onNodesChange={handleNodesChange}
+            onNodeClick={handleNodeClick}
+            onNodeDragStop={handleNodeDragStop}
+            onPaneClick={deselectNode}
+            onConnect={handleConnect}
+            onEdgesDelete={handleEdgesDelete}
+            fitView
+            fitViewOptions={{ padding: 0.28 }}
+            panOnDrag={isMapMovementUnlocked}
+            panOnScroll={false}
+            zoomOnScroll={isMapMovementUnlocked}
+            zoomOnPinch={isMapMovementUnlocked}
+            zoomOnDoubleClick={isMapMovementUnlocked}
+            preventScrolling={isMapMovementUnlocked}
+            deleteKeyCode={['Backspace', 'Delete']}
+            defaultEdgeOptions={{ type: 'default' }}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={28} size={1.2} color="#ddd6ea" />
+            <MiniMap pannable zoomable nodeColor="#c39bd3" maskColor="rgba(250, 247, 255, 0.68)" />
+            <Controls showInteractive={false} />
+          </ReactFlow>
+        </div>
+      )}
 
-      {isRouteViewOpen ? (
+      {isRouteViewOpen && !isProjectEmpty ? (
         <div className="foru-canvas-route-overlay">
           <DigitalRoutePath project={activeProject} onCompleteStep={completeCurrentRouteStep} />
         </div>
@@ -339,27 +380,61 @@ export default function ProjectCanvas() {
         ?
       </button>
 
+      <button
+        type="button"
+        className={`foru-map-lock-toggle ${isMapMovementUnlocked ? 'is-unlocked' : 'is-locked'}`}
+        onClick={() => setIsMapMovementUnlocked((current) => !current)}
+      >
+        {isMapMovementUnlocked ? '🔒 Bloquear Movimiento' : '🔓 Mover Mapa'}
+      </button>
+
       <button type="button" className="foru-canvas-route-toggle" onClick={() => setIsRouteViewOpen((current) => !current)}>
         {isRouteViewOpen ? 'Volver al mapa' : '🗺️ Ver Ruta'}
       </button>
 
-      <button
-        type="button"
-        className={`foru-step-focus-toggle ${isStepFocusOpen ? 'is-active' : ''}`}
-        onClick={() => setIsStepFocusOpen((current) => !current)}
-        disabled={!activeProject?.digitalRoute.length}
-      >
-        {isStepFocusOpen ? 'Salir del Enfoque' : '🔍 Enfocar Paso Actual'}
-      </button>
+      <div className="foru-focus-popover">
+        <button
+          type="button"
+          className={`foru-focus-menu-toggle ${isStepFocusOpen || isRouteFocusOpen ? 'is-active' : ''}`}
+          onClick={() => {
+            if (isStepFocusOpen || isRouteFocusOpen) {
+              setIsStepFocusOpen(false);
+              setIsRouteFocusOpen(false);
+              setIsFocusMenuOpen(false);
+              return;
+            }
 
-      <button
-        type="button"
-        className={`foru-route-focus-toggle ${isRouteFocusOpen ? 'is-active' : ''}`}
-        onClick={() => setIsRouteFocusOpen((current) => !current)}
-        disabled={!activeProject?.digitalRoute.length}
-      >
-        {isRouteFocusOpen ? 'Salir del Enfoque' : '🔍 Enfocar Ruta'}
-      </button>
+            setIsFocusMenuOpen((current) => !current);
+          }}
+          disabled={!activeProject?.digitalRoute.length}
+        >
+          {isStepFocusOpen || isRouteFocusOpen ? 'Salir del Enfoque' : '🔍 Enfoque'}
+        </button>
+        {isFocusMenuOpen ? (
+          <div className="foru-focus-menu-card">
+            <button
+              type="button"
+              onClick={() => {
+                setIsStepFocusOpen((current) => !current);
+                setIsRouteFocusOpen(false);
+                setIsFocusMenuOpen(false);
+              }}
+            >
+              Paso actual
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsRouteFocusOpen((current) => !current);
+                setIsStepFocusOpen(false);
+                setIsFocusMenuOpen(false);
+              }}
+            >
+              Ruta completa
+            </button>
+          </div>
+        ) : null}
+      </div>
 
       {isGuideOpen ? (
         <div className="foru-project-guide" role="dialog" aria-modal="true" aria-label="Guia del mapa mental">
@@ -440,19 +515,19 @@ function getNearestBranch(x: number, y: number) {
 
 function getEdgeOpacity(source: string, target: string, nodes: ForUProjectNode[], focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null, focusedRouteNodeIds: Set<string> | null) {
   if (focusedRouteNodeIds) {
-    return focusedRouteNodeIds.has(source) || focusedRouteNodeIds.has(target) ? 1 : 0.08;
+    return focusedRouteNodeIds.has(source) && focusedRouteNodeIds.has(target) ? 1 : 0;
   }
 
   if (focusedStepNodeIds) {
-    return focusedStepNodeIds.has(source) || focusedStepNodeIds.has(target) ? 1 : 0.12;
+    return focusedStepNodeIds.has(source) || focusedStepNodeIds.has(target) ? 0.75 : 0.1;
   }
 
-  if (!focusedBranch) return 1;
+  if (!focusedBranch) return 0.4;
 
   const sourceNode = nodes.find((node) => node.id === source);
   const targetNode = nodes.find((node) => node.id === target);
 
-  return sourceNode?.branchKey === focusedBranch || targetNode?.branchKey === focusedBranch ? 1 : 0.18;
+  return sourceNode?.branchKey === focusedBranch || targetNode?.branchKey === focusedBranch ? 0.55 : 0.1;
 }
 
 function getEdgeColor(source: string, target: string, nodes: ForUProjectNode[]) {
@@ -506,7 +581,7 @@ function getRouteEdges(route: ForURouteStep[], isRouteFocusOpen: boolean): Edge[
       deletable: false,
       style: {
         stroke: '#F4B400',
-        strokeWidth: isRouteFocusOpen ? 7 : 5,
+        strokeWidth: isRouteFocusOpen ? 6 : 4,
         opacity: 1,
         filter: isRouteFocusOpen
           ? 'drop-shadow(0 0 14px rgba(244, 180, 0, 0.82))'

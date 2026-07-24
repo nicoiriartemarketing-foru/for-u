@@ -449,6 +449,7 @@ function WorldScene({
   onSelectBranch,
   onEnter,
   onExit,
+  isCameraUnlocked,
 }: {
   projects: ForUActiveProject[];
   selectedProjectId: string | null;
@@ -460,6 +461,7 @@ function WorldScene({
   onSelectBranch: (branchKey: ForUBranchKey) => void;
   onEnter: () => void;
   onExit: () => void;
+  isCameraUnlocked: boolean;
 }) {
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? projects[0];
   const selectedIslandPosition = selectedProject ? getIslandPosition(projects.findIndex((project) => project.id === selectedProject.id), projects.length) : [0, 0, 0] as [number, number, number];
@@ -545,7 +547,9 @@ function WorldScene({
       )}
       <OrbitControls
         enablePan={false}
-        enabled={viewLevel !== 'interior'}
+        enabled={isCameraUnlocked && viewLevel !== 'interior'}
+        enableZoom={isCameraUnlocked}
+        enableRotate={isCameraUnlocked}
         minDistance={viewLevel === 'archipelago' ? 14 : 4}
         maxDistance={viewLevel === 'archipelago' ? 48 : 13}
         minPolarAngle={Math.PI / 4}
@@ -560,7 +564,8 @@ function WorldScene({
   );
 }
 
-export default function World3D({ onBackToMap, onOpenProject }: World3DProps) {
+export default function World3D({ onOpenProject }: World3DProps) {
+  const [isCameraUnlocked, setIsCameraUnlocked] = useState(false);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const activeProjectIds = useActiveProjectsStore((state) => state.activeProjectIds);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
@@ -598,11 +603,15 @@ export default function World3D({ onBackToMap, onOpenProject }: World3DProps) {
 
   return (
     <section className="foru-world3d-shell" aria-label="Mundito 3D de proyectos">
-      <button type="button" className="foru-world3d-back" onClick={onBackToMap}>
-        Volver al Mapa
-      </button>
       <button type="button" className="foru-world3d-archipelago-reset" onClick={resetCamera}>
         🏝️ Volver al Archipiélago
+      </button>
+      <button
+        type="button"
+        className={`foru-world3d-lock-toggle ${isCameraUnlocked ? 'is-unlocked' : 'is-locked'}`}
+        onClick={() => setIsCameraUnlocked((current) => !current)}
+      >
+        {isCameraUnlocked ? '🔒 Bloquear Movimiento' : '🔓 Mover Mundo'}
       </button>
 
       <Canvas shadows={{ type: PCFSoftShadowMap }} camera={{ position: [0, 20, 30], fov: 45 }} className="foru-world3d-canvas">
@@ -617,6 +626,7 @@ export default function World3D({ onBackToMap, onOpenProject }: World3DProps) {
           onSelectBranch={selectBranch}
           onEnter={() => setViewLevel('interior')}
           onExit={() => setViewLevel('exterior')}
+          isCameraUnlocked={isCameraUnlocked}
         />
       </Canvas>
     </section>

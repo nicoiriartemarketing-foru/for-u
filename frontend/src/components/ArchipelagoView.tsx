@@ -20,6 +20,7 @@ export default function ArchipelagoView({ onEnterProject }: ArchipelagoViewProps
   const dragStartRef = useRef<{ x: number; y: number; offsetX: number; offsetY: number } | null>(null);
   const [boatProjectId, setBoatProjectId] = useState<string | null>(null);
   const [isPanning, setIsPanning] = useState(false);
+  const [isMapMovementUnlocked, setIsMapMovementUnlocked] = useState(false);
 
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const activeProjectIds = useActiveProjectsStore((state) => state.activeProjectIds);
@@ -68,11 +69,14 @@ export default function ArchipelagoView({ onEnterProject }: ArchipelagoViewProps
   }
 
   function handleWheel(event: WheelEvent<HTMLDivElement>) {
+    if (!isMapMovementUnlocked) return;
+
     event.preventDefault();
     setZoom(archipelagoZoom + (event.deltaY > 0 ? -0.08 : 0.08));
   }
 
   function handlePanStart(event: PointerEvent<HTMLDivElement>) {
+    if (!isMapMovementUnlocked) return;
     if ((event.target as HTMLElement).closest('button, .foru-mini-island')) return;
 
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -132,6 +136,14 @@ export default function ArchipelagoView({ onEnterProject }: ArchipelagoViewProps
           <button type="button" onClick={() => zoomBy(-0.15)}>-</button>
           <button type="button" onClick={resetArchipelagoView}>Ver todo</button>
         </div>
+
+        <button
+          type="button"
+          className={`foru-map-lock-toggle foru-archipelago-lock-toggle ${isMapMovementUnlocked ? 'is-unlocked' : 'is-locked'}`}
+          onClick={() => setIsMapMovementUnlocked((current) => !current)}
+        >
+          {isMapMovementUnlocked ? '🔒 Bloquear Movimiento' : '🔓 Mover Mapa'}
+        </button>
 
         <button type="button" className="foru-archipelago-nav is-prev" onClick={() => panToIsland(projects[Math.max(0, selectedIndex - 1)]?.id ?? activeProjectId ?? '')}>
           ← Isla Anterior

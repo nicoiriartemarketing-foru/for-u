@@ -36,6 +36,8 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
   const selectNode = useActiveProjectsStore((state) => state.selectNode);
   const completeRouteStep = useActiveProjectsStore((state) => state.completeRouteStep);
   const addCoins = useActiveProjectsStore((state) => state.addCoins);
+  const openIdeaJar = useActiveProjectsStore((state) => state.openIdeaJar);
+  const addFreeNodeToBranch = useActiveProjectsStore((state) => state.addFreeNodeToBranch);
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
   const focusedStepNodeIds = useMemo(() => {
     if (!isStepFocusOpen || !activeProject?.digitalRoute.length) return null;
@@ -95,6 +97,20 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
     }
   }
 
+  function createFirstKanbanTask() {
+    if (!activeProjectId) return;
+
+    addFreeNodeToBranch(activeProjectId, 'actions', {
+      title: 'Mi primera tarea',
+      kind: 'task',
+      icon: '✅',
+      priority: 'low',
+      x: 690,
+      y: 250,
+    });
+    toast.success('Primera tarea creada');
+  }
+
   return (
     <section className="foru-kanban-view" aria-label="Vista Kanban">
       <header className="foru-view-header">
@@ -120,9 +136,21 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
         </div>
       </header>
 
-      {isRoutePathOpen ? (
+      {cards.length === 0 ? (
+        <section className="foru-kanban-empty-guide">
+          <span>📋</span>
+          <h2>Tu tablero está listo, solo faltan tareas.</h2>
+          <p>Empieza con una acción pequeña o lanza ideas al frasco para que For U las organice contigo.</p>
+          <div>
+            <button type="button" onClick={createFirstKanbanTask}>Agregar tarea manualmente</button>
+            <button type="button" onClick={openIdeaJar}>✨ Echar ideas al frasco</button>
+          </div>
+        </section>
+      ) : null}
+
+      {cards.length > 0 && isRoutePathOpen ? (
         <DigitalRoutePath project={activeProject} onCompleteStep={completeCurrentRouteStep} />
-      ) : (
+      ) : cards.length > 0 ? (
         <section className="foru-digital-route" aria-label="Tu Ruta Digital">
           <div className="foru-digital-route-header">
             <div>
@@ -153,9 +181,9 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
             <p className="foru-digital-route-empty">Procesa ideas desde el Frasco para que la IA trace tu misión principal.</p>
           )}
         </section>
-      )}
+      ) : null}
 
-      <div className="foru-kanban-columns">
+      {cards.length > 0 ? <div className="foru-kanban-columns">
         {columns.map((column) => {
           const columnCards = cards.filter(({ node }) => getNodeStatus(node) === column.key);
 
@@ -208,7 +236,7 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
             </section>
           );
         })}
-      </div>
+      </div> : null}
       <FloatingReward burst={rewardBurst} />
     </section>
   );
