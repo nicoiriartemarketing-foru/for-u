@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent, WheelEvent } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import MiniMapIsland from './MiniMapIsland';
 import { Sailboat } from '../lib/icons';
-import { useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import { type ForUActiveProject, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
 type ArchipelagoViewProps = {
   onEnterProject: (projectId: string) => void;
@@ -22,7 +22,8 @@ export default function ArchipelagoView({ onEnterProject }: ArchipelagoViewProps
   const [isPanning, setIsPanning] = useState(false);
 
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
-  const projects = useActiveProjectsStore((state) => state.getActiveProjects());
+  const activeProjectIds = useActiveProjectsStore((state) => state.activeProjectIds);
+  const projectsById = useActiveProjectsStore((state) => state.projectsById);
   const lastCreatedProjectId = useActiveProjectsStore((state) => state.lastCreatedProjectId);
   const archipelagoZoom = useActiveProjectsStore((state) => state.archipelagoZoom);
   const archipelagoOffset = useActiveProjectsStore((state) => state.archipelagoOffset);
@@ -33,6 +34,10 @@ export default function ArchipelagoView({ onEnterProject }: ArchipelagoViewProps
   const panToIsland = useActiveProjectsStore((state) => state.panToIsland);
   const resetArchipelagoView = useActiveProjectsStore((state) => state.resetArchipelagoView);
   const clearLastCreatedProject = useActiveProjectsStore((state) => state.clearLastCreatedProject);
+  const projects = useMemo(
+    () => getVisibleActiveProjects(activeProjectIds, projectsById),
+    [activeProjectIds, projectsById],
+  );
 
   const selectedProjectId = boatProjectId ?? activeProjectId ?? projects[0]?.id ?? null;
   const selectedIndex = Math.max(0, projects.findIndex((project) => project.id === selectedProjectId));
@@ -232,6 +237,14 @@ function getIslandPosition(index: number) {
     x: (index % COLUMNS) * CELL_WIDTH,
     y: Math.floor(index / COLUMNS) * CELL_HEIGHT,
   };
+}
+
+function getVisibleActiveProjects(activeProjectIds: string[], projectsById: Record<string, ForUActiveProject>) {
+  const orderedProjectIds = Array.from(new Set([...activeProjectIds, ...Object.keys(projectsById)]));
+
+  return orderedProjectIds
+    .map((projectId) => projectsById[projectId])
+    .filter((project): project is ForUActiveProject => Boolean(project) && project.status === 'active');
 }
 
 function getNearestProject(projects: Array<{ id: string }>, screenX: number, screenY: number, offset: { x: number; y: number }, zoom: number) {

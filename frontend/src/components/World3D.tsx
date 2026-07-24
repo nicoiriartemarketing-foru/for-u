@@ -562,15 +562,18 @@ function WorldScene({
 
 export default function World3D({ onBackToMap, onOpenProject }: World3DProps) {
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
+  const activeProjectIds = useActiveProjectsStore((state) => state.activeProjectIds);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
-  const getActiveProjects = useActiveProjectsStore((state) => state.getActiveProjects);
   const switchProject = useActiveProjectsStore((state) => state.switchProject);
   const focusedBranch = useActiveProjectsStore((state) => state.focusedBranch);
   const setFocusBranch = useActiveProjectsStore((state) => state.setFocusBranch);
   const viewLevel = useActiveProjectsStore((state) => state.viewLevel);
   const setViewLevel = useActiveProjectsStore((state) => state.setViewLevel);
   const clearFocus = useActiveProjectsStore((state) => state.clearFocus);
-  const projects = getActiveProjects();
+  const projects = useMemo(
+    () => getVisibleActiveProjects(activeProjectIds, projectsById),
+    [activeProjectIds, projectsById],
+  );
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
   const selectedBranch = focusedBranch ?? 'marketing';
 
@@ -623,19 +626,17 @@ export default function World3D({ onBackToMap, onOpenProject }: World3DProps) {
 function getIslandPosition(index: number, total: number): [number, number, number] {
   if (total <= 1) return [0, 0, 0];
 
-  const fixedPositions: Array<[number, number, number]> = [
-    [0, 0, 0],
-    [12, 0, 0],
-    [-12, 0, 0],
-    [0, 0, 12],
-    [0, 0, -12],
-  ];
-
-  if (index < fixedPositions.length) return fixedPositions[index];
-
   const angle = (index / total) * Math.PI * 2;
-  const radius = 15 + Math.floor(index / 8) * 6;
+  const radius = total <= 5 ? 12 : 15 + Math.floor(index / 8) * 6;
   return [Math.cos(angle) * radius, 0, Math.sin(angle) * radius];
+}
+
+function getVisibleActiveProjects(activeProjectIds: string[], projectsById: Record<string, ForUActiveProject>) {
+  const orderedProjectIds = Array.from(new Set([...activeProjectIds, ...Object.keys(projectsById)]));
+
+  return orderedProjectIds
+    .map((projectId) => projectsById[projectId])
+    .filter((project): project is ForUActiveProject => Boolean(project) && project.status === 'active');
 }
 
 function getBranchCounts(project: ForUActiveProject): BranchCounts {
