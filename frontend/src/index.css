@@ -3038,6 +3038,20 @@ body {
   font-weight: 800;
 }
 
+.foru-context-message {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.35rem;
+  border: 1px solid rgba(124, 92, 255, 0.1);
+  border-radius: 999px;
+  padding: 0.55rem 0.85rem;
+  color: #342e40;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 10px 24px rgba(46, 41, 64, 0.06);
+  font-size: 0.86rem;
+  font-weight: 950;
+}
+
 .foru-first-use-tip {
   display: flex;
   align-items: center;
@@ -3078,13 +3092,10 @@ body {
 }
 
 .foru-project-flow {
-  display: grid;
-  grid-template-columns: minmax(18rem, 1fr) minmax(13rem, 18rem) auto;
-  align-items: center;
-  gap: 0.8rem;
+  display: block;
   border: 1px solid rgba(124, 92, 255, 0.12);
   border-radius: 22px;
-  padding: 0.78rem;
+  padding: 0.55rem;
   color: #342e40;
   background:
     radial-gradient(circle at 7% 18%, rgba(244, 208, 63, 0.14), transparent 13rem),
@@ -3095,11 +3106,11 @@ body {
 .foru-project-flow-steps {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.38rem;
+  gap: 0.35rem;
 }
 
 .foru-project-flow-steps article {
-  min-height: 3.3rem;
+  min-height: 3rem;
   display: grid;
   place-items: center;
   gap: 0.18rem;
@@ -3140,44 +3151,12 @@ body {
 .foru-project-flow-steps article.is-current {
   border-color: rgba(244, 180, 0, 0.34);
   background: rgba(255, 248, 220, 0.9);
-  box-shadow: 0 10px 24px rgba(244, 180, 0, 0.12);
+  box-shadow: 0 0 0 3px rgba(244, 180, 0, 0.08), 0 10px 24px rgba(244, 180, 0, 0.12);
 }
 
 .foru-project-flow-steps article.is-current span {
   color: #4a3000;
   background: linear-gradient(135deg, #F4D03F, #F8C471);
-}
-
-.foru-project-flow-now {
-  display: grid;
-  gap: 0.12rem;
-}
-
-.foru-project-flow-now small {
-  color: #8d849a;
-  font-size: 0.72rem;
-  font-weight: 950;
-  text-transform: uppercase;
-}
-
-.foru-project-flow-now strong {
-  color: #2b2435;
-  font-size: 0.95rem;
-  font-weight: 950;
-}
-
-.foru-project-flow > button {
-  min-height: 2.85rem;
-  border: 1px solid rgba(244, 180, 0, 0.28);
-  border-radius: 999px;
-  padding: 0.74rem 1rem;
-  color: #2b2435;
-  background: linear-gradient(135deg, #F4D03F, #F9A8D4, #76D7C4);
-  box-shadow: 0 16px 36px rgba(244, 180, 0, 0.16);
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: 950;
-  white-space: nowrap;
 }
 
 .foru-first-steps-backdrop {

@@ -120,9 +120,9 @@ export default function IdeaJarFab({ centered = false, title = 'Captura primero'
           </div>
           <h2>{title}</h2>
           <p>{description}</p>
-          {rawNotes.length > 0 ? <strong>{rawNotes.length} ideas esperando organización</strong> : null}
+          {rawNotes.length > 0 ? <strong>{rawNotes.length === 1 ? 'Tienes 1 idea lista para organizar ✨' : `Tienes ${rawNotes.length} ideas listas para organizar ✨`}</strong> : null}
           <button type="button" onClick={openIdeaJar}>
-            {rawNotes.length > 0 ? '✨ Organizar o agregar más ideas' : '✨ Echar ideas al frasco'}
+            {rawNotes.length > 0 ? '✨ Organizar con IA' : '✨ Echar ideas al frasco'}
           </button>
         </section>
       ) : (

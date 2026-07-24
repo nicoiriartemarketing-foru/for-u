@@ -167,20 +167,8 @@ export default function ForUWorkspace() {
       <section className="foru-shell-main">
         <div className="foru-canvas-stage">
           <div className="foru-canvas-toolbar">
-            <span className="foru-step-kicker">
-              {mainView === 'world'
-                ? 'Mi Mundo · Exploración 3D'
-                : currentView === 'dashboard'
-                ? 'Dashboard · Archipiélago de Proyectos'
-                : currentView === 'archipelago'
-                ? 'Archipiélago · Todos los mapas mentales'
-                : currentView === 'map'
-                ? 'Mapa Mental · Isla enfocada'
-                : currentView === 'kanban'
-                ? 'Kanban · Ejecución por estado'
-                : currentView === 'gantt'
-                ? 'Gantt · Línea de tiempo'
-                : 'Archipiélago · Zoom continuo'}
+            <span className="foru-context-message">
+              {mainView === 'world' ? '🌍 Explora tu mundo en 3D' : contextualMessageByState[projectGuideState]}
             </span>
             {mainView === 'objectives' ? (
               <div className="foru-subview-switcher" aria-label="Vistas de objetivos">
@@ -201,9 +189,6 @@ export default function ForUWorkspace() {
                 {activeProject ? <span>Isla actual: {activeProject.name}</span> : null}
               </div>
             )}
-            <div className="foru-shell-metrics">
-              <span>{mainView === 'world' ? 'Explora tus islas en 3D' : 'Elige una vista y avanza sin ruido'}</span>
-            </div>
           </div>
           {firstUseTip ? (
             <div className="foru-first-use-tip" role="status">
@@ -214,9 +199,7 @@ export default function ForUWorkspace() {
           ) : null}
           {mainView === 'objectives' && activeProject ? (
             <ProjectFlowBar
-              state={projectGuideState}
               step={guideStep}
-              onNextAction={runNextAction}
             />
           ) : null}
           {mainView === 'objectives' ? <RouteProgressBar project={activeProject} /> : null}
@@ -227,9 +210,9 @@ export default function ForUWorkspace() {
           ) : shouldShowGuidedCapture ? (
             <IdeaJarFab
               centered
-              title={projectGuideState === 'raw' ? '¡Tienes ideas esperando!' : '¡Empecemos por capturar!'}
+              title={projectGuideState === 'raw' ? '¡Tienes ideas listas!' : '¡Empecemos por capturar!'}
               description={projectGuideState === 'raw'
-                ? 'Tu siguiente paso es organizar esas notas con IA para convertirlas en tareas claras.'
+                ? 'Tu siguiente paso es organizarlas con IA para convertirlas en tareas claras.'
                 : 'Antes de ver mapas y tableros, suelta ideas crudas en el frasco. No tienen que estar perfectas.'}
             />
           ) : currentView === 'dashboard' ? (
@@ -276,13 +259,9 @@ export default function ForUWorkspace() {
 }
 
 function ProjectFlowBar({
-  state,
   step,
-  onNextAction,
 }: {
-  state: ForUProjectGuideState;
   step: GuideStep;
-  onNextAction: () => void;
 }) {
   return (
     <section className="foru-project-flow" aria-label="Progreso guiado del proyecto">
@@ -294,13 +273,6 @@ function ProjectFlowBar({
           </article>
         ))}
       </div>
-      <div className="foru-project-flow-now">
-        <small>Paso {step.index}/5</small>
-        <strong>{step.label}</strong>
-      </div>
-      <button type="button" onClick={onNextAction}>
-        {nextActionByState[state]}
-      </button>
     </section>
   );
 }
@@ -381,13 +353,13 @@ const guideStepsByState: Record<ForUProjectGuideState, GuideStep> = {
   completed: flowSteps[4],
 };
 
-const nextActionByState: Record<ForUProjectGuideState, string> = {
-  empty: '📥 Capturar',
-  raw: '✨ Organizar',
-  organized: '🗺️ Ver Ruta',
-  planned: '▶️ Empezar',
-  active: '✅ Seguir ejecutando',
-  completed: '🎉 Celebrar',
+const contextualMessageByState: Record<ForUProjectGuideState, string> = {
+  empty: '📥 Captura tus ideas sin juzgar',
+  raw: '🤖 Deja que la IA organice tu cerebro',
+  organized: '🗺️ Tu Ruta Digital está lista',
+  planned: '✅ Sigue tu ruta paso a paso',
+  active: '✅ Sigue tu ruta paso a paso',
+  completed: '🎉 ¡Proyecto en marcha!',
 };
 
 const modalContentByState: Record<Exclude<ForUProjectGuideState, 'active' | 'completed'>, {
@@ -399,7 +371,7 @@ const modalContentByState: Record<Exclude<ForUProjectGuideState, 'active' | 'com
   empty: {
     icon: '🚀',
     title: '¡Empecemos!',
-    description: 'Este proyecto todavía no tiene ideas. Primero vamos a capturar sin ordenar ni juzgar.',
+    description: 'Este proyecto está vacío. Primero vamos a capturar sin ordenar ni juzgar.',
     action: 'Echar ideas al frasco',
   },
   raw: {
