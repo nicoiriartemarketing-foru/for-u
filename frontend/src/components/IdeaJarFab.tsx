@@ -12,11 +12,12 @@ const noteModes: Array<{ kind: ForURawNoteKind; label: string; icon: typeof File
 
 type IdeaJarFabProps = {
   centered?: boolean;
+  hiddenLauncher?: boolean;
   title?: string;
   description?: string;
 };
 
-export default function IdeaJarFab({ centered = false, title = 'Captura primero', description = 'Suelta ideas desordenadas. For U las ordena después contigo.' }: IdeaJarFabProps) {
+export default function IdeaJarFab({ centered = false, hiddenLauncher = false, title = 'Captura primero', description = 'Suelta ideas desordenadas. For U las ordena después contigo.' }: IdeaJarFabProps) {
   const [kind, setKind] = useState<ForURawNoteKind>('text');
   const [content, setContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -113,7 +114,7 @@ export default function IdeaJarFab({ centered = false, title = 'Captura primero'
 
   return (
     <>
-      {centered ? (
+      {hiddenLauncher ? null : centered ? (
         <section className="foru-centered-idea-jar">
           <div className="foru-centered-idea-jar-orb">
             <Sparkles size={34} />

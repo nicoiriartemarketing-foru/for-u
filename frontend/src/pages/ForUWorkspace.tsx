@@ -2,17 +2,14 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
-import ArchipelagoView from '../components/ArchipelagoView';
 import DailyRewardsModal from '../components/DailyRewardsModal';
-import GanttView from '../components/GanttView';
 import IdeaJarFab from '../components/IdeaJarFab';
 import KanbanView from '../components/KanbanView';
 import Logo from '../components/Logo';
 import NodeDetailPanel from '../components/NodeDetailPanel';
 import ProjectCanvas from '../components/ProjectCanvas';
-import ProjectDashboard from '../components/ProjectDashboard';
 import ProjectNavigator from '../components/ProjectNavigator';
-import { type ForUActiveProject, type ForUProjectGuideState, type ForUWorkspaceView, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import { type ForUProjectGuideState, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
 const World3D = lazy(() => import('../components/World3D'));
 type ForUMainView = 'objectives' | 'world';
@@ -20,12 +17,11 @@ type ForUMainView = 'objectives' | 'world';
 export default function ForUWorkspace() {
   const [mainView, setMainView] = useState<ForUMainView>('objectives');
   const [isDailyRewardOpen, setIsDailyRewardOpen] = useState(false);
+  const [revealedStep, setRevealedStep] = useState<ForUProjectGuideState | null>(null);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
-  const projectsById = useActiveProjectsStore((state) => state.projectsById);
   const selectedNodeId = useActiveProjectsStore((state) => state.selectedNodeId);
   const deselectNode = useActiveProjectsStore((state) => state.deselectNode);
   const clearFocus = useActiveProjectsStore((state) => state.clearFocus);
-  const currentView = useActiveProjectsStore((state) => state.currentView);
   const setView = useActiveProjectsStore((state) => state.setView);
   const switchProject = useActiveProjectsStore((state) => state.switchProject);
   const panToIsland = useActiveProjectsStore((state) => state.panToIsland);
@@ -34,48 +30,19 @@ export default function ForUWorkspace() {
   const checkDailyReward = useActiveProjectsStore((state) => state.checkDailyReward);
   const getProjectState = useActiveProjectsStore((state) => state.getProjectState);
   const openIdeaJar = useActiveProjectsStore((state) => state.openIdeaJar);
-  const [firstUseTip, setFirstUseTip] = useState<string | null>(null);
-  const [dismissedGuideKey, setDismissedGuideKey] = useState('');
 
-  const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
   const projectGuideState = activeProjectId ? getProjectState(activeProjectId) : 'empty';
   const guideStep = guideStepsByState[projectGuideState];
-  const shouldShowGuidedCapture = mainView === 'objectives' && (projectGuideState === 'empty' || projectGuideState === 'raw');
-  const contextualGuideKey = `${activeProjectId ?? 'none'}-${projectGuideState}`;
-  const shouldShowContextualGuide = mainView === 'objectives'
-    && ['empty', 'raw', 'organized', 'planned'].includes(projectGuideState)
-    && dismissedGuideKey !== contextualGuideKey;
+  const focusContent = focusContentByState[projectGuideState];
+  const shouldRevealWorkView = revealedStep === projectGuideState && ['organized', 'planned', 'active'].includes(projectGuideState);
 
   useEffect(() => {
-    if (checkDailyReward().shouldShow) {
-      setIsDailyRewardOpen(true);
-    }
-  }, [checkDailyReward]);
+    if (projectGuideState === 'completed' && checkDailyReward().shouldShow) setIsDailyRewardOpen(true);
+  }, [checkDailyReward, projectGuideState]);
 
   useEffect(() => {
-    if (mainView !== 'objectives') {
-      setFirstUseTip(null);
-      return;
-    }
-
-    const tip = firstUseTips[currentView];
-    if (!tip) {
-      setFirstUseTip(null);
-      return;
-    }
-
-    const storageKey = `foru-first-use-tip-${currentView}`;
-    if (window.localStorage.getItem(storageKey)) {
-      setFirstUseTip(null);
-      return;
-    }
-
-    setFirstUseTip(tip);
-    window.localStorage.setItem(storageKey, 'true');
-    const timeoutId = window.setTimeout(() => setFirstUseTip(null), 6500);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [currentView, mainView]);
+    setRevealedStep(null);
+  }, [activeProjectId, projectGuideState]);
 
   function openProjectIsland(projectId: string) {
     switchProject(projectId);
@@ -84,46 +51,37 @@ export default function ForUWorkspace() {
     clearFocus();
     setView('map');
     setMainView('objectives');
+    setRevealedStep('organized');
   }
 
   function openDashboard() {
     deselectNode();
     clearFocus();
-    setView('dashboard');
     setMainView('objectives');
-  }
-
-  function changeView(view: ForUWorkspaceView) {
-    deselectNode();
-    clearFocus();
-    setMainView('objectives');
-    setView(view);
+    setRevealedStep(null);
   }
 
   function changeMainView(view: ForUMainView) {
     deselectNode();
     clearFocus();
     setMainView(view);
-    if (view === 'objectives' && currentView === 'dashboard') {
-      setView('archipelago');
-    }
   }
 
-  function runNextAction() {
+  function runCurrentStepAction() {
     if (projectGuideState === 'empty' || projectGuideState === 'raw') {
       openIdeaJar();
       return;
     }
 
     if (projectGuideState === 'organized') {
-      setMainView('objectives');
       setView('map');
+      setRevealedStep('organized');
       return;
     }
 
     if (projectGuideState === 'planned' || projectGuideState === 'active') {
-      setMainView('objectives');
       setView('kanban');
+      setRevealedStep(projectGuideState);
       return;
     }
 
@@ -156,8 +114,9 @@ export default function ForUWorkspace() {
             <strong>Mi Mundo</strong>
           </button>
         </div>
+        {mainView === 'objectives' ? <span className="foru-header-step-pill">Paso {guideStep.index}/5</span> : null}
         <button type="button" className="foru-daily-streak-badge" onClick={() => setIsDailyRewardOpen(true)}>
-          🔥 Racha: {dailyStreak} días
+          🔥 {dailyStreak}
         </button>
         <button type="button" className="foru-coins-badge" onClick={() => setIsDailyRewardOpen(true)}>
           🪙 {coins}
@@ -166,143 +125,62 @@ export default function ForUWorkspace() {
 
       <section className="foru-shell-main">
         <div className="foru-canvas-stage">
-          <div className="foru-canvas-toolbar">
-            <span className="foru-context-message">
-              {mainView === 'world' ? '🌍 Explora tu mundo en 3D' : contextualMessageByState[projectGuideState]}
-            </span>
-            {mainView === 'objectives' ? (
-              <div className="foru-subview-switcher" aria-label="Vistas de objetivos">
-                {workspaceViews.map((view) => (
-                  <button
-                    key={view.key}
-                    type="button"
-                    className={currentView === view.key ? 'is-active' : ''}
-                    onClick={() => changeView(view.key)}
-                  >
-                    {view.label}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="foru-world-subnav" aria-label="Vistas de Mi Mundo">
-                <span>🌌 Archipiélago 3D</span>
-                {activeProject ? <span>Isla actual: {activeProject.name}</span> : null}
-              </div>
-            )}
-          </div>
-          {firstUseTip ? (
-            <div className="foru-first-use-tip" role="status">
-              <strong>Tip rápido</strong>
-              <span>{firstUseTip}</span>
-              <button type="button" onClick={() => setFirstUseTip(null)}>Entendido</button>
-            </div>
-          ) : null}
-          {mainView === 'objectives' && activeProject ? (
-            <ProjectFlowBar
-              step={guideStep}
-            />
-          ) : null}
-          {mainView === 'objectives' ? <RouteProgressBar project={activeProject} /> : null}
           {mainView === 'world' ? (
-            <Suspense fallback={<World3DSkeleton />}>
-              <World3D onBackToMap={() => setMainView('objectives')} onOpenProject={openProjectIsland} />
-            </Suspense>
-          ) : shouldShowGuidedCapture ? (
-            <IdeaJarFab
-              centered
-              title={projectGuideState === 'raw' ? '¡Tienes ideas listas!' : '¡Empecemos por capturar!'}
-              description={projectGuideState === 'raw'
-                ? 'Tu siguiente paso es organizarlas con IA para convertirlas en tareas claras.'
-                : 'Antes de ver mapas y tableros, suelta ideas crudas en el frasco. No tienen que estar perfectas.'}
-            />
-          ) : currentView === 'dashboard' ? (
-            <ProjectDashboard onEnterProject={openProjectIsland} />
-          ) : currentView === 'archipelago' ? (
-            <ArchipelagoView onEnterProject={openProjectIsland} />
-          ) : currentView === 'map' ? (
+            <>
+              <div className="foru-canvas-toolbar">
+                <span className="foru-context-message">🌍 Explora tu mundo en 3D</span>
+              </div>
+              <Suspense fallback={<World3DSkeleton />}>
+                <World3D onBackToMap={() => setMainView('objectives')} onOpenProject={openProjectIsland} />
+              </Suspense>
+            </>
+          ) : shouldRevealWorkView && projectGuideState === 'organized' ? (
             <>
               <ProjectCanvas />
               <AnimatePresence>
                 {selectedNodeId ? <NodeDetailPanel key={selectedNodeId} /> : null}
               </AnimatePresence>
             </>
-          ) : currentView === 'kanban' ? (
+          ) : shouldRevealWorkView && (projectGuideState === 'planned' || projectGuideState === 'active') ? (
             <>
               <KanbanView />
               <AnimatePresence>
                 {selectedNodeId ? <NodeDetailPanel key={selectedNodeId} /> : null}
               </AnimatePresence>
             </>
-          ) : currentView === 'gantt' ? (
-            <GanttView />
           ) : (
-            <ArchipelagoView onEnterProject={openProjectIsland} />
+            <FocusOnlyStep
+              content={focusContent}
+              step={guideStep}
+              onAction={runCurrentStepAction}
+            />
           )}
         </div>
       </section>
 
-      {mainView === 'objectives' && currentView === 'archipelago' && !shouldShowGuidedCapture ? <IdeaJarFab /> : null}
-      {shouldShowContextualGuide ? (
-        <FirstStepsModal
-          state={projectGuideState}
-          step={guideStep}
-          onClose={() => setDismissedGuideKey(contextualGuideKey)}
-          onAction={() => {
-            setDismissedGuideKey(contextualGuideKey);
-            runNextAction();
-          }}
-        />
-      ) : null}
       <DailyRewardsModal isOpen={isDailyRewardOpen} onClose={() => setIsDailyRewardOpen(false)} />
     </main>
   );
 }
 
-function ProjectFlowBar({
+function FocusOnlyStep({
+  content,
   step,
-}: {
-  step: GuideStep;
-}) {
-  return (
-    <section className="foru-project-flow" aria-label="Progreso guiado del proyecto">
-      <div className="foru-project-flow-steps">
-        {flowSteps.map((item) => (
-          <article key={item.index} className={`${item.index < step.index ? 'is-done' : ''} ${item.index === step.index ? 'is-current' : ''}`}>
-            <span>{item.index < step.index ? '✓' : item.index}</span>
-            <strong>{item.shortLabel}</strong>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function FirstStepsModal({
-  state,
-  step,
-  onClose,
   onAction,
 }: {
-  state: ForUProjectGuideState;
+  content: FocusStepContent;
   step: GuideStep;
-  onClose: () => void;
   onAction: () => void;
 }) {
-  const content = modalContentByState[state] ?? modalContentByState.empty;
-
   return (
-    <div className="foru-first-steps-backdrop" role="dialog" aria-modal="true">
-      <section className="foru-first-steps-modal">
-        <span>{content.icon}</span>
-        <small>Paso {step.index}/5 · {step.label}</small>
-        <h2>{content.title}</h2>
-        <p>{content.description}</p>
-        <div>
-          <button type="button" onClick={onAction}>{content.action}</button>
-          <button type="button" onClick={onClose}>Ahora no</button>
-        </div>
-      </section>
-    </div>
+    <section className="foru-focus-only-step" aria-label={step.label}>
+      <span className="foru-focus-only-step-index">Paso {step.index}/5</span>
+      <div className="foru-focus-only-orb">{content.icon}</div>
+      <h1>{content.title}</h1>
+      <p>{content.description}</p>
+      <button type="button" onClick={onAction}>{content.action}</button>
+      {step.index <= 2 ? <IdeaJarFab hiddenLauncher /> : null}
+    </section>
   );
 }
 
@@ -322,107 +200,62 @@ function World3DSkeleton() {
   );
 }
 
-const workspaceViews: Array<{ key: ForUWorkspaceView; label: string }> = [
-  { key: 'archipelago', label: '🗺️ Archipiélago' },
-  { key: 'map', label: '🧠 Mapa' },
-  { key: 'kanban', label: '📋 Kanban' },
-  { key: 'gantt', label: '📊 Gantt' },
-  { key: 'dashboard', label: '📊 Dashboard' },
-];
-
 type GuideStep = {
   index: number;
   label: string;
-  shortLabel: string;
 };
 
-const flowSteps: GuideStep[] = [
-  { index: 1, label: '📥 Captura tus ideas', shortLabel: 'Capturar' },
-  { index: 2, label: '🤖 Organiza con IA', shortLabel: 'Organizar' },
-  { index: 3, label: '🗺️ Crea tu Ruta', shortLabel: 'Planificar' },
-  { index: 4, label: '✅ Ejecuta el plan', shortLabel: 'Ejecutar' },
-  { index: 5, label: '🎉 ¡Progreso!', shortLabel: 'Celebrar' },
-];
-
-const guideStepsByState: Record<ForUProjectGuideState, GuideStep> = {
-  empty: flowSteps[0],
-  raw: flowSteps[1],
-  organized: flowSteps[2],
-  planned: flowSteps[3],
-  active: flowSteps[3],
-  completed: flowSteps[4],
-};
-
-const contextualMessageByState: Record<ForUProjectGuideState, string> = {
-  empty: '📥 Captura tus ideas sin juzgar',
-  raw: '🤖 Deja que la IA organice tu cerebro',
-  organized: '🗺️ Tu Ruta Digital está lista',
-  planned: '✅ Sigue tu ruta paso a paso',
-  active: '✅ Sigue tu ruta paso a paso',
-  completed: '🎉 ¡Proyecto en marcha!',
-};
-
-const modalContentByState: Record<Exclude<ForUProjectGuideState, 'active' | 'completed'>, {
+type FocusStepContent = {
   icon: string;
   title: string;
   description: string;
   action: string;
-}> = {
+};
+
+const guideStepsByState: Record<ForUProjectGuideState, GuideStep> = {
+  empty: { index: 1, label: 'Capturar' },
+  raw: { index: 2, label: 'Organizar' },
+  organized: { index: 3, label: 'Planificar' },
+  planned: { index: 4, label: 'Ejecutar' },
+  active: { index: 4, label: 'Ejecutar' },
+  completed: { index: 5, label: 'Celebrar' },
+};
+
+const focusContentByState: Record<ForUProjectGuideState, FocusStepContent> = {
   empty: {
-    icon: '🚀',
+    icon: '📥',
     title: '¡Empecemos!',
-    description: 'Este proyecto está vacío. Primero vamos a capturar sin ordenar ni juzgar.',
+    description: 'Captura tus ideas sin juzgar. Una frase basta.',
     action: 'Echar ideas al frasco',
   },
   raw: {
-    icon: '✨',
-    title: '¡Tienes ideas!',
-    description: 'Ya hay material en el frasco. El siguiente paso es pedirle a la IA que lo convierta en tareas claras.',
-    action: 'Organizar mi cerebro con IA',
+    icon: '🤖',
+    title: 'Ideas listas',
+    description: 'Ahora deja que la IA ordene tu cabeza.',
+    action: 'Organizar con IA',
   },
   organized: {
-    icon: '🧠',
-    title: '¡Estructura lista!',
-    description: 'Tus ideas ya tienen forma. Ahora revisa el mapa y la Ruta Digital para elegir el camino.',
-    action: 'Ver mi Ruta Digital',
+    icon: '🗺️',
+    title: 'Ruta lista',
+    description: 'Mira tu ruta solo cuando estés lista para planificar.',
+    action: 'Ver Ruta Digital',
   },
   planned: {
     icon: '🎯',
-    title: '¡Plan listo!',
-    description: 'Ya tienes una ruta. Ahora toca ejecutar paso a paso sin mirar todo a la vez.',
-    action: 'Empezar a ejecutar',
+    title: 'Plan listo',
+    description: 'Empieza por una tarea. Solo una.',
+    action: 'Empezar',
+  },
+  active: {
+    icon: '✅',
+    title: 'Sigue el plan',
+    description: 'Continúa con la siguiente tarea.',
+    action: 'Seguir ejecutando',
+  },
+  completed: {
+    icon: '🎉',
+    title: '¡A celebrar!',
+    description: 'Ya hiciste progreso real.',
+    action: 'Ver recompensa',
   },
 };
-
-const firstUseTips: Partial<Record<ForUWorkspaceView, string>> = {
-  archipelago: 'Haz doble clic en una isla para entrar a su mapa. Activa Mover Mapa solo cuando quieras navegar.',
-  map: 'Haz clic en una rama o en un nodo para ver detalles. Usa Mover Mapa solo cuando quieras reorganizar la vista.',
-  kanban: 'Arrastra tareas entre columnas. Cuando una tarea llega a Done, ganas monedas.',
-  gantt: 'Aquí ves la línea de tiempo de tu proyecto para entender qué viene primero.',
-  dashboard: 'Compara tus proyectos sin entrar en cada isla.',
-};
-
-function RouteProgressBar({ project }: { project: ForUActiveProject | null }) {
-  if (!project?.digitalRoute.length) return null;
-
-  const totalSteps = project.digitalRoute.length;
-  const safeIndex = Math.min(project.currentRouteIndex, totalSteps - 1);
-  const currentStep = project.digitalRoute[safeIndex];
-  const completedSteps = project.digitalRoute.filter((step, index) => step.completedAt || index < project.currentRouteIndex).length;
-  const progress = Math.round((completedSteps / totalSteps) * 100);
-
-  return (
-    <section className="foru-route-progress-bar" aria-label="Progreso de la Ruta Digital">
-      <div>
-        <span>Ruta Digital</span>
-        <strong>
-          Paso {Math.min(safeIndex + 1, totalSteps)} de {totalSteps}: {currentStep?.title ?? 'Ruta completa'}
-        </strong>
-      </div>
-      <div className="foru-route-progress-track" aria-hidden="true">
-        <i style={{ width: `${progress}%` }} />
-      </div>
-      <small>{progress}% completado</small>
-    </section>
-  );
-}
