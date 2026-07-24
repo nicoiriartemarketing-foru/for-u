@@ -46,7 +46,20 @@ const addOptions: Array<{ kind: ForUNodeKind; label: string; title: string }> = 
 
 type ForUCanvasNodeData = IdeaNodeData | BranchNodeData | CenterNodeData;
 
-function getFocusOpacity(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null) {
+const DUST_THRESHOLD_MS = 48 * 60 * 60 * 1000;
+
+function isDustyNode(node: ForUProjectNode) {
+  if (node.locked || node.completedAt || node.taskStatus === 'done') return false;
+  const lastActiveTime = new Date(node.lastActiveDate).getTime();
+  return Number.isFinite(lastActiveTime) && lastActiveTime < Date.now() - DUST_THRESHOLD_MS;
+}
+
+function getFocusOpacity(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null, focusedRouteNodeIds: Set<string> | null) {
+  if (focusedRouteNodeIds) {
+    if (node.role === 'free' && focusedRouteNodeIds.has(node.id)) return 1;
+    return 0.2;
+  }
+
   if (focusedStepNodeIds) {
     if (node.role === 'free' && focusedStepNodeIds.has(node.id)) return 1;
     return 0.2;
@@ -58,8 +71,8 @@ function getFocusOpacity(node: ForUProjectNode, focusedBranch: ForUBranchKey | n
   return 0.2;
 }
 
-function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null, nextActionIds: Set<string>, routeStepByNodeId: Map<string, number>): Node<ForUCanvasNodeData> {
-  const opacity = getFocusOpacity(node, focusedBranch, focusedStepNodeIds);
+function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null, focusedRouteNodeIds: Set<string> | null, nextActionIds: Set<string>, routeStepByNodeId: Map<string, number>): Node<ForUCanvasNodeData> {
+  const opacity = getFocusOpacity(node, focusedBranch, focusedStepNodeIds, focusedRouteNodeIds);
   const style: CSSProperties = {
     opacity,
     transition: 'opacity 0.3s ease',
@@ -113,6 +126,7 @@ function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, 
       priority: node.priority,
       isNextAction: nextActionIds.has(node.id),
       routeStepNumber: routeStepByNodeId.get(node.id),
+      isDusty: isDustyNode(node),
     },
   };
 }
@@ -123,6 +137,7 @@ export default function ProjectCanvas() {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isRouteViewOpen, setIsRouteViewOpen] = useState(false);
   const [isStepFocusOpen, setIsStepFocusOpen] = useState(false);
+  const [isRouteFocusOpen, setIsRouteFocusOpen] = useState(false);
   const [rewardBurst, setRewardBurst] = useState<FloatingRewardBurst | null>(null);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
@@ -150,6 +165,10 @@ export default function ProjectCanvas() {
 
     return getStepNodeIds(activeProject.nodes, currentStep.linkedNodeId);
   }, [activeProject?.currentRouteIndex, activeProject?.digitalRoute, activeProject?.nodes, isStepFocusOpen]);
+  const focusedRouteNodeIds = useMemo(() => {
+    if (!isRouteFocusOpen || !activeProject?.digitalRoute.length) return null;
+    return new Set(activeProject.digitalRoute.map((step) => step.linkedNodeId));
+  }, [activeProject?.digitalRoute, isRouteFocusOpen]);
 
   const branchCounts = useMemo(() => {
     return Object.fromEntries(baseBranches.map((branch) => [
@@ -173,8 +192,8 @@ export default function ProjectCanvas() {
   }, [activeProjectId]);
 
   const nodes = useMemo<Node<ForUCanvasNodeData>[]>(() => {
-    return activeProject?.nodes?.map((node) => toFlowNode(node, focusedBranch, focusedStepNodeIds, nextActionIds, routeStepByNodeId)) ?? [];
-  }, [activeProject?.nodes, focusedBranch, focusedStepNodeIds, nextActionIds, routeStepByNodeId]);
+    return activeProject?.nodes?.map((node) => toFlowNode(node, focusedBranch, focusedStepNodeIds, focusedRouteNodeIds, nextActionIds, routeStepByNodeId)) ?? [];
+  }, [activeProject?.nodes, focusedBranch, focusedRouteNodeIds, focusedStepNodeIds, nextActionIds, routeStepByNodeId]);
 
   const edges = useMemo<Edge[]>(() => {
     const centerNodeId = activeProject ? getCenterNodeId(activeProject.id) : '';
@@ -187,13 +206,13 @@ export default function ProjectCanvas() {
       animated: edge.source === centerNodeId,
       markerEnd: undefined,
       style: edge.source === centerNodeId
-        ? { stroke: getEdgeColor(edge.source, edge.target, activeProject.nodes), strokeWidth: 3, strokeDasharray: '8 8', opacity: getEdgeOpacity(edge.source, edge.target, activeProject.nodes, focusedBranch, focusedStepNodeIds) }
-        : { stroke: getEdgeColor(edge.source, edge.target, activeProject?.nodes ?? []), strokeWidth: 2, opacity: getEdgeOpacity(edge.source, edge.target, activeProject?.nodes ?? [], focusedBranch, focusedStepNodeIds), transition: 'opacity 0.3s ease' },
+        ? { stroke: getEdgeColor(edge.source, edge.target, activeProject.nodes), strokeWidth: 3, strokeDasharray: '8 8', opacity: getEdgeOpacity(edge.source, edge.target, activeProject.nodes, focusedBranch, focusedStepNodeIds, focusedRouteNodeIds) }
+        : { stroke: getEdgeColor(edge.source, edge.target, activeProject?.nodes ?? []), strokeWidth: 2, opacity: getEdgeOpacity(edge.source, edge.target, activeProject?.nodes ?? [], focusedBranch, focusedStepNodeIds, focusedRouteNodeIds), transition: 'opacity 0.3s ease' },
     }));
 
-    const routeEdges = getRouteEdges(activeProject?.digitalRoute ?? []);
+    const routeEdges = getRouteEdges(activeProject?.digitalRoute ?? [], isRouteFocusOpen);
     return [...projectEdges, ...routeEdges];
-  }, [activeProject, focusedBranch, focusedStepNodeIds]);
+  }, [activeProject, focusedBranch, focusedRouteNodeIds, focusedStepNodeIds, isRouteFocusOpen]);
 
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
     if (!activeProjectId) return;
@@ -263,8 +282,12 @@ export default function ProjectCanvas() {
 
     const didAdvance = completeRouteStep(activeProjectId);
     if (didAdvance) {
+      const currentStep = activeProject?.digitalRoute[activeProject.currentRouteIndex];
+      const routeNode = activeProject?.nodes.find((node) => node.id === currentStep?.linkedNodeId);
+      const wasDusty = routeNode ? isDustyNode(routeNode) : false;
       toast.success('¡Ruta Avanzada! +50 XP');
-      showRewardBurst(event.clientX, event.clientY, 20, 50);
+      showRewardBurst(event.clientX, event.clientY, wasDusty ? 60 : 20, 50);
+      if (wasDusty) toast.success('¡Limpieza Profunda! +40 monedas extra');
     } else {
       toast('La Ruta Digital ya está completa.');
     }
@@ -327,6 +350,15 @@ export default function ProjectCanvas() {
         disabled={!activeProject?.digitalRoute.length}
       >
         {isStepFocusOpen ? 'Salir del Enfoque' : '🔍 Enfocar Paso Actual'}
+      </button>
+
+      <button
+        type="button"
+        className={`foru-route-focus-toggle ${isRouteFocusOpen ? 'is-active' : ''}`}
+        onClick={() => setIsRouteFocusOpen((current) => !current)}
+        disabled={!activeProject?.digitalRoute.length}
+      >
+        {isRouteFocusOpen ? 'Salir del Enfoque' : '🔍 Enfocar Ruta'}
       </button>
 
       {isGuideOpen ? (
@@ -406,7 +438,11 @@ function getNearestBranch(x: number, y: number) {
   return nearest && nearest.distance < 260 ? nearest : null;
 }
 
-function getEdgeOpacity(source: string, target: string, nodes: ForUProjectNode[], focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null) {
+function getEdgeOpacity(source: string, target: string, nodes: ForUProjectNode[], focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null, focusedRouteNodeIds: Set<string> | null) {
+  if (focusedRouteNodeIds) {
+    return focusedRouteNodeIds.has(source) || focusedRouteNodeIds.has(target) ? 1 : 0.08;
+  }
+
   if (focusedStepNodeIds) {
     return focusedStepNodeIds.has(source) || focusedStepNodeIds.has(target) ? 1 : 0.12;
   }
@@ -456,7 +492,7 @@ function getNextActionIds(nodes: ForUProjectNode[]) {
   return ids;
 }
 
-function getRouteEdges(route: ForURouteStep[]): Edge[] {
+function getRouteEdges(route: ForURouteStep[], isRouteFocusOpen: boolean): Edge[] {
   return route.slice(0, -1).map((step, index) => {
     const nextStep = route[index + 1];
 
@@ -470,8 +506,11 @@ function getRouteEdges(route: ForURouteStep[]): Edge[] {
       deletable: false,
       style: {
         stroke: '#F4B400',
-        strokeWidth: 5,
-        filter: 'drop-shadow(0 0 8px rgba(244, 180, 0, 0.55))',
+        strokeWidth: isRouteFocusOpen ? 7 : 5,
+        opacity: 1,
+        filter: isRouteFocusOpen
+          ? 'drop-shadow(0 0 14px rgba(244, 180, 0, 0.82))'
+          : 'drop-shadow(0 0 8px rgba(244, 180, 0, 0.55))',
       },
     };
   });

@@ -15,6 +15,14 @@ const columns: Array<{ key: ForUTaskStatus; title: string }> = [
   { key: 'done', title: 'Done' },
 ];
 
+const DUST_THRESHOLD_MS = 48 * 60 * 60 * 1000;
+
+function isDustyNode(node: ForUProjectNode) {
+  if (node.locked || node.completedAt || node.taskStatus === 'done') return false;
+  const lastActiveTime = new Date(node.lastActiveDate).getTime();
+  return Number.isFinite(lastActiveTime) && lastActiveTime < Date.now() - DUST_THRESHOLD_MS;
+}
+
 export default function KanbanView({ includeAllProjectsDefault = false }: KanbanViewProps) {
   const [includeAllProjects, setIncludeAllProjects] = useState(includeAllProjectsDefault);
   const [isRoutePathOpen, setIsRoutePathOpen] = useState(false);
@@ -27,6 +35,7 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
   const updateNode = useActiveProjectsStore((state) => state.updateNode);
   const selectNode = useActiveProjectsStore((state) => state.selectNode);
   const completeRouteStep = useActiveProjectsStore((state) => state.completeRouteStep);
+  const addCoins = useActiveProjectsStore((state) => state.addCoins);
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
   const focusedStepNodeIds = useMemo(() => {
     if (!isStepFocusOpen || !activeProject?.digitalRoute.length) return null;
@@ -57,15 +66,19 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
 
   function moveCard(projectId: string, node: ForUProjectNode, status: ForUTaskStatus, point?: { x: number; y: number }) {
     const wasCompleted = Boolean(node.completedAt || node.taskStatus === 'done');
+    const wasDusty = isDustyNode(node);
+    const coinReward = status === 'done' && !wasCompleted ? (wasDusty ? 60 : 20) : 0;
     updateNode(projectId, node.id, {
       taskStatus: status,
       completedAt: status === 'done' ? new Date().toISOString() : undefined,
-      rewardCoins: status === 'done' && !wasCompleted ? (node.rewardCoins ?? 0) + 20 : node.rewardCoins,
+      rewardCoins: coinReward ? (node.rewardCoins ?? 0) + coinReward : node.rewardCoins,
     });
 
     if (status === 'done' && !wasCompleted && point) {
+      addCoins(coinReward);
       setCompletingCardKey(`${projectId}-${node.id}`);
-      showRewardBurst(point.x, point.y, 20, 0);
+      showRewardBurst(point.x, point.y, coinReward, 0);
+      if (wasDusty) toast.success('¡Limpieza Profunda! +40 monedas extra');
       window.setTimeout(() => setCompletingCardKey(null), 900);
     }
   }
@@ -169,11 +182,12 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
                 {columnCards.map(({ projectId, projectName, node }) => {
                   const branch = baseBranches.find((item) => item.key === node.branchKey);
                   const belongsToFocusedStep = !focusedStepNodeIds || (projectId === activeProjectId && focusedStepNodeIds.has(node.id));
+                  const isDusty = isDustyNode(node);
 
                   return (
                     <article
                       key={`${projectId}-${node.id}`}
-                      className={`foru-kanban-card is-${node.priority ?? 'low'} ${belongsToFocusedStep ? 'is-step-current' : 'is-step-muted'} ${completingCardKey === `${projectId}-${node.id}` ? 'is-disintegrating' : ''}`}
+                      className={`foru-kanban-card is-${node.priority ?? 'low'} ${belongsToFocusedStep ? 'is-step-current' : 'is-step-muted'} ${isDusty ? 'is-dusty-card' : ''} ${completingCardKey === `${projectId}-${node.id}` ? 'is-disintegrating' : ''}`}
                       draggable
                       onDragStart={(event) => {
                         event.dataTransfer.setData('application/foru-node', JSON.stringify({ projectId, nodeId: node.id }));
@@ -185,6 +199,7 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
                         <small>{includeAllProjects ? projectName : branch?.title ?? 'Sin rama'}</small>
                       </div>
                       <span>{priorityLabel[node.priority ?? 'low']}</span>
+                      {isDusty ? <span className="foru-dusty-card-badge">Polvo</span> : null}
                       <em>{branch?.icon ?? '•'} {branch?.title ?? 'Sin rama'}</em>
                     </article>
                   );

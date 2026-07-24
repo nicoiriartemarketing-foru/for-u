@@ -9,6 +9,7 @@ import IdeaJarFab from '../components/IdeaJarFab';
 import KanbanView from '../components/KanbanView';
 import Logo from '../components/Logo';
 import NodeDetailPanel from '../components/NodeDetailPanel';
+import ProjectCanvas from '../components/ProjectCanvas';
 import ProjectDashboard from '../components/ProjectDashboard';
 import ProjectNavigator from '../components/ProjectNavigator';
 import { Sparkles } from '../lib/icons';
@@ -27,6 +28,7 @@ export default function ForUWorkspace() {
   const clearFocus = useActiveProjectsStore((state) => state.clearFocus);
   const currentView = useActiveProjectsStore((state) => state.currentView);
   const setView = useActiveProjectsStore((state) => state.setView);
+  const switchProject = useActiveProjectsStore((state) => state.switchProject);
   const panToIsland = useActiveProjectsStore((state) => state.panToIsland);
   const coins = useActiveProjectsStore((state) => state.coins);
   const dailyStreak = useActiveProjectsStore((state) => state.dailyStreak);
@@ -41,10 +43,11 @@ export default function ForUWorkspace() {
   }, [checkDailyReward]);
 
   function openProjectIsland(projectId: string) {
+    switchProject(projectId);
     panToIsland(projectId);
     deselectNode();
     clearFocus();
-    setView('archipelago');
+    setView('map');
     setIsWorldOpen(false);
   }
 
@@ -107,6 +110,8 @@ export default function ForUWorkspace() {
                 ? 'Dashboard · Archipiélago de Proyectos'
                 : currentView === 'archipelago'
                 ? 'Archipiélago · Todos los mapas mentales'
+                : currentView === 'map'
+                ? 'Mapa Mental · Isla enfocada'
                 : currentView === 'kanban'
                 ? 'Kanban · Ejecución por estado'
                 : currentView === 'gantt'
@@ -128,6 +133,16 @@ export default function ForUWorkspace() {
             <ProjectDashboard onEnterProject={openProjectIsland} />
           ) : currentView === 'archipelago' ? (
             <ArchipelagoView onEnterProject={openProjectIsland} />
+          ) : currentView === 'map' ? (
+            <>
+              <button type="button" className="foru-back-archipelago" onClick={() => changeView('archipelago')}>
+                🏝️ Volver al Archipiélago
+              </button>
+              <ProjectCanvas />
+              <AnimatePresence>
+                {selectedNodeId ? <NodeDetailPanel key={selectedNodeId} /> : null}
+              </AnimatePresence>
+            </>
           ) : currentView === 'kanban' ? (
             <>
               <KanbanView />
@@ -167,6 +182,7 @@ function World3DSkeleton() {
 
 const workspaceViews: Array<{ key: ForUWorkspaceView; label: string }> = [
   { key: 'archipelago', label: '🗺️ Archipiélago' },
+  { key: 'map', label: '🧠 Mapa' },
   { key: 'kanban', label: '📋 Kanban' },
   { key: 'gantt', label: '📊 Gantt' },
   { key: 'dashboard', label: '📊 Dashboard' },

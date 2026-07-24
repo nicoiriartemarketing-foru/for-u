@@ -431,7 +431,7 @@ function CameraRig({
       lookTarget.set(0, 0.95, 0);
     }
 
-    camera.position.lerp(cameraTarget, 0.045);
+    camera.position.lerp(cameraTarget, 0.075);
     camera.lookAt(lookTarget);
   });
 
@@ -507,7 +507,7 @@ function WorldScene({
                 onSelect={() => {
                   onSelectProject(project.id);
                   if (viewLevel === 'archipelago') {
-                    window.setTimeout(() => onOpenProject(project.id), 520);
+                    window.setTimeout(() => onOpenProject(project.id), 1150);
                   }
                 }}
               >

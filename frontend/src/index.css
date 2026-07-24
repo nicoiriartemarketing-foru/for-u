@@ -3664,6 +3664,35 @@ body {
   box-shadow: 0 18px 42px rgba(244, 180, 0, 0.18);
 }
 
+.foru-idea-node.is-route-node:hover {
+  box-shadow: 0 22px 54px rgba(244, 180, 0, 0.28);
+}
+
+.foru-idea-node.is-dusty-node {
+  filter: grayscale(0.5);
+  background:
+    radial-gradient(circle at 12% 8%, rgba(180, 170, 154, 0.14), transparent 4rem),
+    rgba(255, 255, 255, 0.92);
+}
+
+.foru-dusty-badge,
+.foru-dusty-card-badge {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.24rem 0.48rem;
+  color: #6b5b45;
+  background: rgba(244, 228, 198, 0.92);
+  box-shadow: inset 0 0 0 1px rgba(166, 138, 92, 0.16);
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.foru-dusty-badge {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.72rem;
+}
+
 .foru-idea-node-kicker {
   display: inline-flex;
   border-radius: 999px;
@@ -3881,6 +3910,34 @@ body {
 }
 
 .foru-step-focus-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.foru-route-focus-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 7.45rem;
+  z-index: 11;
+  min-height: 2.75rem;
+  border: 1px solid rgba(244, 180, 0, 0.32);
+  border-radius: 999px;
+  padding: 0.68rem 0.9rem;
+  color: #4a3000;
+  background: rgba(255, 248, 220, 0.92);
+  box-shadow: 0 14px 30px rgba(244, 180, 0, 0.16);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 950;
+  backdrop-filter: blur(18px);
+}
+
+.foru-route-focus-toggle.is-active {
+  background: linear-gradient(135deg, #F4D03F, #F8C471);
+  box-shadow: 0 18px 42px rgba(244, 180, 0, 0.28);
+}
+
+.foru-route-focus-toggle:disabled {
   cursor: not-allowed;
   opacity: 0.48;
 }
@@ -6590,6 +6647,13 @@ body {
 
 .foru-kanban-card.is-step-current {
   box-shadow: 0 16px 36px rgba(244, 180, 0, 0.13);
+}
+
+.foru-kanban-card.is-dusty-card {
+  filter: grayscale(0.5);
+  background:
+    radial-gradient(circle at 92% 12%, rgba(180, 170, 154, 0.18), transparent 4rem),
+    #ffffff;
 }
 
 .foru-kanban-card.is-disintegrating {

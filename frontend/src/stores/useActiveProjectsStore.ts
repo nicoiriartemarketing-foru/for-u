@@ -381,7 +381,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
         const state = get();
         const cutoff = Date.now() - DUST_THRESHOLD_MS;
 
-        return state.activeProjectIds
+        return getProjectOrder(state)
           .flatMap((projectId) => {
             const project = state.projectsById[projectId];
             return project ? normalizeProject(project).nodes : [];
@@ -915,6 +915,13 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
         if (!currentStep || currentStep.completedAt) return false;
 
         const timestamp = now();
+        const currentNode = project.nodes.find((node) => node.id === currentStep.linkedNodeId);
+        const isDustyRouteNode = currentNode
+          ? !currentNode.locked
+            && !currentNode.completedAt
+            && new Date(currentNode.lastActiveDate).getTime() < Date.now() - DUST_THRESHOLD_MS
+          : false;
+        const coinReward = isDustyRouteNode ? 60 : 20;
 
         set((state) => {
           const currentProject = normalizeProject(state.projectsById[projectId]);
@@ -924,7 +931,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
 
           return {
             userXP: state.userXP,
-            coins: state.coins + 20,
+            coins: state.coins + coinReward,
             projectsById: {
               ...state.projectsById,
               [projectId]: touch({
