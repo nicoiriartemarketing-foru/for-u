@@ -1,4 +1,4 @@
-import { Handle, Position, type NodeProps } from 'reactflow';
+import type { NodeProps } from 'reactflow';
 import type { ForUNodeKind, ForUNodePriority } from '../stores/useActiveProjectsStore';
 
 export type IdeaNodeData = {
@@ -9,6 +9,8 @@ export type IdeaNodeData = {
   isNextAction?: boolean;
   routeStepNumber?: number;
   isDusty?: boolean;
+  status: 'done' | 'doing' | 'todo';
+  statusText: string;
 };
 
 const nodeLabels: Partial<Record<ForUNodeKind, string>> = {
@@ -26,7 +28,6 @@ export default function IdeaNode({ data, selected }: NodeProps<IdeaNodeData>) {
 
   return (
     <article className={`${selected ? 'foru-idea-node is-selected' : 'foru-idea-node'}${priorityClass}${routeClass}${dustyClass}`}>
-      <Handle className="foru-node-handle" type="target" position={Position.Left} />
       <div className="foru-idea-node-meta">
         <span className="foru-idea-node-kicker">{nodeLabels[data.kind] ?? 'Nodo'}</span>
         {data.priority ? <span className="foru-priority-badge">{priorityIcon[data.priority]}</span> : null}
@@ -35,10 +36,10 @@ export default function IdeaNode({ data, selected }: NodeProps<IdeaNodeData>) {
       {data.isDusty ? <span className="foru-dusty-badge">Polvo</span> : null}
       {data.isNextAction ? <span className="foru-next-action-badge">🔥 Siguiente</span> : null}
       <h3>
-        {data.icon && <span aria-hidden="true">{data.icon}</span>}
+        <span className="foru-idea-node-main-icon" aria-hidden="true">{data.icon ?? '✅'}</span>
         {data.title}
       </h3>
-      <Handle className="foru-node-handle" type="source" position={Position.Right} />
+      <em className={`foru-action-status is-${data.status}`}>{data.statusText}</em>
     </article>
   );
 }

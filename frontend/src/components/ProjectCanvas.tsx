@@ -6,7 +6,7 @@ import ReactFlow, {
   Background,
   BackgroundVariant,
   Controls,
-  MiniMap,
+  MarkerType,
   type Connection,
   type Edge,
   type Node,
@@ -54,7 +54,19 @@ function isDustyNode(node: ForUProjectNode) {
   return Number.isFinite(lastActiveTime) && lastActiveTime < Date.now() - DUST_THRESHOLD_MS;
 }
 
-function getFocusOpacity(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null, focusedRouteNodeIds: Set<string> | null) {
+type BranchStat = {
+  total: number;
+  completed: number;
+  pending: number;
+  status: 'done' | 'doing' | 'todo';
+};
+
+function getFocusOpacity(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null, focusedRouteNodeIds: Set<string> | null, branchFocus: ForUBranchKey | null) {
+  if (branchFocus) {
+    if (node.role === 'center') return 0.3;
+    return node.branchKey === branchFocus ? 1 : 0.3;
+  }
+
   if (focusedRouteNodeIds) {
     if (node.role === 'free' && focusedRouteNodeIds.has(node.id)) return 1;
     return 0.2;
@@ -71,8 +83,14 @@ function getFocusOpacity(node: ForUProjectNode, focusedBranch: ForUBranchKey | n
   return 0.2;
 }
 
-function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null, focusedRouteNodeIds: Set<string> | null, nextActionIds: Set<string>, routeStepByNodeId: Map<string, number>): Node<ForUCanvasNodeData> {
-  const opacity = getFocusOpacity(node, focusedBranch, focusedStepNodeIds, focusedRouteNodeIds);
+function getNodeStatus(node: ForUProjectNode): 'done' | 'doing' | 'todo' {
+  if (node.completedAt || node.taskStatus === 'done') return 'done';
+  if (node.taskStatus === 'doing') return 'doing';
+  return 'todo';
+}
+
+function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, focusedStepNodeIds: Set<string> | null, focusedRouteNodeIds: Set<string> | null, branchFocus: ForUBranchKey | null, nextActionIds: Set<string>, routeStepByNodeId: Map<string, number>, branchStats: Record<ForUBranchKey, BranchStat>, projectProgress: number, nextMilestone: string): Node<ForUCanvasNodeData> {
+  const opacity = getFocusOpacity(node, focusedBranch, focusedStepNodeIds, focusedRouteNodeIds, branchFocus);
   const style: CSSProperties = {
     opacity,
     transition: 'opacity 0.3s ease',
@@ -90,6 +108,9 @@ function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, 
       data: {
         title: node.title,
         icon: node.icon,
+        progress: projectProgress,
+        nextMilestone,
+        reward: '🪙 50 monedas al completar',
       },
     };
   }
@@ -109,6 +130,10 @@ function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, 
         icon: node.icon,
         branchKey: node.branchKey,
         color: branch?.color,
+        total: node.branchKey ? branchStats[node.branchKey].total : 0,
+        completed: node.branchKey ? branchStats[node.branchKey].completed : 0,
+        pending: node.branchKey ? branchStats[node.branchKey].pending : 0,
+        status: node.branchKey ? branchStats[node.branchKey].status : 'todo',
       },
     };
   }
@@ -127,6 +152,8 @@ function toFlowNode(node: ForUProjectNode, focusedBranch: ForUBranchKey | null, 
       isNextAction: nextActionIds.has(node.id),
       routeStepNumber: routeStepByNodeId.get(node.id),
       isDusty: isDustyNode(node),
+      status: getNodeStatus(node),
+      statusText: statusTextByState[getNodeStatus(node)],
     },
   };
 }
@@ -140,6 +167,7 @@ export default function ProjectCanvas() {
   const [isRouteFocusOpen, setIsRouteFocusOpen] = useState(false);
   const [isFocusMenuOpen, setIsFocusMenuOpen] = useState(false);
   const [isMapMovementUnlocked, setIsMapMovementUnlocked] = useState(false);
+  const [branchFocus, setBranchFocus] = useState<ForUBranchKey | null>(null);
   const [rewardBurst, setRewardBurst] = useState<FloatingRewardBurst | null>(null);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
@@ -179,10 +207,30 @@ export default function ProjectCanvas() {
       activeProject?.nodes.filter((node) => node.role === 'free' && node.branchKey === branch.key).length ?? 0,
     ])) as Record<ForUBranchKey, number>;
   }, [activeProject?.nodes]);
+  const branchStats = useMemo(() => {
+    return Object.fromEntries(baseBranches.map((branch) => {
+      const branchNodes = activeProject?.nodes.filter((node) => node.role === 'free' && node.branchKey === branch.key) ?? [];
+      const completed = branchNodes.filter((node) => getNodeStatus(node) === 'done').length;
+      const doing = branchNodes.some((node) => getNodeStatus(node) === 'doing');
+      const status = branchNodes.length > 0 && completed === branchNodes.length ? 'done' : doing || completed > 0 ? 'doing' : 'todo';
+
+      return [branch.key, {
+        total: branchNodes.length,
+        completed,
+        pending: Math.max(0, branchNodes.length - completed),
+        status,
+      }];
+    })) as Record<ForUBranchKey, BranchStat>;
+  }, [activeProject?.nodes]);
   const freeNodes = useMemo(() => {
     return activeProject?.nodes.filter((node) => node.role === 'free') ?? [];
   }, [activeProject?.nodes]);
   const isProjectEmpty = freeNodes.length === 0;
+  const completedCount = freeNodes.filter((node) => getNodeStatus(node) === 'done').length;
+  const projectProgress = freeNodes.length ? Math.round((completedCount / freeNodes.length) * 100) : 0;
+  const nextMilestone = Math.max(0, Math.min(2, freeNodes.length - completedCount)) === 0
+    ? 'Siguiente hito desbloqueado'
+    : `Completa ${Math.min(2, freeNodes.length - completedCount)} tareas más`;
 
   useEffect(() => {
     setSelectedOption(null);
@@ -199,25 +247,30 @@ export default function ProjectCanvas() {
   }, [activeProjectId]);
 
   const nodes = useMemo<Node<ForUCanvasNodeData>[]>(() => {
-    return activeProject?.nodes?.map((node) => toFlowNode(node, focusedBranch, focusedStepNodeIds, focusedRouteNodeIds, nextActionIds, routeStepByNodeId)) ?? [];
-  }, [activeProject?.nodes, focusedBranch, focusedRouteNodeIds, focusedStepNodeIds, nextActionIds, routeStepByNodeId]);
+    return activeProject?.nodes?.map((node) => toFlowNode(node, focusedBranch, focusedStepNodeIds, focusedRouteNodeIds, branchFocus, nextActionIds, routeStepByNodeId, branchStats, projectProgress, nextMilestone)) ?? [];
+  }, [activeProject?.nodes, branchFocus, branchStats, focusedBranch, focusedRouteNodeIds, focusedStepNodeIds, nextActionIds, nextMilestone, projectProgress, routeStepByNodeId]);
 
   const edges = useMemo<Edge[]>(() => {
     const centerNodeId = activeProject ? getCenterNodeId(activeProject.id) : '';
 
-    const projectEdges = (activeProject?.edges ?? []).map((edge) => ({
+    const projectEdges = (activeProject?.edges ?? [])
+      .filter((edge) => edge.source !== centerNodeId)
+      .map((edge) => ({
       id: edge.id,
       source: edge.source,
       target: edge.target,
-      type: 'default',
-      animated: edge.source === centerNodeId,
-      markerEnd: undefined,
-      style: edge.source === centerNodeId
-        ? { stroke: getEdgeColor(edge.source, edge.target, activeProject.nodes), strokeWidth: 3, strokeDasharray: '8 8', opacity: getEdgeOpacity(edge.source, edge.target, activeProject.nodes, focusedBranch, focusedStepNodeIds, focusedRouteNodeIds) }
-        : { stroke: getEdgeColor(edge.source, edge.target, activeProject?.nodes ?? []), strokeWidth: 2, opacity: getEdgeOpacity(edge.source, edge.target, activeProject?.nodes ?? [], focusedBranch, focusedStepNodeIds, focusedRouteNodeIds), transition: 'opacity 0.3s ease' },
+      type: 'smoothstep',
+      animated: false,
+      markerEnd: { type: MarkerType.ArrowClosed, color: getEdgeColor(edge.source, edge.target, activeProject?.nodes ?? []) },
+      style: {
+        stroke: getEdgeColor(edge.source, edge.target, activeProject?.nodes ?? []),
+        strokeWidth: 2,
+        opacity: getEdgeOpacity(edge.source, edge.target, activeProject?.nodes ?? [], focusedBranch, focusedStepNodeIds, focusedRouteNodeIds),
+        transition: 'opacity 0.3s ease',
+      },
     }));
 
-    const routeEdges = getRouteEdges(activeProject?.digitalRoute ?? [], isRouteFocusOpen);
+    const routeEdges = getRouteEdges(activeProject?.digitalRoute ?? [], activeProject?.currentRouteIndex ?? 0, isRouteFocusOpen);
     return [...projectEdges, ...routeEdges];
   }, [activeProject, focusedBranch, focusedRouteNodeIds, focusedStepNodeIds, isRouteFocusOpen]);
 
@@ -242,6 +295,10 @@ export default function ProjectCanvas() {
   }, [activeProjectId, removeEdge]);
 
   const handleNodeClick = useCallback<NodeMouseHandler>((_event, node) => {
+    if (node.type === 'branchNode') {
+      const branchKey = (node.data as BranchNodeData).branchKey;
+      if (branchKey) setBranchFocus(branchKey);
+    }
     selectNode(node.id);
   }, [selectNode]);
 
@@ -352,11 +409,11 @@ export default function ProjectCanvas() {
             zoomOnPinch={isMapMovementUnlocked}
             zoomOnDoubleClick={isMapMovementUnlocked}
             preventScrolling={isMapMovementUnlocked}
+            nodesConnectable={false}
             deleteKeyCode={['Backspace', 'Delete']}
-            defaultEdgeOptions={{ type: 'default' }}
+            defaultEdgeOptions={{ type: 'smoothstep' }}
           >
             <Background variant={BackgroundVariant.Dots} gap={28} size={1.2} color="#ddd6ea" />
-            <MiniMap pannable zoomable nodeColor="#c39bd3" maskColor="rgba(250, 247, 255, 0.68)" />
             <Controls showInteractive={false} />
           </ReactFlow>
         </div>
@@ -375,6 +432,24 @@ export default function ProjectCanvas() {
           </span>
         ))}
       </div>
+
+      {branchFocus ? (
+        <aside className="foru-branch-focus-panel">
+          <button type="button" onClick={() => setBranchFocus(null)}>Volver al mapa completo</button>
+          <h2>{baseBranches.find((branch) => branch.key === branchFocus)?.icon} {baseBranches.find((branch) => branch.key === branchFocus)?.title}</h2>
+          <p>{branchStats[branchFocus].pending} pendientes · {branchStats[branchFocus].completed}/{branchStats[branchFocus].total} completadas</p>
+          <div>
+            {freeNodes.filter((node) => node.branchKey === branchFocus).map((node) => (
+              <article key={node.id} className={`is-${getNodeStatus(node)}`}>
+                <span>{node.icon ?? '✅'}</span>
+                <strong>{node.title}</strong>
+                <em>{statusTextByState[getNodeStatus(node)]}</em>
+              </article>
+            ))}
+            {branchStats[branchFocus].total === 0 ? <small>No hay tareas en esta rama todavía.</small> : null}
+          </div>
+        </aside>
+      ) : null}
 
       <button type="button" className="foru-canvas-help" onClick={() => setIsGuideOpen(true)} aria-label="Mostrar guia del mapa">
         ?
@@ -567,9 +642,12 @@ function getNextActionIds(nodes: ForUProjectNode[]) {
   return ids;
 }
 
-function getRouteEdges(route: ForURouteStep[], isRouteFocusOpen: boolean): Edge[] {
+function getRouteEdges(route: ForURouteStep[], currentRouteIndex: number, isRouteFocusOpen: boolean): Edge[] {
   return route.slice(0, -1).map((step, index) => {
     const nextStep = route[index + 1];
+    const isCompleted = Boolean(step.completedAt) || index < currentRouteIndex;
+    const isCurrent = index === currentRouteIndex;
+    const color = isCompleted ? '#58D68D' : isCurrent ? '#F4B400' : '#A8A1B5';
 
     return {
       id: `digital-route-${step.id}-${nextStep.id}`,
@@ -579,9 +657,10 @@ function getRouteEdges(route: ForURouteStep[], isRouteFocusOpen: boolean): Edge[
       animated: true,
       selectable: false,
       deletable: false,
+      markerEnd: { type: MarkerType.ArrowClosed, color },
       style: {
-        stroke: '#F4B400',
-        strokeWidth: isRouteFocusOpen ? 6 : 4,
+        stroke: color,
+        strokeWidth: isCurrent ? 6 : isRouteFocusOpen ? 5 : 3,
         opacity: 1,
         filter: isRouteFocusOpen
           ? 'drop-shadow(0 0 14px rgba(244, 180, 0, 0.82))'
@@ -590,3 +669,9 @@ function getRouteEdges(route: ForURouteStep[], isRouteFocusOpen: boolean): Edge[
     };
   });
 }
+
+const statusTextByState = {
+  done: '✓ Completado',
+  doing: '◷ En progreso',
+  todo: 'Pendiente',
+};
