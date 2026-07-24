@@ -28,6 +28,7 @@ export default function ForUWorkspace() {
   const currentView = useActiveProjectsStore((state) => state.currentView);
   const setView = useActiveProjectsStore((state) => state.setView);
   const panToIsland = useActiveProjectsStore((state) => state.panToIsland);
+  const coins = useActiveProjectsStore((state) => state.coins);
   const dailyStreak = useActiveProjectsStore((state) => state.dailyStreak);
   const checkDailyReward = useActiveProjectsStore((state) => state.checkDailyReward);
 
@@ -114,6 +115,7 @@ export default function ForUWorkspace() {
             </span>
             <div className="foru-shell-metrics">
               <span><Sparkles size={16} /> {rawNotes.length} notas crudas</span>
+              <span>🪙 {coins} monedas</span>
               <span>{activeProject?.name ?? 'sin proyecto'}</span>
             </div>
           </div>

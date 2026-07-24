@@ -148,7 +148,7 @@ type ActiveProjectsState = {
   addCoins: (amount: number) => void;
   checkWeeklyMilestone: () => WeeklyMilestoneResult;
   checkDailyReward: () => DailyRewardStatus;
-  claimDailyReward: (day: number) => boolean;
+  claimDailyReward: (day?: number) => boolean;
   openProject: (input: CreateProjectInput) => string;
   focusProject: (projectId: string) => void;
   closeProject: (projectId: string) => void;
@@ -501,16 +501,18 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
       },
 
       claimDailyReward: (day) => {
-        const reward = dailyRewards[day - 1];
+        const rewardStatus = get().checkDailyReward();
+        const rewardDay = day ?? rewardStatus.currentDay;
+        const reward = dailyRewards[rewardDay - 1];
         if (!reward) return false;
 
         const today = getDayStamp();
         const state = get();
         const continuedStreak = state.lastLoginDate === getPreviousDayStamp();
         const cycleFinished = continuedStreak && state.dailyStreak >= dailyRewards.length;
-        if (state.lastLoginDate === today || (!cycleFinished && state.claimedDays.includes(day))) return false;
+        if (state.lastLoginDate === today || (!cycleFinished && state.claimedDays.includes(rewardDay))) return false;
         const nextStreak = continuedStreak && !cycleFinished ? state.dailyStreak + 1 : 1;
-        const cleanDay = Math.min(day, dailyRewards.length);
+        const cleanDay = Math.min(rewardDay, dailyRewards.length);
 
         set({
           coins: state.coins + reward,

@@ -5329,13 +5329,29 @@ body {
 }
 
 .foru-daily-reward-days {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.7rem;
   margin: 1.25rem 0;
 }
 
+.foru-daily-reward-days::before {
+  content: '';
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  top: 50%;
+  height: 0.22rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(244, 208, 63, 0.72), rgba(249, 168, 212, 0.42), rgba(118, 215, 196, 0.58));
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
 .foru-daily-reward-days article {
+  position: relative;
+  z-index: 1;
   min-height: 8.5rem;
   display: grid;
   place-items: center;
@@ -5412,6 +5428,17 @@ body {
   opacity: 0.6;
 }
 
+.foru-daily-reward-close {
+  display: block;
+  width: fit-content !important;
+  min-height: auto !important;
+  margin: 0.75rem auto 0;
+  padding: 0.45rem 0.9rem !important;
+  color: #766d82 !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  box-shadow: none !important;
+}
+
 .foru-coin-rain {
   position: absolute;
   inset: 0;
@@ -5455,11 +5482,14 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 0.46rem;
-  height: 0.46rem;
+  width: 0.5rem;
+  height: 0.5rem;
   border-radius: 999px;
-  background: #F4D03F;
-  animation: foru-reward-particle 0.72s ease-out both;
+  background:
+    radial-gradient(circle at 30% 25%, #ffffff, transparent 32%),
+    hsl(calc(42 + var(--particle-index) * 18), 82%, 68%);
+  box-shadow: 0 0 16px rgba(244, 208, 63, 0.42);
+  animation: foru-reward-particle 1.08s ease-out both;
   animation-delay: calc(var(--particle-index) * 18ms);
 }
 
@@ -6562,6 +6592,40 @@ body {
   box-shadow: 0 16px 36px rgba(244, 180, 0, 0.13);
 }
 
+.foru-kanban-card.is-disintegrating {
+  position: relative;
+  overflow: visible;
+  animation: foru-card-complete-pop 0.72s ease-out both;
+}
+
+.foru-kanban-card.is-disintegrating::before,
+.foru-kanban-card.is-disintegrating::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  pointer-events: none;
+  background: #F4D03F;
+  box-shadow:
+    -2.2rem -0.8rem 0 #F9A8D4,
+    -1.4rem 1.3rem 0 #76D7C4,
+    -0.4rem -1.8rem 0 #F4D03F,
+    0.8rem 1.6rem 0 #E8DAEF,
+    1.8rem -0.9rem 0 #F8C471,
+    2.4rem 0.8rem 0 #D5F5E3;
+  animation: foru-card-particles 0.78s ease-out both;
+}
+
+.foru-kanban-card.is-disintegrating::after {
+  width: 0.36rem;
+  height: 0.36rem;
+  animation-delay: 0.06s;
+  transform: rotate(35deg);
+}
+
 .foru-kanban-card strong {
   display: block;
   color: #2b2435;
@@ -6785,10 +6849,36 @@ body {
     opacity: 0;
     transform:
       translate(
-        calc(-50% + (var(--particle-index) - 5) * 0.45rem),
-        calc(-50% - 2.4rem + (var(--particle-index) % 3) * 0.35rem)
+        calc(-50% + (var(--particle-index) - 9) * 0.42rem),
+        calc(-50% - 3rem + (var(--particle-index) % 5) * 0.42rem)
       )
       scale(0.45);
+  }
+}
+
+@keyframes foru-card-complete-pop {
+  0% {
+    transform: scale(1);
+    filter: saturate(1);
+  }
+  38% {
+    transform: scale(1.035);
+    filter: saturate(1.45) brightness(1.05);
+  }
+  100% {
+    transform: scale(1);
+    filter: saturate(1);
+  }
+}
+
+@keyframes foru-card-particles {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -165%) scale(1.25) rotate(22deg);
   }
 }
 

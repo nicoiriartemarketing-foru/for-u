@@ -255,7 +255,7 @@ export default function ProjectCanvas() {
 
   function showRewardBurst(x: number, y: number, coins = 20, xp = 50) {
     setRewardBurst({ id: `${Date.now()}-${Math.random()}`, x, y, coins, xp });
-    window.setTimeout(() => setRewardBurst(null), 1100);
+    window.setTimeout(() => setRewardBurst(null), 1600);
   }
 
   function completeCurrentRouteStep(event: MouseEvent<HTMLButtonElement>) {

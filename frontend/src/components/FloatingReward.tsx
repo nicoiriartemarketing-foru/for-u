@@ -22,11 +22,11 @@ export default function FloatingReward({ burst }: FloatingRewardProps) {
           className="foru-floating-reward"
           style={{ left: burst.x, top: burst.y }}
           initial={{ opacity: 0, y: 8, scale: 0.82 }}
-          animate={{ opacity: 1, y: -46, scale: 1 }}
-          exit={{ opacity: 0, y: -76, scale: 0.9 }}
-          transition={{ type: 'spring', stiffness: 360, damping: 24 }}
+          animate={{ opacity: [0, 1, 1, 0], y: [8, -16, -36, -58], scale: [0.82, 1.08, 1, 0.96] }}
+          exit={{ opacity: 0, y: -66, scale: 0.9 }}
+          transition={{ duration: 1.5, times: [0, 0.16, 0.72, 1], ease: 'easeOut' }}
         >
-          {Array.from({ length: 10 }).map((_, index) => (
+          {Array.from({ length: 18 }).map((_, index) => (
             <i key={index} style={{ '--particle-index': index } as CSSProperties} />
           ))}
           {burst.coins ? <strong>+{burst.coins} 🪙</strong> : null}

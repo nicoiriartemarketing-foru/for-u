@@ -20,6 +20,7 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
   const [isRoutePathOpen, setIsRoutePathOpen] = useState(false);
   const [isStepFocusOpen, setIsStepFocusOpen] = useState(false);
   const [rewardBurst, setRewardBurst] = useState<FloatingRewardBurst | null>(null);
+  const [completingCardKey, setCompletingCardKey] = useState<string | null>(null);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const activeProjectIds = useActiveProjectsStore((state) => state.activeProjectIds);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
@@ -51,7 +52,7 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
 
   function showRewardBurst(x: number, y: number, coins = 20, xp = 0) {
     setRewardBurst({ id: `${Date.now()}-${Math.random()}`, x, y, coins, xp });
-    window.setTimeout(() => setRewardBurst(null), 1100);
+    window.setTimeout(() => setRewardBurst(null), 1600);
   }
 
   function moveCard(projectId: string, node: ForUProjectNode, status: ForUTaskStatus, point?: { x: number; y: number }) {
@@ -63,7 +64,9 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
     });
 
     if (status === 'done' && !wasCompleted && point) {
+      setCompletingCardKey(`${projectId}-${node.id}`);
       showRewardBurst(point.x, point.y, 20, 0);
+      window.setTimeout(() => setCompletingCardKey(null), 900);
     }
   }
 
@@ -170,7 +173,7 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
                   return (
                     <article
                       key={`${projectId}-${node.id}`}
-                      className={`foru-kanban-card is-${node.priority ?? 'low'} ${belongsToFocusedStep ? 'is-step-current' : 'is-step-muted'}`}
+                      className={`foru-kanban-card is-${node.priority ?? 'low'} ${belongsToFocusedStep ? 'is-step-current' : 'is-step-muted'} ${completingCardKey === `${projectId}-${node.id}` ? 'is-disintegrating' : ''}`}
                       draggable
                       onDragStart={(event) => {
                         event.dataTransfer.setData('application/foru-node', JSON.stringify({ projectId, nodeId: node.id }));

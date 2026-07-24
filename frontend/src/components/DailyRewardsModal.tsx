@@ -9,11 +9,13 @@ type DailyRewardsModalProps = {
 
 export default function DailyRewardsModal({ isOpen, onClose }: DailyRewardsModalProps) {
   const [isClaiming, setIsClaiming] = useState(false);
+  const coins = useActiveProjectsStore((state) => state.coins);
+  const lastLoginDate = useActiveProjectsStore((state) => state.lastLoginDate);
   const dailyStreak = useActiveProjectsStore((state) => state.dailyStreak);
   const claimedDays = useActiveProjectsStore((state) => state.claimedDays);
   const checkDailyReward = useActiveProjectsStore((state) => state.checkDailyReward);
   const claimDailyReward = useActiveProjectsStore((state) => state.claimDailyReward);
-  const rewardStatus = useMemo(() => checkDailyReward(), [checkDailyReward, dailyStreak, claimedDays]);
+  const rewardStatus = useMemo(() => checkDailyReward(), [checkDailyReward, dailyStreak, claimedDays, lastLoginDate]);
 
   useEffect(() => {
     if (!isOpen) setIsClaiming(false);
@@ -22,7 +24,7 @@ export default function DailyRewardsModal({ isOpen, onClose }: DailyRewardsModal
   function claim() {
     if (isClaiming) return;
 
-    const claimed = claimDailyReward(rewardStatus.currentDay);
+    const claimed = claimDailyReward();
     if (!claimed) {
       onClose();
       return;
@@ -54,7 +56,7 @@ export default function DailyRewardsModal({ isOpen, onClose }: DailyRewardsModal
           >
             {isClaiming ? <CoinRain /> : null}
             <header>
-              <span>🔥 Racha diaria</span>
+              <span>🔥 Racha diaria · {coins} monedas</span>
               <h2 id="daily-reward-title">Tu regalo de hoy está listo</h2>
               <p>Vuelve cada día para mantener tu racha y desbloquear más monedas.</p>
             </header>
@@ -70,14 +72,17 @@ export default function DailyRewardsModal({ isOpen, onClose }: DailyRewardsModal
                   <article key={day} className={`${isPast ? 'is-claimed' : ''} ${isCurrent ? 'is-current' : ''} ${isFuture ? 'is-future' : ''}`}>
                     <small>Día {day}</small>
                     <strong>{isPast ? '✓' : '🪙'}</strong>
-                    <span>{reward}</span>
+                    <span>{reward} 🪙{day === 5 ? ' + 🎁' : ''}</span>
                   </article>
                 );
               })}
             </div>
 
             <button type="button" onClick={claim} disabled={isClaiming || !rewardStatus.shouldShow}>
-              {isClaiming ? 'Reclamando...' : `Reclamar ${rewardStatus.reward} monedas`}
+              {isClaiming ? 'Reclamando...' : rewardStatus.shouldShow ? `Reclamar ${rewardStatus.reward} monedas` : 'Ya reclamaste hoy ✓'}
+            </button>
+            <button type="button" className="foru-daily-reward-close" onClick={onClose}>
+              Cerrar
             </button>
           </motion.section>
         </motion.div>
