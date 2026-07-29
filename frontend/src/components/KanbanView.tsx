@@ -1,7 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { MouseEvent } from 'react';
 import toast from 'react-hot-toast';
-import DigitalRoutePath from './DigitalRoutePath';
 import FloatingReward, { type FloatingRewardBurst } from './FloatingReward';
 import { baseBranches, type ForUTaskStatus, type ForUProjectNode, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
@@ -10,9 +8,9 @@ type KanbanViewProps = {
 };
 
 const columns: Array<{ key: ForUTaskStatus; title: string }> = [
-  { key: 'todo', title: 'To Do' },
-  { key: 'doing', title: 'Doing' },
-  { key: 'done', title: 'Done' },
+  { key: 'todo', title: 'Por hacer' },
+  { key: 'doing', title: 'En proceso' },
+  { key: 'done', title: 'Hecho' },
 ];
 
 const DUST_THRESHOLD_MS = 48 * 60 * 60 * 1000;
@@ -25,8 +23,6 @@ function isDustyNode(node: ForUProjectNode) {
 
 export default function KanbanView({ includeAllProjectsDefault = false }: KanbanViewProps) {
   const [includeAllProjects, setIncludeAllProjects] = useState(includeAllProjectsDefault);
-  const [isRoutePathOpen, setIsRoutePathOpen] = useState(false);
-  const [isStepFocusOpen, setIsStepFocusOpen] = useState(false);
   const [rewardBurst, setRewardBurst] = useState<FloatingRewardBurst | null>(null);
   const [completingCardKey, setCompletingCardKey] = useState<string | null>(null);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
@@ -34,19 +30,10 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
   const updateNode = useActiveProjectsStore((state) => state.updateNode);
   const selectNode = useActiveProjectsStore((state) => state.selectNode);
-  const completeRouteStep = useActiveProjectsStore((state) => state.completeRouteStep);
   const addCoins = useActiveProjectsStore((state) => state.addCoins);
   const openIdeaJar = useActiveProjectsStore((state) => state.openIdeaJar);
   const addFreeNodeToBranch = useActiveProjectsStore((state) => state.addFreeNodeToBranch);
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
-  const focusedStepNodeIds = useMemo(() => {
-    if (!isStepFocusOpen || !activeProject?.digitalRoute.length) return null;
-
-    const currentStep = activeProject.digitalRoute[activeProject.currentRouteIndex];
-    if (!currentStep) return null;
-
-    return getStepNodeIds(activeProject.nodes, currentStep.linkedNodeId);
-  }, [activeProject?.currentRouteIndex, activeProject?.digitalRoute, activeProject?.nodes, isStepFocusOpen]);
 
   const cards = useMemo(() => {
     const projectIds = includeAllProjects ? activeProjectIds : activeProjectId ? [activeProjectId] : [];
@@ -85,18 +72,6 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
     }
   }
 
-  function completeCurrentRouteStep(event?: MouseEvent<HTMLButtonElement>) {
-    if (!activeProjectId) return;
-
-    const didAdvance = completeRouteStep(activeProjectId);
-    if (didAdvance) {
-      toast.success('¡Ruta Avanzada! +50 XP');
-      showRewardBurst(event?.clientX ?? window.innerWidth / 2, event?.clientY ?? 180, 20, 50);
-    } else {
-      toast('La Ruta Digital ya está completa.');
-    }
-  }
-
   function createFirstKanbanTask() {
     if (!activeProjectId) return;
 
@@ -115,23 +90,13 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
     <section className="foru-kanban-view" aria-label="Vista Kanban">
       <header className="foru-view-header">
         <div>
-          <span>Kanban</span>
-          <h1>Qué va, qué está andando, qué ya salió</h1>
+          <span>{activeProject?.name ?? 'Proyecto'}</span>
+          <h1>Aquí tienes todas tus tareas, Nicole.</h1>
+          <p>Sin juicio: solo vemos qué está por hacer, qué está andando y qué ya salió.</p>
         </div>
         <div className="foru-view-header-actions">
-          <button type="button" onClick={() => setIsRoutePathOpen((current) => !current)}>
-            {isRoutePathOpen ? 'Ver como Kanban' : '🗺️ Ver como Camino'}
-          </button>
-          <button
-            type="button"
-            className={isStepFocusOpen ? 'is-active' : ''}
-            onClick={() => setIsStepFocusOpen((current) => !current)}
-            disabled={!activeProject?.digitalRoute.length}
-          >
-            {isStepFocusOpen ? 'Salir del Enfoque' : '🔍 Enfocar Paso Actual'}
-          </button>
           <button type="button" onClick={() => setIncludeAllProjects((current) => !current)}>
-            {includeAllProjects ? 'Solo proyecto actual' : 'Todos los proyectos'}
+            {includeAllProjects ? 'Ver solo este proyecto' : 'Ver todos'}
           </button>
         </div>
       </header>
@@ -145,41 +110,6 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
             <button type="button" onClick={createFirstKanbanTask}>Agregar tarea manualmente</button>
             <button type="button" onClick={openIdeaJar}>✨ Echar ideas al frasco</button>
           </div>
-        </section>
-      ) : null}
-
-      {cards.length > 0 && isRoutePathOpen ? (
-        <DigitalRoutePath project={activeProject} onCompleteStep={completeCurrentRouteStep} />
-      ) : cards.length > 0 ? (
-        <section className="foru-digital-route" aria-label="Tu Ruta Digital">
-          <div className="foru-digital-route-header">
-            <div>
-              <span>🗺️ Tu Ruta Digital</span>
-              <h2>Misión principal</h2>
-            </div>
-            <button type="button" onClick={completeCurrentRouteStep} disabled={!activeProject?.digitalRoute.length || activeProject.currentRouteIndex >= activeProject.digitalRoute.length}>
-              Completar Paso
-            </button>
-          </div>
-
-          {activeProject?.digitalRoute.length ? (
-            <div className="foru-digital-route-steps">
-              {activeProject.digitalRoute.map((step, index) => {
-                const isDone = Boolean(step.completedAt) || index < activeProject.currentRouteIndex;
-                const isCurrent = index === activeProject.currentRouteIndex && !isDone;
-
-                return (
-                  <article key={step.id} className={`${isDone ? 'is-done' : ''} ${isCurrent ? 'is-current' : ''}`}>
-                    <span>{isDone ? '✓' : index + 1}</span>
-                    <strong>{step.title}</strong>
-                    <small>{isDone ? 'Completado' : isCurrent ? 'Paso actual' : 'Próximo'}</small>
-                  </article>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="foru-digital-route-empty">Procesa ideas desde el Frasco para que la IA trace tu misión principal.</p>
-          )}
         </section>
       ) : null}
 
@@ -209,13 +139,12 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
               <div className="foru-kanban-cards">
                 {columnCards.map(({ projectId, projectName, node }) => {
                   const branch = baseBranches.find((item) => item.key === node.branchKey);
-                  const belongsToFocusedStep = !focusedStepNodeIds || (projectId === activeProjectId && focusedStepNodeIds.has(node.id));
                   const isDusty = isDustyNode(node);
 
                   return (
                     <article
                       key={`${projectId}-${node.id}`}
-                      className={`foru-kanban-card is-${node.priority ?? 'low'} ${belongsToFocusedStep ? 'is-step-current' : 'is-step-muted'} ${isDusty ? 'is-dusty-card' : ''} ${completingCardKey === `${projectId}-${node.id}` ? 'is-disintegrating' : ''}`}
+                      className={`foru-kanban-card is-${node.priority ?? 'low'} ${isDusty ? 'is-dusty-card' : ''} ${completingCardKey === `${projectId}-${node.id}` ? 'is-disintegrating' : ''}`}
                       draggable
                       onDragStart={(event) => {
                         event.dataTransfer.setData('application/foru-node', JSON.stringify({ projectId, nodeId: node.id }));
@@ -224,7 +153,7 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
                     >
                       <div>
                         <strong>{node.title}</strong>
-                        <small>{includeAllProjects ? projectName : branch?.title ?? 'Sin rama'}</small>
+                        <small>{estimateNodeMinutes(node)} min · {includeAllProjects ? projectName : branch?.title ?? 'Proyecto'}</small>
                       </div>
                       <span>{priorityLabel[node.priority ?? 'low']}</span>
                       {isDusty ? <span className="foru-dusty-card-badge">Polvo</span> : null}
@@ -248,17 +177,15 @@ function getNodeStatus(node: ForUProjectNode): ForUTaskStatus {
   return 'todo';
 }
 
-function getStepNodeIds(nodes: ForUProjectNode[], linkedNodeId: string) {
-  const ids = new Set<string>([linkedNodeId]);
-  nodes
-    .filter((node) => node.parentNodeId === linkedNodeId)
-    .forEach((node) => ids.add(node.id));
-
-  return ids;
-}
-
 const priorityLabel = {
   high: 'Alta',
   medium: 'Media',
   low: 'Baja',
 };
+
+function estimateNodeMinutes(node: ForUProjectNode) {
+  if (node.subtasks?.length) return 15;
+  if (node.priority === 'high') return 15;
+  if (node.title.length > 72) return 20;
+  return 10;
+}

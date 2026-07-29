@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Float, Text } from '@react-three/drei';
+import { Float } from '@react-three/drei';
 import { Shape, type Group, type Mesh } from 'three';
 
 const clayMaterial = {
@@ -50,16 +50,18 @@ export default function Sailboat() {
             <shapeGeometry args={[createTriangularSailShape()]} />
             <meshPhysicalMaterial color="#ffffff" side={2} roughness={0.7} metalness={0.05} clearcoat={0.22} />
           </mesh>
-          <Text
-            position={[0.29, 0.73, 0.06]}
-            rotation={[0, -0.02, -0.18]}
-            fontSize={0.16}
-            color="#333333"
-            anchorX="center"
-            anchorY="middle"
-          >
-            😊
-          </Text>
+          <mesh position={[0.22, 1.25, 0]} castShadow>
+            <boxGeometry args={[0.28, 0.18, 0.035]} />
+            <meshPhysicalMaterial color="#FFD1DC" roughness={0.78} metalness={0.04} clearcoat={0.2} />
+          </mesh>
+          <mesh position={[0.12, 1.25, 0.03]} castShadow>
+            <sphereGeometry args={[0.025, 8, 6]} />
+            <meshStandardMaterial color="#4A4A4A" />
+          </mesh>
+          <mesh position={[0.26, 1.25, 0.03]} castShadow>
+            <sphereGeometry args={[0.025, 8, 6]} />
+            <meshStandardMaterial color="#4A4A4A" />
+          </mesh>
           <group ref={wakeRef} position={[-0.66, -0.04, 0]}>
             {[
               [-0.1, 0, -0.18],

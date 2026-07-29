@@ -1,5 +1,6 @@
 import { create, type StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { supabase } from '../lib/supabaseClient';
 
 export type ForUProjectStatus = 'active' | 'paused' | 'blocked' | 'completed';
 export type ForUTaskStatus = 'todo' | 'doing' | 'done';
@@ -11,6 +12,23 @@ export type ForURawNoteKind = 'text' | 'audio' | 'photo';
 export type ForUWorldViewLevel = 'archipelago' | 'exterior' | 'interior';
 export type ForUWorkspaceView = 'map' | 'kanban' | 'gantt' | 'archipelago' | 'dashboard';
 export type ForUProjectGuideState = 'empty' | 'raw' | 'organized' | 'planned' | 'active' | 'completed';
+export type ForUUserPlan = 'free' | 'pro' | 'premium';
+export type ForUFeelingType = 'freedom' | 'peace' | 'pride' | 'creativity' | 'abundance' | 'connection' | 'confidence' | 'joy';
+export type ForUMoodType = 'creative' | 'calm' | 'proud' | 'overwhelmed' | 'tired' | 'hopeful' | 'anxious' | 'grateful';
+export type ForUPlanFeatures = {
+  world3D: boolean;
+  aiAdvanced: boolean;
+  kanban: boolean;
+  stats: boolean;
+  teams?: boolean;
+  templates?: boolean;
+  integrations?: boolean;
+};
+export type ForUPlanLimitNotice = {
+  title: string;
+  message: string;
+  feature: keyof ForUPlanFeatures | 'projects' | 'actions';
+} | null;
 
 export type ForUArchipelagoOffset = {
   x: number;
@@ -36,6 +54,7 @@ export type ForUProjectNode = {
   icon?: string;
   description?: string;
   priority?: ForUNodePriority;
+  feelingType?: ForUFeelingType;
   subtasks?: string[];
   reasoning?: string;
   parentNodeId?: string;
@@ -66,6 +85,8 @@ export type ForURouteStep = {
 export type ForUActiveProject = {
   id: string;
   name: string;
+  tangibleGoal?: string;
+  targetFeelings: ForUFeelingType[];
   status: ForUProjectStatus;
   tasks: ForUTask[];
   nodes: ForUProjectNode[];
@@ -74,6 +95,24 @@ export type ForUActiveProject = {
   currentRouteIndex: number;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ForUDailyMood = {
+  id: string;
+  userId: string | null;
+  date: string;
+  mood: ForUMoodType;
+  notes?: string;
+  createdAt: string;
+};
+
+export type ForURewiringHabit = {
+  id: string;
+  userId: string | null;
+  date: string;
+  habit: string;
+  completed: boolean;
+  createdAt: string;
 };
 
 export type ForURawNote = {
@@ -89,6 +128,8 @@ export type ForURawNote = {
 type CreateProjectInput = {
   name: string;
   status?: ForUProjectStatus;
+  tangibleGoal?: string;
+  targetFeelings?: ForUFeelingType[];
 };
 
 type CreateRawNoteInput = {
@@ -112,6 +153,18 @@ export type DailyRewardStatus = {
   reward: number;
 };
 
+export type ForUNextAction = {
+  id: string;
+  projectId: string;
+  sourceNodeId?: string;
+  title: string;
+  description: string;
+  estimatedMinutes: number;
+  rewardCoins: number;
+  priority: ForUNodePriority;
+  isFallback: boolean;
+};
+
 type ActiveProjectsState = {
   activeProjectIds: string[];
   activeProjectId: string | null;
@@ -131,13 +184,48 @@ type ActiveProjectsState = {
   xpToNextLevel: number;
   coins: number;
   weeklyMilestoneProgress: number;
+  userPlan: ForUUserPlan;
+  maxProjects: number;
+  maxActionsPerMonth: number;
+  actionsThisMonth: number;
+  actionsMonthStamp: string;
+  dailyMoods: ForUDailyMood[];
+  rewiringHabits: Record<string, ForURewiringHabit>;
+  features: ForUPlanFeatures;
+  planLimitNotice: ForUPlanLimitNotice;
   lastLoginDate: string | null;
   dailyStreak: number;
   claimedDays: number[];
+  whatsappNumber: string;
+  whatsappEnabled: boolean;
+  cloudUserId: string | null;
+  isCloudSyncing: boolean;
+  hydrateFromSupabase: (userId: string) => Promise<void>;
+  clearCloudUser: () => void;
+  updateWhatsappSettings: (input: { whatsappNumber: string; whatsappEnabled: boolean }) => Promise<boolean>;
+  setUserPlan: (plan: ForUUserPlan) => void;
+  canUseFeature: (feature: keyof ForUPlanFeatures) => boolean;
+  clearPlanLimitNotice: () => void;
   getAllProjects: () => ForUActiveProject[];
   getActiveProjects: () => ForUActiveProject[];
   getProjectById: (projectId: string) => ForUActiveProject | null;
   getProjectState: (projectId: string) => ForUProjectGuideState;
+  getGuidedExecutionTasks: (projectId: string) => ForUProjectNode[];
+  getGuidedExecutionCompletedCount: (projectId: string) => number;
+  completeGuidedExecutionTask: (projectId: string, nodeId: string) => boolean;
+  getNextAction: (projectId: string) => ForUNextAction | null;
+  getPersonalDashboardProjects: () => Array<{ project: ForUActiveProject; nextAction: ForUNextAction | null; pendingCount: number }>;
+  generateNextAction: (projectId: string) => ForUNextAction | null;
+  completeNextAction: (projectId: string, actionId: string) => boolean;
+  setProjectEmotionalOnboarding: (projectId: string, input: { tangibleGoal: string; targetFeelings: ForUFeelingType[] }) => Promise<boolean>;
+  getProjectPrimaryFeeling: (projectId: string) => ForUFeelingType | null;
+  getFeelingProgress: (projectId: string, feeling: ForUFeelingType) => number;
+  addDailyMood: (input: { mood: ForUMoodType; notes?: string }) => Promise<boolean>;
+  getMoodPatternSummary: () => string;
+  getTodayHabit: (projectId?: string | null) => ForURewiringHabit;
+  completeTodayHabit: () => Promise<boolean>;
+  backgroundOrganizeText: (projectId: string, text: string) => Promise<ForUNextAction | null>;
+  getProjectProgress: (projectId: string) => number;
   getDustyNodes: () => ForUProjectNode[];
   clearLastCreatedProject: () => void;
   switchProject: (projectId: string) => void;
@@ -204,18 +292,434 @@ const DUST_THRESHOLD_MS = 48 * 60 * 60 * 1000;
 const WEEKLY_MILESTONE_GOAL = 5;
 export const dailyRewards = [10, 20, 50, 50, 100] as const;
 
+export const feelingLabels: Record<ForUFeelingType, { label: string; icon: string }> = {
+  freedom: { label: 'Libertad creativa', icon: '🕊️' },
+  peace: { label: 'Paz', icon: '💚' },
+  pride: { label: 'Orgullo', icon: '🏛️' },
+  creativity: { label: 'Creatividad', icon: '🎨' },
+  abundance: { label: 'Abundancia', icon: '💰' },
+  connection: { label: 'Conexión', icon: '🤝' },
+  confidence: { label: 'Confianza', icon: '🧭' },
+  joy: { label: 'Alegría', icon: '✨' },
+};
+
+export const moodLabels: Record<ForUMoodType, { label: string; icon: string }> = {
+  creative: { label: 'Creativa', icon: '🎨' },
+  calm: { label: 'Tranquila', icon: '💚' },
+  proud: { label: 'Orgullosa', icon: '🏛️' },
+  overwhelmed: { label: 'Abrumada', icon: '🌊' },
+  tired: { label: 'Cansada', icon: '🌙' },
+  hopeful: { label: 'Esperanzada', icon: '🌤️' },
+  anxious: { label: 'Ansiosa', icon: '🫧' },
+  grateful: { label: 'Agradecida', icon: '🤍' },
+};
+
+const rewiringHabitTemplates: Record<ForUFeelingType, string[]> = {
+  freedom: [
+    'Antes de empezar, respira 3 veces y di: "Estoy eligiendo crear".',
+    'Elige una sola acción que te dé más espacio mental hoy.',
+  ],
+  peace: [
+    'Pon una mano en el pecho, respira lento y baja el ritmo antes de abrir tareas.',
+    'Cierra una pestaña física o mental antes de avanzar.',
+  ],
+  pride: [
+    'Anota una victoria pequeña antes de empezar. Tu cerebro necesita evidencia.',
+    'Al terminar, di en voz alta: "Esto cuenta".',
+  ],
+  creativity: [
+    'Haz un boceto feo de 2 minutos antes de buscar perfección.',
+    'Escribe 3 posibilidades sin juzgar antes de elegir.',
+  ],
+  abundance: [
+    'Antes de trabajar, nombra una oportunidad que ya existe.',
+    'Anota un número simple: costo, precio o siguiente venta posible.',
+  ],
+  connection: [
+    'Piensa en una persona real que se beneficia si avanzas esto.',
+    'Envía un mensaje amable o pide una cosa concreta.',
+  ],
+  confidence: [
+    'Divide la tarea en el primer movimiento visible. Solo ese.',
+    'Recuerda una vez en la que sí resolviste algo difícil.',
+  ],
+  joy: [
+    'Pon una canción suave y celebra empezar, no solo terminar.',
+    'Elige una micro-recompensa antes de hacer la tarea.',
+  ],
+};
+
+type SupabaseProjectRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  tangible_goal: string | null;
+  status: ForUProjectStatus;
+  created_at: string;
+};
+
+type SupabaseProfileRow = {
+  id: string;
+  email: string;
+  display_name: string | null;
+  plan: ForUUserPlan;
+  streak: number;
+  coins: number;
+  whatsapp_number: string | null;
+  whatsapp_enabled: boolean | null;
+  created_at: string;
+};
+
+type SupabaseTaskRow = {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  status: ForUTaskStatus;
+  priority: ForUNodePriority;
+  estimated_time: number | null;
+  feeling_type?: ForUFeelingType | null;
+  completed_at: string | null;
+  created_at?: string;
+};
+
+type SupabaseIdeaRow = {
+  id: string;
+  project_id: string;
+  content: string;
+  created_at: string;
+};
+
+type SupabaseProjectFeelingRow = {
+  project_id: string;
+  feeling_type: ForUFeelingType;
+  created_at: string;
+};
+
+type SupabaseDailyMoodRow = {
+  id: string;
+  user_id: string;
+  date: string;
+  mood: ForUMoodType;
+  notes: string | null;
+  created_at: string;
+};
+
+type SupabaseRewiringHabitRow = {
+  id: string;
+  user_id: string;
+  date: string;
+  habit: string;
+  completed: boolean;
+  created_at: string;
+};
+
+export const planConfigs: Record<ForUUserPlan, {
+  label: string;
+  maxProjects: number;
+  maxActionsPerMonth: number;
+  features: ForUPlanFeatures;
+}> = {
+  free: {
+    label: 'Gratis',
+    maxProjects: 1,
+    maxActionsPerMonth: 5,
+    features: {
+      world3D: false,
+      aiAdvanced: false,
+      kanban: false,
+      stats: false,
+    },
+  },
+  pro: {
+    label: 'Pro',
+    maxProjects: Number.POSITIVE_INFINITY,
+    maxActionsPerMonth: Number.POSITIVE_INFINITY,
+    features: {
+      world3D: true,
+      aiAdvanced: true,
+      kanban: true,
+      stats: true,
+    },
+  },
+  premium: {
+    label: 'Premium',
+    maxProjects: Number.POSITIVE_INFINITY,
+    maxActionsPerMonth: Number.POSITIVE_INFINITY,
+    features: {
+      world3D: true,
+      aiAdvanced: true,
+      kanban: true,
+      stats: true,
+      teams: true,
+      templates: true,
+      integrations: true,
+    },
+  },
+};
+
 function getProjectOrder(state: Pick<ActiveProjectsState, 'activeProjectIds' | 'projectsById'>) {
   return Array.from(new Set([...(state.activeProjectIds ?? []), ...Object.keys(state.projectsById ?? {})]));
+}
+
+function canSyncCloud(userId?: string | null) {
+  return Boolean(supabase && userId);
+}
+
+function getBranchPosition(branchKey: ForUBranchKey, index: number) {
+  const branch = baseBranches.find((item) => item.key === branchKey) ?? baseBranches[0];
+  const ring = Math.floor(index / 3);
+  const slot = index % 3;
+
+  return {
+    x: branch.x + 190 + slot * 54,
+    y: branch.y + (slot - 1) * 74 + ring * 96,
+  };
+}
+
+async function upsertCloudProject(userId: string | null, project: ForUActiveProject) {
+  if (!canSyncCloud(userId) || !supabase) return;
+
+  await supabase.from('projects').upsert({
+    id: project.id,
+    user_id: userId,
+    name: project.name,
+    description: '',
+    tangible_goal: project.tangibleGoal ?? '',
+    status: project.status,
+    created_at: project.createdAt,
+  });
+}
+
+async function deleteCloudProject(userId: string | null, projectId: string) {
+  if (!canSyncCloud(userId) || !supabase) return;
+
+  await supabase.from('projects').delete().eq('id', projectId).eq('user_id', userId);
+}
+
+async function updateCloudProfile(
+  userId: string | null,
+  patch: Partial<Pick<SupabaseProfileRow, 'plan' | 'streak' | 'coins' | 'whatsapp_number' | 'whatsapp_enabled'>>,
+) {
+  if (!canSyncCloud(userId) || !supabase) return;
+
+  await supabase.from('profiles').update(patch).eq('id', userId);
+}
+
+function nodeToCloudTask(projectId: string, node: ForUProjectNode): SupabaseTaskRow | null {
+  if (node.role !== 'free' || node.branchKey === 'ideas' || node.branchKey === 'resources') return null;
+
+  return {
+    id: node.id,
+    project_id: projectId,
+    title: node.title,
+    description: node.description ?? null,
+    status: node.taskStatus ?? (node.completedAt ? 'done' : 'todo'),
+    priority: node.priority ?? 'medium',
+    estimated_time: estimateActionMinutes(node),
+    feeling_type: node.feelingType ?? null,
+    completed_at: node.completedAt ?? null,
+    created_at: node.createdAt,
+  };
+}
+
+async function upsertCloudTask(userId: string | null, projectId: string, node: ForUProjectNode) {
+  if (!canSyncCloud(userId) || !supabase) return;
+  const task = nodeToCloudTask(projectId, node);
+  if (!task) return;
+
+  await supabase.from('tasks').upsert(task);
+}
+
+async function upsertCloudIdea(userId: string | null, note: ForURawNote) {
+  if (!canSyncCloud(userId) || !supabase || !note.projectId) return;
+
+  await supabase.from('ideas').upsert({
+    id: note.id,
+    project_id: note.projectId,
+    content: note.content,
+    created_at: note.createdAt,
+  });
 }
 
 function getDayStamp(date = new Date()) {
   return date.toISOString().slice(0, 10);
 }
 
+function getMonthStamp(date = new Date()) {
+  return date.toISOString().slice(0, 7);
+}
+
+function getPlanConfig(plan: ForUUserPlan) {
+  return planConfigs[plan] ?? planConfigs.free;
+}
+
 function getPreviousDayStamp(date = new Date()) {
   const previous = new Date(date);
   previous.setDate(previous.getDate() - 1);
   return getDayStamp(previous);
+}
+
+function getConcreteActionTitle(node: Pick<ForUProjectNode, 'title' | 'description' | 'branchKey'>) {
+  const title = node.title.trim();
+  const lowerTitle = title.toLowerCase();
+  const abstractWords = ['aclarar', 'idea', 'definir', 'pensar', 'concepto', 'estrategia', 'planear'];
+  const isAbstract = abstractWords.some((word) => lowerTitle.includes(word));
+
+  if (!isAbstract) return title;
+
+  if (node.branchKey === 'marketing') return 'Escribe 3 ideas de contenido para publicar esta semana';
+  if (node.branchKey === 'finances') return 'Anota 3 numeros clave: costo, precio y presupuesto disponible';
+  if (node.branchKey === 'resources') return 'Guarda 2 enlaces o archivos que te ayuden a avanzar';
+  if (node.branchKey === 'actions') return 'Escribe en 1 frase el resultado que quieres lograr hoy';
+
+  return 'Escribe en 1 frase que quieres lograr con esta idea';
+}
+
+function estimateActionMinutes(node?: Pick<ForUProjectNode, 'priority' | 'title' | 'subtasks'>) {
+  if (!node) return 5;
+  if (node.subtasks && node.subtasks.length > 0) return 15;
+  if (node.priority === 'high') return 15;
+  if (node.title.length > 72) return 20;
+  return 15;
+}
+
+function getPriorityWeight(priority?: ForUNodePriority) {
+  if (priority === 'high') return 0;
+  if (priority === 'medium') return 1;
+  return 2;
+}
+
+function getRawIdeaText(project: ForUActiveProject, rawNotes: ForURawNote[] = []) {
+  const rawText = rawNotes
+    .filter((note) => !note.processedAt && (note.projectId === project.id || note.projectId === null))
+    .map((note) => note.content)
+    .join(' ');
+  const ideaText = project.nodes
+    .filter((node) => node.role === 'free' && node.branchKey === 'ideas' && !node.completedAt)
+    .map((node) => `${node.title} ${node.description ?? ''}`)
+    .join(' ');
+
+  return `${rawText} ${ideaText}`.trim();
+}
+
+function inferConcreteActionFromText(text: string, projectName: string) {
+  const cleanText = text.toLowerCase();
+  const cleanProjectName = projectName.toLowerCase();
+  const source = `${cleanProjectName} ${cleanText}`;
+
+  if (!cleanText.trim()) return null;
+  if (source.includes('vela') || source.includes('cera') || source.includes('aroma')) return 'Investigar 3 proveedores de cera de soja';
+  if (source.includes('kiosco') || source.includes('golosina') || source.includes('dulce')) return 'Llamar a 2 proveedores de golosinas y anotar precios';
+  if (source.includes('cafeter') || source.includes('cafe') || source.includes('café')) return 'Comparar 3 opciones de menú rentable para la cafetería';
+  if (source.includes('marketing') || source.includes('instagram') || source.includes('contenido')) return 'Escribir 5 ideas de posts para Instagram';
+  if (source.includes('presupuesto') || source.includes('precio') || source.includes('finanza')) return 'Anotar costos, precio esperado y margen ideal';
+  if (source.includes('web') || source.includes('site') || source.includes('pagina') || source.includes('página')) return 'Definir el objetivo principal de la página en una frase';
+  if (source.includes('marca') || source.includes('logo') || source.includes('identidad')) return 'Buscar 3 referencias visuales para la identidad de marca';
+
+  return `Elegir 1 resultado concreto para ${projectName} y escribir el primer paso`;
+}
+
+function buildNextAction(project: ForUActiveProject, rawNotes: ForURawNote[] = []): ForUNextAction | null {
+  const normalizedProject = normalizeProject(project);
+  const pendingNodes = normalizedProject.nodes
+    .filter((node) => node.role === 'free' && !node.completedAt && node.taskStatus !== 'done')
+    .sort((a, b) => {
+      const priorityDifference = getPriorityWeight(a.priority) - getPriorityWeight(b.priority);
+      if (priorityDifference !== 0) return priorityDifference;
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
+  const nextNode = pendingNodes[0];
+
+  if (nextNode) {
+    return {
+      id: `action-${nextNode.id}`,
+      projectId: normalizedProject.id,
+      sourceNodeId: nextNode.id,
+      title: getConcreteActionTitle(nextNode),
+      description: nextNode.description?.trim() || 'Dedica un bloque corto a esto. Sin abrir diez cosas a la vez.',
+      estimatedMinutes: estimateActionMinutes(nextNode),
+      rewardCoins: nextNode.priority === 'high' ? 30 : 20,
+      priority: nextNode.priority ?? 'medium',
+      isFallback: false,
+    };
+  }
+
+  const ideaText = getRawIdeaText(normalizedProject, rawNotes);
+  const suggestedTitle = inferConcreteActionFromText(ideaText, normalizedProject.name);
+  if (suggestedTitle) {
+    return {
+      id: `suggested-${normalizedProject.id}`,
+      projectId: normalizedProject.id,
+      title: suggestedTitle,
+      description: 'Sugerencia de For U basada en tus ideas del frasco. Si te sirve, dale Empezar y vamos juntas.',
+      estimatedMinutes: 15,
+      rewardCoins: 20,
+      priority: 'medium',
+      isFallback: true,
+    };
+  }
+
+  return {
+    id: `fallback-${normalizedProject.id}`,
+    projectId: normalizedProject.id,
+    title: 'Agrega más ideas al frasco para que pueda sugerirte una acción concreta',
+    description: 'For U necesita un poquito más de contexto para ayudarte bien. Una frase suelta ya sirve.',
+    estimatedMinutes: 5,
+    rewardCoins: 0,
+    priority: 'low',
+    isFallback: true,
+  };
+}
+
+function chooseFeelingForNode(project: ForUActiveProject, node?: Pick<ForUProjectNode, 'branchKey' | 'priority'>): ForUFeelingType | undefined {
+  const feelings = project.targetFeelings ?? [];
+  if (feelings.length === 0) return undefined;
+  if (node?.branchKey === 'finances' && feelings.includes('abundance')) return 'abundance';
+  if (node?.branchKey === 'marketing' && feelings.includes('connection')) return 'connection';
+  if (node?.branchKey === 'ideas' && feelings.includes('creativity')) return 'creativity';
+  if (node?.priority === 'high' && feelings.includes('peace')) return 'peace';
+  return feelings[0];
+}
+
+function getFeelingProgressFromProject(project: ForUActiveProject, feeling: ForUFeelingType) {
+  const freeNodes = normalizeProject(project).nodes.filter((node) => node.role === 'free');
+  if (freeNodes.length === 0) return 0;
+
+  const relevantNodes = freeNodes.filter((node) => (node.feelingType ?? chooseFeelingForNode(project, node)) === feeling);
+  if (relevantNodes.length === 0) return 0;
+
+  const completed = relevantNodes.filter((node) => node.completedAt || node.taskStatus === 'done').length;
+  return Math.round((completed / relevantNodes.length) * 100);
+}
+
+function createHabitForFeeling(feeling: ForUFeelingType | null, date = getDayStamp()): ForURewiringHabit {
+  const targetFeeling = feeling ?? 'confidence';
+  const habits = rewiringHabitTemplates[targetFeeling] ?? rewiringHabitTemplates.confidence;
+  const dayNumber = new Date(date).getDate();
+
+  return {
+    id: createId('habit'),
+    userId: null,
+    date,
+    habit: habits[dayNumber % habits.length],
+    completed: false,
+    createdAt: now(),
+  };
+}
+
+function summarizeMoodPattern(moods: ForUDailyMood[]) {
+  if (moods.length === 0) return 'Todavía estamos aprendiendo tus ritmos emocionales.';
+
+  const counts = moods.reduce<Record<ForUMoodType, number>>((acc, mood) => {
+    acc[mood.mood] = (acc[mood.mood] ?? 0) + 1;
+    return acc;
+  }, {} as Record<ForUMoodType, number>);
+  const dominantMood = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] as ForUMoodType | undefined;
+  if (!dominantMood) return 'Todavía estamos aprendiendo tus ritmos emocionales.';
+
+  return `Últimamente aparece más ${moodLabels[dominantMood].label.toLowerCase()}. For U va a ajustar tus pasos a ese ritmo.`;
 }
 
 function createProject(input: CreateProjectInput): ForUActiveProject {
@@ -227,6 +731,8 @@ function createProject(input: CreateProjectInput): ForUActiveProject {
   return {
     id: projectId,
     name,
+    tangibleGoal: input.tangibleGoal?.trim(),
+    targetFeelings: input.targetFeelings ?? [],
     status: input.status ?? 'active',
     tasks: [],
     nodes: base.nodes,
@@ -255,6 +761,8 @@ function normalizeProject(project: ForUActiveProject): ForUActiveProject {
 
   return {
     ...project,
+    tangibleGoal: project.tangibleGoal ?? '',
+    targetFeelings: project.targetFeelings ?? [],
     tasks: project.tasks ?? [],
     nodes: [...missingBaseNodes, ...nodes],
     edges: [...missingBaseEdges, ...edges],
@@ -350,9 +858,244 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
       xpToNextLevel: 100,
       coins: 0,
       weeklyMilestoneProgress: 0,
+      userPlan: 'free',
+      maxProjects: planConfigs.free.maxProjects,
+      maxActionsPerMonth: planConfigs.free.maxActionsPerMonth,
+      actionsThisMonth: 0,
+      actionsMonthStamp: getMonthStamp(),
+      dailyMoods: [],
+      rewiringHabits: {},
+      features: planConfigs.free.features,
+      planLimitNotice: null,
       lastLoginDate: null,
       dailyStreak: 0,
       claimedDays: [],
+      whatsappNumber: '',
+      whatsappEnabled: false,
+      cloudUserId: null,
+      isCloudSyncing: false,
+
+      hydrateFromSupabase: async (userId) => {
+        if (!supabase) {
+          set({ cloudUserId: userId, isCloudSyncing: false });
+          return;
+        }
+
+        set({ cloudUserId: userId, isCloudSyncing: true });
+
+        const [{ data: profileRow }, { data: projectRows, error: projectsError }] = await Promise.all([
+          supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+          supabase
+            .from('projects')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: true }),
+        ]);
+
+        if (projectsError) {
+          console.warn('No se pudieron cargar los proyectos:', projectsError.message);
+          set({ isCloudSyncing: false });
+          return;
+        }
+
+        const cleanProjects = (projectRows ?? []) as SupabaseProjectRow[];
+        const profile = profileRow as SupabaseProfileRow | null;
+        const profilePlan = profile?.plan ?? get().userPlan ?? 'free';
+        const profilePlanConfig = getPlanConfig(profilePlan);
+
+        if (cleanProjects.length === 0) {
+          const state = get();
+          const localProjects = state.getAllProjects();
+          await Promise.all(localProjects.map((project) => upsertCloudProject(userId, normalizeProject(project))));
+          set({
+            cloudUserId: userId,
+            isCloudSyncing: false,
+            userPlan: profilePlan,
+            maxProjects: profilePlanConfig.maxProjects,
+            maxActionsPerMonth: profilePlanConfig.maxActionsPerMonth,
+            features: profilePlanConfig.features,
+            coins: profile?.coins ?? state.coins,
+            dailyStreak: profile?.streak ?? state.dailyStreak,
+            whatsappNumber: profile?.whatsapp_number ?? state.whatsappNumber ?? '',
+            whatsappEnabled: profile?.whatsapp_enabled ?? state.whatsappEnabled ?? false,
+          });
+          return;
+        }
+
+        const projectIds = cleanProjects.map((project) => project.id);
+        const [{ data: taskRows }, { data: ideaRows }, { data: feelingRows }, { data: moodRows }, { data: habitRows }] = await Promise.all([
+          supabase.from('tasks').select('*').in('project_id', projectIds),
+          supabase.from('ideas').select('*').in('project_id', projectIds),
+          supabase.from('project_feelings').select('*').in('project_id', projectIds),
+          supabase.from('daily_mood').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(30),
+          supabase.from('rewiring_habits').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(14),
+        ]);
+
+        const tasksByProject = ((taskRows ?? []) as SupabaseTaskRow[]).reduce<Record<string, SupabaseTaskRow[]>>((acc, task) => {
+          acc[task.project_id] = [...(acc[task.project_id] ?? []), task];
+          return acc;
+        }, {});
+        const ideasByProject = ((ideaRows ?? []) as SupabaseIdeaRow[]).reduce<Record<string, SupabaseIdeaRow[]>>((acc, idea) => {
+          acc[idea.project_id] = [...(acc[idea.project_id] ?? []), idea];
+          return acc;
+        }, {});
+        const feelingsByProject = ((feelingRows ?? []) as SupabaseProjectFeelingRow[]).reduce<Record<string, ForUFeelingType[]>>((acc, feeling) => {
+          acc[feeling.project_id] = [...(acc[feeling.project_id] ?? []), feeling.feeling_type];
+          return acc;
+        }, {});
+
+        const nextProjects = Object.fromEntries(cleanProjects.map((row) => {
+          const timestamp = row.created_at ?? now();
+          const base = createBaseMap(row.id, row.name, timestamp);
+          const rowFeelings = feelingsByProject[row.id] ?? [];
+          const taskNodes = (tasksByProject[row.id] ?? []).map((task, index): ForUProjectNode => ({
+            id: task.id,
+            title: task.title,
+            kind: 'task',
+            role: 'free',
+            branchKey: 'actions',
+            icon: '✅',
+            description: task.description ?? undefined,
+            priority: task.priority ?? 'medium',
+            feelingType: task.feeling_type ?? rowFeelings[0],
+            taskStatus: task.status ?? 'todo',
+            completedAt: task.completed_at ?? undefined,
+            ...getBranchPosition('actions', index),
+            lastActiveDate: task.completed_at ?? task.created_at ?? timestamp,
+            createdAt: task.created_at ?? timestamp,
+          }));
+          const ideaNodes = (ideasByProject[row.id] ?? []).map((idea, index): ForUProjectNode => ({
+            id: idea.id,
+            title: idea.content.slice(0, 76) || 'Idea',
+            kind: 'idea',
+            role: 'free',
+            branchKey: 'ideas',
+            icon: '💡',
+            description: idea.content,
+            priority: 'low',
+            ...getBranchPosition('ideas', index),
+            lastActiveDate: idea.created_at ?? timestamp,
+            createdAt: idea.created_at ?? timestamp,
+          }));
+          const cloudEdges: ForUProjectEdge[] = [...taskNodes, ...ideaNodes].map((node) => ({
+            id: `edge-${row.id}-${node.id}`,
+            source: getBranchNodeId(row.id, node.branchKey ?? 'actions'),
+            target: node.id,
+            createdAt: node.createdAt,
+          }));
+          const project: ForUActiveProject = normalizeProject({
+            id: row.id,
+            name: row.name,
+            tangibleGoal: row.tangible_goal ?? '',
+            targetFeelings: rowFeelings,
+            status: row.status ?? 'active',
+            tasks: taskNodes.map((node) => ({
+              id: node.id,
+              title: node.title,
+              status: node.taskStatus ?? 'todo',
+              createdAt: node.createdAt,
+              completedAt: node.completedAt,
+            })),
+            nodes: [...base.nodes, ...taskNodes, ...ideaNodes],
+            edges: [...base.edges, ...cloudEdges],
+            digitalRoute: [],
+            currentRouteIndex: 0,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+          });
+
+          return [project.id, project];
+        }));
+
+        const firstProjectId = cleanProjects[0]?.id ?? null;
+
+        set({
+          activeProjectIds: projectIds,
+          activeProjectId: firstProjectId,
+          currentProjectId: firstProjectId,
+          projectsById: nextProjects,
+          rawNotes: [],
+          selectedNodeId: null,
+          focusedBranch: null,
+          cloudUserId: userId,
+          isCloudSyncing: false,
+          userPlan: profilePlan,
+          maxProjects: profilePlanConfig.maxProjects,
+          maxActionsPerMonth: profilePlanConfig.maxActionsPerMonth,
+          features: profilePlanConfig.features,
+          coins: profile?.coins ?? get().coins,
+          dailyStreak: profile?.streak ?? get().dailyStreak,
+          whatsappNumber: profile?.whatsapp_number ?? '',
+          whatsappEnabled: profile?.whatsapp_enabled ?? false,
+          dailyMoods: ((moodRows ?? []) as SupabaseDailyMoodRow[]).map((mood) => ({
+            id: mood.id,
+            userId: mood.user_id,
+            date: mood.date,
+            mood: mood.mood,
+            notes: mood.notes ?? undefined,
+            createdAt: mood.created_at,
+          })),
+          rewiringHabits: Object.fromEntries(((habitRows ?? []) as SupabaseRewiringHabitRow[]).map((habit) => [
+            habit.date,
+            {
+              id: habit.id,
+              userId: habit.user_id,
+              date: habit.date,
+              habit: habit.habit,
+              completed: habit.completed,
+              createdAt: habit.created_at,
+            },
+          ])),
+        });
+      },
+
+      clearCloudUser: () => set({ cloudUserId: null, isCloudSyncing: false }),
+
+      updateWhatsappSettings: async ({ whatsappNumber, whatsappEnabled }) => {
+        const cleanNumber = whatsappNumber.trim().replace(/[^\d+]/g, '');
+        const normalizedNumber = cleanNumber && !cleanNumber.startsWith('+') ? `+${cleanNumber}` : cleanNumber;
+
+        set({
+          whatsappNumber: normalizedNumber,
+          whatsappEnabled: Boolean(whatsappEnabled && normalizedNumber),
+        });
+
+        if (!canSyncCloud(get().cloudUserId) || !supabase) return true;
+
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            whatsapp_number: normalizedNumber || null,
+            whatsapp_enabled: Boolean(whatsappEnabled && normalizedNumber),
+          })
+          .eq('id', get().cloudUserId);
+
+        if (error) {
+          console.warn('No se pudo guardar WhatsApp:', error.message);
+          return false;
+        }
+
+        return true;
+      },
+
+      setUserPlan: (plan) => {
+        const config = getPlanConfig(plan);
+        set({
+          userPlan: plan,
+          maxProjects: config.maxProjects,
+          maxActionsPerMonth: config.maxActionsPerMonth,
+          features: config.features,
+          planLimitNotice: null,
+        });
+        void updateCloudProfile(get().cloudUserId, { plan });
+      },
+
+      canUseFeature: (feature) => {
+        const state = get();
+        return Boolean((state.features ?? getPlanConfig(state.userPlan ?? 'free').features)[feature]);
+      },
+
+      clearPlanLimitNotice: () => set({ planLimitNotice: null }),
 
       getAllProjects: () => {
         const state = get();
@@ -401,6 +1144,333 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
         if (completedNodes.length === 0) return 'planned';
 
         return 'active';
+      },
+
+      getGuidedExecutionTasks: (projectId) => {
+        const project = get().projectsById[projectId];
+        if (!project) return [];
+
+        const normalizedProject = normalizeProject(project);
+        const routeNodeIds = normalizedProject.digitalRoute.map((step) => step.linkedNodeId);
+        const routeTasks = routeNodeIds
+          .map((nodeId) => normalizedProject.nodes.find((node) => node.id === nodeId))
+          .filter((node): node is ForUProjectNode => Boolean(node) && node.role === 'free');
+        const otherTasks = normalizedProject.nodes.filter((node) =>
+          node.role === 'free' && !routeNodeIds.includes(node.id),
+        );
+
+        return [...routeTasks, ...otherTasks].filter((node) => !node.completedAt && node.taskStatus !== 'done');
+      },
+
+      getGuidedExecutionCompletedCount: (projectId) => {
+        const project = get().projectsById[projectId];
+        if (!project) return 0;
+
+        return normalizeProject(project).nodes.filter((node) =>
+          node.role === 'free' && (node.completedAt || node.taskStatus === 'done'),
+        ).length;
+      },
+
+      completeGuidedExecutionTask: (projectId, nodeId) => {
+        const storedProject = get().projectsById[projectId];
+        if (!storedProject) return false;
+
+        const project = normalizeProject(storedProject);
+        const node = project.nodes.find((item) => item.id === nodeId);
+        if (!node || node.completedAt || node.taskStatus === 'done') return false;
+
+        get().updateNode(projectId, nodeId, {
+          taskStatus: 'done',
+          completedAt: now(),
+          rewardCoins: (node.rewardCoins ?? 0) + 20,
+        });
+        get().addCoins(20);
+        get().addXP(20);
+
+        return true;
+      },
+
+      getNextAction: (projectId) => {
+        const state = get();
+        const project = state.projectsById[projectId];
+        return project ? buildNextAction(project, state.rawNotes) : null;
+      },
+
+      getPersonalDashboardProjects: () => {
+        const state = get();
+        const projects = state.getActiveProjects();
+
+        return projects
+          .map((project) => {
+            const pendingCount = project.nodes.filter((node) =>
+              node.role === 'free' && !node.completedAt && node.taskStatus !== 'done',
+            ).length;
+
+            return {
+              project,
+              nextAction: buildNextAction(project, state.rawNotes),
+              pendingCount,
+            };
+          })
+          .sort((a, b) => {
+            if (a.pendingCount > 0 && b.pendingCount === 0) return -1;
+            if (a.pendingCount === 0 && b.pendingCount > 0) return 1;
+            const priorityDifference = getPriorityWeight(a.nextAction?.priority) - getPriorityWeight(b.nextAction?.priority);
+            if (priorityDifference !== 0) return priorityDifference;
+            return b.pendingCount - a.pendingCount;
+          });
+      },
+
+      generateNextAction: (projectId) => {
+        const state = get();
+        const storedProject = state.projectsById[projectId];
+        if (!storedProject) return null;
+
+        const project = normalizeProject(storedProject);
+        const pendingAction = buildNextAction(project, state.rawNotes);
+        if (pendingAction?.sourceNodeId) return pendingAction;
+
+        const ideaText = getRawIdeaText(project, state.rawNotes);
+        const title = inferConcreteActionFromText(ideaText, project.name);
+        if (!title) return pendingAction;
+
+        const nodeId = get().addFreeNodeToBranch(projectId, 'actions', {
+          title,
+          kind: 'task',
+          icon: '✅',
+          priority: 'medium',
+          description: 'Sugerido por For U a partir de tus ideas del frasco.',
+          x: 690,
+          y: 250,
+        });
+
+        if (!nodeId) return pendingAction;
+
+        return get().getNextAction(projectId);
+      },
+
+      completeNextAction: (projectId, actionId) => {
+        const state = get();
+        const storedProject = state.projectsById[projectId];
+        if (!storedProject) return false;
+        const monthStamp = getMonthStamp();
+        const actionsThisMonth = state.actionsMonthStamp === monthStamp ? state.actionsThisMonth : 0;
+        const config = getPlanConfig(state.userPlan ?? 'free');
+
+        if (actionsThisMonth >= config.maxActionsPerMonth) {
+          set({
+            actionsThisMonth,
+            actionsMonthStamp: monthStamp,
+            planLimitNotice: {
+              title: 'Upgrade a Pro para acciones ilimitadas',
+              message: 'Ya usaste tus acciones gratis de este mes. Pro mantiene el impulso sin cortar el flujo.',
+              feature: 'actions',
+            },
+          });
+          return false;
+        }
+
+        const action = buildNextAction(storedProject, state.rawNotes);
+        if (!action || action.id !== actionId) return false;
+
+        if (action.sourceNodeId) {
+          get().updateNode(projectId, action.sourceNodeId, {
+            taskStatus: 'done',
+            completedAt: now(),
+            rewardCoins: (storedProject.nodes.find((node) => node.id === action.sourceNodeId)?.rewardCoins ?? 0) + action.rewardCoins,
+          });
+        } else {
+          get().addCoins(action.rewardCoins);
+        }
+
+        get().addXP(action.isFallback ? 5 : 20);
+        set((latestState) => {
+          const latestMonthStamp = getMonthStamp();
+          const latestActions = latestState.actionsMonthStamp === latestMonthStamp ? latestState.actionsThisMonth : 0;
+          const nextActions = latestActions + 1;
+
+          return {
+            actionsThisMonth: nextActions,
+            actionsMonthStamp: latestMonthStamp,
+            planLimitNotice: latestState.userPlan === 'free' && nextActions >= planConfigs.free.maxActionsPerMonth
+              ? {
+                  title: 'Upgrade a Pro para acciones ilimitadas',
+                  message: 'Llegaste al límite gratis de acciones mensuales. Pro te deja seguir sin fricción.',
+                  feature: 'actions',
+                }
+              : latestState.planLimitNotice,
+          };
+        });
+        return true;
+      },
+
+      setProjectEmotionalOnboarding: async (projectId, input) => {
+        const targetFeelings = Array.from(new Set(input.targetFeelings)).slice(0, 4);
+        const tangibleGoal = input.tangibleGoal.trim();
+
+        set((state) => {
+          const project = state.projectsById[projectId];
+          if (!project) return state;
+
+          const normalizedProject = normalizeProject(project);
+          const nextProject = touch({
+            ...normalizedProject,
+            tangibleGoal,
+            targetFeelings,
+            nodes: normalizedProject.nodes.map((node) =>
+              node.role === 'free' && !node.feelingType
+                ? { ...node, feelingType: chooseFeelingForNode({ ...normalizedProject, targetFeelings }, node) }
+                : node,
+            ),
+          });
+
+          return {
+            projectsById: {
+              ...state.projectsById,
+              [projectId]: nextProject,
+            },
+          };
+        });
+
+        const project = get().projectsById[projectId];
+        if (project) void upsertCloudProject(get().cloudUserId, normalizeProject(project));
+
+        if (canSyncCloud(get().cloudUserId) && supabase) {
+          await supabase.from('project_feelings').delete().eq('project_id', projectId);
+          if (targetFeelings.length > 0) {
+            const { error } = await supabase.from('project_feelings').insert(
+              targetFeelings.map((feeling) => ({
+                project_id: projectId,
+                feeling_type: feeling,
+              })),
+            );
+            if (error) return false;
+          }
+        }
+
+        return true;
+      },
+
+      getProjectPrimaryFeeling: (projectId) => {
+        const project = get().projectsById[projectId];
+        if (!project) return null;
+        return normalizeProject(project).targetFeelings[0] ?? null;
+      },
+
+      getFeelingProgress: (projectId, feeling) => {
+        const project = get().projectsById[projectId];
+        return project ? getFeelingProgressFromProject(normalizeProject(project), feeling) : 0;
+      },
+
+      addDailyMood: async ({ mood, notes }) => {
+        const date = getDayStamp();
+        const moodEntry: ForUDailyMood = {
+          id: createId('mood'),
+          userId: get().cloudUserId,
+          date,
+          mood,
+          notes: notes?.trim() || undefined,
+          createdAt: now(),
+        };
+
+        set((state) => ({
+          dailyMoods: [moodEntry, ...state.dailyMoods.filter((entry) => !(entry.date === date && entry.mood === mood))].slice(0, 60),
+        }));
+
+        if (canSyncCloud(get().cloudUserId) && supabase) {
+          const { error } = await supabase.from('daily_mood').upsert({
+            user_id: get().cloudUserId,
+            date,
+            mood,
+            notes: notes?.trim() || null,
+          }, { onConflict: 'user_id,date,mood' });
+
+          return !error;
+        }
+
+        return true;
+      },
+
+      getMoodPatternSummary: () => summarizeMoodPattern(get().dailyMoods),
+
+      getTodayHabit: (projectId) => {
+        const date = getDayStamp();
+        const existingHabit = get().rewiringHabits[date];
+        if (existingHabit) return existingHabit;
+
+        const primaryFeeling = projectId ? get().getProjectPrimaryFeeling(projectId) : null;
+        const habit = createHabitForFeeling(primaryFeeling, date);
+
+        set((state) => ({
+          rewiringHabits: {
+            ...state.rewiringHabits,
+            [date]: { ...habit, userId: state.cloudUserId },
+          },
+        }));
+
+        if (canSyncCloud(get().cloudUserId) && supabase) {
+          void supabase.from('rewiring_habits').upsert({
+            user_id: get().cloudUserId,
+            date,
+            habit: habit.habit,
+            completed: false,
+          }, { onConflict: 'user_id,date' });
+        }
+
+        return { ...habit, userId: get().cloudUserId };
+      },
+
+      completeTodayHabit: async () => {
+        const date = getDayStamp();
+        const habit = get().rewiringHabits[date] ?? get().getTodayHabit(get().activeProjectId);
+
+        set((state) => ({
+          rewiringHabits: {
+            ...state.rewiringHabits,
+            [date]: { ...habit, completed: true },
+          },
+        }));
+
+        if (canSyncCloud(get().cloudUserId) && supabase) {
+          const { error } = await supabase.from('rewiring_habits').upsert({
+            user_id: get().cloudUserId,
+            date,
+            habit: habit.habit,
+            completed: true,
+          }, { onConflict: 'user_id,date' });
+          return !error;
+        }
+
+        return true;
+      },
+
+      backgroundOrganizeText: async (projectId, text) => {
+        const cleanText = text.trim();
+        if (!cleanText) return get().getNextAction(projectId);
+
+        const notes = cleanText
+          .split(/\n+/)
+          .map((line) => line.trim())
+          .filter(Boolean);
+        const rawNotes = notes.length > 0 ? notes : [cleanText];
+
+        rawNotes.forEach((content) => {
+          get().addRawNote({ projectId, kind: 'text', content });
+        });
+
+        const action = get().generateNextAction(projectId);
+        return action;
+      },
+
+      getProjectProgress: (projectId) => {
+        const project = get().projectsById[projectId];
+        if (!project) return 0;
+
+        const nodes = normalizeProject(project).nodes.filter((node) => node.role === 'free');
+        if (nodes.length === 0) return 0;
+
+        const completed = nodes.filter((node) => node.completedAt || node.taskStatus === 'done').length;
+        return Math.round((completed / nodes.length) * 100);
       },
 
       getDustyNodes: () => {
@@ -495,6 +1565,8 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
         set((state) => ({
           coins: state.coins + cleanAmount,
         }));
+        const nextCoins = get().coins;
+        void updateCloudProfile(get().cloudUserId, { coins: nextCoins });
       },
 
       checkWeeklyMilestone: () => {
@@ -546,11 +1618,25 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           dailyStreak: nextStreak,
           claimedDays: Array.from(new Set([...(continuedStreak && !cycleFinished ? state.claimedDays : []), cleanDay])).slice(0, dailyRewards.length),
         });
+        void updateCloudProfile(get().cloudUserId, { coins: get().coins, streak: nextStreak });
 
         return true;
       },
 
       openProject: (input) => {
+        const state = get();
+        const config = getPlanConfig(state.userPlan ?? 'free');
+        if (state.getActiveProjects().length >= config.maxProjects) {
+          set({
+            planLimitNotice: {
+              title: 'Upgrade a Pro para proyectos ilimitados',
+              message: 'Gratis incluye 1 proyecto activo. Pro te deja abrir todos los proyectos que necesites sin cerrar ninguno.',
+              feature: 'projects',
+            },
+          });
+          return state.activeProjectId ?? '';
+        }
+
         const project = createProject(input);
 
         set((state) => ({
@@ -570,6 +1656,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           },
         }));
 
+        void upsertCloudProject(get().cloudUserId, project);
         return project.id;
       },
 
@@ -579,6 +1666,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
       },
 
       closeProject: (projectId) => {
+        const cloudUserId = get().cloudUserId;
         set((state) => {
           const nextActiveIds = state.activeProjectIds.filter((id) => id !== projectId);
           const { [projectId]: _closedProject, ...nextProjects } = state.projectsById;
@@ -598,6 +1686,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
             projectsById: nextProjects,
           };
         });
+        void deleteCloudProject(cloudUserId, projectId);
       },
 
       renameProject: (projectId, name) => {
@@ -620,6 +1709,8 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
             },
           };
         });
+        const project = get().projectsById[projectId];
+        if (project) void upsertCloudProject(get().cloudUserId, normalizeProject(project));
       },
 
       updateProjectStatus: (projectId, status) => {
@@ -634,6 +1725,8 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
             },
           };
         });
+        const project = get().projectsById[projectId];
+        if (project) void upsertCloudProject(get().cloudUserId, normalizeProject(project));
       },
 
       addTask: (projectId, title) => {
@@ -658,6 +1751,18 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           },
         }));
 
+        if (canSyncCloud(get().cloudUserId)) {
+          void supabase?.from('tasks').upsert({
+            id: task.id,
+            project_id: projectId,
+            title: task.title,
+            description: null,
+            status: task.status,
+            priority: 'medium',
+            estimated_time: 15,
+            completed_at: null,
+          });
+        }
         return task.id;
       },
 
@@ -681,6 +1786,20 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
             },
           };
         });
+        const project = get().projectsById[projectId];
+        const task = project?.tasks.find((item) => item.id === taskId);
+        if (task && canSyncCloud(get().cloudUserId)) {
+          void supabase?.from('tasks').upsert({
+            id: task.id,
+            project_id: projectId,
+            title: task.title,
+            description: null,
+            status: task.status,
+            priority: 'medium',
+            estimated_time: 15,
+            completed_at: task.completedAt ?? null,
+          });
+        }
       },
 
       addNode: (projectId, node) => {
@@ -706,6 +1825,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           },
         }));
 
+        void upsertCloudTask(get().cloudUserId, projectId, projectNode);
         return projectNode.id;
       },
 
@@ -744,6 +1864,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           },
         }));
 
+        void upsertCloudTask(get().cloudUserId, projectId, projectNode);
         return projectNode.id;
       },
 
@@ -790,6 +1911,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           },
         }));
 
+        void Promise.all(createdNodes.map((node) => upsertCloudTask(get().cloudUserId, projectId, node)));
         return createdNodes.map((node) => node.id);
       },
 
@@ -818,6 +1940,9 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
             },
           };
         });
+        const project = get().projectsById[projectId];
+        const node = project?.nodes.find((item) => item.id === nodeId);
+        if (node) void upsertCloudTask(get().cloudUserId, projectId, node);
       },
 
       reassignNodeBranch: (projectId, nodeId, branchKey) => {
@@ -851,6 +1976,9 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
             },
           };
         });
+        const project = get().projectsById[projectId];
+        const node = project?.nodes.find((item) => item.id === nodeId);
+        if (node) void upsertCloudTask(get().cloudUserId, projectId, node);
       },
 
       splitNodeIntoSubtasks: (projectId, nodeId, subtasks) => {
@@ -907,6 +2035,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           };
         });
 
+        void Promise.all(createdNodes.map((node) => upsertCloudTask(get().cloudUserId, projectId, node)));
         return createdNodes.map((node) => node.id);
       },
 
@@ -975,6 +2104,9 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
         });
 
         get().addXP(50);
+        const updatedProject = get().projectsById[projectId];
+        const updatedNode = updatedProject?.nodes.find((node) => node.id === currentStep.linkedNodeId);
+        if (updatedNode) void upsertCloudTask(get().cloudUserId, projectId, updatedNode);
         return true;
       },
 
@@ -997,6 +2129,9 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
             },
           };
         });
+        const project = get().projectsById[projectId];
+        const node = project?.nodes.find((item) => item.id === nodeId);
+        if (node) void upsertCloudTask(get().cloudUserId, projectId, node);
       },
 
       connectNodes: (projectId, source, target) => {
@@ -1113,6 +2248,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           isJarOpen: false,
         }));
 
+        void upsertCloudIdea(get().cloudUserId, note);
         return note.id;
       },
 
@@ -1124,7 +2260,15 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
         }));
       },
 
-      clearRawNotes: () => set({ rawNotes: [] }),
+      clearRawNotes: () => {
+        const state = get();
+        const activeProjectId = state.activeProjectId;
+        set({ rawNotes: [] });
+
+        if (canSyncCloud(state.cloudUserId) && activeProjectId) {
+          void supabase?.from('ideas').delete().eq('project_id', activeProjectId);
+        }
+      },
 
       resetWorkspace: () => {
         const project = createProject({ name: 'Mi primer proyecto' });
@@ -1150,9 +2294,22 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           xpToNextLevel: 100,
           coins: 0,
           weeklyMilestoneProgress: 0,
+          userPlan: 'free',
+          maxProjects: planConfigs.free.maxProjects,
+          maxActionsPerMonth: planConfigs.free.maxActionsPerMonth,
+          actionsThisMonth: 0,
+          actionsMonthStamp: getMonthStamp(),
+          dailyMoods: [],
+          rewiringHabits: {},
+          features: planConfigs.free.features,
+          planLimitNotice: null,
           lastLoginDate: null,
           dailyStreak: 0,
           claimedDays: [],
+          whatsappNumber: '',
+          whatsappEnabled: false,
+          cloudUserId: null,
+          isCloudSyncing: false,
         });
       },
 });
@@ -1162,10 +2319,12 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
     createActiveProjectsState,
     {
       name: 'foru-active-projects',
-      version: 9,
+      version: 13,
       migrate: (persistedState) => {
         const state = persistedState as ActiveProjectsState | undefined;
         if (!state) return state;
+        const userPlan = state.userPlan ?? 'free';
+        const planConfig = getPlanConfig(userPlan);
 
         return {
           ...state,
@@ -1195,9 +2354,22 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           xpToNextLevel: state.xpToNextLevel ?? 100,
           coins: state.coins ?? 0,
           weeklyMilestoneProgress: state.weeklyMilestoneProgress ?? 0,
+          userPlan,
+          maxProjects: state.maxProjects ?? planConfig.maxProjects,
+          maxActionsPerMonth: state.maxActionsPerMonth ?? planConfig.maxActionsPerMonth,
+          actionsThisMonth: state.actionsThisMonth ?? 0,
+          actionsMonthStamp: state.actionsMonthStamp ?? getMonthStamp(),
+          dailyMoods: state.dailyMoods ?? [],
+          rewiringHabits: state.rewiringHabits ?? {},
+          features: state.features ?? planConfig.features,
+          planLimitNotice: null,
           lastLoginDate: state.lastLoginDate ?? null,
           dailyStreak: state.dailyStreak ?? 0,
           claimedDays: state.claimedDays ?? [],
+          whatsappNumber: state.whatsappNumber ?? '',
+          whatsappEnabled: state.whatsappEnabled ?? false,
+          cloudUserId: state.cloudUserId ?? null,
+          isCloudSyncing: false,
         };
       },
     },
