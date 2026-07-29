@@ -2,20 +2,20 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
-import ActionView from '../components/ActionView';
 import EmotionalOnboardingModal from '../components/EmotionalOnboardingModal';
 import FloatingReward, { type FloatingRewardBurst } from '../components/FloatingReward';
-import ForUChat from '../components/ForUChat';
-import GanttView from '../components/GanttView';
-import KanbanView from '../components/KanbanView';
 import Logo from '../components/Logo';
-import NodeDetailPanel from '../components/NodeDetailPanel';
-import PersonalDashboard from '../components/PersonalDashboard';
-import ProjectCanvas from '../components/ProjectCanvas';
 import { useAuth } from '../contexts/AuthContext';
 import { planConfigs, type ForUNextAction, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
 const World3D = lazy(() => import('../components/World3D'));
+const ActionView = lazy(() => import('../components/ActionView'));
+const GanttView = lazy(() => import('../components/GanttView'));
+const KanbanView = lazy(() => import('../components/KanbanView'));
+const ProjectCanvas = lazy(() => import('../components/ProjectCanvas'));
+const ForUChat = lazy(() => import('../components/ForUChat'));
+const PersonalDashboard = lazy(() => import('../components/PersonalDashboard'));
+const NodeDetailPanel = lazy(() => import('../components/NodeDetailPanel'));
 
 type WorkspaceScreen = 'dashboard' | 'action' | 'project' | 'world';
 type ProjectSubview = 'kanban' | 'map' | 'gantt';
@@ -225,34 +225,46 @@ export default function ForUWorkspace() {
             </div>
           </div>
 
-          {projectSubview === 'kanban' ? <KanbanView /> : null}
+          {projectSubview === 'kanban' ? (
+            <Suspense fallback={<ScreenLoader label="Cargando tareas..." />}>
+              <KanbanView />
+            </Suspense>
+          ) : null}
           {projectSubview === 'map' ? (
-            <>
+            <Suspense fallback={<ScreenLoader label="Cargando mapa..." />}>
               <ProjectCanvas />
               <AnimatePresence>
                 {selectedNodeId ? <NodeDetailPanel key={selectedNodeId} /> : null}
               </AnimatePresence>
-            </>
+            </Suspense>
           ) : null}
-          {projectSubview === 'gantt' ? <GanttView /> : null}
+          {projectSubview === 'gantt' ? (
+            <Suspense fallback={<ScreenLoader label="Cargando cronograma..." />}>
+              <GanttView />
+            </Suspense>
+          ) : null}
         </section>
       ) : screen === 'action' ? (
-        <ActionView
-          project={currentProject}
-          action={currentAction}
-          completedAction={completedAction}
-          onComplete={completeAction}
-          onNext={() => setCompletedAction(null)}
-          onBack={() => openDashboard(currentProjectId ?? undefined)}
-        />
+        <Suspense fallback={<ScreenLoader label="Cargando acción..." />}>
+          <ActionView
+            project={currentProject}
+            action={currentAction}
+            completedAction={completedAction}
+            onComplete={completeAction}
+            onNext={() => setCompletedAction(null)}
+            onBack={() => openDashboard(currentProjectId ?? undefined)}
+          />
+        </Suspense>
       ) : (
-        <PersonalDashboard
-          name="Nicole"
-          planLabel={planLabel}
-          projects={dashboardProjects}
-          onStart={startProject}
-          onViewProject={viewProject}
-        />
+        <Suspense fallback={<ScreenLoader label="Cargando tablero..." />}>
+          <PersonalDashboard
+            name="Nicole"
+            planLabel={planLabel}
+            projects={dashboardProjects}
+            onStart={startProject}
+            onViewProject={viewProject}
+          />
+        </Suspense>
       )}
 
       <AnimatePresence>
@@ -273,7 +285,9 @@ export default function ForUWorkspace() {
       <AnimatePresence>
         {currentProject ? <EmotionalOnboardingModal project={currentProject} /> : null}
       </AnimatePresence>
-      <ForUChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <Suspense fallback={null}>
+        <ForUChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      </Suspense>
       <FloatingReward burst={rewardBurst} />
     </main>
   );
@@ -284,6 +298,15 @@ function WorldLoader() {
     <section className="foru-world-loader">
       <span>🌍</span>
       <strong>Cargando Mi Mundo...</strong>
+    </section>
+  );
+}
+
+function ScreenLoader({ label }: { label: string }) {
+  return (
+    <section className="foru-world-loader">
+      <span>✨</span>
+      <strong>{label}</strong>
     </section>
   );
 }

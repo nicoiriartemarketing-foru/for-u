@@ -54,8 +54,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const client = requireSupabase();
+    let settled = false;
+
+    const timeoutId = window.setTimeout(() => {
+      if (!settled) {
+        setLoading(false);
+      }
+    }, 2000);
 
     client.auth.getSession().then(({ data, error }) => {
+      settled = true;
+      window.clearTimeout(timeoutId);
+
       if (error) {
         console.warn('No se pudo recuperar la sesion:', error.message);
       }
@@ -73,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
+      window.clearTimeout(timeoutId);
       authListener.subscription.unsubscribe();
     };
   }, []);

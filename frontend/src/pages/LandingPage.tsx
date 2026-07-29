@@ -64,7 +64,6 @@ const floatingItems = [
 
 export default function LandingPage() {
   const [showTopButton, setShowTopButton] = useState(false);
-  const [trail, setTrail] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 0.35], [0, 120]);
   const mockupY = useTransform(scrollYProgress, [0, 0.35], [0, -40]);
@@ -85,21 +84,11 @@ export default function LandingPage() {
       setShowTopButton(window.scrollY > 520);
     }
 
-    function handlePointerMove(event: PointerEvent) {
-      const id = Date.now();
-      setTrail((current) => [...current.slice(-8), { id, x: event.clientX, y: event.clientY }]);
-      window.setTimeout(() => {
-        setTrail((current) => current.filter((item) => item.id !== id));
-      }, 650);
-    }
-
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('pointermove', handlePointerMove);
     };
   }, []);
 
@@ -114,11 +103,6 @@ export default function LandingPage() {
   return (
     <main className="foru-landing-page">
       <motion.div className="foru-scroll-progress" style={{ scaleX: scrollScaleX }} />
-      <div className="foru-cursor-trail" aria-hidden="true">
-        {trail.map((item) => (
-          <i key={item.id} style={{ left: item.x, top: item.y }} />
-        ))}
-      </div>
 
       <header className="foru-landing-nav">
         <Link to="/" aria-label="FOR U" className="foru-landing-logo">

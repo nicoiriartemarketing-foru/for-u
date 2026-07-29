@@ -4,6 +4,31 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'framer-motion',
+      'react-hot-toast',
+      'zustand',
+      '@supabase/supabase-js',
+      'reactflow',
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei',
+    ],
+  },
+  server: {
+    warmup: {
+      clientFiles: [
+        './src/main.tsx',
+        './src/App.tsx',
+        './src/pages/LandingPage.tsx',
+        './src/pages/ForUWorkspace.tsx',
+      ],
+    },
+  },
   build: {
     assetsInlineLimit: 4096,
     chunkSizeWarningLimit: 1000,

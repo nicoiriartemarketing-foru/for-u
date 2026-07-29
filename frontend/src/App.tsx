@@ -1,8 +1,8 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { BrowserRouter as Router, Navigate, Routes, Route } from 'react-router-dom';
-import LandingPage from './pages/LandingPage';
 import { useAuth } from './contexts/AuthContext';
 
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 const AiForU = lazy(() => import('./pages/AiForU'));
 const Methodology = lazy(() => import('./pages/Methodology'));
 const RegisterWizard = lazy(() => import('./pages/auth/RegisterWizard'));
