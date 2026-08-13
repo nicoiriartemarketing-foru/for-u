@@ -11,6 +11,7 @@ import { planConfigs, type ForUNextAction, useActiveProjectsStore } from '../sto
 
 const World3D = lazy(() => import('../components/World3D'));
 const ActionView = lazy(() => import('../components/ActionView'));
+const DigitalRouteView = lazy(() => import('../components/DigitalRouteView'));
 const GanttView = lazy(() => import('../components/GanttView'));
 const KanbanView = lazy(() => import('../components/KanbanView'));
 const IndustryKitView = lazy(() => import('../components/IndustryKitView'));
@@ -20,13 +21,13 @@ const PersonalDashboard = lazy(() => import('../components/PersonalDashboard'));
 const NodeDetailPanel = lazy(() => import('../components/NodeDetailPanel'));
 
 type WorkspaceScreen = 'dashboard' | 'action' | 'project' | 'world';
-type ProjectSubview = 'kit' | 'kanban' | 'map' | 'gantt';
+type ProjectSubview = 'route' | 'kit' | 'kanban' | 'map' | 'gantt';
 
 export default function ForUWorkspace() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [screen, setScreen] = useState<WorkspaceScreen>('dashboard');
-  const [projectSubview, setProjectSubview] = useState<ProjectSubview>('kanban');
+  const [projectSubview, setProjectSubview] = useState<ProjectSubview>('route');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [completedAction, setCompletedAction] = useState<ForUNextAction | null>(null);
   const [rewardBurst, setRewardBurst] = useState<FloatingRewardBurst | null>(null);
@@ -125,20 +126,14 @@ export default function ForUWorkspace() {
     if (!createdProject?.industryKey) return;
 
     selectProject(projectId);
-    setProjectSubview('kit');
+    setProjectSubview('route');
     setScreen('project');
   }
 
   function viewProject(projectId: string) {
-    if (!features.kanban) {
-      showUpgrade('Upgrade a Pro para ver el proyecto completo', 'El plan Gratis mantiene el tablero personal y la acción del momento. Pro desbloquea Kanban, mapa mental y flujo completo.');
-      return;
-    }
-
     selectProject(projectId);
-    const project = useActiveProjectsStore.getState().getProjectById(projectId);
-    const nextSubview = project?.industryKey ? 'kit' : 'kanban';
-    setView('kanban');
+    const nextSubview: ProjectSubview = 'route';
+    setView('dashboard');
     setProjectSubview(nextSubview);
     setScreen('project');
   }
@@ -155,6 +150,14 @@ export default function ForUWorkspace() {
   }
 
   function changeProjectSubview(subview: ProjectSubview) {
+    if ((subview === 'kanban' || subview === 'map' || subview === 'gantt') && !features.kanban) {
+      showUpgrade(
+        'Upgrade a Pro para ver vistas avanzadas',
+        'La Ruta Digital y el tablero personal siguen disponibles en Gratis. Pro desbloquea Kanban, mapa mental y cronograma.',
+      );
+      return;
+    }
+
     deselectNode();
     clearFocus();
     setProjectSubview(subview);
@@ -242,6 +245,9 @@ export default function ForUWorkspace() {
             </button>
             <p>{currentProject?.name ? `Aquí tienes todo lo de ${currentProject.name}, Nicole.` : 'Aquí tienes el proyecto completo, Nicole.'}</p>
             <div className="foru-project-subtabs" aria-label="Vistas del proyecto">
+              <button type="button" className={projectSubview === 'route' ? 'is-active' : ''} onClick={() => setProjectSubview('route')}>
+                🗺️ Ruta
+              </button>
               {currentProject?.industryKey ? (
                 <button type="button" className={projectSubview === 'kit' ? 'is-active' : ''} onClick={() => setProjectSubview('kit')}>
                   🧳 Kit
@@ -259,6 +265,18 @@ export default function ForUWorkspace() {
             </div>
           </div>
 
+          {projectSubview === 'route' ? (
+            <Suspense fallback={<ScreenLoader label="Cargando ruta..." />}>
+              <DigitalRouteView
+                project={currentProject}
+                onOpenLanding={() => {
+                  window.open('/editor', '_blank', 'noopener,noreferrer');
+                }}
+                onOpenTasks={() => changeProjectSubview('kanban')}
+                onStartAction={() => currentProjectId && startProject(currentProjectId)}
+              />
+            </Suspense>
+          ) : null}
           {projectSubview === 'kit' ? (
             <Suspense fallback={<ScreenLoader label="Cargando kit..." />}>
               <IndustryKitView
@@ -304,7 +322,6 @@ export default function ForUWorkspace() {
             name="Nicole"
             planLabel={planLabel}
             projects={dashboardProjects}
-            onStart={startProject}
             onViewProject={viewProject}
             onCreateIndustryProject={() => setIsIndustryModalOpen(true)}
           />

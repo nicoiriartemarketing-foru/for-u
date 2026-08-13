@@ -12559,7 +12559,265 @@ a.foru-header-quiet-button {
   padding: 18px;
 }
 
+.foru-digital-route-view {
+  display: grid;
+  gap: 18px;
+}
+
+.foru-digital-route-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(240px, 0.75fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.foru-digital-route-hero h1 {
+  margin: 12px 0;
+  max-width: 780px;
+  color: var(--color-texto);
+  font-size: clamp(2.2rem, 5vw, 4.6rem);
+  line-height: 0.95;
+}
+
+.foru-digital-route-hero p {
+  max-width: 760px;
+  color: var(--color-texto-suave);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.foru-digital-route-progress-card {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  border-color: rgba(212, 175, 55, 0.26);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.12), transparent 34%),
+    radial-gradient(circle at 90% 85%, rgba(232, 213, 245, 0.22), transparent 38%),
+    rgba(248, 246, 243, 0.95);
+}
+
+.foru-digital-route-progress-card strong {
+  color: var(--color-texto);
+  font-family: var(--font-titulos);
+  font-size: clamp(2.2rem, 6vw, 4.4rem);
+  line-height: 1;
+}
+
+.foru-digital-route-progress-card span {
+  color: #8a6d17;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.foru-digital-route-current {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  border-color: rgba(212, 175, 55, 0.28);
+  box-shadow: 0 16px 40px rgba(58, 58, 74, 0.08);
+}
+
+.foru-digital-route-current h2 {
+  margin: 10px 0 8px;
+  color: var(--color-texto);
+  font-size: clamp(1.6rem, 3vw, 2.5rem);
+}
+
+.foru-digital-route-current p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--color-texto-suave);
+  line-height: 1.65;
+}
+
+.foru-digital-route-current-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.foru-digital-route-path {
+  position: relative;
+  display: grid;
+  gap: 14px;
+}
+
+.foru-digital-route-path::before {
+  position: absolute;
+  top: 34px;
+  bottom: 34px;
+  left: 28px;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.4), rgba(232, 213, 245, 0.28), rgba(213, 232, 224, 0.35));
+  content: '';
+}
+
+.foru-digital-route-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.foru-digital-route-step-marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border: 1px solid rgba(212, 175, 55, 0.26);
+  border-radius: 999px;
+  color: var(--color-texto);
+  background: var(--color-perla);
+  box-shadow: 0 10px 28px rgba(58, 58, 74, 0.08);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.foru-digital-route-step.is-ready .foru-digital-route-step-marker {
+  border-color: rgba(93, 143, 112, 0.3);
+  color: #3d7752;
+  background: rgba(213, 232, 224, 0.72);
+}
+
+.foru-digital-route-step.is-in_progress .foru-digital-route-step-marker,
+.foru-digital-route-step.is-current .foru-digital-route-step-marker {
+  border-color: rgba(212, 175, 55, 0.42);
+  background: var(--gradient-iridiscente);
+  box-shadow: 0 0 0 8px rgba(212, 175, 55, 0.08), 0 16px 34px rgba(212, 175, 55, 0.14);
+}
+
+.foru-digital-route-step-body {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(58, 58, 74, 0.08);
+  border-radius: 14px;
+  padding: 18px;
+  background: rgba(248, 246, 243, 0.88);
+  box-shadow: 0 6px 18px rgba(58, 58, 74, 0.04);
+}
+
+.foru-digital-route-step.is-current .foru-digital-route-step-body {
+  border-color: rgba(212, 175, 55, 0.3);
+  background:
+    radial-gradient(circle at top right, rgba(212, 175, 55, 0.09), transparent 36%),
+    rgba(248, 246, 243, 0.96);
+}
+
+.foru-digital-route-step-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.foru-digital-route-step-top h3 {
+  margin: 4px 0 0;
+  color: var(--color-texto);
+  font-size: 1.35rem;
+}
+
+.foru-digital-route-step-top span {
+  color: #8a6d17;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.foru-digital-route-step-body p {
+  margin: 0;
+  color: var(--color-texto-suave);
+  line-height: 1.6;
+}
+
+.foru-digital-route-output {
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  border-radius: 12px;
+  padding: 12px;
+  color: var(--color-texto);
+  background: rgba(212, 175, 55, 0.06);
+  font-weight: 700;
+}
+
+.foru-digital-route-mini-progress {
+  display: grid;
+  gap: 7px;
+}
+
+.foru-digital-route-mini-progress span {
+  color: var(--color-texto-suave);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.foru-digital-route-mini-progress i {
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(58, 58, 74, 0.08);
+}
+
+.foru-digital-route-mini-progress b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gradient-iridiscente);
+}
+
+.foru-digital-route-step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.foru-digital-route-step-actions button {
+  border: 1px solid rgba(58, 58, 74, 0.12);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: var(--color-texto);
+  background: rgba(250, 250, 248, 0.8);
+  font-weight: 800;
+  cursor: pointer;
+  transition: var(--transicion-suave, all 0.2s ease);
+}
+
+.foru-digital-route-step-actions button:hover {
+  border-color: rgba(212, 175, 55, 0.32);
+  transform: translateY(-1px);
+}
+
 @media (max-width: 860px) {
+  .foru-digital-route-hero,
+  .foru-digital-route-current {
+    grid-template-columns: 1fr;
+  }
+
+  .foru-digital-route-current-actions {
+    justify-content: flex-start;
+  }
+
+  .foru-digital-route-path::before {
+    left: 23px;
+  }
+
+  .foru-digital-route-step {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .foru-digital-route-step-marker {
+    width: 46px;
+    height: 46px;
+    font-size: 1.05rem;
+  }
+
   .foru-industry-kit-grid {
     grid-template-columns: 1fr;
   }

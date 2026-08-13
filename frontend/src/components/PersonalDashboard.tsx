@@ -22,7 +22,6 @@ type PersonalDashboardProps = {
   name?: string;
   planLabel: string;
   projects: PersonalDashboardItem[];
-  onStart: (projectId: string) => void;
   onViewProject: (projectId: string) => void;
   onCreateIndustryProject: () => void;
 };
@@ -31,13 +30,14 @@ export default function PersonalDashboard({
   name = 'Nicole',
   planLabel,
   projects,
-  onStart,
   onViewProject,
   onCreateIndustryProject,
 }: PersonalDashboardProps) {
   const greeting = getGreeting();
   const attentiveProjects = projects.filter((item) => item.pendingCount > 0).length;
   const getFeelingProgress = useActiveProjectsStore((state) => state.getFeelingProgress);
+  const getCurrentDigitalRouteStep = useActiveProjectsStore((state) => state.getCurrentDigitalRouteStep);
+  const getDigitalRouteSteps = useActiveProjectsStore((state) => state.getDigitalRouteSteps);
   const focusProjectId = projects[0]?.project.id ?? null;
 
   return (
@@ -97,14 +97,14 @@ export default function PersonalDashboard({
             </div>
 
             <div className="foru-personal-next-action">
-              <span>Proxima accion</span>
-              <p>{nextAction?.title ?? 'Crear una accion concreta para empezar'}</p>
+              <span>Ruta Digital</span>
+              <p>{getRouteCardTitle(project.id, getCurrentDigitalRouteStep)}</p>
+              <small>{getRouteCardSubtitle(project.id, getDigitalRouteSteps, nextAction?.title)}</small>
               {project.targetFeelings[0] ? (
                 <small className="foru-task-feeling-line">
                   Esto te acerca a sentir: {feelingLabels[project.targetFeelings[0]].icon} {feelingLabels[project.targetFeelings[0]].label}
                 </small>
               ) : null}
-              <small>{nextAction?.estimatedMinutes ?? 5} min · {nextAction?.rewardCoins ?? 5} monedas</small>
               {isProjectQuiet(project) ? (
                 <em>Nicole, este proyecto te extraña. ¿Le dedicamos 10 minutos?</em>
               ) : null}
@@ -126,11 +126,11 @@ export default function PersonalDashboard({
             ) : null}
 
             <div className="foru-personal-project-actions">
-              <MagicButton type="button" onClick={() => onStart(project.id)}>
-                Empezar
+              <MagicButton type="button" onClick={() => onViewProject(project.id)}>
+                Continuar ruta
               </MagicButton>
               <MagicButton type="button" variant="soft" onClick={() => onViewProject(project.id)}>
-                Ver proyecto completo
+                Ver proyecto
               </MagicButton>
             </div>
             </motion.div>
@@ -169,4 +169,23 @@ function isProjectQuiet(project: ForUActiveProject) {
 function getIndustryLabel(industryKey: NonNullable<ForUActiveProject['industryKey']>) {
   if (industryKey === 'gastronomy') return 'Gastronomía';
   return 'Turismo';
+}
+
+function getRouteCardTitle(
+  projectId: string,
+  getCurrentDigitalRouteStep: ReturnType<typeof useActiveProjectsStore.getState>['getCurrentDigitalRouteStep'],
+) {
+  const step = getCurrentDigitalRouteStep(projectId);
+  return step ? `Siguiente estación: ${step.title}` : 'Crear Ruta Digital';
+}
+
+function getRouteCardSubtitle(
+  projectId: string,
+  getDigitalRouteSteps: ReturnType<typeof useActiveProjectsStore.getState>['getDigitalRouteSteps'],
+  fallbackAction?: string,
+) {
+  const steps = getDigitalRouteSteps(projectId);
+  if (steps.length === 0) return fallbackAction ?? 'For U preparará el primer paso.';
+  const ready = steps.filter((step) => step.status === 'ready').length;
+  return `${ready}/${steps.length} estaciones listas · Oferta, landing, WhatsApp, contenido, Google y mejora.`;
 }

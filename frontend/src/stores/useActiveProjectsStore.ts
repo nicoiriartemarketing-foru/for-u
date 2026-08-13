@@ -1,7 +1,9 @@
 import { create, type StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../lib/supabaseClient';
+import { getDigitalRouteTemplate, getStepCompletionStatus } from '../templates/digitalRouteTemplates';
 import { industryTemplates, type ForUIndustryKey } from '../templates/industryTemplates';
+import type { ForUDigitalRouteStepStatus, ForUDigitalRouteStepTemplate } from '../templates/digitalRouteTemplates';
 
 export type ForUProjectStatus = 'active' | 'paused' | 'blocked' | 'completed';
 export type ForUTaskStatus = 'todo' | 'doing' | 'done';
@@ -119,6 +121,13 @@ export type ForURewiringHabit = {
   createdAt: string;
 };
 
+export type ForUDigitalRouteStepState = ForUDigitalRouteStepTemplate & {
+  status: ForUDigitalRouteStepStatus;
+  createdTasks: number;
+  completedTasks: number;
+  totalTasks: number;
+};
+
 export type ForURawNote = {
   id: string;
   projectId: string | null;
@@ -233,6 +242,10 @@ type ActiveProjectsState = {
   completeTodayHabit: () => Promise<boolean>;
   backgroundOrganizeText: (projectId: string, text: string) => Promise<ForUNextAction | null>;
   getProjectProgress: (projectId: string) => number;
+  getDigitalRouteSteps: (projectId: string) => ForUDigitalRouteStepState[];
+  getCurrentDigitalRouteStep: (projectId: string) => ForUDigitalRouteStepState | null;
+  createTasksForDigitalRouteStep: (projectId: string, stepId: string) => string[];
+  completeDigitalRouteStep: (projectId: string, stepId: string) => boolean;
   getDustyNodes: () => ForUProjectNode[];
   clearLastCreatedProject: () => void;
   switchProject: (projectId: string) => void;
@@ -952,6 +965,78 @@ function normalizeProject(project: ForUActiveProject): ForUActiveProject {
   };
 }
 
+function normalizeTitle(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function getDigitalRouteOutputs(project: ForUActiveProject): Record<string, Record<string, string>> {
+  const profile = project.strategyProfile ?? {};
+  const routeSystem = profile.digitalRouteSystem;
+
+  if (!routeSystem || typeof routeSystem !== 'object' || Array.isArray(routeSystem)) return {};
+  const outputs = (routeSystem as { outputs?: unknown }).outputs;
+
+  if (!outputs || typeof outputs !== 'object' || Array.isArray(outputs)) return {};
+  return outputs as Record<string, Record<string, string>>;
+}
+
+function getDigitalRouteCompletedStepIds(project: ForUActiveProject): string[] {
+  const profile = project.strategyProfile ?? {};
+  const routeSystem = profile.digitalRouteSystem;
+
+  if (!routeSystem || typeof routeSystem !== 'object' || Array.isArray(routeSystem)) return [];
+  const completedStepIds = (routeSystem as { completedStepIds?: unknown }).completedStepIds;
+
+  return Array.isArray(completedStepIds)
+    ? completedStepIds.filter((item): item is string => typeof item === 'string')
+    : [];
+}
+
+function getDigitalRouteCurrentStepId(project: ForUActiveProject) {
+  const profile = project.strategyProfile ?? {};
+  const routeSystem = profile.digitalRouteSystem;
+
+  if (!routeSystem || typeof routeSystem !== 'object' || Array.isArray(routeSystem)) return undefined;
+  const currentStepId = (routeSystem as { currentStepId?: unknown }).currentStepId;
+
+  return typeof currentStepId === 'string' ? currentStepId : undefined;
+}
+
+function getRouteTaskMatches(project: ForUActiveProject, step: ForUDigitalRouteStepTemplate) {
+  const freeNodes = normalizeProject(project).nodes.filter((node) => node.role === 'free');
+  const taskTitles = new Set(step.tasks.map((task) => normalizeTitle(task.title)));
+  const matchingNodes = freeNodes.filter((node) => taskTitles.has(normalizeTitle(node.title)));
+  const completed = matchingNodes.filter((node) => Boolean(node.completedAt) || node.taskStatus === 'done').length;
+
+  return {
+    matchingNodes,
+    created: matchingNodes.length,
+    completed,
+    total: step.tasks.length,
+  };
+}
+
+function buildDigitalRouteStepStates(project: ForUActiveProject): ForUDigitalRouteStepState[] {
+  const normalizedProject = normalizeProject(project);
+  const template = getDigitalRouteTemplate(normalizedProject.industryKey);
+  const completedStepIds = new Set(getDigitalRouteCompletedStepIds(normalizedProject));
+
+  return template.steps.map((step) => {
+    const matches = getRouteTaskMatches(normalizedProject, step);
+    const status = completedStepIds.has(step.id)
+      ? 'ready'
+      : getStepCompletionStatus(matches.completed, matches.total);
+
+    return {
+      ...step,
+      status,
+      createdTasks: matches.created,
+      completedTasks: matches.completed,
+      totalTasks: matches.total,
+    };
+  });
+}
+
 export const baseBranches: Array<{
   key: ForUBranchKey;
   title: string;
@@ -1655,6 +1740,125 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
 
         const completed = nodes.filter((node) => node.completedAt || node.taskStatus === 'done').length;
         return Math.round((completed / nodes.length) * 100);
+      },
+
+      getDigitalRouteSteps: (projectId) => {
+        const project = get().projectsById[projectId];
+        return project ? buildDigitalRouteStepStates(normalizeProject(project)) : [];
+      },
+
+      getCurrentDigitalRouteStep: (projectId) => {
+        const project = get().projectsById[projectId];
+        if (!project) return null;
+
+        const normalizedProject = normalizeProject(project);
+        const steps = buildDigitalRouteStepStates(normalizedProject);
+        const explicitCurrentStepId = getDigitalRouteCurrentStepId(normalizedProject);
+        const explicitStep = explicitCurrentStepId ? steps.find((step) => step.id === explicitCurrentStepId) : null;
+
+        return explicitStep ?? steps.find((step) => step.status !== 'ready') ?? steps[steps.length - 1] ?? null;
+      },
+
+      createTasksForDigitalRouteStep: (projectId, stepId) => {
+        const storedProject = get().projectsById[projectId];
+        if (!storedProject) return [];
+
+        const project = normalizeProject(storedProject);
+        const template = getDigitalRouteTemplate(project.industryKey);
+        const step = template.steps.find((item) => item.id === stepId);
+        if (!step) return [];
+
+        const existingTitles = new Set(project.nodes.filter((node) => node.role === 'free').map((node) => normalizeTitle(node.title)));
+        const missingTasks = step.tasks.filter((task) => !existingTitles.has(normalizeTitle(task.title)));
+        const createdIds = missingTasks.map((task, index) => get().addFreeNodeToBranch(projectId, task.branchKey, {
+          title: task.title,
+          kind: 'task',
+          icon: '✅',
+          priority: task.priority,
+          description: task.description,
+          taskStatus: 'todo',
+          rewardCoins: 20,
+          x: 620 + index * 38,
+          y: 280 + index * 42,
+        })).filter((id): id is string => Boolean(id));
+
+        set((state) => {
+          const latestProject = state.projectsById[projectId];
+          if (!latestProject) return state;
+          const normalizedLatestProject = normalizeProject(latestProject);
+          const outputs = getDigitalRouteOutputs(normalizedLatestProject);
+
+          return {
+            projectsById: {
+              ...state.projectsById,
+              [projectId]: touch({
+                ...normalizedLatestProject,
+                strategyProfile: {
+                  ...(normalizedLatestProject.strategyProfile ?? {}),
+                  digitalRouteSystem: {
+                    ...((normalizedLatestProject.strategyProfile?.digitalRouteSystem as Record<string, unknown> | undefined) ?? {}),
+                    currentStepId: step.id,
+                    outputs: {
+                      ...outputs,
+                      [step.outputKey]: outputs[step.outputKey] ?? step.defaultOutputs,
+                    },
+                  },
+                },
+              }),
+            },
+          };
+        });
+
+        const updatedProject = get().projectsById[projectId];
+        if (updatedProject) void upsertCloudProject(get().cloudUserId, normalizeProject(updatedProject));
+        return createdIds;
+      },
+
+      completeDigitalRouteStep: (projectId, stepId) => {
+        const storedProject = get().projectsById[projectId];
+        if (!storedProject) return false;
+
+        const project = normalizeProject(storedProject);
+        const steps = buildDigitalRouteStepStates(project);
+        const step = steps.find((item) => item.id === stepId);
+        if (!step) return false;
+
+        set((state) => {
+          const latestProject = state.projectsById[projectId];
+          if (!latestProject) return state;
+          const normalizedLatestProject = normalizeProject(latestProject);
+          const completedStepIds = Array.from(new Set([...getDigitalRouteCompletedStepIds(normalizedLatestProject), stepId]));
+          const template = getDigitalRouteTemplate(normalizedLatestProject.industryKey);
+          const nextStep = template.steps.find((item) => !completedStepIds.includes(item.id));
+          const outputs = getDigitalRouteOutputs(normalizedLatestProject);
+
+          return {
+            projectsById: {
+              ...state.projectsById,
+              [projectId]: touch({
+                ...normalizedLatestProject,
+                strategyProfile: {
+                  ...(normalizedLatestProject.strategyProfile ?? {}),
+                  digitalRouteSystem: {
+                    ...((normalizedLatestProject.strategyProfile?.digitalRouteSystem as Record<string, unknown> | undefined) ?? {}),
+                    completedStepIds,
+                    currentStepId: nextStep?.id ?? stepId,
+                    outputs: {
+                      ...outputs,
+                      [step.outputKey]: outputs[step.outputKey] ?? step.defaultOutputs,
+                    },
+                  },
+                },
+              }),
+            },
+          };
+        });
+
+        get().addCoins(20);
+        get().addXP(35);
+        const updatedProject = get().projectsById[projectId];
+        if (updatedProject) void upsertCloudProject(get().cloudUserId, normalizeProject(updatedProject));
+        return true;
       },
 
       getDustyNodes: () => {
