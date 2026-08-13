@@ -7526,6 +7526,317 @@ h3 {
   background: #ffffff;
 }
 
+.foru-world-lite-shell {
+  display: block;
+  min-height: 42rem;
+  padding: 5.5rem clamp(1rem, 3vw, 2rem) 2rem;
+}
+
+.foru-world-lite-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.65rem;
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 999px;
+  padding: 0.72rem 1rem;
+  color: var(--color-texto-suave);
+  background: rgba(248, 246, 243, 0.82);
+  font-size: 0.82rem;
+  font-weight: 750;
+  box-shadow: 0 10px 24px rgba(58, 58, 74, 0.06);
+  backdrop-filter: blur(18px);
+}
+
+.foru-world-lite-ocean {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.foru-world-lite-ocean span {
+  position: absolute;
+  left: -12%;
+  right: -12%;
+  height: 18rem;
+  border-radius: 50%;
+  background:
+    linear-gradient(90deg, transparent, rgba(213, 232, 224, 0.34), transparent),
+    rgba(232, 213, 245, 0.12);
+  filter: blur(2px);
+  animation: foru-ocean-wave 13s ease-in-out infinite alternate;
+}
+
+.foru-world-lite-ocean span:nth-child(1) {
+  top: 8%;
+}
+
+.foru-world-lite-ocean span:nth-child(2) {
+  top: 38%;
+  animation-delay: -4s;
+  opacity: 0.72;
+}
+
+.foru-world-lite-ocean span:nth-child(3) {
+  top: 68%;
+  animation-delay: -7s;
+  opacity: 0.56;
+}
+
+.foru-world-lite-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1.4rem;
+}
+
+.foru-world-lite-heading {
+  max-width: 48rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.foru-world-lite-heading h2 {
+  margin: 0.7rem 0 0;
+  color: var(--color-texto);
+  font-family: var(--font-titulos);
+  font-size: clamp(2.1rem, 4vw, 4.2rem);
+  line-height: 0.98;
+}
+
+.foru-world-lite-heading p {
+  margin: 0.9rem auto 0;
+  max-width: 38rem;
+  color: var(--color-texto-suave);
+  font-size: clamp(1rem, 1.5vw, 1.14rem);
+  line-height: 1.7;
+}
+
+.foru-world-lite-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.foru-world-lite-island {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.8fr) minmax(0, 1.15fr);
+  gap: 1rem;
+  min-height: 18rem;
+  padding: 1rem;
+  overflow: hidden;
+  animation: foru-island-emerge 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.foru-world-lite-island.is-active {
+  border-color: rgba(212, 175, 55, 0.32) !important;
+  box-shadow: 0 22px 58px rgba(212, 175, 55, 0.14) !important;
+}
+
+.foru-world-lite-island-art {
+  position: relative;
+  min-height: 15rem;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 64%, rgba(213, 232, 224, 0.32), transparent 5rem),
+    linear-gradient(180deg, rgba(248, 246, 243, 0.42), rgba(232, 213, 245, 0.2));
+}
+
+.foru-world-lite-land,
+.foru-world-lite-house,
+.foru-world-lite-tree,
+.foru-world-lite-pearl {
+  position: absolute;
+  display: block;
+}
+
+.foru-world-lite-land {
+  left: 50%;
+  bottom: 1.4rem;
+  width: 9.6rem;
+  height: 5.7rem;
+  transform: translateX(-50%);
+  border-radius: 48% 52% 42% 58% / 58% 48% 52% 42%;
+  background:
+    radial-gradient(circle at 34% 22%, rgba(255, 255, 255, 0.86), transparent 2.2rem),
+    linear-gradient(135deg, var(--color-menta-perla), var(--color-lavanda-perla), var(--color-rosa-perla));
+  box-shadow: 0 20px 35px rgba(58, 58, 74, 0.12);
+}
+
+.foru-world-lite-house {
+  left: 50%;
+  bottom: 4.4rem;
+  width: 3.8rem;
+  height: 4.2rem;
+  transform: translateX(-50%);
+  border-radius: 12px 12px 8px 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(245, 213, 224, 0.72));
+  box-shadow: 0 12px 26px rgba(58, 58, 74, 0.12);
+}
+
+.foru-world-lite-house::before {
+  content: '';
+  position: absolute;
+  left: -0.3rem;
+  right: -0.3rem;
+  top: -1.1rem;
+  height: 1.6rem;
+  border-radius: 0.65rem;
+  background: linear-gradient(135deg, var(--color-dorado), var(--color-lavanda-perla));
+  transform: rotate(2deg);
+}
+
+.foru-world-lite-tree {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: var(--color-menta-perla);
+  box-shadow: 0 10px 20px rgba(58, 58, 74, 0.1);
+}
+
+.foru-world-lite-tree.one {
+  left: 21%;
+  bottom: 4.1rem;
+}
+
+.foru-world-lite-tree.two {
+  right: 20%;
+  bottom: 3.7rem;
+}
+
+.foru-world-lite-pearl {
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.34);
+  animation: foru-pearl-float 3.8s ease-in-out infinite;
+}
+
+.foru-world-lite-pearl.one {
+  top: 2.6rem;
+  left: 25%;
+}
+
+.foru-world-lite-pearl.two {
+  top: 4rem;
+  right: 22%;
+  animation-delay: -1.4s;
+}
+
+.foru-world-lite-island-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.foru-world-lite-island-body h3 {
+  margin: 0.75rem 0 0;
+  color: var(--color-texto);
+  font-family: var(--font-titulos);
+  font-size: clamp(1.6rem, 2.4vw, 2.35rem);
+  line-height: 1;
+}
+
+.foru-world-lite-island-body p {
+  margin: 0.5rem 0 0;
+  color: var(--color-texto-suave);
+  line-height: 1.5;
+}
+
+.foru-world-lite-progress {
+  height: 0.64rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(58, 58, 74, 0.08);
+}
+
+.foru-world-lite-progress span {
+  display: block;
+  height: 100%;
+  min-width: 0.45rem;
+  border-radius: inherit;
+  background: var(--gradient-iridiscente);
+  transition: width 420ms ease;
+}
+
+.foru-world-lite-branches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.foru-world-lite-branches span {
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 999px;
+  padding: 0.45rem 0.62rem;
+  color: var(--color-texto-suave);
+  background: rgba(248, 246, 243, 0.74);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.foru-world-lite-empty {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.foru-world-lite-empty > span {
+  font-size: 3rem;
+}
+
+.foru-world-lite-empty h3 {
+  margin: 0.8rem 0 0;
+  font-family: var(--font-titulos);
+  font-size: 2.4rem;
+}
+
+@keyframes foru-ocean-wave {
+  from {
+    transform: translateX(-2%) rotate(-2deg);
+  }
+  to {
+    transform: translateX(2%) rotate(2deg);
+  }
+}
+
+@keyframes foru-island-emerge {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes foru-pearl-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.75rem);
+  }
+}
+
+@media (max-width: 720px) {
+  .foru-world-lite-island {
+    grid-template-columns: 1fr;
+  }
+
+  .foru-world-lite-island-art {
+    min-height: 12rem;
+  }
+}
+
 .foru-task-board {
   position: relative;
   flex: 1;

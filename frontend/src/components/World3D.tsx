@@ -1,19 +1,21 @@
-import { useMemo, useState } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { ContactShadows, Environment, Float, Html, OrbitControls } from '@react-three/drei';
-import { PCFSoftShadowMap, Vector3 } from 'three';
-import Island3D from './Island3D';
-import Sailboat from './Sailboat';
+import { useMemo } from 'react';
 import { type ForUActiveProject, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import MagicBadge from './ui/MagicBadge';
+import MagicButton from './ui/MagicButton';
+import MagicCard from './ui/MagicCard';
 
 type World3DProps = {
   onBackToMap: () => void;
   onOpenProject: (projectId: string) => void;
 };
 
+type ProjectMetrics = {
+  pending: number;
+  completed: number;
+  progress: number;
+};
+
 export default function World3D({ onBackToMap, onOpenProject }: World3DProps) {
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [isCameraUnlocked, setIsCameraUnlocked] = useState(false);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const activeProjectIds = useActiveProjectsStore((state) => state.activeProjectIds);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
@@ -25,150 +27,132 @@ export default function World3D({ onBackToMap, onOpenProject }: World3DProps) {
       .filter((project): project is ForUActiveProject => Boolean(project) && project.status === 'active'),
     [activeProjectIds, projectsById],
   );
-  const selectedId = selectedProjectId ?? activeProjectId ?? projects[0]?.id ?? null;
 
-  function selectIsland(projectId: string) {
-    setSelectedProjectId(projectId);
+  function enterProject(projectId: string) {
     switchProject(projectId);
-    window.setTimeout(() => onOpenProject(projectId), 520);
+    onOpenProject(projectId);
   }
 
   return (
-    <section className="foru-world3d-shell" aria-label="Archipiélago 3D de proyectos">
+    <section className="foru-world3d-shell foru-world-lite-shell" aria-label="Mi Mundo de proyectos">
       <div className="foru-world-house-ui">
         <button type="button" onClick={onBackToMap}>← Volver al tablero</button>
-        <button type="button" onClick={() => setIsCameraUnlocked((current) => !current)}>
-          {isCameraUnlocked ? '🔒 Fijar vista' : '🕹️ Explorar'}
-        </button>
+        <span className="foru-world-lite-status">Vista ligera activa</span>
       </div>
 
-      <Canvas shadows={{ type: PCFSoftShadowMap }} camera={{ position: [0, 20, 30], fov: 45 }} className="foru-world3d-canvas">
-        <ArchipelagoCamera selectedProjectId={selectedId} projects={projects} isCameraUnlocked={isCameraUnlocked} />
-        <color attach="background" args={['#F8F2FF']} />
-        <fog attach="fog" args={['#F8F2FF', 20, 58]} />
-        <Environment preset="sunset" />
-        <ambientLight intensity={0.58} />
-        <directionalLight position={[6, 12, 8]} intensity={1.15} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+      <div className="foru-world-lite-ocean" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
 
-        <mesh position={[0, -0.9, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <circleGeometry args={[34, 96]} />
-          <meshPhysicalMaterial color="#76d7c4" transparent opacity={0.55} roughness={0.1} metalness={0.02} transmission={0.35} clearcoat={0.5} />
-        </mesh>
+      <div className="foru-world-lite-content">
+        <div className="foru-world-lite-heading">
+          <MagicBadge>Mi Mundo</MagicBadge>
+          <h2>Tus proyectos como islas</h2>
+          <p>
+            Esta vista liviana mantiene el archipielago funcionando mientras estabilizamos el 3D pesado en produccion.
+          </p>
+        </div>
 
-        {projects.map((project, index) => (
-          <Island3D
-            key={project.id}
-            project={project}
-            position={getIslandPosition(index, projects.length)}
-            isSelected={project.id === selectedId}
-            onSelect={() => selectIsland(project.id)}
-          >
-            <ProjectBuildings project={project} />
-            <Html position={[0, 5.2, 0]} center distanceFactor={14}>
-              <button type="button" className="foru-world-room-action" onClick={() => selectIsland(project.id)}>
-                Entrar al Kanban
-              </button>
-            </Html>
-          </Island3D>
-        ))}
-
-        <Sailboat />
-        <FloatingPearls />
-        <ContactShadows position={[0, -0.35, 0]} opacity={0.32} scale={Math.max(18, projects.length * 8)} blur={2.6} far={14} color="#8d7ca6" />
-        <OrbitControls enabled={isCameraUnlocked} enablePan={false} minDistance={12} maxDistance={46} maxPolarAngle={Math.PI / 2.35} />
-      </Canvas>
+        {projects.length ? (
+          <div className="foru-world-lite-grid">
+            {projects.map((project, index) => (
+              <ProjectIsland
+                key={project.id}
+                project={project}
+                index={index}
+                isActive={project.id === activeProjectId}
+                onEnter={() => enterProject(project.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <MagicCard className="foru-world-lite-empty">
+            <span>🏝️</span>
+            <h3>Aun no hay islas</h3>
+            <p>Crea tu primer proyecto desde el tablero y aparecera aqui.</p>
+            <MagicButton variant="soft" onClick={onBackToMap}>Volver al tablero</MagicButton>
+          </MagicCard>
+        )}
+      </div>
     </section>
   );
 }
 
-function ArchipelagoCamera({
-  selectedProjectId,
-  projects,
-  isCameraUnlocked,
+function ProjectIsland({
+  project,
+  index,
+  isActive,
+  onEnter,
 }: {
-  selectedProjectId: string | null;
-  projects: ForUActiveProject[];
-  isCameraUnlocked: boolean;
+  project: ForUActiveProject;
+  index: number;
+  isActive: boolean;
+  onEnter: () => void;
 }) {
-  const { camera } = useThree();
-  const targetPosition = useMemo(() => new Vector3(0, 20, 30), []);
-  const lookTarget = useMemo(() => new Vector3(0, 0, 0), []);
-
-  useFrame(() => {
-    if (isCameraUnlocked) return;
-    const selectedIndex = projects.findIndex((project) => project.id === selectedProjectId);
-    if (selectedIndex >= 0 && projects.length > 1) {
-      const island = getIslandPosition(selectedIndex, projects.length);
-      targetPosition.set(island[0] + 7, 8, island[2] + 9);
-      lookTarget.set(island[0], 0.6, island[2]);
-    } else {
-      targetPosition.set(0, 20, 30);
-      lookTarget.set(0, 0, 0);
-    }
-
-    camera.position.lerp(targetPosition, 0.06);
-    camera.lookAt(lookTarget);
-  });
-
-  return null;
-}
-
-function ProjectBuildings({ project }: { project: ForUActiveProject }) {
-  const freeNodes = project.nodes.filter((node) => node.role === 'free');
-  const completedNodes = freeNodes.filter((node) => node.completedAt || node.taskStatus === 'done');
-  const progress = freeNodes.length ? completedNodes.length / freeNodes.length : 0;
-  const glow = progress >= 0.6;
+  const metrics = getProjectMetrics(project);
+  const branches = getBranchCounts(project);
 
   return (
-    <group>
-      <Float speed={1.2} rotationIntensity={0.04} floatIntensity={0.12}>
-        <mesh position={[0, 1, 0]} castShadow>
-          <boxGeometry args={[1.25 + progress * 0.45, 1.45 + progress * 0.75, 1.15]} />
-          <meshPhysicalMaterial color={progress > 0 ? '#FFD1DC' : '#d5d5d5'} roughness={0.78} metalness={0.06} clearcoat={0.25} />
-        </mesh>
-        <mesh position={[0, 2.05 + progress * 0.34, 0]} castShadow>
-          <coneGeometry args={[0.98, 0.62, 4]} />
-          <meshPhysicalMaterial color="#FFDAB9" roughness={0.72} metalness={0.06} clearcoat={0.22} />
-        </mesh>
-      </Float>
-      <mesh position={[-1.65, 0.58, 1.25]} castShadow>
-        <sphereGeometry args={[0.38, 18, 12]} />
-        <meshPhysicalMaterial color="#B5EAD7" roughness={0.84} metalness={0.03} />
-      </mesh>
-      <mesh position={[1.55, 0.58, -1.15]} castShadow>
-        <sphereGeometry args={[0.34, 18, 12]} />
-        <meshPhysicalMaterial color="#B5EAD7" roughness={0.84} metalness={0.03} />
-      </mesh>
-      {glow ? <pointLight position={[0, 3.2, 0]} color="#FFDAB9" distance={5} intensity={1.05} /> : null}
-    </group>
+    <MagicCard
+      className={`foru-world-lite-island ${isActive ? 'is-active' : ''}`}
+      style={{ animationDelay: `${Math.min(index * 90, 540)}ms` }}
+    >
+      <div className="foru-world-lite-island-art" aria-hidden="true">
+        <span className="foru-world-lite-land" />
+        <span className="foru-world-lite-house" />
+        <span className="foru-world-lite-tree one" />
+        <span className="foru-world-lite-tree two" />
+        <span className="foru-world-lite-pearl one" />
+        <span className="foru-world-lite-pearl two" />
+      </div>
+
+      <div className="foru-world-lite-island-body">
+        <div>
+          <MagicBadge>{isActive ? 'Isla actual' : 'Proyecto activo'}</MagicBadge>
+          <h3>{project.name}</h3>
+          <p>{metrics.completed}/{metrics.pending + metrics.completed} acciones completadas</p>
+        </div>
+
+        <div className="foru-world-lite-progress" aria-label={`${metrics.progress}% completado`}>
+          <span style={{ width: `${metrics.progress}%` }} />
+        </div>
+
+        <div className="foru-world-lite-branches" aria-label="Areas del proyecto">
+          {branches.map((branch) => (
+            <span key={branch.key} title={branch.label}>
+              {branch.icon} {branch.count}
+            </span>
+          ))}
+        </div>
+
+        <MagicButton onClick={onEnter}>Entrar al proyecto</MagicButton>
+      </div>
+    </MagicCard>
   );
 }
 
-function FloatingPearls() {
-  const pearls: Array<[number, number, number]> = [
-    [0, 4.2, 0],
-    [7, 3.4, -5],
-    [-8, 3.1, 6],
-    [4, 3.8, 9],
-  ];
+function getProjectMetrics(project: ForUActiveProject): ProjectMetrics {
+  const actionNodes = project.nodes.filter((node) => node.role === 'free');
+  const completed = actionNodes.filter((node) => node.completedAt || node.taskStatus === 'done').length;
+  const pending = Math.max(actionNodes.length - completed, 0);
+  const progress = actionNodes.length ? Math.round((completed / actionNodes.length) * 100) : 0;
 
-  return (
-    <>
-      {pearls.map((position, index) => (
-        <Float key={position.join('-')} speed={1.2 + index * 0.16} rotationIntensity={0.4} floatIntensity={0.45}>
-          <mesh position={position} castShadow>
-            <sphereGeometry args={[0.28, 24, 18]} />
-            <meshPhysicalMaterial color="#ffffff" roughness={0.08} metalness={0.72} transmission={0.28} clearcoat={0.8} emissive="#E6E6FA" emissiveIntensity={0.24} />
-          </mesh>
-        </Float>
-      ))}
-    </>
-  );
+  return { pending, completed, progress };
 }
 
-function getIslandPosition(index: number, total: number): [number, number, number] {
-  if (total <= 1) return [0, 0, 0];
-  const angle = (index / total) * Math.PI * 2;
-  const radius = total <= 5 ? 12 : 15 + Math.floor(index / 8) * 5;
-  return [Math.cos(angle) * radius, 0, Math.sin(angle) * radius];
+function getBranchCounts(project: ForUActiveProject) {
+  const branches = [
+    { key: 'ideas', icon: '💡', label: 'Ideas' },
+    { key: 'actions', icon: '✅', label: 'Acciones' },
+    { key: 'finances', icon: '💰', label: 'Finanzas' },
+    { key: 'marketing', icon: '📱', label: 'Marketing' },
+    { key: 'resources', icon: '📚', label: 'Recursos' },
+  ] as const;
+
+  return branches.map((branch) => ({
+    ...branch,
+    count: project.nodes.filter((node) => node.role === 'free' && node.branchKey === branch.key).length,
+  }));
 }
