@@ -1,12 +1,9 @@
 import { motion } from 'framer-motion';
 import {
-  feelingLabels,
   type ForUActiveProject,
   type ForUNextAction,
   useActiveProjectsStore,
 } from '../stores/useActiveProjectsStore';
-import AutonomousOrganizer from './AutonomousOrganizer';
-import EmotionalWellbeingPanel from './EmotionalWellbeingPanel';
 import MagicBadge from './ui/MagicBadge';
 import MagicButton from './ui/MagicButton';
 import MagicCard from './ui/MagicCard';
@@ -35,10 +32,9 @@ export default function PersonalDashboard({
 }: PersonalDashboardProps) {
   const greeting = getGreeting();
   const attentiveProjects = projects.filter((item) => item.pendingCount > 0).length;
-  const getFeelingProgress = useActiveProjectsStore((state) => state.getFeelingProgress);
   const getCurrentDigitalRouteStep = useActiveProjectsStore((state) => state.getCurrentDigitalRouteStep);
   const getDigitalRouteSteps = useActiveProjectsStore((state) => state.getDigitalRouteSteps);
-  const focusProjectId = projects[0]?.project.id ?? null;
+  const featuredProject = projects[0] ?? null;
 
   return (
     <section className="foru-personal-dashboard" aria-label="Tablero de Control Personal">
@@ -48,34 +44,28 @@ export default function PersonalDashboard({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.24 }}
       >
-        <span>{greeting.icon}</span>
         <div>
           <h1><GradientText>{greeting.text}, {name}</GradientText></h1>
           <p>{getBossMessage(attentiveProjects)}</p>
-          <MagicBadge className="foru-plan-badge">Plan {planLabel}</MagicBadge>
         </div>
+        <MagicBadge className="foru-plan-badge">Plan {planLabel}</MagicBadge>
       </motion.div>
 
-      <MagicCard as="section" className="foru-industry-starter-card">
-        <div>
-          <MagicBadge>Sistemas por rubro</MagicBadge>
-          <h2>Crea una estrategia según tu industria</h2>
-          <p>
-            Elige turismo o gastronomía y For U crea una ruta, tareas y sistema base según ese rubro.
-            Después replicamos este patrón para belleza, educación, retail y servicios.
-          </p>
-        </div>
-        <MagicButton type="button" onClick={onCreateIndustryProject}>
-          Elegir rubro
-        </MagicButton>
-      </MagicCard>
+      {featuredProject ? (
+        <MagicCard as="section" className="foru-next-route-card">
+          <div>
+            <MagicBadge>Ahora</MagicBadge>
+            <h2>{featuredProject.project.name}</h2>
+            <p>{getRouteCardTitle(featuredProject.project.id, getCurrentDigitalRouteStep)}</p>
+            <small>{getRouteCardSubtitle(featuredProject.project.id, getDigitalRouteSteps, featuredProject.nextAction?.title)}</small>
+          </div>
+          <MagicButton type="button" onClick={() => onViewProject(featuredProject.project.id)}>
+            Continuar ruta
+          </MagicButton>
+        </MagicCard>
+      ) : null}
 
-      <div className="foru-dashboard-emotional-grid">
-        <EmotionalWellbeingPanel projectId={focusProjectId} />
-        <AutonomousOrganizer projectId={focusProjectId} />
-      </div>
-
-      <div className="foru-personal-project-list">
+      <div className="foru-personal-project-list" aria-label="Proyectos">
         {projects.map(({ project, nextAction, pendingCount }, index) => (
           <MagicCard
             as="article"
@@ -89,7 +79,7 @@ export default function PersonalDashboard({
           >
             <div className="foru-personal-project-main">
               <div>
-                <span className="foru-personal-project-status">{pendingCount > 0 ? `${pendingCount} pendientes` : 'Sin pendientes'}</span>
+                <span className="foru-personal-project-status">{pendingCount > 0 ? `${pendingCount} acciones` : 'Sin pendientes'}</span>
                 <h2>{project.name}</h2>
                 {project.industryKey ? <MagicBadge>{getIndustryLabel(project.industryKey)}</MagicBadge> : null}
               </div>
@@ -100,30 +90,10 @@ export default function PersonalDashboard({
               <span>Ruta Digital</span>
               <p>{getRouteCardTitle(project.id, getCurrentDigitalRouteStep)}</p>
               <small>{getRouteCardSubtitle(project.id, getDigitalRouteSteps, nextAction?.title)}</small>
-              {project.targetFeelings[0] ? (
-                <small className="foru-task-feeling-line">
-                  Esto te acerca a sentir: {feelingLabels[project.targetFeelings[0]].icon} {feelingLabels[project.targetFeelings[0]].label}
-                </small>
-              ) : null}
               {isProjectQuiet(project) ? (
                 <em>Nicole, este proyecto te extraña. ¿Le dedicamos 10 minutos?</em>
               ) : null}
             </div>
-
-            {project.targetFeelings.length > 0 ? (
-              <div className="foru-feeling-bars">
-                {project.targetFeelings.slice(0, 3).map((feeling) => {
-                  const progress = getFeelingProgress(project.id, feeling);
-                  return (
-                    <div key={feeling}>
-                      <span>{feelingLabels[feeling].icon} {feelingLabels[feeling].label}</span>
-                      <strong>{progress}%</strong>
-                      <i><b style={{ width: `${progress}%` }} /></i>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : null}
 
             <div className="foru-personal-project-actions">
               <MagicButton type="button" onClick={() => onViewProject(project.id)}>
@@ -137,6 +107,17 @@ export default function PersonalDashboard({
           </MagicCard>
         ))}
       </div>
+
+      <MagicCard as="section" className="foru-industry-starter-card">
+        <div>
+          <MagicBadge>Nuevo sistema</MagicBadge>
+          <h2>Crear otra Ruta Digital</h2>
+          <p>Elige un rubro y For U prepara una ruta completa: oferta, landing, WhatsApp, contenido, Google y métricas.</p>
+        </div>
+        <MagicButton type="button" variant="soft" onClick={onCreateIndustryProject}>
+          Elegir rubro
+        </MagicButton>
+      </MagicCard>
     </section>
   );
 }

@@ -210,21 +210,29 @@ export default function ForUWorkspace() {
         </label>
 
         <div className="foru-personal-header-stats">
-          <button type="button" className="foru-chat-open-button" onClick={() => setIsChatOpen(true)}>
-            Hablar con For U 💬
+          <button
+            type="button"
+            className="foru-header-primary-action"
+            onClick={() => (screen === 'project' ? openDashboard(currentProjectId ?? undefined) : currentProjectId && viewProject(currentProjectId))}
+          >
+            {screen === 'project' ? 'Volver al tablero' : 'Continuar ruta'}
+          </button>
+          <button type="button" className="foru-chat-open-button" onClick={() => setIsChatOpen(true)} aria-label="Hablar con For U">
+            💬
           </button>
           <button type="button" className="foru-world-button" onClick={openWorld}>
-            🌍 Mi Mundo
+            Mi Mundo
           </button>
-          <Link className="foru-header-quiet-button" to="/whatsapp">
-            WhatsApp
-          </Link>
-          <span title="Tu plan actual">Plan {planLabel}</span>
-          <span title="Inicia sesión cada día para mantener tu racha">📅 Racha: {dailyStreak} {dailyStreak === 1 ? 'dia' : 'dias'}</span>
           <span title="Gana monedas completando acciones">🪙 {coins} monedas</span>
-          <button type="button" className="foru-header-quiet-button" onClick={handleSignOut}>
-            Salir
-          </button>
+          <details className="foru-header-more">
+            <summary>Más</summary>
+            <div>
+              <Link to="/whatsapp">WhatsApp</Link>
+              <Link to="/pricing">Plan {planLabel}</Link>
+              <span>Racha: {dailyStreak} {dailyStreak === 1 ? 'dia' : 'dias'}</span>
+              <button type="button" onClick={handleSignOut}>Salir</button>
+            </div>
+          </details>
         </div>
       </header>
 
