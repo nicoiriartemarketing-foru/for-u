@@ -24,6 +24,7 @@ type PersonalDashboardProps = {
   projects: PersonalDashboardItem[];
   onStart: (projectId: string) => void;
   onViewProject: (projectId: string) => void;
+  onCreateIndustryProject: () => void;
 };
 
 export default function PersonalDashboard({
@@ -32,6 +33,7 @@ export default function PersonalDashboard({
   projects,
   onStart,
   onViewProject,
+  onCreateIndustryProject,
 }: PersonalDashboardProps) {
   const greeting = getGreeting();
   const attentiveProjects = projects.filter((item) => item.pendingCount > 0).length;
@@ -54,6 +56,20 @@ export default function PersonalDashboard({
         </div>
       </motion.div>
 
+      <MagicCard as="section" className="foru-industry-starter-card">
+        <div>
+          <MagicBadge>Sistemas por rubro</MagicBadge>
+          <h2>Crea una estrategia según tu industria</h2>
+          <p>
+            Elige turismo o gastronomía y For U crea una ruta, tareas y sistema base según ese rubro.
+            Después replicamos este patrón para belleza, educación, retail y servicios.
+          </p>
+        </div>
+        <MagicButton type="button" onClick={onCreateIndustryProject}>
+          Elegir rubro
+        </MagicButton>
+      </MagicCard>
+
       <div className="foru-dashboard-emotional-grid">
         <EmotionalWellbeingPanel projectId={focusProjectId} />
         <AutonomousOrganizer projectId={focusProjectId} />
@@ -75,6 +91,7 @@ export default function PersonalDashboard({
               <div>
                 <span className="foru-personal-project-status">{pendingCount > 0 ? `${pendingCount} pendientes` : 'Sin pendientes'}</span>
                 <h2>{project.name}</h2>
+                {project.industryKey ? <MagicBadge>{getIndustryLabel(project.industryKey)}</MagicBadge> : null}
               </div>
               <strong>{formatPriority(nextAction?.priority)}</strong>
             </div>
@@ -147,4 +164,9 @@ function isProjectQuiet(project: ForUActiveProject) {
   const lastUpdate = new Date(project.updatedAt).getTime();
   if (!Number.isFinite(lastUpdate)) return false;
   return Date.now() - lastUpdate > 48 * 60 * 60 * 1000;
+}
+
+function getIndustryLabel(industryKey: NonNullable<ForUActiveProject['industryKey']>) {
+  if (industryKey === 'gastronomy') return 'Gastronomía';
+  return 'Turismo';
 }

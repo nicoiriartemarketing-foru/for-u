@@ -1,6 +1,7 @@
 import { create, type StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../lib/supabaseClient';
+import { industryTemplates, type ForUIndustryKey } from '../templates/industryTemplates';
 
 export type ForUProjectStatus = 'active' | 'paused' | 'blocked' | 'completed';
 export type ForUTaskStatus = 'todo' | 'doing' | 'done';
@@ -87,6 +88,9 @@ export type ForUActiveProject = {
   name: string;
   tangibleGoal?: string;
   targetFeelings: ForUFeelingType[];
+  industryKey?: ForUIndustryKey;
+  strategyProfile?: Record<string, unknown>;
+  templateSource?: string;
   status: ForUProjectStatus;
   tasks: ForUTask[];
   nodes: ForUProjectNode[];
@@ -130,6 +134,9 @@ type CreateProjectInput = {
   status?: ForUProjectStatus;
   tangibleGoal?: string;
   targetFeelings?: ForUFeelingType[];
+  industryKey?: ForUIndustryKey;
+  strategyProfile?: Record<string, unknown>;
+  templateSource?: string;
 };
 
 type CreateRawNoteInput = {
@@ -355,6 +362,9 @@ type SupabaseProjectRow = {
   name: string;
   description: string | null;
   tangible_goal: string | null;
+  industry_key?: ForUIndustryKey | null;
+  strategy_profile?: Record<string, unknown> | null;
+  template_source?: string | null;
   status: ForUProjectStatus;
   created_at: string;
 };
@@ -481,15 +491,36 @@ function getBranchPosition(branchKey: ForUBranchKey, index: number) {
 async function upsertCloudProject(userId: string | null, project: ForUActiveProject) {
   if (!canSyncCloud(userId) || !supabase) return;
 
-  await supabase.from('projects').upsert({
+  const payload = {
     id: project.id,
     user_id: userId,
     name: project.name,
     description: '',
     tangible_goal: project.tangibleGoal ?? '',
+    industry_key: project.industryKey ?? null,
+    strategy_profile: project.strategyProfile ?? {},
+    template_source: project.templateSource ?? null,
     status: project.status,
     created_at: project.createdAt,
-  });
+  };
+
+  const { error } = await supabase.from('projects').upsert(payload);
+  if (!error) return;
+
+  if (error.message.includes('industry_key') || error.message.includes('strategy_profile') || error.message.includes('template_source')) {
+    await supabase.from('projects').upsert({
+      id: project.id,
+      user_id: userId,
+      name: project.name,
+      description: '',
+      tangible_goal: project.tangibleGoal ?? '',
+      status: project.status,
+      created_at: project.createdAt,
+    });
+    return;
+  }
+
+  console.warn('No se pudo guardar el proyecto en Supabase:', error.message);
 }
 
 async function deleteCloudProject(userId: string | null, projectId: string) {
@@ -621,6 +652,50 @@ function inferConcreteActionFromText(text: string, projectName: string) {
   return `Elegir 1 resultado concreto para ${projectName} y escribir el primer paso`;
 }
 
+function inferTourismAction(project: ForUActiveProject, text: string) {
+  const source = `${project.name} ${project.tangibleGoal ?? ''} ${text}`.toLowerCase();
+
+  if (source.includes('whatsapp') || source.includes('consulta') || source.includes('reserva')) {
+    return 'Redactar el mensaje de respuesta para una consulta por WhatsApp';
+  }
+  if (source.includes('precio') || source.includes('cupo') || source.includes('disponibilidad') || source.includes('calendario')) {
+    return 'Definir cupos, precio base y fechas disponibles de la experiencia';
+  }
+  if (source.includes('foto') || source.includes('galería') || source.includes('galeria') || source.includes('imagen')) {
+    return 'Elegir 5 fotos que transmitan confianza y deseo de viajar';
+  }
+  if (source.includes('historia') || source.includes('anfitri') || source.includes('guía') || source.includes('guia')) {
+    return 'Escribir una historia breve del anfitrión y por qué esta experiencia existe';
+  }
+  if (source.includes('landing') || source.includes('web') || source.includes('página') || source.includes('pagina')) {
+    return 'Armar el texto base de la landing: promesa, beneficios, itinerario y CTA';
+  }
+
+  return 'Definir la experiencia estrella con nombre, promesa, duración y próximo paso de reserva';
+}
+
+function inferGastronomyAction(project: ForUActiveProject, text: string) {
+  const source = `${project.name} ${project.tangibleGoal ?? ''} ${text}`.toLowerCase();
+
+  if (source.includes('whatsapp') || source.includes('pedido') || source.includes('delivery') || source.includes('reserva')) {
+    return 'Redactar el mensaje de bienvenida para recibir pedidos por WhatsApp';
+  }
+  if (source.includes('precio') || source.includes('costo') || source.includes('margen') || source.includes('combo')) {
+    return 'Calcular costo, precio y margen del producto estrella';
+  }
+  if (source.includes('foto') || source.includes('reel') || source.includes('instagram') || source.includes('contenido')) {
+    return 'Crear 3 ideas de contenido de antojo para Instagram';
+  }
+  if (source.includes('menú') || source.includes('menu') || source.includes('plato') || source.includes('producto')) {
+    return 'Elegir el producto estrella y escribir una descripción vendible';
+  }
+  if (source.includes('cliente') || source.includes('oficina') || source.includes('familia') || source.includes('evento')) {
+    return 'Definir el cliente ideal y el momento de consumo principal';
+  }
+
+  return 'Definir el producto estrella con nombre, precio, canal de pedido y siguiente paso';
+}
+
 function buildNextAction(project: ForUActiveProject, rawNotes: ForURawNote[] = []): ForUNextAction | null {
   const normalizedProject = normalizeProject(project);
   const pendingNodes = normalizedProject.nodes
@@ -647,6 +722,32 @@ function buildNextAction(project: ForUActiveProject, rawNotes: ForURawNote[] = [
   }
 
   const ideaText = getRawIdeaText(normalizedProject, rawNotes);
+  if (normalizedProject.industryKey === 'tourism') {
+    return {
+      id: `tourism-suggested-${normalizedProject.id}`,
+      projectId: normalizedProject.id,
+      title: inferTourismAction(normalizedProject, ideaText),
+      description: 'Sugerencia especializada para turismo: convertir la experiencia en una acción que acerque reservas reales.',
+      estimatedMinutes: 15,
+      rewardCoins: 20,
+      priority: 'medium',
+      isFallback: true,
+    };
+  }
+
+  if (normalizedProject.industryKey === 'gastronomy') {
+    return {
+      id: `gastronomy-suggested-${normalizedProject.id}`,
+      projectId: normalizedProject.id,
+      title: inferGastronomyAction(normalizedProject, ideaText),
+      description: 'Sugerencia especializada para gastronomía: convertir la oferta en una acción que acerque pedidos reales.',
+      estimatedMinutes: 15,
+      rewardCoins: 20,
+      priority: 'medium',
+      isFallback: true,
+    };
+  }
+
   const suggestedTitle = inferConcreteActionFromText(ideaText, normalizedProject.name);
   if (suggestedTitle) {
     return {
@@ -722,17 +823,92 @@ function summarizeMoodPattern(moods: ForUDailyMood[]) {
   return `Últimamente aparece más ${moodLabels[dominantMood].label.toLowerCase()}. For U va a ajustar tus pasos a ese ritmo.`;
 }
 
+function applyIndustryTemplate(project: ForUActiveProject, timestamp: string): ForUActiveProject {
+  if (!project.industryKey) return project;
+
+  const template = industryTemplates[project.industryKey];
+  if (!template) return project;
+
+  const existingNodeIds = new Set((project.nodes ?? []).map((node) => node.id));
+  const existingTaskIds = new Set((project.tasks ?? []).map((task) => task.id));
+  const templateNodes: ForUProjectNode[] = template.nodes.map((node) => {
+    const nodeId = `${project.id}-${node.idSuffix}`;
+
+    return {
+      id: nodeId,
+      title: node.title,
+      kind: node.branchKey === 'resources' ? 'resource' : node.branchKey === 'ideas' ? 'idea' : 'task',
+      role: 'free',
+      branchKey: node.branchKey,
+      icon: node.icon,
+      description: node.description,
+      priority: node.priority,
+      feelingType: node.feelingType,
+      taskStatus: node.branchKey === 'ideas' || node.branchKey === 'resources' ? undefined : 'todo',
+      x: node.x,
+      y: node.y,
+      lastActiveDate: timestamp,
+      createdAt: timestamp,
+    };
+  }).filter((node) => !existingNodeIds.has(node.id));
+  const templateEdges: ForUProjectEdge[] = templateNodes.map((node) => ({
+    id: `${project.id}-edge-template-${node.id}`,
+    source: getBranchNodeId(project.id, node.branchKey ?? 'actions'),
+    target: node.id,
+    createdAt: timestamp,
+  }));
+  const route: ForURouteStep[] = template.route.map((step) => ({
+    id: `${project.id}-route-${step.idSuffix}`,
+    title: step.title,
+    linkedNodeId: `${project.id}-${step.linkedNodeSuffix}`,
+  }));
+
+  return {
+    ...project,
+    tangibleGoal: project.tangibleGoal || template.tangibleGoal,
+    targetFeelings: project.targetFeelings.length ? project.targetFeelings : template.targetFeelings,
+    strategyProfile: {
+      ...template.strategyProfile,
+      ...(project.strategyProfile ?? {}),
+    },
+    templateSource: project.templateSource ?? template.source,
+    tasks: [
+      ...project.tasks,
+      ...templateNodes
+        .filter((node) => node.taskStatus)
+        .filter((node) => !existingTaskIds.has(node.id))
+        .map((node) => ({
+          id: node.id,
+          title: node.title,
+          status: node.taskStatus ?? 'todo',
+          createdAt: node.createdAt,
+          completedAt: node.completedAt,
+        })),
+    ],
+    nodes: [...project.nodes, ...templateNodes],
+    edges: [...project.edges, ...templateEdges],
+    digitalRoute: project.digitalRoute.length ? project.digitalRoute : route,
+  };
+}
+
 function createProject(input: CreateProjectInput): ForUActiveProject {
   const timestamp = now();
   const projectId = createId('project');
-  const name = input.name.trim() || 'Proyecto sin nombre';
+  const template = input.industryKey ? industryTemplates[input.industryKey] : null;
+  const name = input.name.trim() || template?.defaultProjectName || 'Proyecto sin nombre';
   const base = createBaseMap(projectId, name, timestamp);
 
-  return {
+  const project: ForUActiveProject = {
     id: projectId,
     name,
-    tangibleGoal: input.tangibleGoal?.trim(),
-    targetFeelings: input.targetFeelings ?? [],
+    tangibleGoal: input.tangibleGoal?.trim() || template?.tangibleGoal,
+    targetFeelings: input.targetFeelings ?? template?.targetFeelings ?? [],
+    industryKey: input.industryKey,
+    strategyProfile: {
+      ...(template?.strategyProfile ?? {}),
+      ...(input.strategyProfile ?? {}),
+    },
+    templateSource: input.templateSource ?? template?.source,
     status: input.status ?? 'active',
     tasks: [],
     nodes: base.nodes,
@@ -742,6 +918,8 @@ function createProject(input: CreateProjectInput): ForUActiveProject {
     createdAt: timestamp,
     updatedAt: timestamp,
   };
+
+  return applyIndustryTemplate(project, timestamp);
 }
 
 function touch(project: ForUActiveProject): ForUActiveProject {
@@ -763,6 +941,9 @@ function normalizeProject(project: ForUActiveProject): ForUActiveProject {
     ...project,
     tangibleGoal: project.tangibleGoal ?? '',
     targetFeelings: project.targetFeelings ?? [],
+    industryKey: project.industryKey,
+    strategyProfile: project.strategyProfile ?? {},
+    templateSource: project.templateSource,
     tasks: project.tasks ?? [],
     nodes: [...missingBaseNodes, ...nodes],
     edges: [...missingBaseEdges, ...edges],
@@ -988,6 +1169,9 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
             name: row.name,
             tangibleGoal: row.tangible_goal ?? '',
             targetFeelings: rowFeelings,
+            industryKey: row.industry_key ?? undefined,
+            strategyProfile: row.strategy_profile ?? {},
+            templateSource: row.template_source ?? undefined,
             status: row.status ?? 'active',
             tasks: taskNodes.map((node) => ({
               id: node.id,
@@ -1004,7 +1188,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
             updatedAt: timestamp,
           });
 
-          return [project.id, project];
+          return [project.id, applyIndustryTemplate(project, timestamp)];
         }));
 
         const firstProjectId = cleanProjects[0]?.id ?? null;
@@ -1657,6 +1841,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
         }));
 
         void upsertCloudProject(get().cloudUserId, project);
+        void Promise.all(project.nodes.map((node) => upsertCloudTask(get().cloudUserId, project.id, node)));
         return project.id;
       },
 

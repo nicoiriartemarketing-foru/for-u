@@ -11864,3 +11864,396 @@ a.foru-header-quiet-button {
     grid-template-columns: 1fr;
   }
 }
+
+.foru-industry-starter-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin: 1.25rem 0;
+  border-color: rgba(212, 175, 55, 0.18);
+  background:
+    radial-gradient(circle at top left, rgba(212, 175, 55, 0.1), transparent 34%),
+    rgba(248, 246, 243, 0.92);
+}
+
+.foru-industry-starter-card h2 {
+  margin: 0.55rem 0 0.35rem;
+  color: var(--color-texto);
+}
+
+.foru-industry-starter-card p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--color-texto-suave);
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .foru-industry-starter-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.foru-industry-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(30, 28, 34, 0.28);
+  backdrop-filter: blur(14px);
+}
+
+.foru-industry-modal {
+  width: min(940px, 100%);
+  max-height: min(860px, calc(100vh - 48px));
+  overflow: auto;
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top left, rgba(212, 175, 55, 0.12), transparent 34%),
+    rgba(250, 250, 248, 0.96);
+  box-shadow: 0 24px 80px rgba(58, 58, 74, 0.18);
+}
+
+.foru-industry-modal > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 26px;
+  border-bottom: 1px solid rgba(58, 58, 74, 0.08);
+}
+
+.foru-industry-modal > header h2 {
+  margin: 0.65rem 0 0.35rem;
+  color: var(--color-texto);
+}
+
+.foru-industry-modal > header p {
+  max-width: 700px;
+  margin: 0;
+  color: var(--color-texto-suave);
+  line-height: 1.6;
+}
+
+.foru-industry-modal > header > button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(58, 58, 74, 0.1);
+  border-radius: 999px;
+  color: var(--color-texto);
+  background: rgba(248, 246, 243, 0.75);
+  cursor: pointer;
+  font-size: 1.35rem;
+}
+
+.foru-industry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 26px;
+}
+
+.foru-industry-option {
+  min-height: 150px;
+  border: 1px solid rgba(58, 58, 74, 0.1);
+  border-radius: 16px;
+  padding: 18px;
+  text-align: left;
+  color: var(--color-texto);
+  background: rgba(248, 246, 243, 0.72);
+}
+
+.foru-industry-option.is-enabled {
+  border-color: rgba(212, 175, 55, 0.28);
+  cursor: pointer;
+  background:
+    radial-gradient(circle at top right, rgba(212, 175, 55, 0.12), transparent 40%),
+    rgba(248, 246, 243, 0.9);
+}
+
+.foru-industry-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.foru-industry-option strong,
+.foru-industry-option span,
+.foru-industry-option em {
+  display: block;
+}
+
+.foru-industry-option strong {
+  font-size: 1.05rem;
+}
+
+.foru-industry-option span {
+  margin-top: 0.65rem;
+  color: var(--color-texto-suave);
+  line-height: 1.5;
+}
+
+.foru-industry-option em {
+  margin-top: 1rem;
+  color: var(--color-dorado);
+  font-style: normal;
+  font-weight: 700;
+}
+
+.foru-tourism-onboarding {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+  gap: 16px;
+  padding: 26px;
+}
+
+.foru-tourism-form-card,
+.foru-tourism-assets-card {
+  display: grid;
+  gap: 14px;
+}
+
+.foru-tourism-form-card label {
+  display: grid;
+  gap: 7px;
+  color: var(--color-texto);
+  font-weight: 700;
+}
+
+.foru-tourism-form-card input,
+.foru-tourism-form-card select {
+  width: 100%;
+  border: 1px solid rgba(58, 58, 74, 0.12);
+  border-radius: 12px;
+  padding: 12px 13px;
+  color: var(--color-texto);
+  background: rgba(250, 250, 248, 0.86);
+  font: 500 0.95rem/1.4 var(--font-principal);
+}
+
+.foru-tourism-form-card input:focus,
+.foru-tourism-form-card select:focus {
+  outline: none;
+  border-color: rgba(212, 175, 55, 0.38);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.08);
+}
+
+.foru-tourism-assets-card h3 {
+  margin: 0;
+  color: var(--color-texto);
+}
+
+.foru-tourism-assets-card p {
+  margin: 0;
+  color: var(--color-texto-suave);
+}
+
+.foru-tourism-assets-card > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.foru-tourism-assets-card button {
+  border: 1px solid rgba(58, 58, 74, 0.12);
+  border-radius: 999px;
+  padding: 9px 12px;
+  color: var(--color-texto);
+  background: rgba(248, 246, 243, 0.78);
+  cursor: pointer;
+}
+
+.foru-tourism-assets-card button.is-selected {
+  border-color: rgba(212, 175, 55, 0.42);
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.foru-tourism-onboarding footer {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+@media (max-width: 760px) {
+  .foru-industry-grid,
+  .foru-tourism-onboarding {
+    grid-template-columns: 1fr;
+  }
+
+  .foru-tourism-onboarding footer {
+    flex-direction: column-reverse;
+  }
+}
+
+.foru-industry-kit-view {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.foru-industry-kit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.foru-industry-kit-hero-card {
+  grid-row: span 2;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  border-color: rgba(212, 175, 55, 0.22);
+  background:
+    radial-gradient(circle at top left, rgba(212, 175, 55, 0.12), transparent 38%),
+    rgba(248, 246, 243, 0.94);
+}
+
+.foru-industry-kit-card {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.foru-kit-card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.foru-kit-status {
+  border: 1px solid rgba(107, 107, 123, 0.16);
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--color-texto-suave);
+  background: rgba(250, 250, 248, 0.72);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.foru-kit-status.is-active {
+  border-color: rgba(212, 175, 55, 0.28);
+  color: #8a6d17;
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.foru-kit-status.is-done {
+  border-color: rgba(93, 143, 112, 0.28);
+  color: #3d7752;
+  background: rgba(213, 232, 224, 0.62);
+}
+
+.foru-kit-progress-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid rgba(58, 58, 74, 0.08);
+  padding-top: 12px;
+  color: var(--color-texto-suave);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.foru-kit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.foru-kit-secondary-action {
+  border: 1px solid rgba(58, 58, 74, 0.12);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: var(--color-texto);
+  background: rgba(248, 246, 243, 0.72);
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transicion-suave, all 0.2s ease);
+}
+
+.foru-kit-secondary-action:hover {
+  border-color: rgba(212, 175, 55, 0.28);
+  box-shadow: 0 8px 18px rgba(58, 58, 74, 0.08);
+  transform: translateY(-1px);
+}
+
+.foru-industry-kit-view h1,
+.foru-industry-kit-view h2 {
+  color: var(--color-texto);
+}
+
+.foru-industry-kit-view h2 {
+  margin: 0;
+}
+
+.foru-industry-kit-view p,
+.foru-industry-kit-view li,
+.foru-industry-kit-view dd {
+  color: var(--color-texto-suave);
+  line-height: 1.6;
+}
+
+.foru-industry-kit-view ol,
+.foru-industry-kit-view ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.foru-industry-kit-hero-card dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.foru-industry-kit-hero-card dl div {
+  border-top: 1px solid rgba(58, 58, 74, 0.08);
+  padding-top: 12px;
+}
+
+.foru-industry-kit-hero-card dt {
+  color: var(--color-texto);
+  font-weight: 700;
+}
+
+.foru-industry-kit-hero-card dd {
+  margin: 4px 0 0;
+}
+
+.foru-industry-assets-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.foru-industry-assets-list span {
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 999px;
+  padding: 8px 11px;
+  color: var(--color-texto);
+  background: rgba(212, 175, 55, 0.08);
+  font-weight: 700;
+}
+
+.foru-industry-kit-empty {
+  padding: 18px;
+}
+
+@media (max-width: 860px) {
+  .foru-industry-kit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .foru-industry-kit-hero-card {
+    grid-row: auto;
+  }
+}

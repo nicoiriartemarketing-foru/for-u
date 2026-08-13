@@ -7,6 +7,8 @@
 
 node_modules/
 frontend/node_modules/
+.pnpm-store/
+**/.pnpm-store/
 dist/
 frontend/dist/
 
@@ -15,12 +17,12 @@ npm-debug.log*
 yarn-error.log*
 
 # Legacy static prototype files kept locally, not part of the deployable app.
-admin.html
-ia.html
-index.html
-landing.html
-login.html
-metodologia.html
+/admin.html
+/ia.html
+/index.html
+/landing.html
+/login.html
+/metodologia.html
 css/
 js/
 FOR U.code-workspace

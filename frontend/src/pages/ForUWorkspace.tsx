@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import EmotionalOnboardingModal from '../components/EmotionalOnboardingModal';
 import FloatingReward, { type FloatingRewardBurst } from '../components/FloatingReward';
+import IndustryOnboardingModal, { type IndustryOnboardingInput } from '../components/IndustryOnboardingModal';
 import Logo from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { planConfigs, type ForUNextAction, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
@@ -12,13 +13,14 @@ const World3D = lazy(() => import('../components/World3D'));
 const ActionView = lazy(() => import('../components/ActionView'));
 const GanttView = lazy(() => import('../components/GanttView'));
 const KanbanView = lazy(() => import('../components/KanbanView'));
+const IndustryKitView = lazy(() => import('../components/IndustryKitView'));
 const ProjectCanvas = lazy(() => import('../components/ProjectCanvas'));
 const ForUChat = lazy(() => import('../components/ForUChat'));
 const PersonalDashboard = lazy(() => import('../components/PersonalDashboard'));
 const NodeDetailPanel = lazy(() => import('../components/NodeDetailPanel'));
 
 type WorkspaceScreen = 'dashboard' | 'action' | 'project' | 'world';
-type ProjectSubview = 'kanban' | 'map' | 'gantt';
+type ProjectSubview = 'kit' | 'kanban' | 'map' | 'gantt';
 
 export default function ForUWorkspace() {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ export default function ForUWorkspace() {
   const [completedAction, setCompletedAction] = useState<ForUNextAction | null>(null);
   const [rewardBurst, setRewardBurst] = useState<FloatingRewardBurst | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
 
   const activeProjectIds = useActiveProjectsStore((state) => state.activeProjectIds);
   const projectsById = useActiveProjectsStore((state) => state.projectsById);
@@ -49,6 +52,7 @@ export default function ForUWorkspace() {
   const getPersonalDashboardProjects = useActiveProjectsStore((state) => state.getPersonalDashboardProjects);
   const generateNextAction = useActiveProjectsStore((state) => state.generateNextAction);
   const completeNextAction = useActiveProjectsStore((state) => state.completeNextAction);
+  const openProject = useActiveProjectsStore((state) => state.openProject);
   const hydrateFromSupabase = useActiveProjectsStore((state) => state.hydrateFromSupabase);
   const clearCloudUser = useActiveProjectsStore((state) => state.clearCloudUser);
 
@@ -102,6 +106,29 @@ export default function ForUWorkspace() {
     setScreen('action');
   }
 
+  function createIndustryProject(input: IndustryOnboardingInput) {
+    const projectId = openProject({
+      name: input.projectName,
+      industryKey: input.industryKey,
+      tangibleGoal: `Vender ${input.offerType} en ${input.location} a ${input.idealTraveler}.`,
+      targetFeelings: input.industryKey === 'gastronomy' ? ['abundance', 'confidence', 'joy'] : ['connection', 'abundance', 'confidence'],
+      strategyProfile: {
+        offerType: input.offerType,
+        location: input.location,
+        idealTraveler: input.idealTraveler,
+        primaryChannel: input.primaryChannel,
+        availableAssets: input.assets,
+      },
+    });
+    if (!projectId) return;
+    const createdProject = useActiveProjectsStore.getState().getProjectById(projectId);
+    if (!createdProject?.industryKey) return;
+
+    selectProject(projectId);
+    setProjectSubview('kit');
+    setScreen('project');
+  }
+
   function viewProject(projectId: string) {
     if (!features.kanban) {
       showUpgrade('Upgrade a Pro para ver el proyecto completo', 'El plan Gratis mantiene el tablero personal y la acción del momento. Pro desbloquea Kanban, mapa mental y flujo completo.');
@@ -109,8 +136,10 @@ export default function ForUWorkspace() {
     }
 
     selectProject(projectId);
+    const project = useActiveProjectsStore.getState().getProjectById(projectId);
+    const nextSubview = project?.industryKey ? 'kit' : 'kanban';
     setView('kanban');
-    setProjectSubview('kanban');
+    setProjectSubview(nextSubview);
     setScreen('project');
   }
 
@@ -213,6 +242,11 @@ export default function ForUWorkspace() {
             </button>
             <p>{currentProject?.name ? `Aquí tienes todo lo de ${currentProject.name}, Nicole.` : 'Aquí tienes el proyecto completo, Nicole.'}</p>
             <div className="foru-project-subtabs" aria-label="Vistas del proyecto">
+              {currentProject?.industryKey ? (
+                <button type="button" className={projectSubview === 'kit' ? 'is-active' : ''} onClick={() => setProjectSubview('kit')}>
+                  🧳 Kit
+                </button>
+              ) : null}
               <button type="button" className={projectSubview === 'kanban' ? 'is-active' : ''} onClick={() => changeProjectSubview('kanban')}>
                 📋 Tareas
               </button>
@@ -225,6 +259,15 @@ export default function ForUWorkspace() {
             </div>
           </div>
 
+          {projectSubview === 'kit' ? (
+            <Suspense fallback={<ScreenLoader label="Cargando kit..." />}>
+              <IndustryKitView
+                project={currentProject}
+                onStart={() => currentProjectId && startProject(currentProjectId)}
+                onOpenTasks={() => changeProjectSubview('kanban')}
+              />
+            </Suspense>
+          ) : null}
           {projectSubview === 'kanban' ? (
             <Suspense fallback={<ScreenLoader label="Cargando tareas..." />}>
               <KanbanView />
@@ -263,6 +306,7 @@ export default function ForUWorkspace() {
             projects={dashboardProjects}
             onStart={startProject}
             onViewProject={viewProject}
+            onCreateIndustryProject={() => setIsIndustryModalOpen(true)}
           />
         </Suspense>
       )}
@@ -288,6 +332,11 @@ export default function ForUWorkspace() {
       <Suspense fallback={null}>
         <ForUChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       </Suspense>
+      <IndustryOnboardingModal
+        isOpen={isIndustryModalOpen}
+        onClose={() => setIsIndustryModalOpen(false)}
+        onCreateIndustryProject={createIndustryProject}
+      />
       <FloatingReward burst={rewardBurst} />
     </main>
   );

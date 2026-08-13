@@ -13,10 +13,14 @@ export default defineConfig({
       'react-hot-toast',
       'zustand',
       '@supabase/supabase-js',
+    ],
+    exclude: [
       'reactflow',
       'three',
       '@react-three/fiber',
       '@react-three/drei',
+      '@react-three/postprocessing',
+      'postprocessing',
     ],
   },
   server: {
