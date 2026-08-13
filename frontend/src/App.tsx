@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode } from 'react';
+import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react';
 import { BrowserRouter as Router, Navigate, Routes, Route } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 
@@ -49,29 +49,59 @@ function PrivateWorkspace({ children }: { children: ReactNode }) {
 
 function App() {
   return (
-    <Router>
-      <Suspense fallback={<RouteLoader />}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/ia" element={<AiForU />} />
-          <Route path="/metodologia" element={<Methodology />} />
-          <Route path="/mundo-digital" element={<MundoDigital />} />
-          <Route path="/aventura" element={<AdventureMvp />} />
-          <Route path="/workspace" element={<PrivateWorkspace><ForUWorkspace /></PrivateWorkspace>} />
-          <Route path="/whatsapp" element={<PrivateWorkspace><WhatsAppConnect /></PrivateWorkspace>} />
-          <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/studio" element={<StudioAccess />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/register-wizard" element={<RegisterWizard />} />
-          <Route path="/dashboard" element={<PrivateStudio><Dashboard /></PrivateStudio>} />
-          <Route path="/editor" element={<PrivateStudio><WorldEditor /></PrivateStudio>} />
-          <Route path="/reservas" element={<PrivateStudio><ReservationsAdmin /></PrivateStudio>} />
-          <Route path="/p/:slug" element={<PublicLanding />} />
-        </Routes>
-      </Suspense>
-    </Router>
+    <AppErrorBoundary>
+      <Router>
+        <Suspense fallback={<RouteLoader />}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/ia" element={<AiForU />} />
+            <Route path="/metodologia" element={<Methodology />} />
+            <Route path="/mundo-digital" element={<MundoDigital />} />
+            <Route path="/aventura" element={<AdventureMvp />} />
+            <Route path="/workspace" element={<PrivateWorkspace><ForUWorkspace /></PrivateWorkspace>} />
+            <Route path="/whatsapp" element={<PrivateWorkspace><WhatsAppConnect /></PrivateWorkspace>} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/studio" element={<StudioAccess />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/register-wizard" element={<RegisterWizard />} />
+            <Route path="/dashboard" element={<PrivateStudio><Dashboard /></PrivateStudio>} />
+            <Route path="/editor" element={<PrivateStudio><WorldEditor /></PrivateStudio>} />
+            <Route path="/reservas" element={<PrivateStudio><ReservationsAdmin /></PrivateStudio>} />
+            <Route path="/p/:slug" element={<PublicLanding />} />
+          </Routes>
+        </Suspense>
+      </Router>
+    </AppErrorBoundary>
   );
+}
+
+class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; message?: string }> {
+  state = { hasError: false, message: undefined };
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, message: error.message };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('For U runtime error:', error, info);
+  }
+
+  render() {
+    if (!this.state.hasError) return this.props.children;
+
+    return (
+      <main className="foru-auth-page">
+        <section className="foru-auth-card">
+          <span className="foru-auth-kicker">FOR U</span>
+          <h1>La app cargó con un error.</h1>
+          <p>Ya no dejamos la pantalla en blanco. Refresca la página o vuelve al inicio.</p>
+          {this.state.message ? <small>{this.state.message}</small> : null}
+          <a href="/" className="foru-ripple-button">Volver al inicio</a>
+        </section>
+      </main>
+    );
+  }
 }
 
 function RouteLoader() {
