@@ -10,6 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@react-three/drei": "^10.7.7",
@@ -41,13 +44,10 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "postcss": "^8.5.15",
-    "rollup": "npm:@rollup/wasm-node@4.62.3",
+    "rollup": "^4.62.3",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.2",
     "vite": "^7.3.5"
-  },
-  "overrides": {
-    "rollup": "npm:@rollup/wasm-node@4.62.3"
   }
 }
