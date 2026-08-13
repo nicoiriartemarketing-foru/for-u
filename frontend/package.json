@@ -27,9 +27,6 @@
     "three": "^0.185.1",
     "zustand": "^5.0.14"
   },
-  "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.62.3"
-  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.0",
@@ -44,9 +41,13 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "postcss": "^8.5.15",
+    "rollup": "npm:@rollup/wasm-node@4.62.3",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.2",
     "vite": "^7.3.5"
+  },
+  "overrides": {
+    "rollup": "npm:@rollup/wasm-node@4.62.3"
   }
 }
