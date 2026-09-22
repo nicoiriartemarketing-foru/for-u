@@ -1,36 +1,54 @@
 :root {
-  --color-perla: #FFFFFF;
-  --color-perla-fondo: #FFFFFF;
-  --color-perla-oscura: #ECEFF5;
-  --color-dorado: #D9B75F;
-  --color-lavanda-perla: #EDE7FF;
-  --color-menta-perla: #DDFBF2;
-  --color-rosa-perla: #FFE8F1;
-  --color-azul-perla: #E8F2FF;
-  --color-rosa: var(--color-rosa-perla);
-  --color-lavanda: var(--color-lavanda-perla);
-  --color-menta: var(--color-menta-perla);
-  --color-durazno: #EBD6BD;
-  --color-azul-cielo: var(--color-azul-perla);
-  --color-amarillo-suave: #EFE2B8;
+  --color-fondo: #ffffff;
+  --color-superficie: rgba(255, 255, 255, 0.88);
+  --color-superficie-fuerte: rgba(255, 255, 255, 0.96);
+
   --color-texto: #111827;
   --color-texto-suave: #667085;
-  --color-superficie: rgba(255, 255, 255, 0.86);
-  --color-superficie-fuerte: rgba(255, 255, 255, 0.96);
-  --gradient-iridiscente: linear-gradient(135deg, #F6C453 0%, #FF8EC7 24%, #A78BFA 49%, #67E8F9 72%, #7CFFCB 100%);
+
+  --color-rosa-iridiscente: #ff8ec7;
+  --color-lila-iridiscente: #a78bfa;
+  --color-celeste-iridiscente: #67e8f9;
+  --color-menta-iridiscente: #7cffcb;
+
+  --gradient-iridiscente: linear-gradient(
+    135deg,
+    #ff8ec7 0%,
+    #a78bfa 38%,
+    #67e8f9 68%,
+    #7cffcb 100%
+  );
+
+  --font-principal: "Inter", system-ui, sans-serif;
+  --border-radius: 16px;
+  --sombra-suave: 0 16px 50px rgba(15, 23, 42, 0.06);
+
+  --color-perla: var(--color-fondo);
+  --color-texto-principal: var(--color-texto);
   --gradient-principal: var(--gradient-iridiscente);
-  --gradient-boton: linear-gradient(135deg, rgba(255, 142, 199, 0.22) 0%, rgba(167, 139, 250, 0.25) 48%, rgba(103, 232, 249, 0.22) 100%);
+  --gradient-boton: var(--gradient-iridiscente);
+  --font-titulos: var(--font-principal);
+
+  --color-perla-fondo: var(--color-fondo);
+  --color-perla-oscura: #eceff5;
+  --color-dorado: #d9b75f;
+  --color-lavanda-perla: rgba(167, 139, 250, 0.16);
+  --color-menta-perla: rgba(124, 255, 203, 0.16);
+  --color-rosa-perla: rgba(255, 142, 199, 0.16);
+  --color-azul-perla: rgba(103, 232, 249, 0.16);
+  --color-rosa: var(--color-rosa-iridiscente);
+  --color-lavanda: var(--color-lila-iridiscente);
+  --color-menta: var(--color-menta-iridiscente);
+  --color-durazno: rgba(255, 184, 108, 0.2);
+  --color-azul-cielo: var(--color-celeste-iridiscente);
+  --color-amarillo-suave: rgba(246, 196, 83, 0.18);
   --gradient-botón: var(--gradient-boton);
-  --gradient-fondo: linear-gradient(180deg, #FFFFFF 0%, #FAFBFF 52%, #FFFFFF 100%);
+  --gradient-fondo: linear-gradient(180deg, #ffffff 0%, #fafbff 52%, #ffffff 100%);
   --gradient-texto: linear-gradient(120deg, #111827 0%, #7C3AED 45%, #0891B2 100%);
-  --font-principal: "Inter", sans-serif;
-  --font-titulos: "Inter", sans-serif;
   --font-títulos: var(--font-titulos);
   --font-sans: var(--font-principal);
   --font-serif: var(--font-titulos);
-  --border-radius: 12px;
   --border-radius-grande: 16px;
-  --sombra-suave: 0 10px 30px rgba(15, 23, 42, 0.045);
   --sombra-media: 0 16px 42px rgba(15, 23, 42, 0.075);
   --sombra-magica: 0 22px 70px rgba(124, 58, 237, 0.12);
   --transicion-suave: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -13362,4 +13380,433 @@ body,
 .foru-digital-route-mini-progress b,
 .foru-digital-route-progress-card i b {
   background: linear-gradient(180deg, #FF8EC7, #A78BFA, #67E8F9, #7CFFCB) !important;
+}
+
+/* Step 3: minimal PersonalDashboard */
+.foru-personal-dashboard {
+  width: min(1080px, calc(100% - 40px));
+  min-height: calc(100vh - 120px);
+  display: grid;
+  align-content: start;
+  gap: 32px !important;
+  margin: 0 auto;
+  padding: 48px 0 72px !important;
+  color: var(--color-texto);
+  background: var(--color-fondo);
+  font-family: var(--font-principal);
+}
+
+.foru-personal-dashboard-hero {
+  width: min(760px, 100%);
+  display: block !important;
+  margin: 0 auto !important;
+  border: 0 !important;
+  padding: 0 !important;
+  text-align: center;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.foru-personal-dashboard-hero::after {
+  display: none !important;
+}
+
+.foru-personal-dashboard-hero h1 {
+  margin: 0 !important;
+  color: var(--color-texto) !important;
+  background: none !important;
+  -webkit-text-fill-color: var(--color-texto) !important;
+  font-family: var(--font-principal) !important;
+  font-size: clamp(2.4rem, 6vw, 4.9rem) !important;
+  font-weight: 720 !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.055em !important;
+}
+
+.foru-personal-dashboard-hero p {
+  max-width: 520px !important;
+  margin: 18px auto 0 !important;
+  color: var(--color-texto-suave) !important;
+  font: 450 1.08rem/1.7 var(--font-principal) !important;
+}
+
+.foru-next-route-card {
+  width: min(760px, 100%);
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 28px;
+  margin: 0 auto;
+  border: 1px solid transparent !important;
+  border-radius: 28px !important;
+  padding: clamp(32px, 6vw, 48px) !important;
+  text-align: center;
+  background:
+    linear-gradient(var(--color-fondo), var(--color-fondo)) padding-box,
+    var(--gradient-iridiscente) border-box !important;
+  box-shadow: var(--sombra-suave) !important;
+}
+
+.foru-next-route-card h2 {
+  margin: 14px 0 8px !important;
+  color: var(--color-texto) !important;
+  background: none !important;
+  -webkit-text-fill-color: var(--color-texto) !important;
+  font: 700 clamp(1.7rem, 4vw, 2.8rem)/1.05 var(--font-principal) !important;
+  letter-spacing: -0.04em !important;
+}
+
+.foru-next-route-card p {
+  margin: 0 !important;
+  color: var(--color-texto) !important;
+  font: 620 clamp(1.12rem, 2vw, 1.35rem)/1.45 var(--font-principal) !important;
+}
+
+.foru-next-route-card small {
+  display: block;
+  margin-top: 10px;
+  color: var(--color-texto-suave) !important;
+  font: 450 0.98rem/1.6 var(--font-principal) !important;
+}
+
+.foru-next-route-card .magic-button {
+  min-height: 58px;
+  min-width: 220px;
+  border: 0 !important;
+  border-radius: 999px !important;
+  padding: 0 30px !important;
+  background: var(--gradient-iridiscente) !important;
+  color: var(--color-texto) !important;
+  font: 760 1.05rem/1 var(--font-principal) !important;
+  box-shadow: 0 18px 48px rgba(124, 58, 237, 0.18) !important;
+}
+
+.foru-personal-project-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.foru-personal-project-card {
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-radius: 18px !important;
+  padding: 22px !important;
+  background: var(--color-superficie) !important;
+  box-shadow: var(--sombra-suave) !important;
+  font-family: var(--font-principal) !important;
+}
+
+.foru-personal-project-main {
+  display: block;
+}
+
+.foru-personal-project-main h2 {
+  margin: 12px 0 6px !important;
+  color: var(--color-texto) !important;
+  background: none !important;
+  -webkit-text-fill-color: var(--color-texto) !important;
+  font: 680 1.18rem/1.2 var(--font-principal) !important;
+  letter-spacing: -0.025em !important;
+}
+
+.foru-personal-project-main p {
+  margin: 0;
+  color: var(--color-texto-suave) !important;
+  font: 450 0.92rem/1.5 var(--font-principal) !important;
+}
+
+.foru-personal-project-status {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-radius: 999px !important;
+  padding: 7px 10px !important;
+  background: var(--color-superficie-fuerte) !important;
+  color: var(--color-texto-suave) !important;
+  box-shadow: none !important;
+  font: 620 0.76rem/1 var(--font-principal) !important;
+}
+
+.foru-personal-project-actions {
+  margin-top: 18px;
+}
+
+.foru-personal-project-actions .magic-button {
+  min-height: 40px;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  background: var(--color-superficie-fuerte) !important;
+  box-shadow: none !important;
+  font: 650 0.9rem/1 var(--font-principal) !important;
+}
+
+.foru-industry-starter-card {
+  width: min(760px, 100%);
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  margin: 0 auto !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-radius: 20px !important;
+  padding: 26px 32px !important;
+  background: var(--color-superficie) !important;
+  box-shadow: var(--sombra-suave) !important;
+  font-family: var(--font-principal) !important;
+}
+
+.foru-industry-starter-card h2 {
+  margin: 0 0 8px !important;
+  color: var(--color-texto) !important;
+  background: none !important;
+  -webkit-text-fill-color: var(--color-texto) !important;
+  font: 700 1.25rem/1.2 var(--font-principal) !important;
+  letter-spacing: -0.03em !important;
+}
+
+.foru-industry-starter-card p {
+  max-width: 560px;
+  margin: 0 !important;
+  color: var(--color-texto-suave) !important;
+  font: 450 0.95rem/1.65 var(--font-principal) !important;
+}
+
+/* Ruta Digital enriquecida por rubro */
+.foru-digital-route-view {
+  color: var(--color-texto);
+  font-family: var(--font-principal);
+}
+
+.foru-digital-route-hero,
+.foru-digital-route-current,
+.foru-digital-route-step-body,
+.foru-digital-route-panel {
+  border: 1px solid rgba(15, 23, 42, 0.07) !important;
+  background: var(--color-superficie-fuerte) !important;
+  box-shadow: var(--sombra-suave) !important;
+}
+
+.foru-digital-route-hero h1,
+.foru-digital-route-current h2,
+.foru-digital-route-panel h2,
+.foru-digital-route-step-top h3 {
+  color: var(--color-texto) !important;
+  background: none !important;
+  -webkit-text-fill-color: var(--color-texto) !important;
+  font-family: var(--font-principal) !important;
+  letter-spacing: -0.04em;
+}
+
+.foru-digital-route-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 22px;
+  align-items: start;
+}
+
+.foru-digital-route-step-marker {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+}
+
+.foru-digital-route-step.is-selected .foru-digital-route-step-body {
+  border-color: rgba(167, 139, 250, 0.34) !important;
+  box-shadow: 0 18px 48px rgba(103, 232, 249, 0.1) !important;
+}
+
+.foru-digital-route-panel {
+  position: sticky;
+  top: 96px;
+  display: grid;
+  gap: 18px;
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.foru-digital-route-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.foru-digital-route-panel-header button,
+.foru-digital-route-panel-actions > button {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  padding: 9px 13px;
+  color: var(--color-texto);
+  background: var(--color-superficie);
+  font: 700 0.82rem/1 var(--font-principal);
+  cursor: pointer;
+}
+
+.foru-digital-route-panel h2 {
+  margin: 0;
+  font-size: clamp(1.55rem, 3vw, 2.3rem);
+}
+
+.foru-digital-route-panel > p {
+  margin: 0;
+  color: var(--color-texto-suave);
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.foru-digital-route-panel-result {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgba(167, 139, 250, 0.18);
+  border-radius: 16px;
+  padding: 14px;
+  background:
+    linear-gradient(var(--color-superficie-fuerte), var(--color-superficie-fuerte)) padding-box,
+    var(--gradient-iridiscente) border-box;
+}
+
+.foru-digital-route-panel-result span,
+.foru-digital-route-subtasks h3,
+.foru-digital-route-resources h3 {
+  margin: 0;
+  color: var(--color-texto-suave);
+  font: 800 0.76rem/1 var(--font-principal);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.foru-digital-route-panel-result strong {
+  color: var(--color-texto);
+  font-size: 1rem;
+}
+
+.foru-digital-route-subtasks,
+.foru-digital-route-resources {
+  display: grid;
+  gap: 12px;
+}
+
+.foru-digital-route-subtask,
+.foru-digital-route-resources article {
+  display: grid;
+  gap: 9px;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.foru-digital-route-subtask > div,
+.foru-digital-route-resources article {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.foru-digital-route-subtask > div span,
+.foru-digital-route-resources article > span {
+  display: grid;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--gradient-iridiscente);
+  color: var(--color-texto);
+  font-weight: 800;
+}
+
+.foru-digital-route-subtask strong,
+.foru-digital-route-resources strong {
+  color: var(--color-texto);
+  font-weight: 800;
+}
+
+.foru-digital-route-subtask p,
+.foru-digital-route-resources p {
+  margin: 0;
+  color: var(--color-texto-suave);
+  line-height: 1.5;
+}
+
+.foru-digital-route-subtask small {
+  color: var(--color-texto);
+  font-weight: 700;
+}
+
+.foru-digital-route-subtask em {
+  border-left: 3px solid var(--color-celeste-iridiscente);
+  padding-left: 10px;
+  color: var(--color-texto-suave);
+  font-style: normal;
+  line-height: 1.45;
+}
+
+.foru-digital-route-subtask blockquote {
+  margin: 0;
+  border-radius: 14px;
+  padding: 11px 12px;
+  color: var(--color-texto);
+  background: rgba(103, 232, 249, 0.08);
+  font-weight: 650;
+}
+
+.foru-digital-route-panel-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.foru-tourism-objective-group {
+  display: grid;
+  gap: 10px;
+}
+
+.foru-tourism-objective-group > span {
+  color: var(--color-texto);
+  font-weight: 800;
+}
+
+.foru-tourism-objective-group > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.foru-tourism-objective-group button {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  padding: 12px;
+  text-align: left;
+  color: var(--color-texto);
+  background: var(--color-superficie);
+  cursor: pointer;
+}
+
+.foru-tourism-objective-group button.is-selected {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--color-superficie-fuerte), var(--color-superficie-fuerte)) padding-box,
+    var(--gradient-iridiscente) border-box;
+  box-shadow: 0 12px 36px rgba(167, 139, 250, 0.13);
+}
+
+.foru-tourism-objective-group small {
+  color: var(--color-texto-suave);
+  line-height: 1.35;
+}
+
+@media (max-width: 980px) {
+  .foru-digital-route-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .foru-digital-route-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 680px) {
+  .foru-tourism-objective-group > div {
+    grid-template-columns: 1fr;
+  }
 }

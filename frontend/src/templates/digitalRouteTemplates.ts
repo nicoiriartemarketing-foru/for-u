@@ -7,6 +7,16 @@ export type ForUDigitalRouteTaskTemplate = {
   description: string;
   branchKey: ForUBranchKey;
   priority: ForUNodePriority;
+  time?: string;
+  tools?: string[];
+  tip?: string;
+  example?: string;
+};
+
+export type ForUDigitalRouteResourceTemplate = {
+  icon: string;
+  text: string;
+  description: string;
 };
 
 export type ForUDigitalRouteStepTemplate = {
@@ -19,6 +29,9 @@ export type ForUDigitalRouteStepTemplate = {
   primaryAction: string;
   outputKey: string;
   artifactLabel: string;
+  priority: ForUNodePriority;
+  guidePhase: string;
+  resources: ForUDigitalRouteResourceTemplate[];
   tasks: ForUDigitalRouteTaskTemplate[];
   defaultOutputs: Record<string, string>;
 };
@@ -37,11 +50,207 @@ const tourismDefaults = {
   channel: 'WhatsApp',
 };
 
+const stepGuidance: Record<string, Pick<ForUDigitalRouteStepTemplate, 'priority' | 'guidePhase' | 'resources'>> = {
+  'strategy-base': {
+    priority: 'high',
+    guidePhase: 'Entender',
+    resources: [
+      { icon: '◇', text: 'Brief de claridad', description: 'Plantilla simple para decir qué vendes, a quién y por qué importa.' },
+      { icon: '✦', text: 'Mapa de cliente ideal', description: 'Guía corta para convertir intuición en perfil accionable.' },
+    ],
+  },
+  'signature-offer': {
+    priority: 'high',
+    guidePhase: 'Convertir',
+    resources: [
+      { icon: '◆', text: 'Ficha de oferta estrella', description: 'Estructura para nombre, precio, beneficios, objeciones y promesa.' },
+      { icon: '◌', text: 'Calculadora simple', description: 'Referencia para pensar precio base, margen y esfuerzo.' },
+    ],
+  },
+  landing: {
+    priority: 'high',
+    guidePhase: 'Publicar',
+    resources: [
+      { icon: '▣', text: 'Editor de landing', description: 'Abre la página editable conectada a esta estación.' },
+      { icon: '◈', text: 'Checklist visual', description: 'Portada, beneficios, prueba social, FAQ y llamado a la acción.' },
+    ],
+  },
+  'whatsapp-conversion': {
+    priority: 'high',
+    guidePhase: 'Responder',
+    resources: [
+      { icon: '◑', text: 'Guion de bienvenida', description: 'Mensaje base para responder sin improvisar cada vez.' },
+      { icon: '✧', text: 'Seguimiento amable', description: 'Plantilla para retomar conversaciones sin presión.' },
+    ],
+  },
+  'content-system': {
+    priority: 'medium',
+    guidePhase: 'Atraer',
+    resources: [
+      { icon: '✶', text: 'Banco de ideas', description: 'Ideas de posts, reels e historias según objetivo de venta.' },
+      { icon: '▥', text: 'Calendario mínimo', description: 'Plan semanal pequeño para no convertir contenido en caos.' },
+    ],
+  },
+  'google-presence': {
+    priority: 'medium',
+    guidePhase: 'Aparecer',
+    resources: [
+      { icon: '◎', text: 'Checklist Google', description: 'Categoría, descripción, fotos, horarios, ubicación y reseñas.' },
+      { icon: '✦', text: 'FAQ local', description: 'Preguntas frecuentes para reducir dudas antes del contacto.' },
+    ],
+  },
+  'trust-assets': {
+    priority: 'medium',
+    guidePhase: 'Confiar',
+    resources: [
+      { icon: '◍', text: 'Historia del negocio', description: 'Guía para contar quién está detrás sin sonar genérico.' },
+      { icon: '✺', text: 'Kit de prueba social', description: 'Fotos, testimonios, resultados, reseñas y garantías.' },
+    ],
+  },
+  'metrics-improvement': {
+    priority: 'low',
+    guidePhase: 'Mejorar',
+    resources: [
+      { icon: '⌁', text: 'Tablero semanal', description: 'Métricas simples: visitas, clics, mensajes, reservas y dudas.' },
+      { icon: '◇', text: 'Lista de mejoras', description: 'Convierte señales reales en ajustes de landing, contenido y WhatsApp.' },
+    ],
+  },
+};
+
+const taskExamples: Record<string, Array<Pick<ForUDigitalRouteTaskTemplate, 'time' | 'tools' | 'tip' | 'example'>>> = {
+  'strategy-base': [
+    {
+      time: '15 min',
+      tools: ['Brief', 'Notas'],
+      tip: 'Escribe una frase imperfecta. For U la puede pulir después.',
+      example: 'Vendemos caminatas suaves para parejas que quieren desconectar sin organizar todo solas.',
+    },
+    {
+      time: '12 min',
+      tools: ['Cliente ideal', 'Mapa de dudas'],
+      tip: 'Piensa en una persona real, no en “todo el mundo”.',
+      example: 'Parejas de Lima que quieren una escapada confiable de fin de semana.',
+    },
+  ],
+  'signature-offer': [
+    {
+      time: '20 min',
+      tools: ['Oferta', 'Precio'],
+      tip: 'Primero define una versión simple; luego agregamos extras.',
+      example: 'Tour privado de medio día + guía local + fotos + reserva por WhatsApp.',
+    },
+    {
+      time: '10 min',
+      tools: ['Beneficios', 'Copy'],
+      tip: 'Un beneficio responde: “¿qué cambia para mi cliente?”.',
+      example: 'No tienes que planificar: llegas, disfrutas y vuelves con fotos lindas.',
+    },
+  ],
+  landing: [
+    {
+      time: '18 min',
+      tools: ['Editor', 'Copy'],
+      tip: 'La portada solo necesita promesa clara, contexto y botón.',
+      example: 'Escápate a una experiencia local lista para reservar por WhatsApp.',
+    },
+    {
+      time: '10 min',
+      tools: ['Fotos', 'Galería'],
+      tip: 'Mejor fotos reales imperfectas que imágenes bonitas sin confianza.',
+      example: 'Lugar, anfitrión, experiencia, detalle y una persona disfrutando.',
+    },
+  ],
+  'whatsapp-conversion': [
+    {
+      time: '12 min',
+      tools: ['WhatsApp', 'Guion'],
+      tip: 'La respuesta debe pedir pocos datos y dar seguridad rápido.',
+      example: 'Hola, gracias por escribir. Te cuento disponibilidad y te pido fecha + número de personas.',
+    },
+    {
+      time: '8 min',
+      tools: ['Reserva', 'Formulario corto'],
+      tip: 'Solo pide lo mínimo para avanzar a una reserva real.',
+      example: 'Fecha, cantidad, nombre, teléfono y preferencia de horario.',
+    },
+  ],
+  'content-system': [
+    {
+      time: '15 min',
+      tools: ['Instagram', 'Calendario'],
+      tip: 'Crea contenido para resolver dudas, no para llenar espacio.',
+      example: 'Reel: 3 razones para reservar esta experiencia antes del fin de semana.',
+    },
+    {
+      time: '12 min',
+      tools: ['Historias', 'Detrás de escena'],
+      tip: 'Lo cotidiano también vende confianza.',
+      example: 'Preparando ruta, revisando clima, mostrando el punto de encuentro.',
+    },
+  ],
+  'google-presence': [
+    {
+      time: '15 min',
+      tools: ['Google Business', 'Descripción'],
+      tip: 'Escribe para una persona que está comparando opciones.',
+      example: 'Experiencias locales guiadas en [zona], con reserva por WhatsApp y grupos pequeños.',
+    },
+    {
+      time: '12 min',
+      tools: ['Fotos', 'Perfil local'],
+      tip: 'Google necesita pruebas visuales de que existes y eres confiable.',
+      example: 'Fachada, equipo, producto/experiencia, clientes, ubicación y detalles.',
+    },
+  ],
+  'trust-assets': [
+    {
+      time: '14 min',
+      tools: ['Historia', 'Confianza'],
+      tip: 'Cuenta por qué haces esto, no solo qué vendes.',
+      example: 'Nacimos para mostrar este lugar con calma, seguridad y mirada local.',
+    },
+    {
+      time: '10 min',
+      tools: ['Testimonios', 'Fotos'],
+      tip: 'Una prueba pequeña vale más que una promesa gigante.',
+      example: 'Captura de reseña, foto real, resultado, mención o pregunta respondida.',
+    },
+  ],
+  'metrics-improvement': [
+    {
+      time: '10 min',
+      tools: ['Métricas', 'Semana'],
+      tip: 'Mide solo lo que ayuda a decidir el siguiente ajuste.',
+      example: 'Clics a WhatsApp, mensajes recibidos, reservas, dudas repetidas.',
+    },
+    {
+      time: '10 min',
+      tools: ['FAQ', 'Mejora'],
+      tip: 'Cada duda repetida es una mejora lista para landing o contenido.',
+      example: 'Si preguntan mucho por precio, crea una sección “qué incluye”.',
+    },
+  ],
+};
+
+type DigitalRouteStepDraft = Omit<ForUDigitalRouteStepTemplate, 'priority' | 'guidePhase' | 'resources'> &
+  Partial<Pick<ForUDigitalRouteStepTemplate, 'priority' | 'guidePhase' | 'resources'>>;
+
+function withRouteGuidance(steps: DigitalRouteStepDraft[]): ForUDigitalRouteStepTemplate[] {
+  return steps.map((step) => ({
+    ...stepGuidance[step.id],
+    ...step,
+    tasks: step.tasks.map((task, index) => ({
+      ...taskExamples[step.id]?.[index],
+      ...task,
+    })),
+  }));
+}
+
 export const tourismDigitalRouteTemplate: ForUDigitalRouteTemplate = {
   industryKey: 'tourism',
   title: 'Ruta Digital Turismo',
   description: 'De experiencia suelta a sistema completo: oferta, landing, reservas, contenido, Google, confianza y mejora.',
-  steps: [
+  steps: withRouteGuidance([
     {
       id: 'strategy-base',
       title: 'Base Estratégica',
@@ -278,7 +487,7 @@ export const tourismDigitalRouteTemplate: ForUDigitalRouteTemplate = {
         },
       ],
     },
-  ],
+  ]),
 };
 
 export const gastronomyDigitalRouteTemplate: ForUDigitalRouteTemplate = {
@@ -293,21 +502,130 @@ export const gastronomyDigitalRouteTemplate: ForUDigitalRouteTemplate = {
         shortTitle: 'Producto',
         outcome: 'Producto o combo principal listo para vender con precio, margen y forma de pedido.',
         primaryAction: 'Diseñar producto estrella',
+        artifactLabel: 'Producto vendible',
+        defaultOutputs: {
+          name: 'Producto o combo estrella',
+          includes: 'Incluye presentación, precio, margen, forma de pedido y entrega.',
+          objections: 'Precio, porciones, horarios, delivery, pago y confianza.',
+        },
+        tasks: [
+          {
+            title: 'Definir producto o combo estrella',
+            description: 'Elige qué plato, combo, box o experiencia será la entrada principal de ventas.',
+            branchKey: 'ideas',
+            priority: 'high',
+            time: '15 min',
+            tools: ['Menú', 'Oferta'],
+            tip: 'No ordenes todo el menú todavía. Primero un producto que abra ventas.',
+            example: 'Combo brunch para dos + bebida + delivery por WhatsApp.',
+          },
+          {
+            title: 'Calcular precio base y margen',
+            description: 'Define costo aproximado, precio de venta y margen mínimo saludable.',
+            branchKey: 'finances',
+            priority: 'high',
+            time: '20 min',
+            tools: ['Precio', 'Margen'],
+            tip: 'La ruta debe vender, pero también cuidar rentabilidad.',
+            example: 'Costo S/18, precio S/39, margen para delivery y promo.',
+          },
+        ],
       },
       landing: {
         title: 'Menú / Página de Venta',
         shortTitle: 'Menú',
         outcome: 'Página simple con producto estrella, combos, fotos, horarios, zona de entrega y pedido por WhatsApp.',
+        artifactLabel: 'Menú digital',
+        defaultOutputs: {
+          hero: 'Pide tu producto estrella sin fricción.',
+          cta: 'Pedir por WhatsApp',
+          sections: 'Producto estrella, combos, fotos, horarios, delivery, reseñas y pedido.',
+        },
+        tasks: [
+          {
+            title: 'Armar menú digital mínimo',
+            description: 'Producto estrella, 2 combos, precios, horarios, zona de entrega y botón a WhatsApp.',
+            branchKey: 'marketing',
+            priority: 'high',
+            time: '25 min',
+            tools: ['Editor', 'Menú'],
+            tip: 'Un menú pequeño vende mejor que una carta enorme sin foco.',
+            example: 'Combo estrella, combo familiar y opción evento.',
+          },
+          {
+            title: 'Elegir 6 fotos de antojo',
+            description: 'Selecciona fotos reales de producto, preparación, detalle, empaque, local y cliente.',
+            branchKey: 'resources',
+            priority: 'medium',
+            time: '12 min',
+            tools: ['Fotos', 'Galería'],
+            tip: 'La foto debe dar hambre y confianza al mismo tiempo.',
+            example: 'Plato servido, close-up, empaque y mesa lista.',
+          },
+        ],
       },
       'whatsapp-conversion': {
         title: 'WhatsApp / Pedidos',
         shortTitle: 'Pedidos',
         outcome: 'Flujo simple para recibir pedidos, confirmar pago y coordinar entrega o reserva.',
+        artifactLabel: 'Flujo de pedidos',
+        defaultOutputs: {
+          welcome: 'Hola, gracias por escribir. Te ayudo a elegir y confirmar tu pedido.',
+          data: 'Producto, cantidad, dirección/mesa, horario, comprobante y contacto.',
+          followup: 'Mensaje post-compra para recompra o reseña.',
+        },
+        tasks: [
+          {
+            title: 'Crear mensaje para tomar pedidos',
+            description: 'Guion para responder rápido: opciones, precio, horario, pago y confirmación.',
+            branchKey: 'actions',
+            priority: 'high',
+            time: '15 min',
+            tools: ['WhatsApp', 'Pedidos'],
+            tip: 'La persona debe poder pedir sin hacer cinco preguntas.',
+            example: 'Tenemos combo A y B. Para confirmar dime cantidad, dirección y horario.',
+          },
+          {
+            title: 'Definir estados del pedido',
+            description: 'Ordena pedido recibido, pago confirmado, en preparación, enviado/listo y seguimiento.',
+            branchKey: 'actions',
+            priority: 'medium',
+            time: '12 min',
+            tools: ['Operación', 'WhatsApp'],
+            tip: 'Estados claros reducen ansiedad para ti y para el cliente.',
+            example: 'Recibido → confirmado → preparando → enviado.',
+          },
+        ],
+      },
+      'content-system': {
+        tasks: [
+          {
+            title: 'Crear 5 contenidos de antojo',
+            description: 'Ideas para mostrar producto, preparación, prueba social, promo y llamado a pedir.',
+            branchKey: 'marketing',
+            priority: 'medium',
+            time: '15 min',
+            tools: ['Instagram', 'Contenido'],
+            tip: 'El contenido gastronómico debe abrir apetito y facilitar pedido.',
+            example: 'Reel: del empaque a la mesa en 10 segundos.',
+          },
+          {
+            title: 'Escribir 3 historias para vender hoy',
+            description: 'Historias con disponibilidad, prueba social y botón directo a WhatsApp.',
+            branchKey: 'marketing',
+            priority: 'medium',
+            time: '10 min',
+            tools: ['Historias', 'Venta'],
+            tip: 'Historias simples, no perfectas. El objetivo es abrir conversación.',
+            example: 'Hoy salen 12 boxes. Reserva hasta las 4 p.m.',
+          },
+        ],
       },
       'metrics-improvement': {
         title: 'Métricas y Recompra',
         shortTitle: 'Recompra',
         outcome: 'Sistema simple para medir pedidos, clientes frecuentes, ticket promedio y promociones.',
+        artifactLabel: 'Sistema de recompra',
       },
     };
 
