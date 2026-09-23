@@ -413,7 +413,7 @@ export default function ProjectCanvas() {
             deleteKeyCode={['Backspace', 'Delete']}
             defaultEdgeOptions={{ type: 'smoothstep' }}
           >
-            <Background variant={BackgroundVariant.Dots} gap={28} size={1.2} color="#ddd6ea" />
+            <Background variant={BackgroundVariant.Dots} gap={28} size={1.2} color="#EAEAEA" />
             <Controls showInteractive={false} />
           </ReactFlow>
         </div>
@@ -611,7 +611,7 @@ function getEdgeColor(source: string, target: string, nodes: ForUProjectNode[]) 
   const branchKey = targetNode?.branchKey ?? sourceNode?.branchKey;
   const branch = baseBranches.find((item) => item.key === branchKey);
 
-  return branch?.color ?? '#A8A1B5';
+  return branch?.color ?? '#6B6B6B';
 }
 
 function getStepNodeIds(nodes: ForUProjectNode[], linkedNodeId: string) {
@@ -647,7 +647,7 @@ function getRouteEdges(route: ForURouteStep[], currentRouteIndex: number, isRout
     const nextStep = route[index + 1];
     const isCompleted = Boolean(step.completedAt) || index < currentRouteIndex;
     const isCurrent = index === currentRouteIndex;
-    const color = isCompleted ? '#58D68D' : isCurrent ? '#F4B400' : '#A8A1B5';
+    const color = isCompleted ? '#9A9A9A' : isCurrent ? '#9A9A9A' : '#6B6B6B';
 
     return {
       id: `digital-route-${step.id}-${nextStep.id}`,
@@ -663,8 +663,8 @@ function getRouteEdges(route: ForURouteStep[], currentRouteIndex: number, isRout
         strokeWidth: isCurrent ? 6 : isRouteFocusOpen ? 5 : 3,
         opacity: 1,
         filter: isRouteFocusOpen
-          ? 'drop-shadow(0 0 14px rgba(244, 180, 0, 0.82))'
-          : 'drop-shadow(0 0 8px rgba(244, 180, 0, 0.55))',
+          ? 'drop-shadow(0 0 14px rgba(0, 0, 0, 0.08))'
+          : 'drop-shadow(0 0 8px rgba(0, 0, 0, 0.06))',
       },
     };
   });

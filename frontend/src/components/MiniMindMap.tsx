@@ -54,7 +54,7 @@ export default function MiniMindMap({ centerLabel, nodes }: MiniMindMapProps) {
             type="button"
             className={`foru-mini-mind-node is-${node.priority ?? 'low'}`}
             style={{
-              '--branch-color': branch?.color ?? '#c4b5fd',
+              '--branch-color': branch?.color ?? '#9A9A9A',
               left: position.x,
               top: position.y,
             } as CSSProperties}

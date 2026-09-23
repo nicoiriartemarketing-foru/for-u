@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import MagicBadge from './ui/MagicBadge';
 import MagicButton from './ui/MagicButton';
 import MagicCard from './ui/MagicCard';

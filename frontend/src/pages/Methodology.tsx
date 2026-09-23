@@ -207,7 +207,7 @@ export default function Methodology() {
   }
 
   return (
-    <div className="foru-app-bg min-h-screen text-[#171717]">
+    <div className="foru-app-bg min-h-screen text-[#0A0A0A]">
       <nav className="foru-nav foru-container">
         <Link to="/" onClick={() => playUiTone('tap')} className="foru-logo">FOR <span>U</span></Link>
         <div className="foru-nav-links">
@@ -222,7 +222,7 @@ export default function Methodology() {
           <div className="grid lg:grid-cols-[0.78fr_1.22fr]">
             <div className="foru-dark-gradient flex flex-col justify-between p-6 text-white md:p-8">
               <div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-xs font-black text-[#FDE68A]">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-xs font-black text-[#EAEAEA]">
                   <GraduationCap size={15} /> Curso esencial · empieza aquí
                 </span>
                 <h1 className="mt-5 font-serif text-4xl font-bold leading-tight md:text-5xl">
@@ -259,10 +259,10 @@ export default function Methodology() {
             <div className="p-5 md:p-8">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-black uppercase text-[#7C5CFF]">Tu ruta visual</p>
+                  <p className="text-xs font-black uppercase text-[#6B6B6B]">Tu ruta visual</p>
                   <h2 className="mt-1 font-serif text-3xl font-bold">Dos niveles, ocho respuestas</h2>
                 </div>
-                <Compass className="shrink-0 text-[#7C5CFF]" size={30} />
+                <Compass className="shrink-0 text-[#6B6B6B]" size={30} />
               </div>
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-gray-600">
                 No necesitas saberlo todo. Responde honestamente y el radar convierte tus ideas en una ruta concreta.
@@ -287,7 +287,7 @@ export default function Methodology() {
                             }}
                             title={step.title}
                             className={`tap-boost flex aspect-square min-w-0 flex-col items-center justify-center rounded-xl border p-1 ${
-                              isComplete ? 'border-[#6EE7B7] bg-[#ECFDF5] text-[#087F5B]' : 'border-black/8 bg-gray-50 text-gray-700'
+                              isComplete ? 'border-[#9A9A9A] bg-[#FAFAFA] text-[#6B6B6B]' : 'border-black/8 bg-gray-50 text-gray-700'
                             }`}
                           >
                             {isComplete ? <CheckCircle2 size={20} /> : <span className="text-xs font-black">{step.symbol}</span>}
@@ -311,7 +311,7 @@ export default function Methodology() {
               <div className="grid gap-7 lg:grid-cols-[0.42fr_0.58fr]">
                 <aside>
                   <div className="flex items-center justify-between">
-                    <span className="rounded-full bg-[#F3F0FF] px-3 py-2 text-xs font-black text-[#6D4AFF]">
+                    <span className="rounded-full bg-[#FAFAFA] px-3 py-2 text-xs font-black text-[#6B6B6B]">
                       Paso {activeStep + 1} de {radarSteps.length}
                     </span>
                     <button type="button" onClick={() => setCourseOpen(false)} className="text-xs font-black text-gray-500">
@@ -328,8 +328,8 @@ export default function Methodology() {
                     </div>
                   </div>
                   <p className="mt-5 text-sm font-semibold leading-7 text-gray-600">{currentRadarStep.explanation}</p>
-                  <div className="mt-5 border-l-4 border-[#FDE68A] bg-[#FFFBEB] p-4">
-                    <p className="flex items-center gap-2 text-xs font-black uppercase text-[#946200]">
+                  <div className="mt-5 border-l-4 border-[#EAEAEA] bg-[#FAFAFA] p-4">
+                    <p className="flex items-center gap-2 text-xs font-black uppercase text-[#6B6B6B]">
                       <Lightbulb size={15} /> Ejemplos
                     </p>
                     <p className="mt-2 text-sm font-semibold leading-6 text-gray-700">{currentRadarStep.examples.join(' · ')}</p>
@@ -349,7 +349,7 @@ export default function Methodology() {
                         }}
                         className={`tap-boost min-h-20 rounded-xl border px-3 py-4 text-sm font-black ${
                           selectedScore === option.score
-                            ? 'border-[#7C5CFF] bg-[#F3F0FF] text-[#5B3FD1] shadow-md'
+                            ? 'border-[#6B6B6B] bg-[#FAFAFA] text-[#0A0A0A] shadow-md'
                             : 'border-black/10 bg-white text-gray-700'
                         }`}
                       >
@@ -434,13 +434,13 @@ export default function Methodology() {
               return (
                 <article key={material.id} className="tap-boost flex min-h-64 flex-col rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F3F0FF] text-[#6D4AFF]"><Icon size={19} /></span>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FAFAFA] text-[#6B6B6B]"><Icon size={19} /></span>
                     <span className="inline-flex items-center gap-1 text-xs font-black text-gray-500"><Clock size={13} /> {material.minutes} min</span>
                   </div>
-                  <p className="mt-5 text-xs font-black uppercase text-[#6D4AFF]">{material.format} · {material.level}</p>
+                  <p className="mt-5 text-xs font-black uppercase text-[#6B6B6B]">{material.format} · {material.level}</p>
                   <h3 className="mt-2 font-serif text-2xl font-bold leading-tight">{material.title}</h3>
                   <p className="mt-3 line-clamp-3 text-sm font-semibold leading-6 text-gray-600">{material.summary}</p>
-                  <Link to="/ia" onClick={() => playUiTone('next')} className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-black text-[#6D4AFF]">
+                  <Link to="/ia" onClick={() => playUiTone('next')} className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-black text-[#6B6B6B]">
                     Usar con IA <ArrowRight size={15} />
                   </Link>
                 </article>
@@ -467,7 +467,7 @@ function RadarDiagnosis({ answers, onReview }: { answers: Record<string, RadarAn
   return (
     <div className="grid gap-7 lg:grid-cols-[0.42fr_0.58fr]">
       <div className="foru-dark-gradient rounded-2xl p-6 text-white">
-        <span className="inline-flex rounded-full bg-white/10 px-3 py-2 text-xs font-black text-[#6EE7B7]">{status.label}</span>
+        <span className="inline-flex rounded-full bg-white/10 px-3 py-2 text-xs font-black text-[#9A9A9A]">{status.label}</span>
         <h2 className="mt-4 font-serif text-3xl font-bold">{status.title}</h2>
         <p className="mt-3 text-sm font-semibold leading-6 text-white/75">
           Tu radar está {percent}% claro. No necesitas resolver todo hoy: trabaja primero en el punto que aparece a la derecha.
@@ -481,14 +481,14 @@ function RadarDiagnosis({ answers, onReview }: { answers: Record<string, RadarAn
       </div>
 
       <div>
-        <p className="text-xs font-black uppercase text-[#7C5CFF]">Tu siguiente paso exacto</p>
+        <p className="text-xs font-black uppercase text-[#6B6B6B]">Tu siguiente paso exacto</p>
         {nextSteps.length > 0 ? (
-          <div className="mt-3 border-l-4 border-[#FDE68A] bg-[#FFFBEB] p-5">
+          <div className="mt-3 border-l-4 border-[#EAEAEA] bg-[#FAFAFA] p-5">
             <h3 className="font-serif text-2xl font-bold">{nextSteps[0].title}</h3>
             <p className="mt-2 text-sm font-semibold leading-6 text-gray-700">{nextSteps[0].exercise}</p>
           </div>
         ) : (
-          <div className="mt-3 border-l-4 border-[#6EE7B7] bg-[#ECFDF5] p-5">
+          <div className="mt-3 border-l-4 border-[#9A9A9A] bg-[#FAFAFA] p-5">
             <h3 className="font-serif text-2xl font-bold">Tu base está lista</h3>
             <p className="mt-2 text-sm font-semibold leading-6 text-gray-700">Continúa con Oferta y ventas en la biblioteca de abajo.</p>
           </div>
@@ -496,12 +496,12 @@ function RadarDiagnosis({ answers, onReview }: { answers: Record<string, RadarAn
 
         <div className="mt-5 flex flex-wrap gap-2">
           {strongSteps.map((step) => (
-            <span key={step.id} className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] px-3 py-2 text-xs font-black text-[#087F5B]">
+            <span key={step.id} className="inline-flex items-center gap-1 rounded-full bg-[#FAFAFA] px-3 py-2 text-xs font-black text-[#6B6B6B]">
               <CheckCircle2 size={14} /> {step.short}
             </span>
           ))}
         </div>
-        <button type="button" onClick={onReview} className="mt-6 text-sm font-black text-[#6D4AFF]">
+        <button type="button" onClick={onReview} className="mt-6 text-sm font-black text-[#6B6B6B]">
           Revisar mis respuestas
         </button>
       </div>

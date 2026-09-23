@@ -118,7 +118,7 @@ export default function RegisterWizard() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-[#1a1a1a]">
+    <main className="min-h-screen bg-white text-[#0A0A0A]">
       <nav className="foru-lp-nav">
         <Link to="/" className="foru-logo">FOR <span>U</span></Link>
         <span className="foru-lp-badge">Configurar negocio</span>
@@ -148,7 +148,7 @@ export default function RegisterWizard() {
               ))}
             </div>
 
-            <div className="mt-8 rounded-2xl bg-[#f5f5f5] p-5">
+            <div className="mt-8 rounded-2xl bg-[#FAFAFA] p-5">
               <p className="text-xs font-black uppercase text-gray-400">Vista previa de ruta</p>
               <p className="mt-2 font-serif text-2xl font-bold">{displayName}</p>
               <p className="mt-3 text-sm font-light leading-7 text-gray-600">{generatedPitch}</p>
@@ -163,7 +163,7 @@ export default function RegisterWizard() {
                   value={businessName}
                   onChange={(event) => setBusinessName(event.target.value)}
                   placeholder="Ej. Casa Brava"
-                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-4 text-sm font-semibold outline-none transition focus:border-[#6EE7B7] focus:ring-4 focus:ring-[#6EE7B7]/20"
+                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-4 text-sm font-semibold outline-none transition focus:border-[#9A9A9A] focus:ring-4 focus:ring-[#9A9A9A]/20"
                 />
               </label>
 
@@ -173,7 +173,7 @@ export default function RegisterWizard() {
                   value={mainGoal}
                   onChange={(event) => setMainGoal(event.target.value)}
                   placeholder="Ej. recibir reservas, vender por WhatsApp, conseguir leads..."
-                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-4 text-sm font-semibold outline-none transition focus:border-[#93C5FD] focus:ring-4 focus:ring-[#93C5FD]/20"
+                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-4 text-sm font-semibold outline-none transition focus:border-[#9A9A9A] focus:ring-4 focus:ring-[#9A9A9A]/20"
                 />
               </label>
 
@@ -196,7 +196,7 @@ export default function RegisterWizard() {
                           active ? 'foru-gradient-border shadow-lg' : 'border-black/8 bg-white hover:shadow-md'
                         }`}
                       >
-                        <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5f5f5]">
+                        <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[#FAFAFA]">
                           <Icon size={20} />
                         </span>
                         <span className="block text-sm font-black">{option.title}</span>

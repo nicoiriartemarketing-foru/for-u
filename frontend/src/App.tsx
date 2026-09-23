@@ -18,6 +18,10 @@ const PricingPage = lazy(() => import('./pages/PricingPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const WhatsAppConnect = lazy(() => import('./pages/WhatsAppConnect'));
+const ToolkitDemo = lazy(() => import('./toolkit/Toolkit').then(module => ({ default: module.ToolkitDemo })));
+const SiteEditorFrame = lazy(() => import('./toolkit/SiteEditorFrame'));
+const PublicSite = lazy(() => import('./toolkit/PublicSite'));
+const JourneyMapDemo = lazy(() => import('./components/JourneyMap').then(module => ({ default: module.JourneyMapDemo })));
 
 function hasStudioAccess() {
   return window.localStorage.getItem('foru-studio-access') === 'granted';
@@ -59,6 +63,10 @@ function App() {
             <Route path="/mundo-digital" element={<MundoDigital />} />
             <Route path="/aventura" element={<AdventureMvp />} />
             <Route path="/workspace" element={<PrivateWorkspace><ForUWorkspace /></PrivateWorkspace>} />
+            <Route path="/herramientas/demo" element={<ToolkitDemo />} />
+            <Route path="/mapa/demo" element={<JourneyMapDemo />} />
+            <Route path="/site-preview" element={<SiteEditorFrame />} />
+            <Route path="/s/:slug" element={<PublicSite />} />
             <Route path="/whatsapp" element={<PrivateWorkspace><WhatsAppConnect /></PrivateWorkspace>} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/studio" element={<StudioAccess />} />

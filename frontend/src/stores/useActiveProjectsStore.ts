@@ -1,3 +1,4 @@
+import { clearSessionCaches } from '../lib/sessionPrivacy';
 import { create, type StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../lib/supabaseClient';
@@ -844,7 +845,7 @@ function applyIndustryTemplate(project: ForUActiveProject, timestamp: string): F
 
   const existingNodeIds = new Set((project.nodes ?? []).map((node) => node.id));
   const existingTaskIds = new Set((project.tasks ?? []).map((task) => task.id));
-  const templateNodes: ForUProjectNode[] = template.nodes.map((node) => {
+  const templateNodes: ForUProjectNode[] = template.nodes.map((node): ForUProjectNode => {
     const nodeId = `${project.id}-${node.idSuffix}`;
 
     return {
@@ -1045,11 +1046,11 @@ export const baseBranches: Array<{
   y: number;
   color: string;
 }> = [
-  { key: 'ideas', title: 'Ideas', icon: '💡', x: 240, y: 210, color: '#F4D03F' },
-  { key: 'actions', title: 'Acciones', icon: '✅', x: 760, y: 210, color: '#58D68D' },
-  { key: 'finances', title: 'Finanzas', icon: '💰', x: 830, y: 400, color: '#8E7CC3' },
-  { key: 'marketing', title: 'Marketing', icon: '📱', x: 760, y: 590, color: '#F9A8D4' },
-  { key: 'resources', title: 'Recursos', icon: '📚', x: 240, y: 590, color: '#F5B041' },
+  { key: 'ideas', title: 'Ideas', icon: '💡', x: 240, y: 210, color: '#EAEAEA' },
+  { key: 'actions', title: 'Acciones', icon: '✅', x: 760, y: 210, color: '#9A9A9A' },
+  { key: 'finances', title: 'Finanzas', icon: '💰', x: 830, y: 400, color: '#6B6B6B' },
+  { key: 'marketing', title: 'Marketing', icon: '📱', x: 760, y: 590, color: '#9A9A9A' },
+  { key: 'resources', title: 'Recursos', icon: '📚', x: 240, y: 590, color: '#9A9A9A' },
 ];
 
 export function getCenterNodeId(projectId: string) {
@@ -1142,6 +1143,10 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
       isCloudSyncing: false,
 
       hydrateFromSupabase: async (userId) => {
+        // Never import a previous account's persisted workspace into another tenant.
+        if (get().cloudUserId !== userId) {
+          get().resetWorkspace();
+        }
         if (!supabase) {
           set({ cloudUserId: userId, isCloudSyncing: false });
           return;
@@ -1158,6 +1163,8 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
             .order('created_at', { ascending: true }),
         ]);
 
+        if (get().cloudUserId !== userId) return;
+
         if (projectsError) {
           console.warn('No se pudieron cargar los proyectos:', projectsError.message);
           set({ isCloudSyncing: false });
@@ -1173,6 +1180,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           const state = get();
           const localProjects = state.getAllProjects();
           await Promise.all(localProjects.map((project) => upsertCloudProject(userId, normalizeProject(project))));
+          if (get().cloudUserId !== userId) return;
           set({
             cloudUserId: userId,
             isCloudSyncing: false,
@@ -1190,9 +1198,9 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
 
         const projectIds = cleanProjects.map((project) => project.id);
         const [{ data: taskRows }, { data: ideaRows }, { data: feelingRows }, { data: moodRows }, { data: habitRows }] = await Promise.all([
-          supabase.from('tasks').select('*').in('project_id', projectIds),
-          supabase.from('ideas').select('*').in('project_id', projectIds),
-          supabase.from('project_feelings').select('*').in('project_id', projectIds),
+          supabase.from('tasks').select('*, projects!inner(user_id)').eq('projects.user_id', userId).in('project_id', projectIds),
+          supabase.from('ideas').select('*, projects!inner(user_id)').eq('projects.user_id', userId).in('project_id', projectIds),
+          supabase.from('project_feelings').select('*, projects!inner(user_id)').eq('projects.user_id', userId).in('project_id', projectIds),
           supabase.from('daily_mood').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(30),
           supabase.from('rewiring_habits').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(14),
         ]);
@@ -1278,6 +1286,8 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
 
         const firstProjectId = cleanProjects[0]?.id ?? null;
 
+        if (get().cloudUserId !== userId) return;
+
         set({
           activeProjectIds: projectIds,
           activeProjectId: firstProjectId,
@@ -1318,7 +1328,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
         });
       },
 
-      clearCloudUser: () => set({ cloudUserId: null, isCloudSyncing: false }),
+      clearCloudUser: () => { get().resetWorkspace(); clearSessionCaches(); },
 
       updateWhatsappSettings: async ({ whatsappNumber, whatsappEnabled }) => {
         const cleanNumber = whatsappNumber.trim().replace(/[^\d+]/g, '');

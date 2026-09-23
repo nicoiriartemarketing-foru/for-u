@@ -1,0 +1,9 @@
+[functions.reservations]
+verify_jwt = false
+
+[functions.toolkit-ai]
+# The function authenticates the access token with auth.getUser, including modern keys.
+verify_jwt = false
+
+[functions.integrations]
+verify_jwt = false

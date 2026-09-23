@@ -10,7 +10,7 @@ export default function Home() {
   const draft = loadLocalDraft();
 
   return (
-    <main className="foru-reference-hub text-[#171717]">
+    <main className="foru-reference-hub text-[#0A0A0A]">
       <div className="foru-reference-blur foru-reference-blur--gold" />
       <div className="foru-reference-blur foru-reference-blur--green" />
       <div className="foru-reference-blur foru-reference-blur--pink" />

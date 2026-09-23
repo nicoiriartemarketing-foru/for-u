@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { isGeminiConfigured, sendForUChatMessage, type ForUChatMessage } from '../lib/gemini';
 import Logo from './Logo';
@@ -12,7 +12,7 @@ const initialMessages: ForUChatMessage[] = [
   {
     role: 'model',
     text: [
-      'Hola, Nicole. Estoy aquí. 🌸',
+      'Hola. Estoy aquí. 🌸',
       '',
       'Puedes contarme cómo te sientes o qué tienes en la cabeza.',
       '',
@@ -73,7 +73,7 @@ export default function ForUChat({ isOpen, onClose }: ForUChatProps) {
               <div>
                 <span>Refugio de conversación</span>
                 <h2>For U</h2>
-                {!isGeminiConfigured ? <small>Modo calma local activo. Agrega tu API key para Gemini.</small> : <small>Jefa amable conectada.</small>}
+                {!isGeminiConfigured ? <small>La IA necesita una cuenta conectada.</small> : <small>Ayuda para tu siguiente paso.</small>}
               </div>
               <button type="button" onClick={onClose} aria-label="Cerrar chat">
                 ×

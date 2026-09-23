@@ -1,3 +1,4 @@
+import { downloadBlob } from '../toolkit/api';
 import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import type { ForUActiveProject } from '../stores/useActiveProjectsStore';
@@ -98,7 +99,7 @@ export default function DigitalRouteView({
             <small>{currentStep.why}</small>
           </div>
           <div className="foru-digital-route-current-actions">
-            <MagicButton type="button" onClick={() => handlePrimaryAction(currentStep.id)}>
+            <MagicButton type="button" variant="soft" onClick={() => handlePrimaryAction(currentStep.id)}>
               {currentStep.primaryAction}
             </MagicButton>
             <MagicButton type="button" variant="soft" onClick={() => handleOpenStep(currentStep.id)}>
@@ -193,6 +194,7 @@ export default function DigitalRouteView({
                   <div>
                     <strong>{resource.text}</strong>
                     <p>{resource.description}</p>
+                    {resource.content && <button onClick={() => downloadBlob(new Blob([resource.content!], {type:'text/markdown;charset=utf-8'}),resource.filename ?? 'recurso.md')}>Descargar recurso</button>}
                   </div>
                 </article>
               ))}

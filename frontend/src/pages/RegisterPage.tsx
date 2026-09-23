@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import MagicButton from '../components/ui/MagicButton';
@@ -7,7 +7,7 @@ import MagicCard from '../components/ui/MagicCard';
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { signUp, session, loading } = useAuth();
-  const [displayName, setDisplayName] = useState('Nicole');
+  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -54,7 +54,7 @@ export default function RegisterPage() {
               type="text"
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
-              placeholder="Nicole"
+              placeholder="Tu nombre"
               autoComplete="name"
             />
           </label>

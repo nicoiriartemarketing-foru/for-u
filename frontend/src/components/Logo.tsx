@@ -9,20 +9,19 @@ export default function Logo({ className, compact = false }: LogoProps) {
       <svg className="foru-logo-mark" viewBox="0 0 96 112" role="img" aria-hidden="true">
         <defs>
           <linearGradient id="foru-u-gradient" x1="16" y1="12" x2="82" y2="98" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#D4AF37" />
-            <stop offset="0.25" stopColor="#E8D5F5" />
-            <stop offset="0.5" stopColor="#D5E8E0" />
-            <stop offset="0.75" stopColor="#F5D5E0" />
-            <stop offset="1" stopColor="#D4AF37" />
+            <stop offset="0" stopColor="#FDE68A" />
+            <stop offset="0.33" stopColor="#10B981" />
+            <stop offset="0.66" stopColor="#F9A8D4" />
+            <stop offset="1" stopColor="#93C5FD" />
           </linearGradient>
           <radialGradient id="foru-pearl-gradient" cx="34%" cy="30%" r="68%">
-            <stop offset="0" stopColor="#FFFFFF" />
-            <stop offset="0.48" stopColor="#F8F6F3" />
-            <stop offset="0.76" stopColor="#E8D5F5" />
-            <stop offset="1" stopColor="#D5E8E0" />
+            <stop offset="0" stopColor="#FAFAFA" />
+            <stop offset="0.48" stopColor="#FAFAFA" />
+            <stop offset="0.76" stopColor="#EAEAEA" />
+            <stop offset="1" stopColor="#EAEAEA" />
           </radialGradient>
           <filter id="foru-logo-shadow" x="-40%" y="-30%" width="180%" height="180%">
-            <feDropShadow dx="0" dy="7" stdDeviation="7" floodColor="#D4AF37" floodOpacity="0.13" />
+            <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#0A0A0A" floodOpacity="0.06" />
           </filter>
         </defs>
 

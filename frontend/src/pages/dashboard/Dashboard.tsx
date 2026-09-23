@@ -70,11 +70,11 @@ type TeleprompterScript = {
 const contentStorageKey = 'foru:content-studio-v1';
 
 const statusOptions: Array<{ id: ContentStatus; label: string; icon: typeof Lightbulb; color: string }> = [
-  { id: 'idea', label: 'Idea', icon: Lightbulb, color: '#FDE68A' },
-  { id: 'script', label: 'Guion', icon: Mic2, color: '#93C5FD' },
-  { id: 'record', label: 'Grabar', icon: Video, color: '#F9A8D4' },
-  { id: 'edit', label: 'Editar', icon: Clapperboard, color: '#C4B5FD' },
-  { id: 'publish', label: 'Publicar', icon: Send, color: '#6EE7B7' },
+  { id: 'idea', label: 'Idea', icon: Lightbulb, color: '#EAEAEA' },
+  { id: 'script', label: 'Guion', icon: Mic2, color: '#9A9A9A' },
+  { id: 'record', label: 'Grabar', icon: Video, color: '#9A9A9A' },
+  { id: 'edit', label: 'Editar', icon: Clapperboard, color: '#9A9A9A' },
+  { id: 'publish', label: 'Publicar', icon: Send, color: '#9A9A9A' },
 ];
 
 const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -391,11 +391,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="foru-studio-surface flex min-h-screen text-[#171717]">
+    <div className="foru-studio-surface flex min-h-screen text-[#0A0A0A]">
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-black/8 bg-white p-4 transition-transform md:sticky md:translate-x-0 ${mobileNav ? 'translate-x-0' : '-translate-x-full'}`}>
         <Link to="/" className="foru-logo block px-3 py-4">FOR <span>U</span></Link>
         <div className="foru-studio-sidebar-card mt-3 p-4">
-          <p className="text-xs font-black uppercase text-[#10B981]">Estudio digital</p>
+          <p className="text-xs font-black uppercase text-[#6B6B6B]">Estudio digital</p>
           <p className="mt-2 font-serif text-xl font-bold text-gray-950">{draft.businessName}</p>
           <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/15">
             <div className="h-full foru-gradient-button" style={{ width: `${Math.max(18, weekProgress)}%` }} />
@@ -420,7 +420,7 @@ export default function Dashboard() {
           })}
         </nav>
 
-        <button type="button" onClick={() => setAiOpen(true)} className="mt-auto flex items-center gap-3 rounded-xl bg-[#F3F0FF] p-4 text-left text-sm font-black text-[#5B3FD1] transition hover:-translate-y-0.5">
+        <button type="button" onClick={() => setAiOpen(true)} className="mt-auto flex items-center gap-3 rounded-xl bg-[#FAFAFA] p-4 text-left text-sm font-black text-[#0A0A0A] transition hover:-translate-y-0.5">
           <Bot size={20} /> Preguntar a IA
         </button>
       </aside>
@@ -433,7 +433,7 @@ export default function Dashboard() {
             <Menu size={20} />
           </button>
           <div>
-            <p className="text-xs font-black uppercase text-[#7C5CFF]">Estudio For U</p>
+            <p className="text-xs font-black uppercase text-[#6B6B6B]">Estudio For U</p>
             <h1 className="text-lg font-black">{navigation.find((item) => item.id === activeView)?.label}</h1>
           </div>
           <Link to={hasProfile ? publicPath : '/register'} className="inline-flex items-center gap-2 rounded-lg border border-black/10 px-3 py-2 text-xs font-black">
@@ -518,7 +518,7 @@ function TodayView({
           ))}
         </div>
         <div className="relative max-w-2xl">
-          <p className="text-sm font-black text-[#6EE7B7]">Hola, {draftName}</p>
+          <p className="text-sm font-black text-[#9A9A9A]">Hola, {draftName}</p>
           <h2 className="mt-3 font-serif text-4xl font-bold leading-tight md:text-5xl">Hoy toca crear, no organizarlo todo.</h2>
           <div className="mt-6 flex flex-wrap gap-3">
           <button type="button" onClick={onOpenContent} className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-4 text-sm font-black text-gray-950">
@@ -534,39 +534,39 @@ function TodayView({
       <section className="grid gap-4 md:grid-cols-[1.25fr_0.75fr]">
         <button type="button" onClick={onOpenContent} className="tap-boost flex min-h-56 flex-col justify-between rounded-2xl border border-black/8 bg-white p-6 text-left shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#FFF4C2]"><Video size={22} /></span>
-            <span className="rounded-full bg-[#F3F0FF] px-3 py-1 text-xs font-black text-[#6D4AFF]">SIGUIENTE</span>
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#FAFAFA]"><Video size={22} /></span>
+            <span className="rounded-full bg-[#FAFAFA] px-3 py-1 text-xs font-black text-[#6B6B6B]">SIGUIENTE</span>
           </div>
           <div>
             <p className="text-sm font-bold text-gray-500">{nextItem?.format || 'Contenido'}</p>
             <h3 className="mt-2 font-serif text-3xl font-bold">{nextItem?.title || 'Crea tu primera idea'}</h3>
           </div>
-          <span className="inline-flex items-center gap-2 text-sm font-black text-[#6D4AFF]">Continuar <ArrowRight size={16} /></span>
+          <span className="inline-flex items-center gap-2 text-sm font-black text-[#6B6B6B]">Continuar <ArrowRight size={16} /></span>
         </button>
 
         <div className="grid grid-cols-2 gap-3">
-          <Metric icon={Clapperboard} value={itemCount} label="Piezas" color="#93C5FD" />
-          <Metric icon={Send} value={publishedCount} label="Publicadas" color="#6EE7B7" />
+          <Metric icon={Clapperboard} value={itemCount} label="Piezas" color="#9A9A9A" />
+          <Metric icon={Send} value={publishedCount} label="Publicadas" color="#9A9A9A" />
           <button type="button" onClick={onOpenCalendar} className="tap-boost col-span-2 flex items-center justify-between rounded-2xl border border-black/8 bg-white p-5 text-left shadow-sm">
             <span>
               <span className="text-xs font-black uppercase text-gray-500">Esta semana</span>
               <span className="mt-1 block text-lg font-black">Ver calendario</span>
             </span>
-            <CalendarDays className="text-[#7C5CFF]" size={28} />
+            <CalendarDays className="text-[#6B6B6B]" size={28} />
           </button>
         </div>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-3">
         <button type="button" onClick={() => onAskAi('Dame una idea de contenido para mi negocio')} className="tap-boost flex items-center gap-3 rounded-2xl border border-black/8 bg-white p-4 text-left text-sm font-black shadow-sm">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F9A8D4]"><Bot size={19} /></span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#9A9A9A]"><Bot size={19} /></span>
           Pedir una idea
         </button>
-        <button type="button" onClick={onOpenContent} className="tap-boost flex items-center gap-3 rounded-2xl border border-[#F9A8D4]/40 bg-white p-4 text-left text-sm font-black shadow-sm">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F9A8D4]"><Video size={19} /></span>
+        <button type="button" onClick={onOpenContent} className="tap-boost flex items-center gap-3 rounded-2xl border border-[#9A9A9A]/40 bg-white p-4 text-left text-sm font-black shadow-sm">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#9A9A9A]"><Video size={19} /></span>
           Grabar con teleprompter
         </button>
-        <QuickAction to="/metodologia" icon={BookOpen} title="Aprender algo" color="#FDE68A" />
+        <QuickAction to="/metodologia" icon={BookOpen} title="Aprender algo" color="#EAEAEA" />
       </section>
     </div>
   );
@@ -719,7 +719,7 @@ function ContentView() {
           <p className="text-xs font-black uppercase text-gray-400">Campaña activa</p>
           <h2 className="mt-2 font-serif text-2xl font-bold">Lanzamiento 40% OFF</h2>
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100">
-            <div className="h-full rounded-full bg-[#1a1a1a]" style={{ width: `${progress}%` }} />
+            <div className="h-full rounded-full bg-[#0A0A0A]" style={{ width: `${progress}%` }} />
           </div>
           <p className="mt-2 text-xs font-bold text-gray-500">{completedCount} de {allTasks.length} tareas</p>
 
@@ -761,13 +761,13 @@ function ContentView() {
               <Plus size={17} /> Nueva idea
             </button>
           </div>
-          <section className="mt-4 grid gap-3 rounded-2xl border border-[#F9A8D4]/40 bg-white p-4 shadow-sm md:grid-cols-[1fr_auto] md:items-center">
+          <section className="mt-4 grid gap-3 rounded-2xl border border-[#9A9A9A]/40 bg-white p-4 shadow-sm md:grid-cols-[1fr_auto] md:items-center">
             <div>
-              <p className="text-xs font-black uppercase text-[#D946EF]">Grabar contenido</p>
+              <p className="text-xs font-black uppercase text-[#6B6B6B]">Grabar contenido</p>
               <h3 className="font-serif text-2xl font-bold">Teleprompter conectado a tus guiones</h3>
               <p className="mt-1 text-sm font-semibold leading-6 text-gray-500">Abre un guion, graba con cámara y guarda el video en la biblioteca de FOR U.</p>
             </div>
-            <button type="button" onClick={openDemoTeleprompter} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#171717] px-5 py-4 text-sm font-black text-white">
+            <button type="button" onClick={openDemoTeleprompter} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0A0A0A] px-5 py-4 text-sm font-black text-white">
               <Video size={18} /> Probar teleprompter
             </button>
           </section>
@@ -776,7 +776,7 @@ function ContentView() {
               <Save size={16} /> Biblioteca FOR U
             </span>
             <span>{assets.length} archivos guardados · Fuente: {assetSource === 'remote' ? 'Supabase' : 'local'}</span>
-            {saveMessage && <span className="rounded-full bg-[#ECFDF5] px-3 py-1 text-xs font-black text-[#047857]">{saveMessage}</span>}
+            {saveMessage && <span className="rounded-full bg-[#FAFAFA] px-3 py-1 text-xs font-black text-[#6B6B6B]">{saveMessage}</span>}
           </div>
 
           {activeTab === 'today' && (
@@ -788,7 +788,7 @@ function ContentView() {
                     <p className="text-xs font-black uppercase text-gray-400">{time}</p>
                     <input
                       defaultValue={content}
-                      className="rounded-lg border border-transparent bg-transparent px-2 py-2 text-sm font-semibold outline-none focus:border-[#6EE7B7] focus:bg-white"
+                      className="rounded-lg border border-transparent bg-transparent px-2 py-2 text-sm font-semibold outline-none focus:border-[#9A9A9A] focus:bg-white"
                     />
                     <span className="w-fit rounded-full foru-gradient-button px-3 py-1 text-xs font-black">{badge}</span>
                   </div>
@@ -831,13 +831,13 @@ function ContentView() {
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {assets.length === 0 && <p className="rounded-xl bg-gray-50 p-4 text-sm font-bold text-gray-500">Aun no hay guiones o videos guardados.</p>}
               {assets.map((asset) => (
-                <button key={asset.id} type="button" onClick={() => downloadAsset(asset)} className="flex items-center justify-between gap-3 rounded-xl border border-black/6 bg-gray-50 p-4 text-left transition hover:border-[#6EE7B7] hover:bg-white">
+                <button key={asset.id} type="button" onClick={() => downloadAsset(asset)} className="flex items-center justify-between gap-3 rounded-xl border border-black/6 bg-gray-50 p-4 text-left transition hover:border-[#9A9A9A] hover:bg-white">
                   <span>
                     <span className="block text-xs font-black uppercase text-gray-400">{asset.kind === 'video' ? 'Video' : 'Guion'}</span>
                     <span className="mt-1 block text-sm font-black text-gray-900">{asset.title}</span>
                     <span className="mt-1 block text-xs font-bold text-gray-500">{asset.file_name}</span>
                   </span>
-                  <Save size={18} className="shrink-0 text-[#7C5CFF]" />
+                  <Save size={18} className="shrink-0 text-[#6B6B6B]" />
                 </button>
               ))}
             </div>
@@ -894,11 +894,11 @@ function CampaignTaskCard({
   onDelete?: (id: string) => void;
 }) {
   const tagClasses = {
-    urgent: 'bg-[#FEF3C7] text-[#92400E]',
-    content: 'bg-[#DBEAFE] text-[#1E40AF]',
-    ads: 'bg-[#FCE7F3] text-[#9D174D]',
-    many: 'bg-[#D1FAE5] text-[#065F46]',
-    close: 'bg-[#EDE9FE] text-[#5B21B6]',
+    urgent: 'bg-[#FAFAFA] text-[#0A0A0A]',
+    content: 'bg-[#EAEAEA] text-[#0A0A0A]',
+    ads: 'bg-[#EAEAEA] text-[#0A0A0A]',
+    many: 'bg-[#FAFAFA] text-[#0A0A0A]',
+    close: 'bg-[#EAEAEA] text-[#0A0A0A]',
   };
 
   return (
@@ -909,7 +909,7 @@ function CampaignTaskCard({
           onClick={() => onToggleDone(task.id)}
           aria-label={done ? 'Marcar pendiente' : 'Marcar listo'}
           className={`mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 transition ${
-            done ? 'border-[#6EE7B7] bg-[#6EE7B7] text-white' : 'border-gray-300 bg-white'
+            done ? 'border-[#9A9A9A] bg-[#9A9A9A] text-white' : 'border-gray-300 bg-white'
           }`}
         >
           {done && '✓'}
@@ -920,7 +920,7 @@ function CampaignTaskCard({
           {task.description && <p className="mt-1 text-sm font-semibold leading-6 text-gray-500">{task.description}</p>}
         </div>
         {onDelete && (
-          <button type="button" onClick={() => onDelete(task.id)} className="rounded-lg border border-black/8 px-3 py-2 text-xs font-black text-gray-500 hover:border-red-200 hover:text-red-500">
+          <button type="button" onClick={() => onDelete(task.id)} className="rounded-lg border border-black/8 px-3 py-2 text-xs font-black text-gray-500 hover:border-gray-200 hover:text-gray-700">
             Borrar
           </button>
         )}
@@ -934,14 +934,14 @@ function CampaignTaskCard({
               <button
                 type="button"
                 onClick={() => onTeleprompter(task, copy)}
-                className="inline-flex items-center gap-2 rounded-lg border border-[#F9A8D4]/50 bg-white px-3 py-2 text-xs font-black text-gray-700 transition hover:border-[#F9A8D4]"
+                className="inline-flex items-center gap-2 rounded-lg border border-[#9A9A9A]/50 bg-white px-3 py-2 text-xs font-black text-gray-700 transition hover:border-[#9A9A9A]"
               >
                 <Video size={14} /> Teleprompter
               </button>
               <button
                 type="button"
                 onClick={() => onSaveScript(task, copy)}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-black text-gray-700 transition hover:border-[#6EE7B7]"
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-black text-gray-700 transition hover:border-[#9A9A9A]"
               >
                 <Save size={14} /> Guardar
               </button>
@@ -949,7 +949,7 @@ function CampaignTaskCard({
                 type="button"
                 onClick={() => onCopy(copy.id)}
                 className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-black transition ${
-                  copiedId === copy.id ? 'border-[#6EE7B7] bg-[#6EE7B7] text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-[#6EE7B7]'
+                  copiedId === copy.id ? 'border-[#9A9A9A] bg-[#9A9A9A] text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-[#9A9A9A]'
                 }`}
               >
                 <Clipboard size={14} /> {copiedId === copy.id ? 'Copiado' : 'Copiar'}
@@ -959,7 +959,7 @@ function CampaignTaskCard({
           <textarea
             value={copyTextMap[copy.id] ?? copy.text}
             onChange={(event) => onUpdateCopy(copy.id, event.target.value)}
-            className="min-h-36 w-full resize-y rounded-lg border border-transparent bg-transparent text-sm font-semibold leading-7 text-gray-700 outline-none focus:border-[#93C5FD] focus:bg-white focus:p-3"
+            className="min-h-36 w-full resize-y rounded-lg border border-transparent bg-transparent text-sm font-semibold leading-7 text-gray-700 outline-none focus:border-[#9A9A9A] focus:bg-white focus:p-3"
           />
         </div>
       ))}
@@ -991,7 +991,7 @@ function IdeaModal({
       <section className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-black uppercase text-[#7C5CFF]">Nueva idea</p>
+            <p className="text-xs font-black uppercase text-[#6B6B6B]">Nueva idea</p>
             <h2 className="mt-1 font-serif text-3xl font-bold">Agrega una pieza a tu campaña</h2>
           </div>
           <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-lg font-black">×</button>
@@ -1193,9 +1193,9 @@ function TeleprompterModal({
             <PlayCircle size={16} className="inline" /> {isPlaying ? 'Pausar' : 'Leer'}
           </button>
           {isRecording ? (
-            <button type="button" onClick={stopRecording} className="rounded-xl bg-red-500 px-4 py-3 text-sm font-black text-white">Detener</button>
+            <button type="button" onClick={stopRecording} className="rounded-xl bg-gray-50 px-4 py-3 text-sm font-black text-white">Detener</button>
           ) : (
-            <button type="button" onClick={startRecording} className="rounded-xl bg-[#F9A8D4] px-4 py-3 text-sm font-black text-gray-950">Grabar</button>
+            <button type="button" onClick={startRecording} className="rounded-xl bg-[#9A9A9A] px-4 py-3 text-sm font-black text-gray-950">Grabar</button>
           )}
         </div>
       </section>
@@ -1262,7 +1262,7 @@ function CalendarView({
                         <button type="button" onClick={() => onDay(item.id, (dayIndex + 1) % 7)} className="text-left text-[10px] font-black uppercase">
                           {item.format}
                         </button>
-                        <button type="button" onClick={() => onDeleteItem(item.id)} aria-label="Borrar" className="text-gray-500 hover:text-red-500">
+                        <button type="button" onClick={() => onDeleteItem(item.id)} aria-label="Borrar" className="text-gray-500 hover:text-gray-700">
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -1286,7 +1286,7 @@ function CalendarView({
           <section className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-black uppercase text-[#7C5CFF]">Calendario</p>
+                <p className="text-xs font-black uppercase text-[#6B6B6B]">Calendario</p>
                 <h2 className="mt-1 font-serif text-3xl font-bold">Nueva pieza</h2>
               </div>
               <button type="button" onClick={() => setModalOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-lg font-black">×</button>
@@ -1323,8 +1323,8 @@ function WebView({ pageTitle, publicPath, hasProfile }: { pageTitle: string; pub
       <span className="foru-badge">Tu web</span>
       <h2 className="mt-4 font-serif text-4xl font-bold">Una página que trabaja contigo.</h2>
       {!hasProfile && (
-        <section className="mt-7 rounded-2xl border border-dashed border-[#7C5CFF]/30 bg-[#F7F5FF] p-6">
-          <p className="text-xs font-black uppercase text-[#7C5CFF]">Configuración básica</p>
+        <section className="mt-7 rounded-2xl border border-dashed border-[#6B6B6B]/30 bg-[#FAFAFA] p-6">
+          <p className="text-xs font-black uppercase text-[#6B6B6B]">Configuración básica</p>
           <h3 className="mt-2 font-serif text-3xl font-bold">Primero define tu negocio</h3>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-7 text-gray-600">
             Aquí van las preguntas importantes: nombre, rubro, objetivo y personalidad. Después se abre el editor de la landing.
@@ -1336,7 +1336,7 @@ function WebView({ pageTitle, publicPath, hasProfile }: { pageTitle: string; pub
       )}
       <div className="mt-7 grid gap-4 md:grid-cols-2">
         <Link to={hasProfile ? '/editor' : '/register'} className="tap-boost flex min-h-64 flex-col justify-between rounded-2xl foru-dark-gradient p-6 text-white shadow-xl">
-          <Edit3 size={30} className="text-[#F9A8D4]" />
+          <Edit3 size={30} className="text-[#9A9A9A]" />
           <div>
             <p className="text-sm font-bold text-white/60">Editor en vivo</p>
             <h3 className="mt-2 font-serif text-3xl font-bold">{hasProfile ? pageTitle : 'Configura tu landing'}</h3>
@@ -1344,12 +1344,12 @@ function WebView({ pageTitle, publicPath, hasProfile }: { pageTitle: string; pub
           <span className="inline-flex items-center gap-2 text-sm font-black">{hasProfile ? 'Editar web' : 'Empezar configuración'} <ArrowRight size={16} /></span>
         </Link>
         <Link to={hasProfile ? publicPath : '/register'} className="tap-boost flex min-h-64 flex-col justify-between rounded-2xl border border-black/8 bg-white p-6 shadow-sm">
-          <Eye size={30} className="text-[#7C5CFF]" />
+          <Eye size={30} className="text-[#6B6B6B]" />
           <div>
             <p className="text-sm font-bold text-gray-500">Vista pública</p>
             <h3 className="mt-2 font-serif text-3xl font-bold">{hasProfile ? 'Mírala como cliente.' : 'Disponible al configurar.'}</h3>
           </div>
-          <span className="inline-flex items-center gap-2 text-sm font-black text-[#6D4AFF]">{hasProfile ? 'Abrir landing' : 'Configurar'} <ArrowRight size={16} /></span>
+          <span className="inline-flex items-center gap-2 text-sm font-black text-[#6B6B6B]">{hasProfile ? 'Abrir landing' : 'Configurar'} <ArrowRight size={16} /></span>
         </Link>
       </div>
     </div>
@@ -1366,12 +1366,12 @@ function PublishView({ items, publicPath }: { items: ContentItem[]; publicPath: 
         <section className="rounded-2xl border border-black/8 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-black">Contenido</h3>
-            <Send className="text-[#7C5CFF]" size={21} />
+            <Send className="text-[#6B6B6B]" size={21} />
           </div>
           <div className="mt-4 grid gap-3">
             {readyItems.length ? readyItems.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 rounded-xl bg-[#ECFDF5] p-4">
-                <CheckCircle2 className="text-[#087F5B]" size={19} />
+              <div key={item.id} className="flex items-center gap-3 rounded-xl bg-[#FAFAFA] p-4">
+                <CheckCircle2 className="text-[#6B6B6B]" size={19} />
                 <span className="text-sm font-black">{item.title}</span>
               </div>
             )) : (
@@ -1420,7 +1420,7 @@ function ProfilePrompt({ onClose }: { onClose: () => void }) {
       <section className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-black uppercase text-[#7C5CFF]">Antes de editar tu web</p>
+            <p className="text-xs font-black uppercase text-[#6B6B6B]">Antes de editar tu web</p>
             <h2 className="mt-1 font-serif text-3xl font-bold">Configura tu perfil</h2>
           </div>
           <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-lg font-black">×</button>
@@ -1461,7 +1461,7 @@ function StudioAiDock({
       <div className="flex h-full flex-col rounded-t-[20px] border border-black/10 bg-white shadow-2xl">
         <header className="flex items-center justify-between border-b border-black/8 px-5 py-4">
           <div>
-            <p className="text-xs font-black uppercase text-[#10B981]">IA For U</p>
+            <p className="text-xs font-black uppercase text-[#6B6B6B]">IA For U</p>
             <h2 className="font-serif text-xl font-bold">Tu guía de estudio</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Cerrar IA" className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-lg font-black">×</button>
@@ -1480,7 +1480,7 @@ function StudioAiDock({
               key={`${message.role}-${index}`}
               className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm font-semibold leading-6 ${
                 message.role === 'user'
-                  ? 'ml-auto rounded-br bg-[#1a1a1a] text-white'
+                  ? 'ml-auto rounded-br bg-[#0A0A0A] text-white'
                   : 'rounded-bl bg-gray-100 text-gray-800'
               }`}
             >
@@ -1497,7 +1497,7 @@ function StudioAiDock({
             placeholder="Pregúntame algo..."
             className="foru-input min-w-0 flex-1 rounded-xl px-4 py-3 text-sm font-bold outline-none"
           />
-          <button type="button" onClick={() => onAsk()} aria-label="Enviar" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#1a1a1a] text-white">
+          <button type="button" onClick={() => onAsk()} aria-label="Enviar" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0A0A0A] text-white">
             <Send size={18} />
           </button>
         </div>

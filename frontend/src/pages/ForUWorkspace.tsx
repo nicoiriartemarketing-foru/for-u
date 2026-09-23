@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import '../toolkit/toolkit.css';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,6 +7,7 @@ import EmotionalOnboardingModal from '../components/EmotionalOnboardingModal';
 import FloatingReward, { type FloatingRewardBurst } from '../components/FloatingReward';
 import IndustryOnboardingModal, { type IndustryOnboardingInput } from '../components/IndustryOnboardingModal';
 import Logo from '../components/Logo';
+import JourneyMap, { projectJourney } from '../components/JourneyMap';
 import { useAuth } from '../contexts/AuthContext';
 import { planConfigs, type ForUNextAction, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
@@ -15,12 +17,12 @@ const DigitalRouteView = lazy(() => import('../components/DigitalRouteView'));
 const GanttView = lazy(() => import('../components/GanttView'));
 const KanbanView = lazy(() => import('../components/KanbanView'));
 const IndustryKitView = lazy(() => import('../components/IndustryKitView'));
-const ProjectCanvas = lazy(() => import('../components/ProjectCanvas'));
 const ForUChat = lazy(() => import('../components/ForUChat'));
 const PersonalDashboard = lazy(() => import('../components/PersonalDashboard'));
 const NodeDetailPanel = lazy(() => import('../components/NodeDetailPanel'));
+const Toolkit = lazy(() => import('../toolkit/Toolkit'));
 
-type WorkspaceScreen = 'dashboard' | 'action' | 'project' | 'world';
+type WorkspaceScreen = 'projects' | 'dashboard' | 'action' | 'project' | 'world' | 'tools';
 type ProjectSubview = 'route' | 'kit' | 'kanban' | 'map' | 'gantt';
 
 export default function ForUWorkspace() {
@@ -34,8 +36,8 @@ export default function ForUWorkspace() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isIndustryModalOpen, setIsIndustryModalOpen] = useState(false);
 
-  const activeProjectIds = useActiveProjectsStore((state) => state.activeProjectIds);
-  const projectsById = useActiveProjectsStore((state) => state.projectsById);
+  useActiveProjectsStore((state) => state.activeProjectIds);
+  useActiveProjectsStore((state) => state.projectsById);
   const activeProjectId = useActiveProjectsStore((state) => state.activeProjectId);
   const selectedNodeId = useActiveProjectsStore((state) => state.selectedNodeId);
   const coins = useActiveProjectsStore((state) => state.coins);
@@ -56,16 +58,15 @@ export default function ForUWorkspace() {
   const openProject = useActiveProjectsStore((state) => state.openProject);
   const hydrateFromSupabase = useActiveProjectsStore((state) => state.hydrateFromSupabase);
   const clearCloudUser = useActiveProjectsStore((state) => state.clearCloudUser);
+  const cloudUserId = useActiveProjectsStore((state) => state.cloudUserId);
+  const isCloudSyncing = useActiveProjectsStore((state) => state.isCloudSyncing);
 
   useEffect(() => {
     if (!user?.id) return;
     void hydrateFromSupabase(user.id);
   }, [hydrateFromSupabase, user?.id]);
 
-  const dashboardProjects = useMemo(
-    () => getPersonalDashboardProjects(),
-    [activeProjectIds, projectsById, getPersonalDashboardProjects],
-  );
+  const dashboardProjects = getPersonalDashboardProjects();
   const currentProjectId = selectedProjectId ?? activeProjectId ?? dashboardProjects[0]?.project.id ?? null;
   const currentProject = currentProjectId ? getProjectById(currentProjectId) : null;
   const currentAction = currentProjectId ? getNextAction(currentProjectId) : null;
@@ -128,7 +129,7 @@ export default function ForUWorkspace() {
 
     selectProject(projectId);
     setProjectSubview('route');
-    setScreen('project');
+    setScreen('dashboard');
   }
 
   function viewProject(projectId: string) {
@@ -151,7 +152,7 @@ export default function ForUWorkspace() {
   }
 
   function changeProjectSubview(subview: ProjectSubview) {
-    if ((subview === 'kanban' || subview === 'map' || subview === 'gantt') && !features.kanban) {
+    if ((subview === 'kanban' || subview === 'gantt') && !features.kanban) {
       showUpgrade(
         'Upgrade a Pro para ver vistas avanzadas',
         'La Ruta Digital y el tablero personal siguen disponibles en Gratis. Pro desbloquea Kanban, mapa mental y cronograma.',
@@ -162,7 +163,7 @@ export default function ForUWorkspace() {
     deselectNode();
     clearFocus();
     setProjectSubview(subview);
-    setView(subview === 'map' ? 'map' : subview);
+    setView(subview === 'route' || subview === 'kit' ? 'dashboard' : subview);
   }
 
   function completeAction(point: { x: number; y: number }) {
@@ -183,10 +184,14 @@ export default function ForUWorkspace() {
   }
 
   async function handleSignOut() {
-    clearCloudUser();
     await signOut();
+    clearCloudUser();
     navigate('/login', { replace: true });
   }
+
+  if (user && (cloudUserId !== user.id || isCloudSyncing)) return <ScreenLoader label="Preparando tus proyectos..." />;
+  if (screen === 'dashboard' && !currentProject) return <main className="hoy-shell"><section className="hoy-view"><p className="hoy-greeting">Hola, {user?.user_metadata?.display_name || 'emprendedora'}</p><div className="hoy-task"><h1>Elige el rubro de tu negocio</h1><p className="hoy-description">Solo necesitamos la base para preparar tu primer paso.</p></div><button className="hoy-action-btn" onClick={()=>setIsIndustryModalOpen(true)}>Empezar ahora</button></section><IndustryOnboardingModal isOpen={isIndustryModalOpen} onClose={()=>setIsIndustryModalOpen(false)} onCreateIndustryProject={createIndustryProject}/></main>;
+  if ((screen === 'dashboard' || screen === 'tools') && currentProject) return <Suspense fallback={<ScreenLoader label="Abriendo tu estudio..." />}><Toolkit project={currentProject} onBack={() => setScreen('projects')} /></Suspense>;
 
   return (
     <main className="foru-personal-shell">
@@ -224,13 +229,13 @@ export default function ForUWorkspace() {
         </label>
 
         <div className="foru-personal-header-stats">
+          <button type="button" className="magic-button magic-button-soft" disabled={!currentProject} onClick={() => setScreen('tools')}>Mi estudio · Herramientas</button>
           <button
             type="button"
-            className="foru-header-primary-action"
+            className="magic-button magic-button-soft"
             onClick={() => (screen === 'project' ? openDashboard(currentProjectId ?? undefined) : currentProjectId && viewProject(currentProjectId))}
             style={{
               borderColor: 'transparent',
-              background: 'var(--gradient-iridiscente)',
               color: 'var(--color-texto)',
               fontFamily: 'var(--font-principal)',
             }}
@@ -268,7 +273,7 @@ export default function ForUWorkspace() {
             <button type="button" onClick={() => openDashboard(currentProjectId ?? undefined)}>
               ← Volver al tablero
             </button>
-            <p>{currentProject?.name ? `Aquí tienes todo lo de ${currentProject.name}, Nicole.` : 'Aquí tienes el proyecto completo, Nicole.'}</p>
+            <p>{currentProject?.name ? `Aquí tienes todo lo de ${currentProject.name}.` : 'Aquí tienes el proyecto completo.'}</p>
             <div className="foru-project-subtabs" aria-label="Vistas del proyecto">
               <button type="button" className={projectSubview === 'route' ? 'is-active' : ''} onClick={() => setProjectSubview('route')}>
                 🗺️ Ruta
@@ -318,7 +323,7 @@ export default function ForUWorkspace() {
           ) : null}
           {projectSubview === 'map' ? (
             <Suspense fallback={<ScreenLoader label="Cargando mapa..." />}>
-              <ProjectCanvas />
+              {currentProject && <JourneyMap steps={projectJourney(currentProject)} onSelect={step => { if (step.nodeId) useActiveProjectsStore.getState().selectNode(step.nodeId); }} />}
               <AnimatePresence>
                 {selectedNodeId ? <NodeDetailPanel key={selectedNodeId} /> : null}
               </AnimatePresence>
@@ -344,7 +349,7 @@ export default function ForUWorkspace() {
       ) : (
         <Suspense fallback={<ScreenLoader label="Cargando tablero..." />}>
           <PersonalDashboard
-            name="Nicole"
+            name={user?.user_metadata?.display_name || "emprendedora"}
             planLabel={planLabel}
             projects={dashboardProjects}
             onViewProject={viewProject}

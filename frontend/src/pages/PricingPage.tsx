@@ -69,7 +69,7 @@ export default function PricingPage() {
         </Link>
         <div>
           <MagicBadge>Planes For U</MagicBadge>
-          <h1><GradientText>Elige cuánto apoyo quieres hoy, Nicole.</GradientText></h1>
+          <h1><GradientText>Elige cuánto apoyo quieres hoy.</GradientText></h1>
           <p>Gratis te ayuda a empezar. Pro y Premium desbloquean el sistema completo.</p>
         </div>
       </header>

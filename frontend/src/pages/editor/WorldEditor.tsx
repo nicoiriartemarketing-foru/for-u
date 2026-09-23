@@ -134,7 +134,7 @@ export default function WorldEditor() {
   }
 
   return (
-    <div className="foru-app-bg min-h-screen text-[#171717]">
+    <div className="foru-app-bg min-h-screen text-[#0A0A0A]">
       <header className="sticky top-0 z-30 border-b border-black/10 bg-white px-4 py-3 md:px-6">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -146,7 +146,7 @@ export default function WorldEditor() {
               <ArrowLeft size={18} />
             </Link>
             <div>
-              <p className="text-xs font-black text-[#7C5CFF]">EDITOR EN VIVO</p>
+              <p className="text-xs font-black text-[#6B6B6B]">EDITOR EN VIVO</p>
               <h1 className="text-lg font-black text-gray-950">{page.heroTitle}</h1>
             </div>
           </div>
@@ -188,7 +188,7 @@ export default function WorldEditor() {
                       setActiveTab(tab.id);
                     }}
                     className={`tap-boost flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-black ${
-                      active ? 'foru-gradient-button text-[#1a1a1a]' : 'foru-soft-panel text-gray-700'
+                      active ? 'foru-gradient-button text-[#0A0A0A]' : 'foru-soft-panel text-gray-700'
                     }`}
                   >
                     <Icon size={15} /> {tab.label}
@@ -198,7 +198,7 @@ export default function WorldEditor() {
             </div>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-4">
-            <div className="mb-4 border-l-4 border-[#7C5CFF] bg-[#F7F5FF] p-3">
+            <div className="mb-4 border-l-4 border-[#6B6B6B] bg-[#FAFAFA] p-3">
               <p className="text-sm font-black text-gray-900">{tabHelp[activeTab].title}</p>
               <p className="mt-1 text-xs font-semibold leading-5 text-gray-600">{tabHelp[activeTab].text}</p>
             </div>
@@ -234,7 +234,7 @@ export default function WorldEditor() {
                     <div className="mb-3 flex items-center justify-between">
                       <p className="text-xs font-black uppercase text-gray-500">Producto o servicio {index + 1}</p>
                       {page.featuredItems.length > 1 && (
-                        <button type="button" onClick={() => removeFeaturedItem(index)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-red-500" title="Eliminar">
+                        <button type="button" onClick={() => removeFeaturedItem(index)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-gray-700" title="Eliminar">
                           <Trash2 size={15} />
                         </button>
                       )}
@@ -278,7 +278,7 @@ export default function WorldEditor() {
                         key={option.id}
                         type="button"
                         onClick={() => applyTheme(option.id)}
-                        className={`tap-boost rounded-2xl p-4 text-left transition ${selected ? 'foru-gradient-border ring-2 ring-[#7C5CFF]/20' : 'foru-soft-panel'}`}
+                        className={`tap-boost rounded-2xl p-4 text-left transition ${selected ? 'foru-gradient-border ring-2 ring-[#6B6B6B]/20' : 'foru-soft-panel'}`}
                       >
                         <span className="mb-4 flex gap-2">
                           {[option.background, option.surface, option.accent, option.text].map((color) => (
@@ -288,7 +288,7 @@ export default function WorldEditor() {
                         <span className="block text-base font-black text-gray-950">{option.name}</span>
                         <span className="mt-1 block text-sm font-semibold leading-6 text-gray-600">{option.description}</span>
                         <span className="mt-3 inline-flex rounded-full bg-white/70 px-3 py-1 text-xs font-black text-gray-600">{option.bestFor}</span>
-                        {selected && <span className="ml-2 mt-3 inline-flex rounded-full bg-[#7C5CFF] px-3 py-1 text-xs font-black text-white">Activo</span>}
+                        {selected && <span className="ml-2 mt-3 inline-flex rounded-full bg-[#6B6B6B] px-3 py-1 text-xs font-black text-white">Activo</span>}
                       </button>
                     );
                   })}
@@ -314,7 +314,7 @@ export default function WorldEditor() {
                         onClick={() => updatePage({ heroVisual: option.id as DigitalWorldPage['heroVisual'] })}
                         className={`tap-boost rounded-2xl p-4 text-left ${active ? 'foru-gradient-border' : 'foru-soft-panel'}`}
                       >
-                        <Icon size={20} className="mb-3 text-[#7C5CFF]" />
+                        <Icon size={20} className="mb-3 text-[#6B6B6B]" />
                         <span className="block text-sm font-black text-gray-950">{option.label}</span>
                       </button>
                     );
@@ -408,10 +408,10 @@ export default function WorldEditor() {
           </div>
         </section>
 
-        <section className="min-h-0 overflow-hidden rounded-2xl border border-black/10 bg-[#ededeb] p-3 shadow-lg xl:flex xl:flex-col">
+        <section className="min-h-0 overflow-hidden rounded-2xl border border-black/10 bg-[#EAEAEA] p-3 shadow-lg xl:flex xl:flex-col">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-black uppercase text-[#7C5CFF]">Vista en vivo</p>
+              <p className="text-xs font-black uppercase text-[#6B6B6B]">Vista en vivo</p>
               <h2 className="text-base font-black text-gray-950">Así lo verá tu cliente</h2>
             </div>
             <div className="foru-soft-panel flex rounded-2xl p-1">

@@ -91,7 +91,7 @@ export default function KanbanView({ includeAllProjectsDefault = false }: Kanban
       <header className="foru-view-header">
         <div>
           <span>{activeProject?.name ?? 'Proyecto'}</span>
-          <h1>Aquí tienes todas tus tareas, Nicole.</h1>
+          <h1>Aquí tienes todas tus tareas.</h1>
           <p>Sin juicio: solo vemos qué está por hacer, qué está andando y qué ya salió.</p>
         </div>
         <div className="foru-view-header-actions">
