@@ -1,11 +1,8 @@
 import { FormEvent, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import Logo from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 import MagicButton from '../components/ui/MagicButton';
 import MagicCard from '../components/ui/MagicCard';
-import MagicBadge from '../components/ui/MagicBadge';
-import GradientText from '../components/ui/GradientText';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -42,12 +39,11 @@ export default function LoginPage() {
   return (
     <main className="foru-auth-page">
       <MagicCard as="section" className="foru-auth-card">
-        <Link to="/" className="foru-auth-logo" aria-label="FOR U">
-          <Logo />
+        <Link to="/" className="foru-auth-wordmark" aria-label="FOR U">
+          FOR <span>U</span>
         </Link>
-        <MagicBadge>Bienvenida de vuelta</MagicBadge>
-        <h1><GradientText>Entra a tu tablero, Nicole</GradientText></h1>
-        <p>For U recuerda tus proyectos y te deja justo en la proxima accion.</p>
+        <h1>Entra a For U</h1>
+        <p>Vuelve a tu Ruta Digital y continua desde la proxima accion clara.</p>
 
         <form onSubmit={handleSubmit} className="foru-auth-form">
           <label>

@@ -1,17 +1,14 @@
 import { motion } from 'framer-motion';
 import {
   type ForUActiveProject,
-  type ForUNextAction,
   useActiveProjectsStore,
 } from '../stores/useActiveProjectsStore';
 import MagicBadge from './ui/MagicBadge';
 import MagicButton from './ui/MagicButton';
 import MagicCard from './ui/MagicCard';
-import GradientText from './ui/GradientText';
 
 type PersonalDashboardItem = {
   project: ForUActiveProject;
-  nextAction: ForUNextAction | null;
   pendingCount: number;
 };
 
@@ -25,13 +22,10 @@ type PersonalDashboardProps = {
 
 export default function PersonalDashboard({
   name = 'Nicole',
-  planLabel,
   projects,
   onViewProject,
   onCreateIndustryProject,
 }: PersonalDashboardProps) {
-  const greeting = getGreeting();
-  const attentiveProjects = projects.filter((item) => item.pendingCount > 0).length;
   const getCurrentDigitalRouteStep = useActiveProjectsStore((state) => state.getCurrentDigitalRouteStep);
   const getDigitalRouteSteps = useActiveProjectsStore((state) => state.getDigitalRouteSteps);
   const featuredProject = projects[0] ?? null;
@@ -45,19 +39,18 @@ export default function PersonalDashboard({
         transition={{ duration: 0.24 }}
       >
         <div>
-          <h1><GradientText>{greeting.text}, {name}</GradientText></h1>
-          <p>{getBossMessage(attentiveProjects)}</p>
+          <h1>{name}, sigamos tu Ruta Digital</h1>
+          <p>Tu próxima estación te espera.</p>
         </div>
-        <MagicBadge className="foru-plan-badge">Plan {planLabel}</MagicBadge>
       </motion.div>
 
       {featuredProject ? (
         <MagicCard as="section" className="foru-next-route-card">
           <div>
-            <MagicBadge>Ahora</MagicBadge>
+            <MagicBadge>Acción principal</MagicBadge>
             <h2>{featuredProject.project.name}</h2>
             <p>{getRouteCardTitle(featuredProject.project.id, getCurrentDigitalRouteStep)}</p>
-            <small>{getRouteCardSubtitle(featuredProject.project.id, getDigitalRouteSteps, featuredProject.nextAction?.title)}</small>
+            <small>{getRouteCardSubtitle(featuredProject.project.id, getDigitalRouteSteps)}</small>
           </div>
           <MagicButton type="button" onClick={() => onViewProject(featuredProject.project.id)}>
             Continuar ruta
@@ -66,7 +59,7 @@ export default function PersonalDashboard({
       ) : null}
 
       <div className="foru-personal-project-list" aria-label="Proyectos">
-        {projects.map(({ project, nextAction, pendingCount }, index) => (
+        {projects.slice(1).map(({ project, pendingCount }, index) => (
           <MagicCard
             as="article"
             key={project.id}
@@ -81,26 +74,13 @@ export default function PersonalDashboard({
               <div>
                 <span className="foru-personal-project-status">{pendingCount > 0 ? `${pendingCount} acciones` : 'Sin pendientes'}</span>
                 <h2>{project.name}</h2>
-                {project.industryKey ? <MagicBadge>{getIndustryLabel(project.industryKey)}</MagicBadge> : null}
+                <p>{project.industryKey ? getIndustryLabel(project.industryKey) : 'Ruta digital'}</p>
               </div>
-              <strong>{formatPriority(nextAction?.priority)}</strong>
-            </div>
-
-            <div className="foru-personal-next-action">
-              <span>Ruta Digital</span>
-              <p>{getRouteCardTitle(project.id, getCurrentDigitalRouteStep)}</p>
-              <small>{getRouteCardSubtitle(project.id, getDigitalRouteSteps, nextAction?.title)}</small>
-              {isProjectQuiet(project) ? (
-                <em>Nicole, este proyecto te extraña. ¿Le dedicamos 10 minutos?</em>
-              ) : null}
             </div>
 
             <div className="foru-personal-project-actions">
               <MagicButton type="button" onClick={() => onViewProject(project.id)}>
-                Continuar ruta
-              </MagicButton>
-              <MagicButton type="button" variant="soft" onClick={() => onViewProject(project.id)}>
-                Ver proyecto
+                Ver ruta
               </MagicButton>
             </div>
             </motion.div>
@@ -110,9 +90,8 @@ export default function PersonalDashboard({
 
       <MagicCard as="section" className="foru-industry-starter-card">
         <div>
-          <MagicBadge>Nuevo sistema</MagicBadge>
           <h2>Crear otra Ruta Digital</h2>
-          <p>Elige un rubro y For U prepara una ruta completa: oferta, landing, WhatsApp, contenido, Google y métricas.</p>
+          <p>Elige un rubro y For U prepara oferta, landing, WhatsApp, contenido, Google y métricas.</p>
         </div>
         <MagicButton type="button" variant="soft" onClick={onCreateIndustryProject}>
           Elegir rubro
@@ -120,31 +99,6 @@ export default function PersonalDashboard({
       </MagicCard>
     </section>
   );
-}
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return { icon: '☀️', text: 'Buenos dias' };
-  if (hour < 19) return { icon: '🌤️', text: 'Buenas tardes' };
-  return { icon: '🌙', text: 'Buenas noches' };
-}
-
-function formatPriority(priority?: ForUNextAction['priority']) {
-  if (priority === 'high') return 'Urgente';
-  if (priority === 'medium') return 'Importante';
-  return 'Suave';
-}
-
-function getBossMessage(count: number) {
-  if (count === 0) return 'Hoy no hay incendios. Podemos elegir un proyecto y avanzar suave, diez minutos cuentan.';
-  if (count === 1) return 'Hay un proyecto pidiendo atención. Empecemos por una acción chiquita y concreta.';
-  return `Hoy tienes ${count} proyectos pidiendo atención. Empecemos por el más urgente, sin abrir mil pestañas.`;
-}
-
-function isProjectQuiet(project: ForUActiveProject) {
-  const lastUpdate = new Date(project.updatedAt).getTime();
-  if (!Number.isFinite(lastUpdate)) return false;
-  return Date.now() - lastUpdate > 48 * 60 * 60 * 1000;
 }
 
 function getIndustryLabel(industryKey: NonNullable<ForUActiveProject['industryKey']>) {
@@ -163,10 +117,9 @@ function getRouteCardTitle(
 function getRouteCardSubtitle(
   projectId: string,
   getDigitalRouteSteps: ReturnType<typeof useActiveProjectsStore.getState>['getDigitalRouteSteps'],
-  fallbackAction?: string,
 ) {
   const steps = getDigitalRouteSteps(projectId);
-  if (steps.length === 0) return fallbackAction ?? 'For U preparará el primer paso.';
+  if (steps.length === 0) return 'For U preparará el primer paso.';
   const ready = steps.filter((step) => step.status === 'ready').length;
-  return `${ready}/${steps.length} estaciones listas · Oferta, landing, WhatsApp, contenido, Google y mejora.`;
+  return `${ready}/${steps.length} estaciones listas.`;
 }

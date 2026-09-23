@@ -1770,17 +1770,27 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
 
         const existingTitles = new Set(project.nodes.filter((node) => node.role === 'free').map((node) => normalizeTitle(node.title)));
         const missingTasks = step.tasks.filter((task) => !existingTitles.has(normalizeTitle(task.title)));
-        const createdIds = missingTasks.map((task, index) => get().addFreeNodeToBranch(projectId, task.branchKey, {
-          title: task.title,
-          kind: 'task',
-          icon: '✅',
-          priority: task.priority,
-          description: task.description,
-          taskStatus: 'todo',
-          rewardCoins: 20,
-          x: 620 + index * 38,
-          y: 280 + index * 42,
-        })).filter((id): id is string => Boolean(id));
+        const createdIds = missingTasks.map((task, index) => {
+          const guidedDescription = [
+            task.description,
+            task.time ? `Tiempo sugerido: ${task.time}.` : null,
+            task.tools?.length ? `Herramientas: ${task.tools.join(', ')}.` : null,
+            task.tip ? `Tip For U: ${task.tip}` : null,
+            task.example ? `Ejemplo: ${task.example}` : null,
+          ].filter(Boolean).join('\n\n');
+
+          return get().addFreeNodeToBranch(projectId, task.branchKey, {
+            title: task.title,
+            kind: 'task',
+            icon: '✅',
+            priority: task.priority,
+            description: guidedDescription,
+            taskStatus: 'todo',
+            rewardCoins: 20,
+            x: 620 + index * 38,
+            y: 280 + index * 42,
+          });
+        }).filter((id): id is string => Boolean(id));
 
         set((state) => {
           const latestProject = state.projectsById[projectId];

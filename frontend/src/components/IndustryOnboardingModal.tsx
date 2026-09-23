@@ -8,6 +8,7 @@ import type { ForUIndustryKey } from '../templates/industryTemplates';
 export type IndustryOnboardingInput = {
   industryKey: Extract<ForUIndustryKey, 'tourism' | 'gastronomy'>;
   projectName: string;
+  objective: 'ventas' | 'reservas' | 'clientes' | 'marca';
   offerType: string;
   location: string;
   idealTraveler: string;
@@ -47,6 +48,29 @@ const industryOptions = [
     enabled: false,
   },
 ];
+
+const objectiveOptions = [
+  {
+    key: 'ventas',
+    title: 'Vender más',
+    description: 'Crear una ruta para convertir interés en compras.',
+  },
+  {
+    key: 'reservas',
+    title: 'Conseguir reservas',
+    description: 'Ordenar disponibilidad, confianza y WhatsApp.',
+  },
+  {
+    key: 'clientes',
+    title: 'Conseguir clientes',
+    description: 'Atraer personas correctas y guiarlas al contacto.',
+  },
+  {
+    key: 'marca',
+    title: 'Ordenar mi marca',
+    description: 'Claridad, contenido y presencia digital consistente.',
+  },
+] as const;
 
 const copyByIndustry = {
   tourism: {
@@ -96,6 +120,7 @@ export default function IndustryOnboardingModal({ isOpen, onClose, onCreateIndus
   const [step, setStep] = useState<'industry' | 'details'>('industry');
   const [industryKey, setIndustryKey] = useState<Extract<ForUIndustryKey, 'tourism' | 'gastronomy'>>('tourism');
   const [projectName, setProjectName] = useState(copyByIndustry.tourism.defaultProjectName);
+  const [objective, setObjective] = useState<IndustryOnboardingInput['objective']>('ventas');
   const [offerType, setOfferType] = useState('');
   const [location, setLocation] = useState('');
   const [idealTraveler, setIdealTraveler] = useState('');
@@ -116,6 +141,7 @@ export default function IndustryOnboardingModal({ isOpen, onClose, onCreateIndus
   function chooseIndustry(nextIndustryKey: Extract<ForUIndustryKey, 'tourism' | 'gastronomy'>) {
     setIndustryKey(nextIndustryKey);
     setProjectName(copyByIndustry[nextIndustryKey].defaultProjectName);
+    setObjective(nextIndustryKey === 'tourism' ? 'reservas' : 'ventas');
     setOfferType('');
     setLocation('');
     setIdealTraveler('');
@@ -138,6 +164,7 @@ export default function IndustryOnboardingModal({ isOpen, onClose, onCreateIndus
     onCreateIndustryProject({
       industryKey,
       projectName: projectName.trim(),
+      objective,
       offerType: offerType.trim(),
       location: location.trim(),
       idealTraveler: idealTraveler.trim(),
@@ -230,6 +257,22 @@ export default function IndustryOnboardingModal({ isOpen, onClose, onCreateIndus
                       placeholder={activeCopy.customerPlaceholder}
                     />
                   </label>
+                  <div className="foru-tourism-objective-group">
+                    <span>¿Qué quieres lograr primero?</span>
+                    <div>
+                      {objectiveOptions.map((option) => (
+                        <button
+                          type="button"
+                          key={option.key}
+                          className={objective === option.key ? 'is-selected' : ''}
+                          onClick={() => setObjective(option.key)}
+                        >
+                          <strong>{option.title}</strong>
+                          <small>{option.description}</small>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <label>
                     <span>Canal principal</span>
                     <select value={primaryChannel} onChange={(event) => setPrimaryChannel(event.target.value)}>

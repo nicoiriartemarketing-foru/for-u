@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import type { ForUActiveProject } from '../stores/useActiveProjectsStore';
 import { useActiveProjectsStore } from '../stores/useActiveProjectsStore';
@@ -20,6 +20,7 @@ export default function DigitalRouteView({
   onOpenTasks,
   onStartAction,
 }: DigitalRouteViewProps) {
+  const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
   const getDigitalRouteSteps = useActiveProjectsStore((state) => state.getDigitalRouteSteps);
   const getCurrentDigitalRouteStep = useActiveProjectsStore((state) => state.getCurrentDigitalRouteStep);
   const createTasksForDigitalRouteStep = useActiveProjectsStore((state) => state.createTasksForDigitalRouteStep);
@@ -28,6 +29,7 @@ export default function DigitalRouteView({
   const routeTemplate = useMemo(() => getDigitalRouteTemplate(project?.industryKey), [project?.industryKey]);
   const steps = project ? getDigitalRouteSteps(project.id) : [];
   const currentStep = project ? getCurrentDigitalRouteStep(project.id) : null;
+  const activeStep = steps.find((step) => step.id === selectedStepId) ?? currentStep;
   const readySteps = steps.filter((step) => step.status === 'ready').length;
   const progress = steps.length ? Math.round((readySteps / steps.length) * 100) : 0;
 
@@ -62,6 +64,10 @@ export default function DigitalRouteView({
     onStartAction();
   }
 
+  function handleOpenStep(stepId: string) {
+    setSelectedStepId(stepId);
+  }
+
   function handleCompleteStep(stepId: string) {
     if (!project) return;
     const completed = completeDigitalRouteStep(project.id, stepId);
@@ -86,7 +92,7 @@ export default function DigitalRouteView({
       {currentStep ? (
         <MagicCard className="foru-digital-route-current" as="section">
           <div>
-            <MagicBadge>Ahora</MagicBadge>
+            <MagicBadge>Esto toca ahora</MagicBadge>
             <h2>{currentStep.title}</h2>
             <p>{currentStep.outcome}</p>
             <small>{currentStep.why}</small>
@@ -95,50 +101,116 @@ export default function DigitalRouteView({
             <MagicButton type="button" onClick={() => handlePrimaryAction(currentStep.id)}>
               {currentStep.primaryAction}
             </MagicButton>
-            <MagicButton type="button" variant="soft" onClick={() => handleCompleteStep(currentStep.id)}>
-              Marcar estación lista
+            <MagicButton type="button" variant="soft" onClick={() => handleOpenStep(currentStep.id)}>
+              Ver guía
             </MagicButton>
           </div>
         </MagicCard>
       ) : null}
 
-      <div className="foru-digital-route-path">
-        {steps.map((step, index) => (
-          <MagicCard
-            key={step.id}
-            as="article"
-            className={`foru-digital-route-step is-${step.status} ${currentStep?.id === step.id ? 'is-current' : ''}`}
-          >
-            <div className="foru-digital-route-step-marker">
-              <span>{step.status === 'ready' ? '✓' : index + 1}</span>
-              {index < steps.length - 1 ? <i /> : null}
+      <div className="foru-digital-route-workspace">
+        <div className="foru-digital-route-path">
+          {steps.map((step, index) => (
+            <MagicCard
+              key={step.id}
+              as="article"
+              className={`foru-digital-route-step is-${step.status} is-priority-${step.priority} ${currentStep?.id === step.id ? 'is-current' : ''} ${activeStep?.id === step.id ? 'is-selected' : ''}`}
+            >
+              <button
+                type="button"
+                className="foru-digital-route-step-marker"
+                onClick={() => handleOpenStep(step.id)}
+                aria-label={`Ver guia de ${step.title}`}
+              >
+                <span>{step.status === 'ready' ? '✓' : index + 1}</span>
+                {index < steps.length - 1 ? <i /> : null}
+              </button>
+
+              <div className="foru-digital-route-step-body">
+                <div className="foru-digital-route-step-top">
+                  <div>
+                    <MagicBadge>{step.guidePhase}</MagicBadge>
+                    <h3>{step.title}</h3>
+                  </div>
+                  <span>{getStatusLabel(step.status)}</span>
+                </div>
+                <p>{step.outcome}</p>
+                <div className="foru-digital-route-output">
+                  <strong>Resultado:</strong> {step.artifactLabel}
+                </div>
+                <div className="foru-digital-route-mini-progress">
+                  <span>{step.completedTasks}/{step.totalTasks} acciones completas</span>
+                  <i><b style={{ width: `${step.totalTasks ? Math.round((step.completedTasks / step.totalTasks) * 100) : 0}%` }} /></i>
+                </div>
+                <div className="foru-digital-route-step-actions">
+                  <button type="button" onClick={() => handleOpenStep(step.id)}>Ver guía</button>
+                  <button type="button" onClick={() => handlePrimaryAction(step.id)}>
+                    {step.id === 'landing' ? 'Abrir landing' : step.createdTasks > 0 ? 'Continuar' : 'Crear acciones'}
+                  </button>
+                </div>
+              </div>
+            </MagicCard>
+          ))}
+        </div>
+
+        {activeStep ? (
+          <aside className="foru-digital-route-panel" aria-label={`Guia de ${activeStep.title}`}>
+            <div className="foru-digital-route-panel-header">
+              <MagicBadge>{activeStep.badge}</MagicBadge>
+              <button type="button" onClick={() => setSelectedStepId(null)} aria-label="Volver a la estacion actual">
+                Actual
+              </button>
+            </div>
+            <h2>{activeStep.title}</h2>
+            <p>{activeStep.why}</p>
+
+            <div className="foru-digital-route-panel-result">
+              <span>Resultado esperado</span>
+              <strong>{activeStep.artifactLabel}</strong>
             </div>
 
-            <div className="foru-digital-route-step-body">
-              <div className="foru-digital-route-step-top">
-                <MagicBadge>{step.badge}</MagicBadge>
-                <span>{getStatusLabel(step.status)}</span>
-              </div>
-              <h3>{step.title}</h3>
-              <p>{step.outcome}</p>
-              <div className="foru-digital-route-output">
-                <strong>Resultado:</strong> {step.artifactLabel}
-              </div>
-              <div className="foru-digital-route-mini-progress">
-                <span>{step.completedTasks}/{step.totalTasks} acciones completas</span>
-                <i><b style={{ width: `${step.totalTasks ? Math.round((step.completedTasks / step.totalTasks) * 100) : 0}%` }} /></i>
-              </div>
-              <div className="foru-digital-route-step-actions">
-                <button type="button" onClick={() => handlePrimaryAction(step.id)}>
-                  {step.id === 'landing' ? 'Abrir landing' : step.createdTasks > 0 ? 'Continuar' : 'Crear acciones'}
-                </button>
-                {step.createdTasks > 0 ? (
-                  <button type="button" onClick={onOpenTasks}>Ver tareas</button>
-                ) : null}
-              </div>
+            <div className="foru-digital-route-subtasks">
+              <h3>Acciones de esta estación</h3>
+              {activeStep.tasks.map((task, index) => (
+                <article key={`${activeStep.id}-${task.title}`} className={`foru-digital-route-subtask is-${task.priority}`}>
+                  <div>
+                    <span>{index + 1}</span>
+                    <strong>{task.title}</strong>
+                  </div>
+                  <p>{task.description}</p>
+                  <small>{task.time ?? '15 min'} · {(task.tools ?? ['For U']).join(' · ')}</small>
+                  {task.tip ? <em>{task.tip}</em> : null}
+                  {task.example ? <blockquote>{task.example}</blockquote> : null}
+                </article>
+              ))}
             </div>
-          </MagicCard>
-        ))}
+
+            <div className="foru-digital-route-resources">
+              <h3>Recursos disponibles</h3>
+              {activeStep.resources.map((resource) => (
+                <article key={resource.text}>
+                  <span>{resource.icon}</span>
+                  <div>
+                    <strong>{resource.text}</strong>
+                    <p>{resource.description}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <div className="foru-digital-route-panel-actions">
+              <MagicButton type="button" onClick={() => handlePrimaryAction(activeStep.id)}>
+                {activeStep.primaryAction}
+              </MagicButton>
+              <MagicButton type="button" variant="soft" onClick={() => handleCompleteStep(activeStep.id)}>
+                Marcar estación lista
+              </MagicButton>
+              {activeStep.createdTasks > 0 ? (
+                <button type="button" onClick={onOpenTasks}>Ver tareas creadas</button>
+              ) : null}
+            </div>
+          </aside>
+        ) : null}
       </div>
     </section>
   );

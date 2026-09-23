@@ -114,6 +114,7 @@ export default function ForUWorkspace() {
       tangibleGoal: `Vender ${input.offerType} en ${input.location} a ${input.idealTraveler}.`,
       targetFeelings: input.industryKey === 'gastronomy' ? ['abundance', 'confidence', 'joy'] : ['connection', 'abundance', 'confidence'],
       strategyProfile: {
+        objective: input.objective,
         offerType: input.offerType,
         location: input.location,
         idealTraveler: input.idealTraveler,
@@ -190,16 +191,29 @@ export default function ForUWorkspace() {
   return (
     <main className="foru-personal-shell">
       <Toaster position="bottom-center" toastOptions={{ className: 'foru-hot-toast' }} />
-      <header className="foru-personal-header">
+      <header
+        className="foru-personal-header"
+        style={{
+          background: 'var(--color-fondo)',
+          color: 'var(--color-texto)',
+          fontFamily: 'var(--font-principal)',
+        }}
+      >
         <Link to="/" className="foru-shell-logo" aria-label="FOR U">
           <Logo />
         </Link>
 
-        <label className="foru-personal-project-select">
-          <span>Proyecto</span>
+        <label className="foru-personal-project-select" aria-label="Proyecto actual">
+          <span style={{ color: 'var(--color-texto-suave)', fontFamily: 'var(--font-principal)' }}>
+            Proyecto actual
+          </span>
           <select
             value={currentProjectId ?? ''}
             onChange={(event) => openDashboard(event.target.value)}
+            style={{
+              color: 'var(--color-texto-suave)',
+              fontFamily: 'var(--font-principal)',
+            }}
           >
             {dashboardProjects.map(({ project }) => (
               <option key={project.id} value={project.id}>
@@ -214,19 +228,22 @@ export default function ForUWorkspace() {
             type="button"
             className="foru-header-primary-action"
             onClick={() => (screen === 'project' ? openDashboard(currentProjectId ?? undefined) : currentProjectId && viewProject(currentProjectId))}
+            style={{
+              borderColor: 'transparent',
+              background: 'var(--gradient-iridiscente)',
+              color: 'var(--color-texto)',
+              fontFamily: 'var(--font-principal)',
+            }}
           >
             {screen === 'project' ? 'Volver al tablero' : 'Continuar ruta'}
           </button>
-          <button type="button" className="foru-chat-open-button" onClick={() => setIsChatOpen(true)} aria-label="Hablar con For U">
-            💬
-          </button>
-          <button type="button" className="foru-world-button" onClick={openWorld}>
-            Mi Mundo
-          </button>
-          <span title="Gana monedas completando acciones">🪙 {coins} monedas</span>
+
           <details className="foru-header-more">
-            <summary>Más</summary>
+            <summary style={{ fontFamily: 'var(--font-principal)' }}>Más</summary>
             <div>
+              <button type="button" onClick={() => setIsChatOpen(true)}>Chat con For U</button>
+              <button type="button" onClick={openWorld}>Mi Mundo</button>
+              <span>Monedas: {coins}</span>
               <Link to="/whatsapp">WhatsApp</Link>
               <Link to="/pricing">Plan {planLabel}</Link>
               <span>Racha: {dailyStreak} {dailyStreak === 1 ? 'dia' : 'dias'}</span>
