@@ -10,6 +10,7 @@ import Logo from '../components/Logo';
 import JourneyMap, { projectJourney } from '../components/JourneyMap';
 import { useAuth } from '../contexts/AuthContext';
 import { planConfigs, type ForUNextAction, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import { projectModuleType } from '../modules/moduleProjects';
 
 const World3D = lazy(() => import('../components/World3D'));
 const ActionView = lazy(() => import('../components/ActionView'));
@@ -246,6 +247,7 @@ export default function ForUWorkspace() {
           <details className="foru-header-more">
             <summary style={{ fontFamily: 'var(--font-principal)' }}>Más</summary>
             <div>
+              {currentProject && projectModuleType(currentProject) === 'restaurant' && <Link to={`/modules/restaurant?project=${encodeURIComponent(currentProject.id)}`}>Mi restaurante · Menú y logística</Link>}
               <button type="button" onClick={() => setIsChatOpen(true)}>Chat con For U</button>
               <button type="button" onClick={openWorld}>Mi Mundo</button>
               <span>Monedas: {coins}</span>
