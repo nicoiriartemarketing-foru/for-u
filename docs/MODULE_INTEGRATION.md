@@ -23,6 +23,9 @@ No contienen una tienda ni un sistema de turismo. Esos dos módulos se construir
 - Rutas privadas `/modules/restaurant` y `/modules/restaurant/editor`, con `?project=ID`. Acceso desde «Más» del workspace cuando el proyecto es de gastronomía.
 - Servicio compartido usa el cliente Supabase existente, tablas `projects` y `toolkit_documents` y documentos `module-restaurant`. No añade una segunda autenticación ni cambia las migraciones.
 - Guardado explícito con comparación de `updated_at`: detecta cambios concurrentes en vez de sobrescribir inventario de otra ventana. Fallos de carga bloquean la edición; fallos de guardado conservan el borrador.
+- Hospedaje: habitaciones y comodidades, calendario mensual por habitación, huéspedes, reservas sin solapamientos, cambios de estado, limpieza al finalizar estancia y registro explícito de ingresos/gastos por mes. Crear una reserva no inventa un cobro.
+- Editor de Hospedaje: seis secciones ordenables por arrastre y por botones, visibilidad, portada, historia, contacto, FAQ, promociones y vista previa React.
+- Restaurante y Hospedaje comparten `ModuleWorkspace` para cargar y guardar datos de la cuenta. Rutas privadas de Hospedaje y editor agregadas; queda pendiente el selector de creación de los cinco rubros.
 
 ## Verificación realizada
 
@@ -31,11 +34,12 @@ No contienen una tienda ni un sistema de turismo. Esos dos módulos se construir
 - Compilación Vite pasa sin advertencias.
 - Prueba en navegador con componentes reales y datos aislados: crear y editar plato; crear ingrediente; crear receta; cuatro lotes bloqueados por falta de stock; dos lotes confirmados reducen 1 kg a 0,4 kg. Consola sin errores ni advertencias en ese recorrido.
 - La prueba de componentes no demuestra guardado autenticado ni aislamiento remoto. Falta verificar esos flujos con Supabase y una sesión de prueba.
+- Hospedaje: siete pruebas de fechas, solapamientos, cancelación, capacidad, mantenimiento, limpieza y finanzas mensuales pasan. En navegador: habitación creada, reserva creada, segunda reserva incompatible rechazada, ingresos permanecen en cero hasta registrar un cobro de S/ 100. Editor actualiza el nombre y reordena secciones; diseño móvil sin desbordamiento horizontal. TypeScript, lint del código nuevo y compilación pasan.
 
 ## Trabajo pendiente (no reducir el alcance)
 
 1. Completar Restaurante: galería/subida de imágenes, vista pública y QR, pedidos WhatsApp en la interfaz, CTA, fidelización operativa y creador compartido. El texto de fidelización no es un registro de clientes.
-2. Hospedaje: preservar editor y secciones; habitaciones, calendario, reservas, limpieza, huéspedes y finanzas con validaciones.
+2. Hospedaje: completar publicación, medios, CTA y conexión al creador compartido; verificar persistencia autenticada y navegación desde proyectos. Habitaciones, calendario, reservas, limpieza, huéspedes, finanzas y editor ya tienen implementación y pruebas locales.
 3. Tienda: catálogo, carrito, checkout y pago real mediante proveedor; no simular un cobro exitoso.
 4. Turismo: itinerarios, guías, reservas por fecha y mapas.
 5. Cursos: módulos/lecciones, alumnos, progreso, ventas, certificados y teleprompter.

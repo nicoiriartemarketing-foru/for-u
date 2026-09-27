@@ -23,6 +23,7 @@ const SiteEditorFrame = lazy(() => import('./toolkit/SiteEditorFrame'));
 const PublicSite = lazy(() => import('./toolkit/PublicSite'));
 const JourneyMapDemo = lazy(() => import('./components/JourneyMap').then(module => ({ default: module.JourneyMapDemo })));
 const RestaurantWorkspace = lazy(() => import('./modules/restaurant/RestaurantWorkspace'));
+const HospitalityWorkspace = lazy(() => import('./modules/hospitality/HospitalityWorkspace'));
 
 function hasStudioAccess() {
   return window.localStorage.getItem('foru-studio-access') === 'granted';
@@ -66,6 +67,8 @@ function App() {
             <Route path="/workspace" element={<PrivateWorkspace><ForUWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/restaurant" element={<PrivateWorkspace><RestaurantWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/restaurant/editor" element={<PrivateWorkspace><RestaurantWorkspace /></PrivateWorkspace>} />
+            <Route path="/modules/hospitality" element={<PrivateWorkspace><HospitalityWorkspace /></PrivateWorkspace>} />
+            <Route path="/modules/hospitality/editor" element={<PrivateWorkspace><HospitalityWorkspace /></PrivateWorkspace>} />
             <Route path="/herramientas/demo" element={<ToolkitDemo />} />
             <Route path="/mapa/demo" element={<JourneyMapDemo />} />
             <Route path="/site-preview" element={<SiteEditorFrame />} />
