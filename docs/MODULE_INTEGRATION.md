@@ -47,12 +47,12 @@ No contienen una tienda ni un sistema de turismo. Esos dos módulos se construir
 
 ## Trabajo pendiente (no reducir el alcance)
 
-1. Completar Restaurante: galería/subida de imágenes, vista pública y QR, CTA y fidelización operativa. El creador compartido ya está conectado; la vista previa incluye el pedido WhatsApp. El texto de fidelización no es un registro de clientes.
-2. Hospedaje: completar publicación, medios, CTA y conexión al creador compartido; verificar persistencia autenticada y navegación desde proyectos. Habitaciones, calendario, reservas, limpieza, huéspedes, finanzas y editor ya tienen implementación y pruebas locales.
+1. Completar Restaurante: verificar subida real de imágenes, vista pública y QR, CTA y fidelización operativa. El creador compartido ya está conectado; la vista previa incluye el pedido WhatsApp. El texto de fidelización no es un registro de clientes.
+2. Hospedaje: completar publicación, CTA y verificar los medios y el creador compartido; verificar persistencia autenticada y navegación desde proyectos. Habitaciones, calendario, reservas, limpieza, huéspedes, finanzas y editor ya tienen implementación y pruebas locales.
 3. Tienda: checkout público y pago real mediante proveedor; no simular un cobro exitoso. Se preguntó al usuario por Mercado Pago/Stripe, sin respuesta aún.
 4. Turismo: publicación y reservas de clientes; pruebas de persistencia autenticada.
 5. Cursos: recursos subidos, publicación/acceso de alumnos, pago real y prueba de cámara/teleprompter. Verificar descarga del certificado y currículos extensos.
-6. Creador compartido: pruebas de subida real, recuperación remota, formatos y exportación con imágenes; conectar galería también a los editores de los módulos.
+6. Creador compartido: pruebas de subida real, recuperación remota, formatos y exportación con imágenes; verificar la galería ya conectada a los editores de los módulos.
 7. Dashboard e islas: verificar creación y persistencia de cinco proyectos, navegación de todas las rutas, monedas, rachas e IA existentes. Se solicitó sesión de prueba sin pedir contraseña.
 8. README incorporado; completar pruebas integradas de navegación, persistencia, aislamiento por usuario/proyecto, consola y diseño móvil; revisión de todos los criterios antes de declarar el objetivo completo.
 
@@ -67,3 +67,11 @@ Los cinco módulos ya contienen código, pero esto no significa que la integraci
 - La carga de proyectos se identifica por cuenta, rubro e intento para no mostrar datos de una carga anterior al cambiar de cuenta o reintentar.
 - Formularios pendientes: los cinco módulos avisan antes de salir desde su navegación y bloquean el guardado global hasta aplicar o cancelar el formulario; también protegen el cierre de pestaña. Cursos permite cerrar explícitamente su edición. En navegador, el aviso cambia de pendiente a aplicado al guardar el curso.
 - Se corrigió una regla móvil heredada del HTML de Cursos que ocultaba la estructura y hacía inaccesible crear módulos/lecciones en pantallas estrechas.
+
+## Biblioteca de imágenes en los módulos
+
+- Campo compartido en las portadas y formularios de platos, productos, habitaciones, experiencias y cursos. Admite enlaces externos o selección/subida desde la biblioteca privada; subida por arrastre y selector de archivos.
+- Se persiste una referencia durable al archivo, no una URL temporal. La vista comprueba cuenta/proyecto y renueva los enlaces de Storage mientras permanece abierta. La galería reinicia su estado al cambiar de proyecto y no mezcla videos con imágenes.
+- Tres pruebas nuevas comprueban aislamiento por propietario/proyecto, rutas inválidas y protocolos externos. Las 35 pruebas de módulos/contenido/imágenes pasan. TypeScript, lint de los componentes nuevos y build sin advertencias pasan en la copia de validación.
+- Prueba visual con recursos locales: enlace muestra una imagen cargada, quitarla limpia el valor, referencia de otro proyecto se rechaza. Falta verificación de subida/recarga con la cuenta real.
+- Se restauraron las dependencias temporales desde la caché local, tras fallar el acceso al registro. No se modificó package.json del proyecto. README usa npm install porque el repositorio no contiene package-lock.json.

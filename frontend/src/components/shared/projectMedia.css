@@ -1,0 +1,7 @@
+.project-media-field { display: grid; gap: 12px; min-width: 0; }
+.project-media-field .project-media-selected { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.project-media-field .project-media-selected img { width: 100px; height: 76px; object-fit: cover; border-radius: 8px; }
+.project-media-field .creator-gallery { padding: 16px; border: 1px solid #d1d5db; border-radius: 12px; min-width: 0; }
+.project-media-field .creator-media-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(100px,1fr)); gap: 12px; }
+.project-media-field .creator-media-grid img { width: 100%; height: 100px; object-fit: cover; }
+.project-media-field .creator-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }

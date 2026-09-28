@@ -1,3 +1,5 @@
+import ProjectImage from '../../components/shared/ProjectImage';
+import ProjectImageField from '../../components/shared/ProjectImageField';
 import { useModuleDraft } from '../useModuleDraft';
 import { Fragment, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -40,7 +42,7 @@ export default function HospitalityDashboard({ data, onChange }: HospitalityProp
       <div className="stats-row"><Metric label="Habitaciones" value={data.rooms.length} /><Metric label="Ocupadas hoy" value={todaySummary.occupied} /><Metric label="Limpias y libres hoy" value={todaySummary.available} /></div>
       <section className="component-card"><div className="component-header"><h3>Tus habitaciones</h3><button onClick={() => setRoom({ id: crypto.randomUUID(), name: '', type: 'Doble', price: 0, capacity: 2, image: '', status: 'clean', amenities: [] })}>Nueva habitación</button></div>
         <div className="rooms-grid">{data.rooms.map(item => <article className="room-card" key={item.id}>
-          {/^https?:\/\//.test(item.image) && <img className="room-img" src={item.image} alt={item.name} />}
+          <ProjectImage className="room-img" value={item.image} alt={item.name} />
           <div className="room-info"><h3>{item.name}</h3><p>{item.type} · {item.capacity} personas</p><p>{roomStatus[item.status]}</p><strong className="room-price">S/ {item.price.toFixed(2)} / noche</strong><p>{item.amenities.join(' · ')}</p><button onClick={() => setRoom(structuredClone(item))}>Editar {item.name}</button></div>
         </article>)}</div>{!data.rooms.length && <p>Agrega tu primera habitación para abrir el calendario.</p>}
       </section>
@@ -51,7 +53,7 @@ export default function HospitalityDashboard({ data, onChange }: HospitalityProp
       <label>Precio por noche (S/)<input type="number" required min="0" step="0.01" value={Number.isFinite(room.price) ? room.price : ''} onChange={event => setRoom({ ...room, price: event.target.valueAsNumber })} /></label>
       <label>Capacidad<input type="number" min="1" step="1" required value={Number.isFinite(room.capacity) ? room.capacity : ''} onChange={event => setRoom({ ...room, capacity: event.target.valueAsNumber })} /></label>
       <label>Estado de habitación<select value={room.status} onChange={event => setRoom({ ...room, status: event.target.value as Room['status'] })}>{Object.entries(roomStatus).map(([id, title]) => <option key={id} value={id}>{title}</option>)}</select></label>
-      <label>Imagen URL<input type="url" value={room.image} onChange={event => setRoom({ ...room, image: event.target.value })} /></label>
+      <ProjectImageField label="Imagen de la habitación" value={room.image} onChange={value => setRoom({ ...room, image: value })} />
       <fieldset><legend>Comodidades</legend><div className="hospitality-actions">{['WiFi', 'A/C', 'TV', 'Desayuno', 'Jacuzzi', 'Cocina', 'Balcón', 'Calefacción'].map(amenity => <label className="hospitality-check" key={amenity}><input type="checkbox" checked={room.amenities.includes(amenity)} onChange={event => setRoom({ ...room, amenities: event.target.checked ? [...room.amenities, amenity] : room.amenities.filter(item => item !== amenity) })} />{amenity}</label>)}</div></fieldset>
       <div className="hospitality-actions"><button type="submit">Guardar habitación</button><button type="button" onClick={() => setRoom(null)}>Cancelar edición</button>{data.rooms.some(item => item.id === room.id) && <button type="button" onClick={() => { if (window.confirm('¿Eliminar esta habitación sin reservas?') && act(() => removeRoom(data, room.id), 'Habitación eliminada.')) setRoom(null); }}>Eliminar habitación</button>}</div>
     </form>}

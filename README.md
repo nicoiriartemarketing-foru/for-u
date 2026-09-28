@@ -8,7 +8,7 @@ Requiere Node.js 22 o posterior. Desde la carpeta del repositorio:
 
 ```sh
 cd frontend
-npm ci
+npm install
 npm run dev
 ```
 
@@ -42,6 +42,7 @@ El creador compartido está en `/content-creator`. `/workspace` conserva la Ruta
 - **Hospedaje:** habitaciones, calendario, reservas sin solapamiento, huéspedes, limpieza y movimientos de dinero. Una reserva no se cuenta como ingreso hasta registrar el cobro.
 - **Turismo:** experiencias, itinerarios, guías, mapas, salidas por fecha y control de plazas y horarios.
 - **Cursos:** estructura por módulos/lecciones, texto/video/archivo/quiz, alumnos, progreso, cobros registrados y certificados SVG. La grabación utiliza el teleprompter y el editor de video existentes.
+- **Imágenes:** portadas, platos, productos, habitaciones, experiencias y cursos comparten la biblioteca privada del proyecto. Permite subir/arrastrar imágenes, elegirlas o usar un enlace externo; los archivos privados conservan su ruta y renuevan su enlace al mostrarse.
 - **Contenido:** 31 plantillas, seis categorías por rubro, creación vacía, biblioteca privada de imágenes y borradores separados por proyecto.
 
 ## Verificar cambios
@@ -51,7 +52,7 @@ Desde `frontend`:
 ```sh
 npm run typecheck
 npm run build
-node --experimental-strip-types --test tests/restaurant-module.test.mjs tests/hospitality-module.test.mjs tests/ecommerce-module.test.mjs tests/tourism-module.test.mjs tests/courses-module.test.mjs tests/content-creator.test.mjs
+node --experimental-strip-types --test tests/restaurant-module.test.mjs tests/hospitality-module.test.mjs tests/ecommerce-module.test.mjs tests/tourism-module.test.mjs tests/courses-module.test.mjs tests/content-creator.test.mjs tests/project-media.test.mjs
 ```
 
 Las pruebas de dominio y de componentes locales no sustituyen una prueba con cuenta real: comprueba creación de proyectos, guardado, recarga, cambio de cuenta y subida de imágenes en el backend configurado.

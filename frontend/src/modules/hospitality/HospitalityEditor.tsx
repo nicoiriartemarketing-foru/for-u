@@ -1,3 +1,5 @@
+import ProjectImage from '../../components/shared/ProjectImage';
+import ProjectImageField from '../../components/shared/ProjectImageField';
 import { useState } from 'react';
 import type { HospitalityProps } from './HospitalityDashboard';
 import type { HospitalityData } from './model';
@@ -28,7 +30,7 @@ export default function HospitalityEditor({ data, onChange }: HospitalityProps) 
       {selected === 'hero' && <>
         <label>Nombre del hospedaje<input value={settings.name} onChange={event => update({ name: event.target.value })} /></label>
         <label>Frase de portada<input value={settings.tagline} onChange={event => update({ tagline: event.target.value })} /></label>
-        <label>Imagen de portada URL<input type="url" value={settings.heroImage} onChange={event => update({ heroImage: event.target.value })} /></label>
+        <ProjectImageField label="Imagen de portada" value={settings.heroImage} onChange={value => update({ heroImage: value })} />
       </>}
       {selected === 'about' && <label>Tu historia<textarea value={settings.about} onChange={event => update({ about: event.target.value })} /></label>}
       {selected === 'rooms' && <p>Las habitaciones se editan desde el panel de Habitaciones. Aquí se muestra su precio y sus comodidades.</p>}
@@ -58,7 +60,7 @@ export default function HospitalityEditor({ data, onChange }: HospitalityProps) 
       </>}
     </section>
     <h3>Vista previa del borrador</h3><div className="web-preview">{data.sections.filter(section => section.visible).map(section => <section className="web-section" key={section.id}>
-      {section.id === 'hero' ? <><h2>{settings.name}</h2><p>{settings.tagline}</p>{/^https?:\/\//.test(settings.heroImage) && <img className="hospitality-hero-image" src={settings.heroImage} alt={settings.name} />}</> : <h2>{section.title}</h2>}
+      {section.id === 'hero' ? <><h2>{settings.name}</h2><p>{settings.tagline}</p><ProjectImage className="hospitality-hero-image" value={settings.heroImage} alt={settings.name} /></> : <h2>{section.title}</h2>}
       {section.id === 'about' && <p>{settings.about}</p>}
       {section.id === 'rooms' && <div className="rooms-grid">{data.rooms.map(room => <article className="room-card room-info" key={room.id}><h3>{room.name}</h3><p>{room.capacity} personas · S/ {room.price.toFixed(2)} por noche</p><p>{room.amenities.join(' · ')}</p></article>)}</div>}
       {section.id === 'promotions' && settings.promotions.filter(item => item.active).map(item => <article key={item.id}><h3>{item.title}</h3><p>{item.description}</p></article>)}

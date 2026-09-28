@@ -1,3 +1,5 @@
+import ProjectImage from '../../components/shared/ProjectImage';
+import ProjectImageField from '../../components/shared/ProjectImageField';
 import { useModuleDraft } from '../useModuleDraft';
 import { useState, type FormEvent } from 'react';
 import { moveSection, saveDish, type Dish, type RestaurantData } from './model';
@@ -33,10 +35,10 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
       <div className="restaurant-fields">
         <label>Nombre del restaurante<input value={settings.title} onChange={event => updateSettings({ title: event.target.value })} /></label>
         <label>Frase de portada<input value={settings.tagline} onChange={event => updateSettings({ tagline: event.target.value })} /></label>
-        <label>URL de imagen de portada<input type="url" value={settings.coverImage} onChange={event => updateSettings({ coverImage: event.target.value })} placeholder="https://…" /></label>
+        <ProjectImageField label="Imagen de portada" value={settings.coverImage} onChange={value => updateSettings({ coverImage: value })} />
       </div>
       <div className="hero-editor">
-        {/^https?:\/\//.test(settings.coverImage) && <img src={settings.coverImage} alt="Portada del restaurante" />}
+        <ProjectImage value={settings.coverImage} alt="Portada del restaurante" />
         <div className="hero-editor-overlay"><h3>{settings.title}</h3><p>{settings.tagline}</p></div>
       </div>
     </section>
@@ -58,12 +60,12 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
         <label>Precio (S/)<input type="number" required min="0" step="0.01" value={Number.isFinite(dish.price) ? dish.price : ''} onChange={event => setDish({ ...dish, price: event.target.valueAsNumber })} /></label>
         <label>Categoría<input required value={dish.category} onChange={event => setDish({ ...dish, category: event.target.value })} /></label>
         <label>Descripción<textarea value={dish.description} onChange={event => setDish({ ...dish, description: event.target.value })} /></label>
-        <label>URL de imagen<input type="url" value={dish.image} onChange={event => setDish({ ...dish, image: event.target.value })} /></label>
+        <ProjectImageField label="Imagen del plato" value={dish.image} onChange={value => setDish({ ...dish, image: value })} />
         <label className="restaurant-check"><input type="checkbox" checked={dish.available} onChange={event => setDish({ ...dish, available: event.target.checked })} />Disponible para pedir</label>
         <div className="restaurant-actions"><button className="btn-primary" type="submit">Guardar plato</button><button type="button" onClick={() => setDish(null)}>Cancelar</button></div>
       </form>}
       <div className="menu-grid">{data.dishes.map(item => <article className="dish-card" key={item.id}>
-        {/^https?:\/\//.test(item.image) && <img src={item.image} alt={item.name} />}
+        <ProjectImage value={item.image} alt={item.name} />
         <div className="dish-card-body"><h3>{item.name}</h3><p>{item.category}</p><p>{item.description}</p><strong className="dish-card-price">S/ {item.price.toFixed(2)}</strong><p>{item.available ? 'Disponible' : 'No disponible'}</p>
           <button type="button" onClick={() => { setDish({ ...item }); setMessage(''); }}>Editar {item.name}</button>
         </div>

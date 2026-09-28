@@ -7,6 +7,7 @@ import { moduleLabels, type ModuleProject, type ModuleType } from './moduleProje
 import type { ComponentType } from 'react';
 import './moduleWorkspace.css';
 import { ModuleDraftContext } from './useModuleDraft';
+import { MediaScope } from '../components/shared/mediaScope';
 export type ModuleConfiguration<T> = {
   type: ModuleType;
   create: (name: string) => T;
@@ -98,7 +99,9 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
     <nav className="module-navigation" aria-label={moduleLabels[config.type]}><button disabled={saving} onClick={() => leave('/dashboard?view=projects')}>Mis proyectos</button><button disabled={saving} aria-current={editing ? undefined : 'page'} onClick={() => changeView(`/modules/${config.type}?project=${encodeURIComponent(project.id)}`)}>{config.dashboardLabel}</button><button disabled={saving} aria-current={editing ? 'page' : undefined} onClick={() => changeView(`/modules/${config.type}/editor?project=${encodeURIComponent(project.id)}`)}>{config.editorLabel}</button></nav>
     <fieldset className="module-editing-area" disabled={saving}>
       <ModuleDraftContext.Provider value={setPendingDraft}>
+      <MediaScope.Provider value={{ userId, projectId: project.id }}>
       {editing ? <Editor data={data} onChange={update} project={project} userId={userId} /> : <Dashboard data={data} onChange={update} project={project} userId={userId} />}
+      </MediaScope.Provider>
       </ModuleDraftContext.Provider>
     </fieldset>
   </main>;

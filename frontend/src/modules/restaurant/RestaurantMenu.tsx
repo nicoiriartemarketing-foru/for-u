@@ -1,3 +1,4 @@
+import ProjectImage from '../../components/shared/ProjectImage';
 import { useState } from 'react';
 import { whatsappOrderUrl, type RestaurantData } from './model';
 
@@ -18,10 +19,10 @@ export default function RestaurantMenu({ data }: { data: RestaurantData }) {
   }
   return <div className="restaurant-menu-preview">
     {data.sections.filter(section => section.visible).map(section => <section key={section.id} className="component-card" aria-label={section.title}>
-      {section.id === 'hero' && <><h2>{settings.title}</h2><p>{settings.tagline}</p>{/^https?:\/\//.test(settings.coverImage) && <img className="restaurant-menu-cover" src={settings.coverImage} alt={settings.title} />}</>}
+      {section.id === 'hero' && <><h2>{settings.title}</h2><p>{settings.tagline}</p><ProjectImage className="restaurant-menu-cover" value={settings.coverImage} alt={settings.title} /></>}
       {section.id === 'menu' && <><h2>Menú</h2><label>Categoría<select value={categories.includes(category) ? category : ''} onChange={event => setCategory(event.target.value)}><option value="">Todas</option>{categories.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
         <div className="menu-grid">{available.filter(dish => !categories.includes(category) || dish.category === category).map(dish => <article className="dish-card" key={dish.id}>
-          {/^https?:\/\//.test(dish.image) && <img src={dish.image} alt={dish.name} />}
+          <ProjectImage value={dish.image} alt={dish.name} />
           <div className="dish-card-body"><h3>{dish.name}</h3><p>{dish.description}</p><strong>S/ {dish.price.toFixed(2)}</strong><label>Cantidad de {dish.name}<input type="number" min="0" max="99" step="1" value={quantities[dish.id] ?? 0} onChange={event => { const value = event.target.valueAsNumber; setQuantities(previous => ({ ...previous, [dish.id]: Number.isFinite(value) ? Math.max(0, Math.min(99, Math.floor(value))) : 0 })); }} /></label></div>
         </article>)}</div>{!available.length && <p>La carta se está preparando.</p>}
         {lines.length > 0 && <aside aria-label="Tu pedido"><h3>Tu pedido</h3><ul>{lines.map(line => <li key={line.dish.id}>{line.quantity} × {line.dish.name} · S/ {(Math.round(line.dish.price * 100) * line.quantity / 100).toFixed(2)}</li>)}</ul><strong>Total: S/ {total.toFixed(2)}</strong><p>El restaurante confirma disponibilidad, entrega y pago por WhatsApp.</p>{orderError ? <p role="alert">{orderError}</p> : <a href={orderUrl} target="_blank" rel="noopener noreferrer">Revisar pedido en WhatsApp</a>}<button type="button" onClick={() => setQuantities({})}>Vaciar pedido</button></aside>}
