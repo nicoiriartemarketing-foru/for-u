@@ -3,7 +3,7 @@ export type Tour = { id: string; name: string; description: string; price: numbe
 export type Guide = { id: string; name: string; contact: string; languages: string };
 export type Departure = { id: string; tourId: string; guideId: string; date: string; time: string; capacity: number };
 export type TourBooking = { id: string; departureId: string; customer: string; contact: string; people: number; total: number; status: 'confirmed' | 'cancelled' };
-export type TourismData = { version: 1; tours: Tour[]; guides: Guide[]; departures: Departure[]; bookings: TourBooking[]; settings: { name: string; about: string; whatsapp: string } };
+export type TourismData = { version: 1; tours: Tour[]; guides: Guide[]; departures: Departure[]; bookings: TourBooking[]; settings: { name: string; about: string; whatsapp: string; timeZone?: string } };
 export function emptyTourism(name: string): TourismData { return { version: 1, tours: [], guides: [], departures: [], bookings: [], settings: { name, about: '', whatsapp: '' } }; }
 const count = (value: number) => Number.isSafeInteger(value) && value > 0;
 export function bookedSeats(data: TourismData, departureId: string) { return data.bookings.filter(booking => booking.departureId === departureId && booking.status === 'confirmed').reduce((total, booking) => total + booking.people, 0); }

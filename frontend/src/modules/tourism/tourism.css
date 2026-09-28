@@ -25,3 +25,9 @@
 .tourism-module .tour-item { padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; }
 .tourism-module .tour-item img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; }
 .tourism-module fieldset { min-width: 0; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; }
+.tourism-module.tourism-public { max-width: 1100px; margin: auto; padding: 24px 16px; min-height: 100vh; }
+.tourism-module.tourism-public .tour-card > img { width: 100%; max-height: 280px; object-fit: cover; border-radius: 12px; }
+.tourism-module.tourism-public .tour-card > button { margin: 12px 0; }
+.tourism-module.tourism-public strong { overflow-wrap: anywhere; }
+.tourism-module .publication-qr { display: grid; justify-items: start; gap: 12px; margin: 20px 0; }
+.tourism-module .publication-qr img { max-width: 100%; height: auto; background: white; }
