@@ -26,8 +26,7 @@ begin
   from jsonb_array_elements(doc->'departures') d
   where exists(select 1 from jsonb_array_elements(s.content->'tours') t where t->>'id'=d->>'tourId' and t->>'active'='true')
     and exists(select 1 from jsonb_array_elements(doc->'tours') t where t->>'id'=d->>'tourId' and t->>'active'='true')
-    and (((d->>'date')::date + (d->>'time')::time) at time zone zone) > now()
-    and (((d->>'date')::date + (d->>'time')::time) at time zone zone) < now() + interval '180 days';
+    and (((d->>'date')::date + (d->>'time')::time) at time zone zone) > now();
   return result;
 end $$;
 
@@ -39,7 +38,7 @@ language plpgsql security definer set search_path = '' as $$
 declare s public.module_sites; doc public.toolkit_documents; departure jsonb; tour jsonb; old_booking jsonb;
   reserved integer; capacity integer; total numeric; zone text; starts_at timestamptz; new_booking jsonb;
 begin
-  if booking_request is null or departure_id is null or length(departure_id) not between 1 and 120 or party_size is null or party_size not between 1 and 20
+  if booking_request is null or departure_id is null or length(departure_id) not between 1 and 120 or party_size is null or party_size < 1
     or customer_name is null or length(trim(customer_name)) not between 2 and 100
     or customer_contact is null or length(trim(customer_contact)) not between 3 and 200 then
     raise exception 'foru:invalid';
@@ -63,7 +62,7 @@ begin
   if not found or not exists(select 1 from jsonb_array_elements(doc.payload->'tours') t where t->>'id'=departure->>'tourId' and t->>'active'='true') then raise exception 'foru:unavailable'; end if;
   zone := coalesce(s.content#>>'{settings,timeZone}', 'America/Lima');
   starts_at := (((departure->>'date')::date + (departure->>'time')::time) at time zone zone);
-  if starts_at <= now() or starts_at >= now() + interval '180 days' then raise exception 'foru:unavailable'; end if;
+  if starts_at <= now() then raise exception 'foru:unavailable'; end if;
   capacity := (departure->>'capacity')::integer;
   select coalesce(sum((b->>'people')::integer),0) into reserved from jsonb_array_elements(doc.payload->'bookings') b where b->>'departureId'=departure_id and b->>'status'='confirmed';
   if reserved + party_size > capacity then raise exception 'foru:capacity'; end if;

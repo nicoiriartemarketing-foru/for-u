@@ -21,7 +21,7 @@ await db.exec(`
   create function storage.foldername(name text) returns text[] language sql immutable as $$ select string_to_array(name, '/') $$;
 `);
 await db.exec(await readFile(new URL('../migrations/11_toolkit_ai.sql', import.meta.url), 'utf8'));
-for (const file of ['12_public_site_data.sql','13_reservations.sql','14_site_analytics.sql','15_integrations.sql','16_site_assets.sql','17_published_sites.sql']) await db.exec(await readFile(new URL('../migrations/' + file, import.meta.url), 'utf8'));
+for (const file of ['12_public_site_data.sql','13_reservations.sql','14_site_analytics.sql','15_integrations.sql','16_site_assets.sql','17_published_sites.sql','18_module_sites.sql','19_tourism_public_bookings.sql']) await db.exec(await readFile(new URL('../migrations/' + file, import.meta.url), 'utf8'));
 const alice = '11111111-1111-4111-8111-111111111111', bob = '22222222-2222-4222-8222-222222222222';
 await db.exec(`insert into auth.users values ('${alice}'), ('${bob}'); insert into public.projects values ('alice-project','${alice}'),('bob-project','${bob}');`);
 async function asUser(user, sql, params = []) {
@@ -157,7 +157,6 @@ test('published_sites exposes actual site_data but no private owner fields or dr
 
 test('module publications isolate owners, preserve drafts and expose only a published snapshot', async () => {
   await db.exec('reset role;');
-  await db.exec(await readFile(new URL('../migrations/18_module_sites.sql', import.meta.url), 'utf8'));
   const payload = JSON.stringify({version:1,type:'restaurant',menu:{settings:{title:'Carta'},dishes:[],sections:[]}});
   await asUser(alice, `insert into module_sites(user_id,project_id,module_type,slug,content) values ($1,'alice-project','restaurant','alice-menu',$2::jsonb)`, [alice,payload]);
   assert.equal((await asUser(null, `select module_public_site('alice-menu') as site`)).rows[0].site, null);
@@ -174,4 +173,50 @@ test('module publications isolate owners, preserve drafts and expose only a publ
   assert.equal((await asUser(alice, `update module_sites set published=true where slug='alice-menu' and revision=$1 returning id`, [published.revision])).rows.length, 0);
   await assert.rejects(asUser(alice, `update module_sites set content='{}' where slug='alice-menu'`), /check constraint/);
   await assert.rejects(asUser(alice, `update module_sites set content='{"type":"courses","version":1}' where slug='alice-menu'`), /check constraint/);
+});
+
+let tourRevision, tourDocumentRevision;
+const tourRequest = '33333333-3333-4333-8333-333333333333';
+const tourBookingSql = `select module_reserve_tour('alice-tours','departure-1',$1,$2,$3,$4,$5) as receipt`;
+test('tourism availability exposes future seats without guides or traveler information', async () => {
+  await db.exec('reset role;');
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0,10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  const doc = {version:1,settings:{name:'Tours',timeZone:'UTC'},tours:[{id:'tour-1',active:true,price:999},{id:'hidden-tour',active:true,price:5}],guides:[{name:'Guía privado',contact:'private-guide@example.test'}],bookings:[],departures:[{id:'departure-1',tourId:'tour-1',date:tomorrow,time:'10:00',capacity:2},{id:'past',tourId:'tour-1',date:yesterday,time:'10:00',capacity:2},{id:'hidden',tourId:'hidden-tour',date:tomorrow,time:'10:00',capacity:3}]};
+  await asUser(alice, `insert into toolkit_documents(user_id,project_id,kind,payload) values ($1,'alice-project','module-tourism',$2::jsonb)`, [alice,JSON.stringify(doc)]);
+  const content = {version:1,type:'tourism',settings:{name:'Tours',timeZone:'UTC'},tours:[{id:'tour-1',active:true,price:50}]};
+  const row = (await asUser(alice, `insert into module_sites(user_id,project_id,module_type,slug,content,published) values ($1,'alice-project','tourism','alice-tours',$2::jsonb,true) returning revision`, [alice,JSON.stringify(content)])).rows[0];
+  tourRevision = row.revision;
+  tourDocumentRevision = (await asUser(alice, `select updated_at::text as revision from toolkit_documents where kind='module-tourism'`)).rows[0].revision;
+  const seats = (await asUser(null, `select module_tourism_availability('alice-tours') as departures`)).rows[0].departures;
+  assert.equal(seats.length,1); assert.equal(seats[0].available,2);
+  assert.deepEqual(Object.keys(seats[0]).sort(), ['available','date','id','time','tourId']);
+  assert.equal(JSON.stringify(seats).includes('private-guide'),false);
+});
+test('public reservations use the published price, retry once and protect private admin drafts', async () => {
+  const args = ['Viajera prueba','traveler@example.test',2,tourRequest,tourRevision];
+  const receipt = (await asUser(null,tourBookingSql,args)).rows[0].receipt;
+  assert.deepEqual(receipt,{bookingId:tourRequest,people:2,total:100,currency:'PEN'});
+  assert.deepEqual((await asUser(null,tourBookingSql,args)).rows[0].receipt,receipt);
+  assert.equal((await asUser(null,`select module_tourism_availability('alice-tours') as departures`)).rows[0].departures[0].available,0);
+  await assert.rejects(asUser(null,tourBookingSql,['Otra viajera','other@example.test',1,'44444444-4444-4444-8444-444444444444',tourRevision]),/foru:capacity/);
+  assert.equal((await asUser(alice,`update toolkit_documents set payload='{}' where kind='module-tourism' and updated_at=$1 returning project_id`,[tourDocumentRevision])).rows.length,0);
+  const doc = (await asUser(alice,`select payload from toolkit_documents where kind='module-tourism'`)).rows[0].payload;
+  assert.equal(doc.bookings.length,1); assert.equal(doc.bookings[0].contact,'traveler@example.test');
+  assert.equal((await asUser(bob,`select * from toolkit_documents where kind='module-tourism'`)).rows.length,0);
+  await assert.rejects(asUser(null,`select * from toolkit_documents where kind='module-tourism'`),/permission denied/);
+});
+test('cancelling frees seats, revisions cannot go backwards and invalid or duplicate requests fail', async () => {
+  const previous=(await asUser(alice,`select updated_at::text as revision from toolkit_documents where kind='module-tourism'`)).rows[0].revision;
+  const next=(await asUser(alice,`update toolkit_documents set payload=jsonb_set(payload,'{bookings,0,status}','"cancelled"'),updated_at='2000-01-01' where kind='module-tourism' returning updated_at::text as revision`)).rows[0].revision;
+  assert.ok(new Date(next)>new Date(previous));
+  assert.equal((await asUser(null,`select module_tourism_availability('alice-tours') as departures`)).rows[0].departures[0].available,2);
+  await assert.rejects(asUser(null,tourBookingSql,['Viajera prueba','traveler@example.test',2,tourRequest,tourRevision]),/foru:request_conflict/);
+  await assert.rejects(asUser(null,tourBookingSql,['Viajera prueba','traveler@example.test',0,'44444444-4444-4444-8444-444444444444',tourRevision]),/foru:invalid/);
+  await assert.rejects(asUser(null,tourBookingSql,['Viajera prueba','traveler@example.test',1,'44444444-4444-4444-8444-444444444444','55555555-5555-4555-8555-555555555555']),/foru:stale/);
+  await asUser(null,tourBookingSql,['Viajera prueba','traveler@example.test',1,'44444444-4444-4444-8444-444444444444',tourRevision]);
+  await assert.rejects(asUser(null,tourBookingSql,['Viajera prueba','traveler@example.test',1,'55555555-5555-4555-8555-555555555555',tourRevision]),/foru:duplicate/);
+  await asUser(alice,`update module_sites set published=false where slug='alice-tours'`);
+  assert.deepEqual((await asUser(null,`select module_tourism_availability('alice-tours') as departures`)).rows[0].departures,[]);
+  await assert.rejects(asUser(null,tourBookingSql,['Otra viajera','other@example.test',1,'66666666-6666-4666-8666-666666666666',tourRevision]),/foru:unavailable/);
 });

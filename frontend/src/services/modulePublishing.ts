@@ -3,7 +3,7 @@ import { externalImageUrl, isPrivateMedia, privateMediaPath } from '../component
 import { restaurantSnapshot } from '../modules/restaurant/publicMenu';
 import type { RestaurantData } from '../modules/restaurant/model';
 import type { TourismData } from '../modules/tourism/model';
-import { tourismSnapshot } from '../modules/tourism/publicTours';
+import { tourismSnapshot } from '../modules/tourism/tourismPublicationModel';
 type PublishedModule = 'restaurant' | 'tourism';
 export type ModulePublication = { slug: string; published: boolean; revision: string };
 function client() { if (!supabase) throw new Error('Conecta tu cuenta para publicar.'); return supabase; }

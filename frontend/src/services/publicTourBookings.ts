@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
-import type { PublicDeparture, TourBookingReceipt } from '../modules/tourism/publicTours';
+import type { PublicDeparture, TourBookingReceipt } from '../modules/tourism/tourismPublicationModel';
+export class RejectedTourBooking extends Error {}
 export async function loadTourDepartures(slug: string): Promise<PublicDeparture[]> {
   if (!supabase) throw new Error('No se pudieron consultar las salidas.');
   const { data, error } = await supabase.rpc('module_tourism_availability', { site_slug: slug });
@@ -15,11 +16,12 @@ export async function reservePublicTour(slug: string, revision: string, request:
       'foru:capacity': 'Ya no quedan suficientes plazas. Actualiza las salidas y elige otra fecha.',
       'foru:unavailable': 'Esta salida ya no está disponible. Actualiza las salidas.',
       'foru:stale': 'La experiencia se actualizó. Recarga la página y revisa el precio antes de reservar.',
-      'foru:invalid': 'Completa nombre, contacto y entre 1 y 20 personas.',
+      'foru:invalid': 'Completa nombre, contacto y una cantidad válida de personas.',
       'foru:duplicate': 'Ya existe una reserva con ese contacto para esta salida. Contacta con la agencia para modificarla.',
       'foru:request_conflict': 'Esta solicitud ya se usó con otros datos o fue cancelada. Contacta con la agencia antes de repetirla.',
     };
-    throw new Error(messages[error.message] ?? 'No pudimos confirmar el resultado. Conserva estos datos y reintenta la misma solicitud para evitar duplicarla.');
+    if (messages[error.message]) throw new RejectedTourBooking(messages[error.message]);
+    throw new Error('No pudimos confirmar el resultado. Conserva estos datos y reintenta la misma solicitud para evitar duplicarla.');
   }
   if (!data || typeof data.bookingId !== 'string' || !Number.isSafeInteger(data.people) || !Number.isFinite(data.total) || data.currency !== 'PEN') throw new Error('No se pudo leer la confirmación. Reintenta con los mismos datos.');
   return data;

@@ -50,7 +50,7 @@ No contienen una tienda ni un sistema de turismo. Esos dos módulos se construir
 1. Completar Restaurante: verificar subida real de imágenes, verificar remotamente la vista pública y QR, completar CTA y fidelización operativa. El creador compartido ya está conectado; la vista previa incluye el pedido WhatsApp. El texto de fidelización no es un registro de clientes.
 2. Hospedaje: completar publicación, CTA y verificar los medios y el creador compartido; verificar persistencia autenticada y navegación desde proyectos. Habitaciones, calendario, reservas, limpieza, huéspedes, finanzas y editor ya tienen implementación y pruebas locales.
 3. Tienda: checkout público y pago real mediante proveedor; no simular un cobro exitoso. Se preguntó al usuario por Mercado Pago/Stripe, sin respuesta aún.
-4. Turismo: publicación y reservas de clientes; pruebas de persistencia autenticada.
+4. Turismo: verificar publicación y reservas de clientes con una cuenta real; implementación y pruebas locales disponibles.
 5. Cursos: recursos subidos, publicación/acceso de alumnos, pago real y prueba de cámara/teleprompter. Verificar descarga del certificado y currículos extensos.
 6. Creador compartido: pruebas de subida real, recuperación remota, formatos y exportación con imágenes; verificar la galería ya conectada a los editores de los módulos.
 7. Dashboard e islas: verificar creación y persistencia de cinco proyectos, navegación de todas las rutas, monedas, rachas e IA existentes. Se solicitó sesión de prueba sin pedir contraseña.
@@ -85,3 +85,14 @@ Los cinco módulos ya contienen código, pero esto no significa que la integraci
 - 39 pruebas de dominio/contenido/medios/publicación pasan. Las 14 pruebas PostgreSQL aisladas con PGlite pasan, incluyendo permisos entre cuentas, publicación, retirada, versión obsoleta y rechazo de contenido incompatible.
 - UI con repositorio local aislado: publicación bloqueada si hay cambios, publicación devuelve enlace y QR, un fallo exige revisar el estado y recupera la publicación existente. Esta prueba no publica en Supabase real.
 - Se añadió package-lock.json para instalación reproducible; instalación limpia npm ci desde caché completada sin advertencias.
+
+## Publicación y reservas de Turismo
+
+- Catálogo público en `/experiencias/:slug`, selector de salidas/plazas, formulario de viajeros, recibo con código e importe y enlace de coordinación por WhatsApp. Publicación/retirada, fotos públicas y QR comparten los servicios de Restaurante.
+- Zona horaria configurable antes de tener reservas; las fechas pasadas quedan fuera de las salidas públicas. El límite de plazas proviene de cada salida. El precio de la reserva es el publicado, aunque exista un borrador con otro precio.
+- Migración 19: disponibilidad anónima sin contactos y reserva bajo bloqueo del documento operativo. Reintentos con el mismo identificador recuperan la confirmación; cancelación libera capacidad; solicitudes obsoletas y duplicadas se rechazan. La revisión del documento avanza en el servidor para impedir que un administrador sobrescriba una reserva desde un borrador antiguo.
+- Botón Actualizar datos en los módulos para recuperar operaciones recibidas; pide descartar los borradores antes de reemplazarlos.
+- 17 pruebas PostgreSQL aisladas pasan con todas las migraciones 11–19 instaladas desde el inicio de la prueba; incluyen RLS, precio publicado, reintento, agotamiento, cancelación y revisión obsoleta. No constituyen una prueba de carga concurrente contra Supabase real.
+- UI local con respuesta perdida simulada: la reserva consume las dos plazas; el reintento recupera el mismo código y total de S/ 100 sin crear otra reserva. Consola sin errores; vista de 375 px sin desbordamiento horizontal.
+- Tres pruebas nuevas de catálogo público: exclusión de contactos y tours ocultos; coordenadas/precios/zonas válidas; rechazo de documentos malformados e identificadores repetidos.
+- Pendiente aplicar migraciones 18–19 y probar publicación, fotos, recepción y cancelación con la sesión real. No se efectuaron cobros ni reservas reales.

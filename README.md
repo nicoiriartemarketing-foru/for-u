@@ -53,6 +53,14 @@ En Restaurante, guarda tus cambios y abre **Publicar y compartir mi carta**. Esc
 
 Genera el enlace y el QR desde el dominio donde esté desplegada la app, no desde localhost. Al publicar se crean copias públicas de las imágenes elegidas. Retirar la carta oculta la página; esas copias conservan sus enlaces públicos. La migración y el despliegue remoto todavía requieren verificación en la cuenta configurada.
 
+## Publicar experiencias y recibir reservas
+
+Instala `19_tourism_public_bookings.sql` después de la migración 18. En Turismo, elige la zona horaria, crea las experiencias, guías y salidas, y guarda el proyecto. **Publicar y compartir mis experiencias** genera el enlace `/experiencias/:slug` y su QR.
+
+Las plazas se consultan desde los datos guardados del módulo. Una reserva pública comprueba disponibilidad y registra al viajero en una operación de base de datos; reintentar la misma solicitud no duplica la reserva. Se utiliza el precio publicado. La confirmación no realiza un cobro: el pago se coordina con la agencia. En el panel, **Actualizar datos** recupera las reservas recibidas; cancelar y guardar libera plazas. Un borrador antiguo no puede sobrescribir una reserva nueva.
+
+La publicación muestra el catálogo; los contactos de guías y viajeros permanecen privados. Los cambios del catálogo requieren volver a publicar. La verificación con una cuenta real y el despliegue de las migraciones siguen pendientes.
+
 ## Verificar cambios
 
 Desde `frontend`:
@@ -60,13 +68,13 @@ Desde `frontend`:
 ```sh
 npm run typecheck
 npm run build
-node --experimental-strip-types --test tests/restaurant-module.test.mjs tests/hospitality-module.test.mjs tests/ecommerce-module.test.mjs tests/tourism-module.test.mjs tests/courses-module.test.mjs tests/content-creator.test.mjs tests/project-media.test.mjs tests/restaurant-publication.test.mjs
+node --experimental-strip-types --test tests/restaurant-module.test.mjs tests/hospitality-module.test.mjs tests/ecommerce-module.test.mjs tests/tourism-module.test.mjs tests/courses-module.test.mjs tests/content-creator.test.mjs tests/project-media.test.mjs tests/restaurant-publication.test.mjs tests/tourism-publication.test.mjs
 ```
 
 Las pruebas de dominio y de componentes locales no sustituyen una prueba con cuenta real: comprueba creación de proyectos, guardado, recarga, cambio de cuenta y subida de imágenes en el backend configurado.
 
 ## Estado de la integración
 
-La integración completa todavía está en desarrollo. La publicación de Restaurante tiene implementación y pruebas locales. Quedan pendientes su verificación remota, publicación de los otros módulos, checkout/pasarela, reservas públicas, algunos recursos multimedia y la verificación autenticada de extremo a extremo. No se ha configurado ni probado un cobro real.
+La integración completa todavía está en desarrollo. La publicación de Restaurante y Turismo tiene implementación y pruebas locales. Quedan pendientes su verificación remota, publicación de los otros módulos, checkout/pasarela, reservas públicas de hospedaje, algunos recursos multimedia y la verificación autenticada de extremo a extremo. No se ha configurado ni probado un cobro real.
 
 El detalle de avances, pruebas y pendientes está en [docs/MODULE_INTEGRATION.md](docs/MODULE_INTEGRATION.md). Los HTML recibidos se conservan en [referencias](referencias); Tienda y Turismo se construyeron a partir del objetivo, porque los adjuntos incluyen dos variantes de Restaurante y dos de Hospedaje.

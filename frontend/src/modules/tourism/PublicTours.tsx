@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import ProjectImage from '../../components/shared/ProjectImage';
-import { loadTourDepartures, reservePublicTour, type PublicTourRequest } from '../../services/publicTourBookings';
+import { loadTourDepartures, reservePublicTour, RejectedTourBooking, type PublicTourRequest } from '../../services/publicTourBookings';
 import { tourMapUrl } from './model';
-import type { PublicDeparture, PublishedTourism, TourBookingReceipt } from './publicTours';
+import type { PublicDeparture, PublishedTourism, TourBookingReceipt } from './tourismPublicationModel';
 import './tourism.css';
 const bookingApi = { departures: loadTourDepartures, reserve: reservePublicTour };
 
@@ -34,7 +34,7 @@ export default function PublicTours({ site, slug, revision, api = bookingApi }: 
     if (!request || submitting.current) return;
     submitting.current = true; setBusy(true); setAttemptedRequest(request.requestId); setNotice('');
     try { setReceipt(await api.reserve(slug, revision, request)); setNotice('Reserva confirmada. Guarda tu código y coordina el pago con la agencia.'); setAttempt(value => value + 1); }
-    catch (error) { setNotice((error as Error).message); setAttempt(value => value + 1); }
+    catch (error) { setNotice((error as Error).message); if (error instanceof RejectedTourBooking) setAttemptedRequest(''); setAttempt(value => value + 1); }
     finally { submitting.current = false; setBusy(false); }
   }
   const chosenDeparture = departures.find(item => item.id === request?.departureId);
@@ -55,7 +55,7 @@ export default function PublicTours({ site, slug, revision, api = bookingApi }: 
     {request && <section className="tour-card"><p role="status">{notice}</p>{receipt ? <><h2>Tu reserva está confirmada</h2><p>Código: <strong>{receipt.bookingId}</strong></p><p>{receipt.people} personas · Total: S/ {receipt.total.toFixed(2)}</p><p>Esta reserva no ha realizado ningún cobro.</p>{/^\d{8,15}$/.test(whatsapp) && <a target="_blank" rel="noopener noreferrer" href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hola, quiero coordinar mi reserva ${receipt.bookingId}.`)}`}>Coordinar con la agencia</a>}</> : <form className="tour-form" onSubmit={submit}><fieldset disabled={busy} className="tour-form"><legend>Datos de tu reserva</legend>
       <label>Tu nombre<input required disabled={attempted} minLength={2} maxLength={100} autoComplete="name" value={request.customer} onChange={event => setRequest({ ...request, customer: event.target.value })} /></label>
       <label>Email o teléfono de contacto<input required disabled={attempted} minLength={3} maxLength={200} value={request.contact} onChange={event => setRequest({ ...request, contact: event.target.value })} /></label>
-      <label>Personas<input required disabled={attempted} type="number" min="1" max="20" step="1" value={Number.isFinite(request.people) ? request.people : ''} onChange={event => setRequest({ ...request, people: event.target.valueAsNumber })} /></label>
+      <label>Personas<input required disabled={attempted} type="number" min="1" max={chosenDeparture?.available || undefined} step="1" value={Number.isFinite(request.people) ? request.people : ''} onChange={event => setRequest({ ...request, people: event.target.valueAsNumber })} /></label>
       {tour && Number.isSafeInteger(request.people) && request.people > 0 && <p>Total: S/ {(Math.round(tour.price * 100) * request.people / 100).toFixed(2)}</p>}
       <p>La reserva asegura tus plazas. El pago se coordina con la agencia.</p><button type="submit" disabled={(!attempted && (!chosenDeparture || chosenDeparture.available < request.people)) || !Number.isSafeInteger(request.people)}>{busy ? 'Confirmando…' : attempted ? 'Revisar la misma solicitud' : 'Confirmar reserva'}</button>
     </fieldset></form>}</section>}

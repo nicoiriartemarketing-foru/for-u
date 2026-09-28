@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
 import PublicTours from './PublicTours';
-import { parsePublishedTourism, type PublishedTourism } from './publicTours';
+import { parsePublishedTourism, type PublishedTourism } from './tourismPublicationModel';
 export default function PublicTourism() { const { slug } = useParams(); return <PublicTourismSession key={slug} slug={slug ?? ''} />; }
 function PublicTourismSession({ slug }: { slug: string }) {
   const [loaded, setLoaded] = useState(false);

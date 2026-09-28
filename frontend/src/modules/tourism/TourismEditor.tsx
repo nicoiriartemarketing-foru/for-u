@@ -1,4 +1,4 @@
-import { tourTimeZones } from './publicTours';
+import { tourTimeZones } from './tourismPublicationModel';
 import ProjectImage from '../../components/shared/ProjectImage';
 import ProjectImageField from '../../components/shared/ProjectImageField';
 import { useModuleDraft } from '../useModuleDraft';

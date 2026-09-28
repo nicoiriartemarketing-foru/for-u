@@ -31,7 +31,7 @@ export default function TourismPublishing({ data, userId, project, disabled, sto
   const localLink = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
   return <details className="tour-card"><summary>Publicar y compartir mis experiencias</summary><p role="status">{notice}</p>
     {!loaded ? <><p>Comprobando el estado de publicación.</p>{notice && <button type="button" onClick={() => setAttempt(value => value + 1)}>Revisar estado</button>}</> : <>
-      <p>Publica los experiencias activas. Las salidas y plazas se consultan en tiempo real. Las fotos seleccionadas también serán públicas.</p>
+      <p>Publica tus experiencias activas. Las salidas y plazas se consultan en tiempo real. Las fotos seleccionadas también serán públicas.</p>
       <label>Dirección de tus experiencias<input value={slug} disabled={busy} maxLength={60} placeholder="mi-agencia" onChange={event => setSlug(event.target.value.toLowerCase())} /></label>
       {disabled && <p>Aplica los formularios y guarda tus cambios antes de publicar.</p>}
       {localLink && <p>Estás usando una dirección local. Abre For U desde su dominio publicado para generar el enlace y QR que compartirás con tus clientes.</p>}
