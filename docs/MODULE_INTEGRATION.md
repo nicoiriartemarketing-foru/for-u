@@ -47,7 +47,7 @@ No contienen una tienda ni un sistema de turismo. Esos dos módulos se construir
 
 ## Trabajo pendiente (no reducir el alcance)
 
-1. Completar Restaurante: verificar subida real de imágenes, vista pública y QR, CTA y fidelización operativa. El creador compartido ya está conectado; la vista previa incluye el pedido WhatsApp. El texto de fidelización no es un registro de clientes.
+1. Completar Restaurante: verificar subida real de imágenes, verificar remotamente la vista pública y QR, completar CTA y fidelización operativa. El creador compartido ya está conectado; la vista previa incluye el pedido WhatsApp. El texto de fidelización no es un registro de clientes.
 2. Hospedaje: completar publicación, CTA y verificar los medios y el creador compartido; verificar persistencia autenticada y navegación desde proyectos. Habitaciones, calendario, reservas, limpieza, huéspedes, finanzas y editor ya tienen implementación y pruebas locales.
 3. Tienda: checkout público y pago real mediante proveedor; no simular un cobro exitoso. Se preguntó al usuario por Mercado Pago/Stripe, sin respuesta aún.
 4. Turismo: publicación y reservas de clientes; pruebas de persistencia autenticada.
@@ -75,3 +75,13 @@ Los cinco módulos ya contienen código, pero esto no significa que la integraci
 - Tres pruebas nuevas comprueban aislamiento por propietario/proyecto, rutas inválidas y protocolos externos. Las 35 pruebas de módulos/contenido/imágenes pasan. TypeScript, lint de los componentes nuevos y build sin advertencias pasan en la copia de validación.
 - Prueba visual con recursos locales: enlace muestra una imagen cargada, quitarla limpia el valor, referencia de otro proyecto se rechaza. Falta verificación de subida/recarga con la cuenta real.
 - Se restauraron las dependencias temporales desde la caché local, tras fallar el acceso al registro. No se modificó package.json del proyecto. README usa npm install porque el repositorio no contiene package-lock.json.
+
+## Publicación de Restaurante y QR
+
+- Nueva tabla `module_sites` y RPC `module_public_site` en la migración 18; las páginas anteriores en `toolkit_sites` permanecen separadas. Propiedad por cuenta/proyecto, restricciones de tipo/versión/tamaño y revisión UUID para detectar cambios concurrentes. No se aplicó la migración a producción.
+- Publicar/actualizar/retirar desde el módulo y ruta anónima `/negocio/:slug`. La copia pública incluye únicamente campos explícitos de platos disponibles y secciones visibles. Nunca incluye inventario, recetas ni preparaciones.
+- Fotos privadas seleccionadas se copian al bucket público existente `site-assets`. Al retirar la página las copias públicas permanecen; la interfaz informa esta condición. No se ha probado todavía el traslado con la cuenta real.
+- QR SVG generado localmente con qrcode-generator 2.0.4 y descargable. El SVG leído de la interfaz se convirtió en PNG y el lector Vision de macOS decodificó exactamente el enlace de prueba. Se advierte al usar localhost.
+- 39 pruebas de dominio/contenido/medios/publicación pasan. Las 14 pruebas PostgreSQL aisladas con PGlite pasan, incluyendo permisos entre cuentas, publicación, retirada, versión obsoleta y rechazo de contenido incompatible.
+- UI con repositorio local aislado: publicación bloqueada si hay cambios, publicación devuelve enlace y QR, un fallo exige revisar el estado y recupera la publicación existente. Esta prueba no publica en Supabase real.
+- Se añadió package-lock.json para instalación reproducible; instalación limpia npm ci desde caché completada sin advertencias.

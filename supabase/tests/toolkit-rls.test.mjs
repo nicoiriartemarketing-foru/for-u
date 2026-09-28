@@ -154,3 +154,24 @@ test('published_sites exposes actual site_data but no private owner fields or dr
  assert.equal((await asUser(null,`select * from published_sites where slug='alice-shop'`)).rows.length,0);
  await assert.rejects(asUser(null,`update published_sites set site_data='{}'`),/permission denied/);
 });
+
+test('module publications isolate owners, preserve drafts and expose only a published snapshot', async () => {
+  await db.exec('reset role;');
+  await db.exec(await readFile(new URL('../migrations/18_module_sites.sql', import.meta.url), 'utf8'));
+  const payload = JSON.stringify({version:1,type:'restaurant',menu:{settings:{title:'Carta'},dishes:[],sections:[]}});
+  await asUser(alice, `insert into module_sites(user_id,project_id,module_type,slug,content) values ($1,'alice-project','restaurant','alice-menu',$2::jsonb)`, [alice,payload]);
+  assert.equal((await asUser(null, `select module_public_site('alice-menu') as site`)).rows[0].site, null);
+  assert.equal((await asUser(bob, 'select * from module_sites')).rows.length, 0);
+  await assert.rejects(asUser(bob, `insert into module_sites(user_id,project_id,module_type,slug,content) values ($1,'alice-project','restaurant','forged-menu',$2::jsonb)`, [bob,payload]), /foreign key/);
+  await assert.rejects(asUser(null, 'select * from module_sites'), /permission denied/);
+  await asUser(alice, `update module_sites set published=true where slug='alice-menu'`);
+  const published = (await asUser(null, `select module_public_site('alice-menu') as site`)).rows[0].site;
+  assert.deepEqual(Object.keys(published).sort(), ['content','revision','slug']);
+  assert.equal(published.content.menu.settings.title, 'Carta');
+  assert.equal((await asUser(bob, `update module_sites set published=false where slug='alice-menu' returning id`)).rows.length, 0);
+  await asUser(alice, `update module_sites set published=false,revision=gen_random_uuid() where slug='alice-menu'`);
+  assert.equal((await asUser(null, `select module_public_site('alice-menu') as site`)).rows[0].site, null);
+  assert.equal((await asUser(alice, `update module_sites set published=true where slug='alice-menu' and revision=$1 returning id`, [published.revision])).rows.length, 0);
+  await assert.rejects(asUser(alice, `update module_sites set content='{}' where slug='alice-menu'`), /check constraint/);
+  await assert.rejects(asUser(alice, `update module_sites set content='{"type":"courses","version":1}' where slug='alice-menu'`), /check constraint/);
+});

@@ -1,9 +1,10 @@
 import ProjectImage from '../../components/shared/ProjectImage';
 import { useState } from 'react';
-import { whatsappOrderUrl, type RestaurantData } from './model';
+import { whatsappOrderUrl } from './model';
+import type { RestaurantMenuData } from './publicMenu';
 
 /** Customer-facing menu; the editor supplies the current draft for preview. */
-export default function RestaurantMenu({ data }: { data: RestaurantData }) {
+export default function RestaurantMenu({ data }: { data: RestaurantMenuData }) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [category, setCategory] = useState('');
   const { settings } = data;

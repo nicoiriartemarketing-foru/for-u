@@ -1,0 +1,41 @@
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '../../services/supabase';
+import RestaurantMenu from './RestaurantMenu';
+import { parsePublishedRestaurant, type PublishedRestaurant } from './publicMenu';
+import './restaurant.css';
+
+export default function PublicRestaurant() {
+  const { slug } = useParams();
+  return <PublicRestaurantSession key={slug} slug={slug ?? ''} />;
+}
+function PublicRestaurantSession({ slug }: { slug: string }) {
+  const [site, setSite] = useState<PublishedRestaurant | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState('');
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let active = true;
+    async function refresh() {
+      try {
+        if (!supabase || !/^[a-z0-9][a-z0-9-]{2,59}$/.test(slug)) throw new Error('Esta carta no está disponible.');
+        const { data, error } = await supabase.rpc('module_public_site', { site_slug: slug });
+        if (error) throw new Error('No se pudo cargar la carta. Reintenta en un momento.');
+        const parsed = parsePublishedRestaurant(data?.content);
+        if (active) { setSite(parsed); setNotice(parsed ? '' : 'Esta carta no está disponible.'); }
+      } catch (error) { if (active) { setSite(null); setNotice((error as Error).message); } }
+      finally { if (active) setLoading(false); }
+    }
+    void refresh();
+    const interval = window.setInterval(() => { if (!document.hidden) void refresh(); }, 30000);
+    return () => { active = false; window.clearInterval(interval); };
+  }, [slug, attempt]);
+  useEffect(() => {
+    const previous = document.title;
+    document.title = site ? `${site.menu.settings.title} · Carta` : 'Carta · For U';
+    return () => { document.title = previous; };
+  }, [site]);
+  return <main className="restaurant-module restaurant-public">
+    {loading ? <p role="status">Cargando la carta…</p> : site ? <RestaurantMenu data={site.menu} /> : <><h1>Carta no disponible</h1><p role="status">{notice}</p><button type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar</button></>}
+  </main>;
+}

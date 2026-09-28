@@ -16,6 +16,7 @@ export type ModuleConfiguration<T> = {
   Editor: ComponentType<{ data: T; onChange: (data: T) => void; project?: ModuleProject; userId?: string }>;
   dashboardLabel: string;
   editorLabel: string;
+  Publication?: ComponentType<{ data: T; userId: string; project: ModuleProject; disabled: boolean }>;
 };
 
 export default function ModuleWorkspace<T>({ config }: { config: ModuleConfiguration<T> }) {
@@ -43,7 +44,7 @@ export default function ModuleWorkspace<T>({ config }: { config: ModuleConfigura
 }
 
 function ModuleSession<T>({ userId, project, projects, config }: { userId: string; project: ModuleProject; projects: ModuleProject[]; config: ModuleConfiguration<T> }) {
-  const { Dashboard, Editor } = config;
+  const { Dashboard, Editor, Publication } = config;
   const navigate = useNavigate();
   const location = useLocation();
   const editing = location.pathname.endsWith('/editor');
@@ -104,5 +105,6 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
       </MediaScope.Provider>
       </ModuleDraftContext.Provider>
     </fieldset>
+    {Publication && <Publication data={data} userId={userId} project={project} disabled={dirty || pendingDraft || saving} />}
   </main>;
 }

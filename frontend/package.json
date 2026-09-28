@@ -29,7 +29,8 @@
     "react-router-dom": "^7.16.0",
     "reactflow": "^11.11.4",
     "three": "^0.185.1",
-    "zustand": "^5.0.14"
+    "zustand": "^5.0.14",
+    "qrcode-generator": "2.0.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

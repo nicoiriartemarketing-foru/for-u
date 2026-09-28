@@ -8,7 +8,7 @@ Requiere Node.js 22 o posterior. Desde la carpeta del repositorio:
 
 ```sh
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
@@ -45,6 +45,14 @@ El creador compartido está en `/content-creator`. `/workspace` conserva la Ruta
 - **Imágenes:** portadas, platos, productos, habitaciones, experiencias y cursos comparten la biblioteca privada del proyecto. Permite subir/arrastrar imágenes, elegirlas o usar un enlace externo; los archivos privados conservan su ruta y renuevan su enlace al mostrarse.
 - **Contenido:** 31 plantillas, seis categorías por rubro, creación vacía, biblioteca privada de imágenes y borradores separados por proyecto.
 
+## Publicar la carta del restaurante
+
+Instala también la migración `18_module_sites.sql` en tu backend, después de las anteriores. El bucket público `site-assets` procede de la migración 16; la biblioteca original permanece privada.
+
+En Restaurante, guarda tus cambios y abre **Publicar y compartir mi carta**. Escribe una dirección y pulsa **Publicar carta**. Se publica una copia de los platos disponibles y las secciones visibles, sin inventario ni recetas. Desde ahí puedes abrir/copiar el enlace, descargar el QR SVG, actualizar o retirar la carta. El enlace público es `/negocio/:slug` y no pide iniciar sesión.
+
+Genera el enlace y el QR desde el dominio donde esté desplegada la app, no desde localhost. Al publicar se crean copias públicas de las imágenes elegidas. Retirar la carta oculta la página; esas copias conservan sus enlaces públicos. La migración y el despliegue remoto todavía requieren verificación en la cuenta configurada.
+
 ## Verificar cambios
 
 Desde `frontend`:
@@ -52,13 +60,13 @@ Desde `frontend`:
 ```sh
 npm run typecheck
 npm run build
-node --experimental-strip-types --test tests/restaurant-module.test.mjs tests/hospitality-module.test.mjs tests/ecommerce-module.test.mjs tests/tourism-module.test.mjs tests/courses-module.test.mjs tests/content-creator.test.mjs tests/project-media.test.mjs
+node --experimental-strip-types --test tests/restaurant-module.test.mjs tests/hospitality-module.test.mjs tests/ecommerce-module.test.mjs tests/tourism-module.test.mjs tests/courses-module.test.mjs tests/content-creator.test.mjs tests/project-media.test.mjs tests/restaurant-publication.test.mjs
 ```
 
 Las pruebas de dominio y de componentes locales no sustituyen una prueba con cuenta real: comprueba creación de proyectos, guardado, recarga, cambio de cuenta y subida de imágenes en el backend configurado.
 
 ## Estado de la integración
 
-La integración completa todavía está en desarrollo. Quedan pendientes la publicación de los módulos, checkout/pasarela, reservas públicas, algunos recursos multimedia y la verificación autenticada de extremo a extremo. No se ha configurado ni probado un cobro real.
+La integración completa todavía está en desarrollo. La publicación de Restaurante tiene implementación y pruebas locales. Quedan pendientes su verificación remota, publicación de los otros módulos, checkout/pasarela, reservas públicas, algunos recursos multimedia y la verificación autenticada de extremo a extremo. No se ha configurado ni probado un cobro real.
 
 El detalle de avances, pruebas y pendientes está en [docs/MODULE_INTEGRATION.md](docs/MODULE_INTEGRATION.md). Los HTML recibidos se conservan en [referencias](referencias); Tienda y Turismo se construyeron a partir del objetivo, porque los adjuntos incluyen dos variantes de Restaurante y dos de Hospedaje.

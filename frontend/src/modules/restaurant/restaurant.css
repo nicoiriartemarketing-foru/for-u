@@ -171,3 +171,7 @@
 .restaurant-module .restaurant-menu-preview aside { padding: 20px; margin-top: 24px; border: 1px solid #d1d5db; border-radius: 16px; }
 .restaurant-module .restaurant-menu-preview aside a { display: inline-block; margin: 16px; text-decoration: underline; }
 .restaurant-module .restaurant-menu-preview details { padding: 12px 0; }
+.restaurant-module.restaurant-public { max-width: 1080px; margin: auto; padding: 24px 16px; min-height: 100vh; }
+.restaurant-module.restaurant-public .restaurant-menu-preview { margin-top: 0; }
+.restaurant-module .publication-qr { display: grid; justify-items: start; gap: 12px; margin: 20px 0; }
+.restaurant-module .publication-qr img { max-width: 100%; height: auto; background: white; }

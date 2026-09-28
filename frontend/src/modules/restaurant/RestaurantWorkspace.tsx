@@ -1,9 +1,10 @@
 import ModuleWorkspace, { type ModuleConfiguration } from '../ModuleWorkspace';
 import RestaurantEditor from './RestaurantEditor';
 import RestaurantDashboard from './RestaurantDashboard';
+import RestaurantPublishing from './RestaurantPublishing';
 import { emptyRestaurant, type RestaurantData } from './model';
 const config: ModuleConfiguration<RestaurantData> = {
-  type: 'restaurant', create: emptyRestaurant, Dashboard: RestaurantDashboard, Editor: RestaurantEditor,
+  type: 'restaurant', create: emptyRestaurant, Dashboard: RestaurantDashboard, Editor: RestaurantEditor, Publication: RestaurantPublishing,
   dashboardLabel: 'Logística y recetas', editorLabel: 'Menú y secciones',
   parse(value) {
     const data = value as RestaurantData;
