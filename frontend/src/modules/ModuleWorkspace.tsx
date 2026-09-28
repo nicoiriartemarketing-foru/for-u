@@ -61,7 +61,7 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
     loadModuleDocument(userId, project.id, config.type).then(document => {
       if (!active) return;
       const payload = document ? config.parse(document.payload) : config.create(project.name);
-      setData(payload); setRevision(document?.revision ?? null); setStatus('');
+      setData(payload); setRevision(document?.revision ?? null); setDirty(false); setStatus('');
     }).catch(reason => { if (active) setStatus(reason.message); });
     return () => { active = false; };
   }, [userId, project.id, project.name, attempt, config]);
@@ -94,6 +94,7 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
   return <main className={`${config.type}-module module-workspace`}>
     <header className="module-header"><div><span>For U · {moduleLabels[config.type]}</span><h1>{project.name}</h1></div><button disabled={!dirty || saving || pendingDraft} onClick={save}>{saving ? 'Guardando…' : 'Guardar cambios'}</button></header>
     <p role="status">{status}</p>
+    <button disabled={saving} onClick={() => { if ((!dirty && !pendingDraft) || window.confirm('Actualizar recupera los datos guardados y descarta los cambios pendientes. ¿Continuar?')) { setData(null); setAttempt(value => value + 1); } }}>Actualizar datos</button>
     {pendingDraft && <p role="status">Termina y aplica el formulario abierto, o cancélalo, antes de guardar el proyecto.</p>}
     <button disabled={saving} onClick={() => leave(`/content-creator?project=${encodeURIComponent(project.id)}`)}>Crear Contenido</button>
     <ProjectSelector projects={projects} value={project.id} disabled={saving} onChange={id => leave(`/modules/${config.type}${editing ? '/editor' : ''}?project=${encodeURIComponent(id)}`)} />

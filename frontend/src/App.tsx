@@ -30,6 +30,7 @@ const TourismWorkspace = lazy(() => import('./modules/tourism/TourismWorkspace')
 const CoursesWorkspace = lazy(() => import('./modules/courses/CoursesWorkspace'));
 const ContentCreator = lazy(() => import('./components/shared/ContentCreator'));
 const PublicRestaurant = lazy(() => import('./modules/restaurant/PublicRestaurant'));
+const PublicTourism = lazy(() => import('./modules/tourism/PublicTourism'));
 
 function hasStudioAccess() {
   return window.localStorage.getItem('foru-studio-access') === 'granted';
@@ -83,6 +84,7 @@ function App() {
             <Route path="/modules/courses/editor" element={<PrivateWorkspace><CoursesWorkspace /></PrivateWorkspace>} />
             <Route path="/content-creator" element={<PrivateWorkspace><ContentCreator /></PrivateWorkspace>} />
             <Route path="/negocio/:slug" element={<PublicRestaurant />} />
+            <Route path="/experiencias/:slug" element={<PublicTourism />} />
             <Route path="/herramientas/demo" element={<ToolkitDemo />} />
             <Route path="/mapa/demo" element={<JourneyMapDemo />} />
             <Route path="/site-preview" element={<SiteEditorFrame />} />
