@@ -1,3 +1,4 @@
+import { useModuleDraft } from '../useModuleDraft';
 import { Fragment, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { addDays, localDate } from '../dates';
@@ -17,6 +18,7 @@ export default function HospitalityDashboard({ data, onChange }: HospitalityProp
   const [room, setRoom] = useState<Room | null>(null);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [entry, setEntry] = useState<FinanceEntry | null>(null);
+  useModuleDraft(!!room || !!booking || !!entry);
   const [month, setMonth] = useState(localDate().slice(0, 7));
   const summary = hospitalitySummary(data, `${month}-01`);
   const todaySummary = hospitalitySummary(data, localDate());
@@ -46,8 +48,8 @@ export default function HospitalityDashboard({ data, onChange }: HospitalityProp
     {room && <form className="component-card hospitality-form" onSubmit={event => submit(event, () => saveRoom(data, room), () => setRoom(null))}>
       <h3>Datos de habitación</h3><label>Nombre<input required value={room.name} onChange={event => setRoom({ ...room, name: event.target.value })} /></label>
       <label>Tipo<select value={room.type} onChange={event => setRoom({ ...room, type: event.target.value })}>{['Individual', 'Doble', 'Matrimonial', 'Familiar', 'Suite'].map(type => <option key={type}>{type}</option>)}</select></label>
-      <label>Precio por noche (S/)<input type="number" required min="0" step="0.01" value={room.price} onChange={event => setRoom({ ...room, price: event.target.valueAsNumber })} /></label>
-      <label>Capacidad<input type="number" min="1" step="1" required value={room.capacity} onChange={event => setRoom({ ...room, capacity: event.target.valueAsNumber })} /></label>
+      <label>Precio por noche (S/)<input type="number" required min="0" step="0.01" value={Number.isFinite(room.price) ? room.price : ''} onChange={event => setRoom({ ...room, price: event.target.valueAsNumber })} /></label>
+      <label>Capacidad<input type="number" min="1" step="1" required value={Number.isFinite(room.capacity) ? room.capacity : ''} onChange={event => setRoom({ ...room, capacity: event.target.valueAsNumber })} /></label>
       <label>Estado de habitación<select value={room.status} onChange={event => setRoom({ ...room, status: event.target.value as Room['status'] })}>{Object.entries(roomStatus).map(([id, title]) => <option key={id} value={id}>{title}</option>)}</select></label>
       <label>Imagen URL<input type="url" value={room.image} onChange={event => setRoom({ ...room, image: event.target.value })} /></label>
       <fieldset><legend>Comodidades</legend><div className="hospitality-actions">{['WiFi', 'A/C', 'TV', 'Desayuno', 'Jacuzzi', 'Cocina', 'Balcón', 'Calefacción'].map(amenity => <label className="hospitality-check" key={amenity}><input type="checkbox" checked={room.amenities.includes(amenity)} onChange={event => setRoom({ ...room, amenities: event.target.checked ? [...room.amenities, amenity] : room.amenities.filter(item => item !== amenity) })} />{amenity}</label>)}</div></fieldset>
@@ -75,10 +77,10 @@ export default function HospitalityDashboard({ data, onChange }: HospitalityProp
         <label>Nombre del huésped<input required value={booking.guest} onChange={event => setBooking({ ...booking, guest: event.target.value })} /></label>
         <label>Contacto<input value={booking.contact} onChange={event => setBooking({ ...booking, contact: event.target.value })} /></label>
         <label>Habitación<select required value={booking.roomId} onChange={event => setBooking({ ...booking, roomId: event.target.value, nightlyRate: data.rooms.find(item => item.id === event.target.value)?.price ?? 0 })}>{data.rooms.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-        <label>Personas<input type="number" min="1" step="1" required value={booking.guests} onChange={event => setBooking({ ...booking, guests: event.target.valueAsNumber })} /></label>
+        <label>Personas<input type="number" min="1" step="1" required value={Number.isFinite(booking.guests) ? booking.guests : ''} onChange={event => setBooking({ ...booking, guests: event.target.valueAsNumber })} /></label>
         <label>Entrada<input type="date" required value={booking.checkIn} onChange={event => setBooking({ ...booking, checkIn: event.target.value })} /></label>
         <label>Salida<input type="date" required value={booking.checkOut} onChange={event => setBooking({ ...booking, checkOut: event.target.value })} /></label>
-        <label>Tarifa acordada por noche (S/)<input type="number" required min="0" step="0.01" value={booking.nightlyRate} onChange={event => setBooking({ ...booking, nightlyRate: event.target.valueAsNumber })} /></label>
+        <label>Tarifa acordada por noche (S/)<input type="number" required min="0" step="0.01" value={Number.isFinite(booking.nightlyRate) ? booking.nightlyRate : ''} onChange={event => setBooking({ ...booking, nightlyRate: event.target.valueAsNumber })} /></label>
         <label>Notas<textarea value={booking.notes} onChange={event => setBooking({ ...booking, notes: event.target.value })} /></label>
         <button type="submit">Guardar reserva</button>
       </fieldset>
@@ -97,7 +99,7 @@ export default function HospitalityDashboard({ data, onChange }: HospitalityProp
     </section>}
     {entry && <form className="component-card hospitality-form" onSubmit={event => submit(event, () => saveFinanceEntry(data, entry), () => setEntry(null))}>
       <h3>Registrar movimiento</h3><label>Tipo de movimiento<select value={entry.type} onChange={event => setEntry({ ...entry, type: event.target.value as FinanceEntry['type'] })}><option value="income">Ingreso recibido</option><option value="expense">Gasto pagado</option></select></label>
-      <label>Concepto<input required value={entry.concept} onChange={event => setEntry({ ...entry, concept: event.target.value })} /></label><label>Monto (S/)<input type="number" required min="0.01" step="0.01" value={entry.amount} onChange={event => setEntry({ ...entry, amount: event.target.valueAsNumber })} /></label>
+      <label>Concepto<input required value={entry.concept} onChange={event => setEntry({ ...entry, concept: event.target.value })} /></label><label>Monto (S/)<input type="number" required min="0.01" step="0.01" value={Number.isFinite(entry.amount) ? entry.amount : ''} onChange={event => setEntry({ ...entry, amount: event.target.valueAsNumber })} /></label>
       <label>Fecha del movimiento<input type="date" required value={entry.date} onChange={event => setEntry({ ...entry, date: event.target.value })} /></label><label>Reserva asociada<select value={entry.bookingId ?? ''} onChange={event => setEntry({ ...entry, bookingId: event.target.value || undefined })}><option value="">Sin reserva</option>{data.bookings.map(item => <option key={item.id} value={item.id}>{item.guest} · {item.checkIn}</option>)}</select></label>
       <div className="hospitality-actions"><button type="submit">Guardar movimiento</button><button type="button" onClick={() => setEntry(null)}>Cancelar movimiento</button></div>
     </form>}

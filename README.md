@@ -1,0 +1,63 @@
+# For U
+
+Aplicación React, Vite y TypeScript con una sesión Supabase, proyectos por rubro y herramientas compartidas.
+
+## Ejecutar en desarrollo
+
+Requiere Node.js 22 o posterior. Desde la carpeta del repositorio:
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Configura `frontend/.env` usando `frontend/.env.example`. La autenticación y los módulos usan `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (o `VITE_SUPABASE_PUBLISHABLE_KEY`) del mismo proyecto Supabase.
+
+El backend debe tener las migraciones existentes de `supabase/migrations/`, en orden. Los módulos utilizan `projects`, sus campos de rubro de la migración 10, `toolkit_documents` y el bucket privado `user-uploads` de la migración 11. El código nuevo no crea una segunda sesión ni requiere otro proyecto Supabase.
+
+## Usar los módulos
+
+1. Inicia sesión en `/login` y abre `/dashboard`. La entrada muestra «Hoy», con una sola tarea. Abre **Mis proyectos** en el menú para administrar tus negocios (`/dashboard?view=projects`).
+2. Pulsa **Crear nuevo proyecto**, escribe su nombre y elige Restaurante, Tienda, Hospedaje, Turismo o Cursos. Se mantienen los límites del plan existente.
+3. Abre una tarjeta o una isla para entrar en su módulo. Cada dirección incluye `?project=ID`, por lo que dos negocios del mismo rubro conservan datos independientes.
+4. Edita el negocio y pulsa **Guardar cambios**. Si falla la conexión, el borrador sigue en pantalla: reintenta antes de salir. Si otra ventana cambió el documento, el guardado detecta el conflicto.
+5. Desde cualquier módulo, abre **Crear Contenido**. Selecciona un proyecto, el propósito de la publicación y una plantilla, o elige **Crear desde cero**.
+6. Personaliza título, subtítulo, texto, colores, formato e imagen. Guarda el contenido, copia el texto o descarga la imagen PNG.
+
+| Módulo | Administración | Editor |
+| --- | --- | --- |
+| Restaurante | `/modules/restaurant` | `/modules/restaurant/editor` |
+| Tienda | `/modules/ecommerce` | `/modules/ecommerce/editor` |
+| Hospedaje | `/modules/hospitality` | `/modules/hospitality/editor` |
+| Turismo | `/modules/tourism` | `/modules/tourism/editor` |
+| Cursos | `/modules/courses` | `/modules/courses/editor` |
+
+El creador compartido está en `/content-creator`. `/workspace` conserva la Ruta Digital, las herramientas, monedas y rachas. El estudio previo se abre desde `/dashboard?view=studio`; su acceso anterior permanece en `/studio/dashboard`.
+
+## Funciones de administración implementadas
+
+- **Restaurante:** carta y secciones, ingredientes, recetas, cálculo de preparación y descuento de stock con validación.
+- **Tienda:** catálogo, cantidades, carrito y pedidos pendientes; cancelar repone stock. Registrar un pedido no cobra una tarjeta.
+- **Hospedaje:** habitaciones, calendario, reservas sin solapamiento, huéspedes, limpieza y movimientos de dinero. Una reserva no se cuenta como ingreso hasta registrar el cobro.
+- **Turismo:** experiencias, itinerarios, guías, mapas, salidas por fecha y control de plazas y horarios.
+- **Cursos:** estructura por módulos/lecciones, texto/video/archivo/quiz, alumnos, progreso, cobros registrados y certificados SVG. La grabación utiliza el teleprompter y el editor de video existentes.
+- **Contenido:** 31 plantillas, seis categorías por rubro, creación vacía, biblioteca privada de imágenes y borradores separados por proyecto.
+
+## Verificar cambios
+
+Desde `frontend`:
+
+```sh
+npm run typecheck
+npm run build
+node --experimental-strip-types --test tests/restaurant-module.test.mjs tests/hospitality-module.test.mjs tests/ecommerce-module.test.mjs tests/tourism-module.test.mjs tests/courses-module.test.mjs tests/content-creator.test.mjs
+```
+
+Las pruebas de dominio y de componentes locales no sustituyen una prueba con cuenta real: comprueba creación de proyectos, guardado, recarga, cambio de cuenta y subida de imágenes en el backend configurado.
+
+## Estado de la integración
+
+La integración completa todavía está en desarrollo. Quedan pendientes la publicación de los módulos, checkout/pasarela, reservas públicas, algunos recursos multimedia y la verificación autenticada de extremo a extremo. No se ha configurado ni probado un cobro real.
+
+El detalle de avances, pruebas y pendientes está en [docs/MODULE_INTEGRATION.md](docs/MODULE_INTEGRATION.md). Los HTML recibidos se conservan en [referencias](referencias); Tienda y Turismo se construyeron a partir del objetivo, porque los adjuntos incluyen dos variantes de Restaurante y dos de Hospedaje.

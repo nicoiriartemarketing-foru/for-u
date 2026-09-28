@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import ModuleProjects from '../../components/shared/ModuleProjects';
+import ForUWorkspace from '../ForUWorkspace';
 import {
   ArrowRight,
   BookOpen,
@@ -292,6 +294,12 @@ function loadCustomCampaignTasks(): CampaignTask[] {
 }
 
 export default function Dashboard() {
+  const [params] = useSearchParams();
+  if (params.get('view') === 'studio') return <LegacyDashboard />;
+  return params.get('view') === 'projects' ? <ModuleProjects /> : <ForUWorkspace />;
+}
+
+export function LegacyDashboard() {
   const hasProfile = typeof window !== 'undefined' && Boolean(localStorage.getItem(draftStorageKey));
   const draft = loadLocalDraft();
   const constructorState = loadConstructorState(draft);

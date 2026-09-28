@@ -1,6 +1,17 @@
 import { supabase } from './supabase';
 import type { ModuleType, ModuleProject } from '../modules/moduleProjects';
 import { projectModuleType } from '../modules/moduleProjects';
+import type { ForUActiveProject } from '../stores/useActiveProjectsStore';
+
+export async function persistModuleProject(userId: string, project: ForUActiveProject) {
+  const { error } = await client().from('projects').upsert({
+    id: project.id, user_id: userId, name: project.name, description: '',
+    tangible_goal: project.tangibleGoal ?? '', industry_key: project.industryKey ?? null,
+    strategy_profile: project.strategyProfile ?? {}, template_source: project.templateSource ?? null,
+    status: project.status, created_at: project.createdAt,
+  });
+  if (error) throw new Error('El proyecto está en este dispositivo, pero todavía no se guardó en tu cuenta. Reintenta la sincronización antes de abrirlo.');
+}
 
 function client() {
   if (!supabase) throw new Error('Conecta tu cuenta para abrir tus módulos.');
@@ -16,13 +27,13 @@ export async function loadModuleProjects(userId: string): Promise<ModuleProject[
   });
 }
 
-export async function loadModuleDocument(userId: string, projectId: string, type: ModuleType) {
+export async function loadModuleDocument(userId: string, projectId: string, type: ModuleType | 'content-creator') {
   const { data, error } = await client().from('toolkit_documents').select('payload,updated_at').eq('user_id', userId).eq('project_id', projectId).eq('kind', `module-${type}`).maybeSingle();
   if (error) throw new Error('No se pudo cargar este módulo. Reintenta antes de editar.');
   return data ? { payload: data.payload as unknown, revision: data.updated_at as string } : null;
 }
 
-export async function saveModuleDocument(userId: string, projectId: string, type: ModuleType, payload: unknown, revision: string | null): Promise<string> {
+export async function saveModuleDocument(userId: string, projectId: string, type: ModuleType | 'content-creator', payload: unknown, revision: string | null): Promise<string> {
   const db = client();
   const updatedAt = new Date().toISOString();
   const values = { user_id: userId, project_id: projectId, kind: `module-${type}`, payload, updated_at: updatedAt };

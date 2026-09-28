@@ -1,3 +1,4 @@
+import { useModuleDraft } from '../useModuleDraft';
 import { useState, type FormEvent } from 'react';
 import { prepareRecipe, preparationImpact, saveIngredient, validateRecipe, type Ingredient, type Recipe } from './model';
 import type { RestaurantEditorProps } from './RestaurantEditor';
@@ -8,6 +9,7 @@ export default function RestaurantDashboard({ data, onChange }: RestaurantEditor
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [preparation, setPreparation] = useState<{ recipeId: string; operationId: string; batches: number } | null>(null);
   const [message, setMessage] = useState('');
+  useModuleDraft(!!ingredient || !!recipe || !!preparation);
   const activeRecipe = data.recipes.find(item => item.id === preparation?.recipeId);
   let impact: ReturnType<typeof preparationImpact> = [];
   let preparationError = '';
@@ -49,19 +51,19 @@ export default function RestaurantDashboard({ data, onChange }: RestaurantEditor
       </article>)}</div>
       {recipe && <form className="restaurant-form" onSubmit={submitRecipe}>
         <h3>Receta</h3><label>Nombre de receta<input required value={recipe.name} onChange={event => setRecipe({ ...recipe, name: event.target.value })} /></label>
-        <label>Porciones por lote<input required type="number" min="1" step="1" value={recipe.portions} onChange={event => setRecipe({ ...recipe, portions: event.target.valueAsNumber })} /></label>
+        <label>Porciones por lote<input required type="number" min="1" step="1" value={Number.isFinite(recipe.portions) ? recipe.portions : ''} onChange={event => setRecipe({ ...recipe, portions: event.target.valueAsNumber })} /></label>
         {recipe.ingredients.map((row, index) => <fieldset key={index} className="restaurant-fields"><legend>Ingrediente {index + 1}</legend>
           <label>Ingrediente<select required value={row.ingredientId} onChange={event => setRecipe({ ...recipe, ingredients: recipe.ingredients.map((value, i) => i === index ? { ...value, ingredientId: event.target.value } : value) })}>
             <option value="">Selecciona</option>{data.inventory.map(item => <option key={item.id} value={item.id}>{item.name} ({item.unit})</option>)}
           </select></label>
-          <label>Cantidad por lote<input type="number" min="0.000001" step="any" required value={row.quantity} onChange={event => setRecipe({ ...recipe, ingredients: recipe.ingredients.map((value, i) => i === index ? { ...value, quantity: event.target.valueAsNumber } : value) })} /></label>
+          <label>Cantidad por lote<input type="number" min="0.000001" step="any" required value={Number.isFinite(row.quantity) ? row.quantity : ''} onChange={event => setRecipe({ ...recipe, ingredients: recipe.ingredients.map((value, i) => i === index ? { ...value, quantity: event.target.valueAsNumber } : value) })} /></label>
           <button type="button" onClick={() => setRecipe({ ...recipe, ingredients: recipe.ingredients.filter((_, i) => i !== index) })}>Quitar ingrediente {index + 1}</button>
         </fieldset>)}
         <button type="button" disabled={!data.inventory.length} onClick={() => setRecipe({ ...recipe, ingredients: [...recipe.ingredients, { ingredientId: '', quantity: 1 }] })}>Agregar ingrediente a receta</button>
         <div className="restaurant-actions"><button type="submit">Guardar receta</button><button type="button" onClick={() => setRecipe(null)}>Cancelar receta</button></div>
       </form>}
       {preparation && activeRecipe && <section className="restaurant-form" aria-label="Confirmar preparación">
-        <h3>{activeRecipe.name}</h3><label>Lotes a preparar<input type="number" min="1" step="1" value={preparation.batches} onChange={event => setPreparation({ ...preparation, batches: event.target.valueAsNumber })} /></label>
+        <h3>{activeRecipe.name}</h3><label>Lotes a preparar<input type="number" min="1" step="1" value={Number.isFinite(preparation.batches) ? preparation.batches : ''} onChange={event => setPreparation({ ...preparation, batches: event.target.valueAsNumber })} /></label>
         <p>{Number.isFinite(preparation.batches) ? preparation.batches * activeRecipe.portions : 0} porciones</p>
         {preparationError && <p role="alert">{preparationError}</p>}
         <div className="restaurant-table"><table><thead><tr><th>Ingrediente</th><th>Necesitas</th><th>Disponible</th><th>Quedará</th></tr></thead><tbody>{impact.map(row => <tr key={row.id}><th>{row.name}</th><td>{row.required.toFixed(3)} {row.unit}</td><td>{row.stock} {row.unit}</td><td>{row.remaining < 0 ? 'Insuficiente' : `${row.remaining} ${row.unit}`}</td></tr>)}</tbody></table></div>
@@ -73,8 +75,8 @@ export default function RestaurantDashboard({ data, onChange }: RestaurantEditor
       {ingredient && <form onSubmit={submitIngredient} className="restaurant-form">
         <label>Nombre del ingrediente<input required value={ingredient.name} onChange={event => setIngredient({ ...ingredient, name: event.target.value })} /></label>
         <label>Unidad<select value={ingredient.unit} onChange={event => setIngredient({ ...ingredient, unit: event.target.value as Ingredient['unit'] })}>{['kg', 'g', 'l', 'ml', 'unidades'].map(unit => <option key={unit}>{unit}</option>)}</select></label>
-        <label>Cantidad disponible<input required type="number" min="0" step="any" value={ingredient.stock} onChange={event => setIngredient({ ...ingredient, stock: event.target.valueAsNumber })} /></label>
-        <label>Alerta cuando quede<input required type="number" min="0" step="any" value={ingredient.minimum} onChange={event => setIngredient({ ...ingredient, minimum: event.target.valueAsNumber })} /></label>
+        <label>Cantidad disponible<input required type="number" min="0" step="any" value={Number.isFinite(ingredient.stock) ? ingredient.stock : ''} onChange={event => setIngredient({ ...ingredient, stock: event.target.valueAsNumber })} /></label>
+        <label>Alerta cuando quede<input required type="number" min="0" step="any" value={Number.isFinite(ingredient.minimum) ? ingredient.minimum : ''} onChange={event => setIngredient({ ...ingredient, minimum: event.target.valueAsNumber })} /></label>
         <div className="restaurant-actions"><button type="submit">Guardar ingrediente</button><button type="button" onClick={() => setIngredient(null)}>Cancelar ingrediente</button></div>
       </form>}
       <div className="menu-grid">{data.inventory.map(item => <article key={item.id} className="dish-card dish-card-body"><h3>{item.name}</h3><p>{item.stock} {item.unit}</p>{item.stock <= item.minimum && <p>Necesita reposición</p>}<button type="button" onClick={() => setIngredient({ ...item })}>Actualizar {item.name}</button></article>)}</div>

@@ -7,6 +7,7 @@ const AiForU = lazy(() => import('./pages/AiForU'));
 const Methodology = lazy(() => import('./pages/Methodology'));
 const RegisterWizard = lazy(() => import('./pages/auth/RegisterWizard'));
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
+const LegacyDashboard = lazy(() => import('./pages/dashboard/Dashboard').then(module => ({ default: module.LegacyDashboard })));
 const WorldEditor = lazy(() => import('./pages/editor/WorldEditor'));
 const PublicLanding = lazy(() => import('./pages/public/PublicLanding'));
 const MundoDigital = lazy(() => import('./pages/MundoDigital'));
@@ -24,6 +25,10 @@ const PublicSite = lazy(() => import('./toolkit/PublicSite'));
 const JourneyMapDemo = lazy(() => import('./components/JourneyMap').then(module => ({ default: module.JourneyMapDemo })));
 const RestaurantWorkspace = lazy(() => import('./modules/restaurant/RestaurantWorkspace'));
 const HospitalityWorkspace = lazy(() => import('./modules/hospitality/HospitalityWorkspace'));
+const EcommerceWorkspace = lazy(() => import('./modules/ecommerce/EcommerceWorkspace'));
+const TourismWorkspace = lazy(() => import('./modules/tourism/TourismWorkspace'));
+const CoursesWorkspace = lazy(() => import('./modules/courses/CoursesWorkspace'));
+const ContentCreator = lazy(() => import('./components/shared/ContentCreator'));
 
 function hasStudioAccess() {
   return window.localStorage.getItem('foru-studio-access') === 'granted';
@@ -69,6 +74,13 @@ function App() {
             <Route path="/modules/restaurant/editor" element={<PrivateWorkspace><RestaurantWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/hospitality" element={<PrivateWorkspace><HospitalityWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/hospitality/editor" element={<PrivateWorkspace><HospitalityWorkspace /></PrivateWorkspace>} />
+            <Route path="/modules/ecommerce" element={<PrivateWorkspace><EcommerceWorkspace /></PrivateWorkspace>} />
+            <Route path="/modules/ecommerce/editor" element={<PrivateWorkspace><EcommerceWorkspace /></PrivateWorkspace>} />
+            <Route path="/modules/tourism" element={<PrivateWorkspace><TourismWorkspace /></PrivateWorkspace>} />
+            <Route path="/modules/tourism/editor" element={<PrivateWorkspace><TourismWorkspace /></PrivateWorkspace>} />
+            <Route path="/modules/courses" element={<PrivateWorkspace><CoursesWorkspace /></PrivateWorkspace>} />
+            <Route path="/modules/courses/editor" element={<PrivateWorkspace><CoursesWorkspace /></PrivateWorkspace>} />
+            <Route path="/content-creator" element={<PrivateWorkspace><ContentCreator /></PrivateWorkspace>} />
             <Route path="/herramientas/demo" element={<ToolkitDemo />} />
             <Route path="/mapa/demo" element={<JourneyMapDemo />} />
             <Route path="/site-preview" element={<SiteEditorFrame />} />
@@ -79,7 +91,8 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/register-wizard" element={<RegisterWizard />} />
-            <Route path="/dashboard" element={<PrivateStudio><Dashboard /></PrivateStudio>} />
+            <Route path="/dashboard" element={<PrivateWorkspace><Dashboard /></PrivateWorkspace>} />
+            <Route path="/studio/dashboard" element={<PrivateStudio><LegacyDashboard /></PrivateStudio>} />
             <Route path="/editor" element={<PrivateStudio><WorldEditor /></PrivateStudio>} />
             <Route path="/reservas" element={<PrivateStudio><ReservationsAdmin /></PrivateStudio>} />
             <Route path="/p/:slug" element={<PublicLanding />} />

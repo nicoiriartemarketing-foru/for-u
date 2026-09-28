@@ -1,6 +1,8 @@
+import { useModuleDraft } from '../useModuleDraft';
 import { useState, type FormEvent } from 'react';
 import { moveSection, saveDish, type Dish, type RestaurantData } from './model';
 import './restaurant.css';
+import RestaurantMenu from './RestaurantMenu';
 
 export type RestaurantEditorProps = {
   data: RestaurantData;
@@ -12,6 +14,7 @@ const blankDish = (): Dish => ({ id: crypto.randomUUID(), name: '', description:
 export default function RestaurantEditor({ data, onChange }: RestaurantEditorProps) {
   const [dish, setDish] = useState<Dish | null>(null);
   const [message, setMessage] = useState('');
+  useModuleDraft(!!dish);
   const settings = data.settings;
   function updateSettings(patch: Partial<RestaurantData['settings']>) {
     onChange({ ...data, settings: { ...settings, ...patch } });
@@ -24,6 +27,7 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
   }
   return <div className="restaurant-module">
     <p role="status">{message}</p>
+    <details className="component-card"><summary>Vista previa del menú para clientes</summary><p>Prueba la carta y el pedido antes de publicar. Esta vista todavía no es una dirección pública.</p><RestaurantMenu data={data} /></details>
     <section className="component-card">
       <h2 className="component-title">Portada principal</h2>
       <div className="restaurant-fields">
@@ -51,7 +55,7 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
       {dish && <form className="restaurant-form" onSubmit={submitDish}>
         <h3>{data.dishes.some(item => item.id === dish.id) ? 'Editar plato' : 'Agregar plato'}</h3>
         <label>Nombre<input required value={dish.name} onChange={event => setDish({ ...dish, name: event.target.value })} /></label>
-        <label>Precio (S/)<input type="number" required min="0" step="0.01" value={dish.price} onChange={event => setDish({ ...dish, price: event.target.valueAsNumber })} /></label>
+        <label>Precio (S/)<input type="number" required min="0" step="0.01" value={Number.isFinite(dish.price) ? dish.price : ''} onChange={event => setDish({ ...dish, price: event.target.valueAsNumber })} /></label>
         <label>Categoría<input required value={dish.category} onChange={event => setDish({ ...dish, category: event.target.value })} /></label>
         <label>Descripción<textarea value={dish.description} onChange={event => setDish({ ...dish, description: event.target.value })} /></label>
         <label>URL de imagen<input type="url" value={dish.image} onChange={event => setDish({ ...dish, image: event.target.value })} /></label>

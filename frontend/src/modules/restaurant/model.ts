@@ -121,7 +121,7 @@ export function whatsappOrderUrl(phone: string, lines: Array<{ dish: Dish; quant
   const number = phone.replace(/[^0-9]/g, '');
   if (!/^\d{8,15}$/.test(number)) throw new Error('Configura el número de WhatsApp con código de país.');
   if (!lines.length || lines.some(line => !line.dish.available || !Number.isInteger(line.quantity) || line.quantity < 1 || !nonnegative(line.dish.price))) throw new Error('Selecciona platos disponibles y cantidades válidas.');
-  const total = lines.reduce((sum, line) => sum + line.dish.price * line.quantity, 0);
+  const total = lines.reduce((sum, line) => sum + Math.round(line.dish.price * 100) * line.quantity, 0) / 100;
   const text = `Hola, quisiera pedir:\n${lines.map(line => `${line.quantity} × ${line.dish.name}`).join('\n')}\nTotal: S/ ${total.toFixed(2)}`;
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }

@@ -143,8 +143,8 @@
 /* Modals */
 .hospitality-module .modal-overlay-pro { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
 .hospitality-module .modal-overlay-pro.active { display: flex; }
-.hospitality-module .modal-pro { background: white; border-radius: 20px; width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: modalIn 0.3s ease; }
-@keyframes modalIn { .hospitality-module from { opacity: 0; transform: scale(0.95) translateY(10px); } .hospitality-module to { opacity: 1; transform: scale(1) translateY(0); } }
+.hospitality-module .modal-pro { background: white; border-radius: 20px; width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: hospitality-modal-in 0.3s ease; }
+@keyframes hospitality-modal-in { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 .hospitality-module .modal-header-pro { padding: 24px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: white; z-index: 10; border-radius: 20px 20px 0 0; }
 .hospitality-module .modal-body-pro { padding: 32px; }
 .hospitality-module .modal-footer-pro { padding: 24px 32px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; position: sticky; bottom: 0; background: white; border-radius: 0 0 20px 20px; }

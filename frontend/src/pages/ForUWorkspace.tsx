@@ -247,6 +247,7 @@ export default function ForUWorkspace() {
           <details className="foru-header-more">
             <summary style={{ fontFamily: 'var(--font-principal)' }}>Más</summary>
             <div>
+              <Link to="/dashboard?view=projects">Mis proyectos por rubro</Link>
               {currentProject && projectModuleType(currentProject) === 'restaurant' && <Link to={`/modules/restaurant?project=${encodeURIComponent(currentProject.id)}`}>Mi restaurante · Menú y logística</Link>}
               <button type="button" onClick={() => setIsChatOpen(true)}>Chat con For U</button>
               <button type="button" onClick={openWorld}>Mi Mundo</button>
