@@ -36,10 +36,13 @@ export default function ModuleProjects() {
     return () => { active = false; };
   }, [userId, hydrate, loadKey]);
   function open(id: string) {
-    const project = projectsById[id];
+    // Read the store at action time: creation updates Zustand asynchronously
+    // relative to this render, so the captured projectsById can be stale.
+    const project = useActiveProjectsStore.getState().getProjectById(id);
     if (!project || !isModuleEnabled(projectModuleType(project))) return;
     useActiveProjectsStore.getState().switchProject(id);
-    navigate(`/modules/restaurant/editor?project=${encodeURIComponent(id)}`);
+    const type = projectModuleType(project);
+    navigate(`/modules/${type}/editor?project=${encodeURIComponent(id)}`);
   }
   async function sync(id: string) {
     if (!userId || submitting.current) return;

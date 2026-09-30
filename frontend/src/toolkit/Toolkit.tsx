@@ -160,10 +160,14 @@ export default function Toolkit({
   project,
   onBack,
   demo = false,
+  initialTool,
+  initialPage,
 }: {
   project: ForUActiveProject;
   onBack?: () => void;
   demo?: boolean;
+  initialTool?: ToolId;
+  initialPage?: 'today' | 'templates';
 }) {
   const { user } = useAuth();
   const userId = demo ? "demo" : user?.id;
@@ -176,7 +180,7 @@ export default function Toolkit({
       business={businessFromProject(project)}
       demo={demo}
     >
-      <ToolkitShell project={project} onBack={onBack} />
+      <ToolkitShell project={project} onBack={onBack} initialTool={initialTool} initialPage={initialPage} />
     </ToolkitProvider>
   );
 }
@@ -186,9 +190,13 @@ export function ToolkitDemo() {
 function ToolkitShell({
   project,
   onBack,
+  initialTool,
+  initialPage,
 }: {
   project: ForUActiveProject;
   onBack?: () => void;
+  initialTool?: ToolId;
+  initialPage?: 'today' | 'templates';
 }) {
   const { user, signOut } = useAuth();
   const {
@@ -201,8 +209,8 @@ function ToolkitShell({
     demo,
     docs,
   } = useToolkit();
-  const [tool, setTool] = useState<ToolId | null>(null);
-  const [page, setPage] = useState<"today" | "tool" | "templates">("today");
+  const [tool, setTool] = useState<ToolId | null>(initialTool ?? null);
+  const [page, setPage] = useState<"today" | "tool" | "templates">(initialTool ? 'tool' : initialPage ?? 'today');
   const [menu, setMenu] = useState(false);
   const [menuPage, setMenuPage] = useState("root");
   const menuRef = useRef<HTMLElement>(null);

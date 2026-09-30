@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import ModuleProjects from '../../components/shared/ModuleProjects';
+import UnifiedDashboard from './UnifiedDashboard';
 import ForUWorkspace from '../ForUWorkspace';
 import {
   ArrowRight,
@@ -296,7 +296,8 @@ function loadCustomCampaignTasks(): CampaignTask[] {
 export default function Dashboard() {
   const [params] = useSearchParams();
   if (params.get('view') === 'studio') return <LegacyDashboard />;
-  return params.get('view') === 'today' ? <ForUWorkspace /> : <ModuleProjects />;
+  if (params.get('view') === 'today') return <ForUWorkspace />;
+  return <UnifiedDashboard />;
 }
 
 export function LegacyDashboard() {

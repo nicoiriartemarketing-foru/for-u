@@ -2,6 +2,7 @@ import { clearSessionCaches } from '../lib/sessionPrivacy';
 import { create, type StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../lib/supabaseClient';
+import { explorationProjectsAreUnlimited } from '../modules/validationLaunch';
 import { getDigitalRouteTemplate, getStepCompletionStatus } from '../templates/digitalRouteTemplates';
 import { industryTemplates, type ForUIndustryKey } from '../templates/industryTemplates';
 import type { ForUDigitalRouteStepStatus, ForUDigitalRouteStepTemplate } from '../templates/digitalRouteTemplates';
@@ -2034,7 +2035,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
       openProject: (input) => {
         const state = get();
         const config = getPlanConfig(state.userPlan ?? 'free');
-        if (state.getActiveProjects().length >= config.maxProjects) {
+        if (!explorationProjectsAreUnlimited && state.getActiveProjects().length >= config.maxProjects) {
           set({
             planLimitNotice: {
               title: 'Upgrade a Pro para proyectos ilimitados',

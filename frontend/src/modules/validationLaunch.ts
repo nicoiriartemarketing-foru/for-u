@@ -1,9 +1,15 @@
 import type { ModuleType } from './moduleProjects';
 
-/** Initial validation: keep other modules and their data, but do not offer entry points. */
+/**
+ * During the exploration phase every vertical is available.  This policy is
+ * intentionally separate from the commercial plan: changing a subscription
+ * must not make a user's existing workspace disappear.
+ */
 export function isModuleEnabled(type: ModuleType | null): boolean {
-  return type === 'restaurant';
+  return type !== null;
 }
+
+export const explorationProjectsAreUnlimited = true;
 
 const reservedSlugs = new Set([
   'ia', 'metodologia', 'mundo-digital', 'aventura', 'workspace', 'modules',

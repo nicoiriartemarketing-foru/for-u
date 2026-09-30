@@ -27,13 +27,15 @@ export async function loadModuleProjects(userId: string): Promise<ModuleProject[
   });
 }
 
-export async function loadModuleDocument(userId: string, projectId: string, type: ModuleType | 'content-creator') {
+export type ModuleDocumentKind = ModuleType | 'content-creator' | 'dashboard-progress';
+
+export async function loadModuleDocument(userId: string, projectId: string, type: ModuleDocumentKind) {
   const { data, error } = await client().from('toolkit_documents').select('payload,updated_at').eq('user_id', userId).eq('project_id', projectId).eq('kind', `module-${type}`).maybeSingle();
   if (error) throw new Error('No se pudo cargar este módulo. Reintenta antes de editar.');
   return data ? { payload: data.payload as unknown, revision: data.updated_at as string } : null;
 }
 
-export async function saveModuleDocument(userId: string, projectId: string, type: ModuleType | 'content-creator', payload: unknown, revision: string | null): Promise<string> {
+export async function saveModuleDocument(userId: string, projectId: string, type: ModuleDocumentKind, payload: unknown, revision: string | null): Promise<string> {
   const db = client();
   const updatedAt = new Date().toISOString();
   const values = { user_id: userId, project_id: projectId, kind: `module-${type}`, payload, updated_at: updatedAt };

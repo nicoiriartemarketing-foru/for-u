@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { usePomodoro } from '../contexts/PomodoroContext';
 
 type PomodoroTimerProps = {
   taskTitle?: string;
@@ -8,39 +9,19 @@ type PomodoroTimerProps = {
 };
 
 export default function PomodoroTimer({
-  taskTitle,
+  taskTitle = 'Una cosa a la vez',
   durationSeconds = 25 * 60,
   onComplete,
 }: PomodoroTimerProps) {
-  const [isRunning, setIsRunning] = useState(false);
-  const [remainingSeconds, setRemainingSeconds] = useState(durationSeconds);
-  const [hasCompleted, setHasCompleted] = useState(false);
-
+  const { remainingSeconds, running: isRunning, completed: hasCompleted, start, pause, reset } = usePomodoro();
+  const completionReported = useRef(false);
   useEffect(() => {
-    setIsRunning(false);
-    setRemainingSeconds(durationSeconds);
-    setHasCompleted(false);
-  }, [durationSeconds, taskTitle]);
-
-  useEffect(() => {
-    if (!isRunning || hasCompleted) return;
-
-    const intervalId = window.setInterval(() => {
-      setRemainingSeconds((current) => {
-        if (current <= 1) {
-          window.clearInterval(intervalId);
-          setIsRunning(false);
-          setHasCompleted(true);
-          onComplete();
-          return 0;
-        }
-
-        return current - 1;
-      });
-    }, 1000);
-
-    return () => window.clearInterval(intervalId);
-  }, [hasCompleted, isRunning, onComplete]);
+    if (hasCompleted && !completionReported.current) {
+      completionReported.current = true;
+      onComplete();
+    }
+    if (!hasCompleted) completionReported.current = false;
+  }, [hasCompleted, onComplete]);
 
   const progress = useMemo(() => {
     return Math.max(0, Math.min(1, 1 - remainingSeconds / durationSeconds));
@@ -79,21 +60,19 @@ export default function PomodoroTimer({
       <div className="foru-pomodoro-actions">
         <button
           type="button"
-          onClick={() => setIsRunning(true)}
-          disabled={!taskTitle || isRunning || hasCompleted}
+          onClick={() => start(remainingSeconds || durationSeconds)}
+          disabled={isRunning}
         >
-          Empezar Pomodoro
+          {isRunning ? 'En foco' : hasCompleted ? 'Empezar otro Pomodoro' : 'Empezar Pomodoro'}
         </button>
         <button
           type="button"
           onClick={() => {
-            setIsRunning(false);
-            setRemainingSeconds(durationSeconds);
-            setHasCompleted(false);
+            if (isRunning) pause(); else reset();
           }}
-          disabled={!taskTitle || (!isRunning && remainingSeconds === durationSeconds && !hasCompleted)}
+          disabled={!isRunning && remainingSeconds === durationSeconds && !hasCompleted}
         >
-          Reiniciar
+          {isRunning ? 'Pausar' : 'Reiniciar'}
         </button>
       </div>
 
