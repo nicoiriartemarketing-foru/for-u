@@ -23,16 +23,6 @@ export default defineConfig({
       'postprocessing',
     ],
   },
-  server: {
-    warmup: {
-      clientFiles: [
-        './src/main.tsx',
-        './src/App.tsx',
-        './src/pages/LandingPage.tsx',
-        './src/pages/ForUWorkspace.tsx',
-      ],
-    },
-  },
   build: {
     assetsInlineLimit: 4096,
     chunkSizeWarningLimit: 1000,

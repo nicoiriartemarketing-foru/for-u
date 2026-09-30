@@ -68,7 +68,7 @@ Desde `frontend`:
 ```sh
 npm run typecheck
 npm run build
-node --experimental-strip-types --test tests/restaurant-module.test.mjs tests/hospitality-module.test.mjs tests/ecommerce-module.test.mjs tests/tourism-module.test.mjs tests/courses-module.test.mjs tests/content-creator.test.mjs tests/project-media.test.mjs tests/restaurant-publication.test.mjs tests/tourism-publication.test.mjs
+npx tsx --require ./tests/setup.cjs --test tests/restaurant-module.test.mjs tests/hospitality-module.test.mjs tests/ecommerce-module.test.mjs tests/tourism-module.test.mjs tests/courses-module.test.mjs tests/content-creator.test.mjs tests/project-media.test.mjs tests/restaurant-publication.test.mjs tests/tourism-publication.test.mjs
 ```
 
 Las pruebas de dominio y de componentes locales no sustituyen una prueba con cuenta real: comprueba creación de proyectos, guardado, recarga, cambio de cuenta y subida de imágenes en el backend configurado.
