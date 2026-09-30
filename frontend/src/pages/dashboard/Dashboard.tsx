@@ -296,7 +296,7 @@ function loadCustomCampaignTasks(): CampaignTask[] {
 export default function Dashboard() {
   const [params] = useSearchParams();
   if (params.get('view') === 'studio') return <LegacyDashboard />;
-  return params.get('view') === 'projects' ? <ModuleProjects /> : <ForUWorkspace />;
+  return params.get('view') === 'today' ? <ForUWorkspace /> : <ModuleProjects />;
 }
 
 export function LegacyDashboard() {

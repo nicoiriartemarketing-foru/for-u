@@ -142,7 +142,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: cleanEmail,
           password: password.trim(),
           options: {
+            emailRedirectTo: `${window.location.origin}/dashboard`,
             data: {
+              business_type: "restaurant",
               display_name: displayName?.trim(),
               whatsapp_number: normalizedWhatsapp,
             },
@@ -150,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (error) throw error;
-        if (data.user) {
+        if (data.user && data.session) {
           await ensureProfile(
             data.user,
             displayName?.trim(),
@@ -168,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (error) throw error;
-        if (data.user) {
+        if (data.user && data.session) {
           await ensureProfile(data.user);
         }
       },

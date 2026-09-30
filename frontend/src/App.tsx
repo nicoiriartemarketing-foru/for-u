@@ -5,7 +5,7 @@ import { useAuth } from './contexts/AuthContext';
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const AiForU = lazy(() => import('./pages/AiForU'));
 const Methodology = lazy(() => import('./pages/Methodology'));
-const RegisterWizard = lazy(() => import('./pages/auth/RegisterWizard'));
+const ComingSoon = lazy(() => import('./modules/ComingSoon'));
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
 const LegacyDashboard = lazy(() => import('./pages/dashboard/Dashboard').then(module => ({ default: module.LegacyDashboard })));
 const WorldEditor = lazy(() => import('./pages/editor/WorldEditor'));
@@ -24,10 +24,6 @@ const SiteEditorFrame = lazy(() => import('./toolkit/SiteEditorFrame'));
 const PublicSite = lazy(() => import('./toolkit/PublicSite'));
 const JourneyMapDemo = lazy(() => import('./components/JourneyMap').then(module => ({ default: module.JourneyMapDemo })));
 const RestaurantWorkspace = lazy(() => import('./modules/restaurant/RestaurantWorkspace'));
-const HospitalityWorkspace = lazy(() => import('./modules/hospitality/HospitalityWorkspace'));
-const EcommerceWorkspace = lazy(() => import('./modules/ecommerce/EcommerceWorkspace'));
-const TourismWorkspace = lazy(() => import('./modules/tourism/TourismWorkspace'));
-const CoursesWorkspace = lazy(() => import('./modules/courses/CoursesWorkspace'));
 const ContentCreator = lazy(() => import('./components/shared/ContentCreator'));
 const PublicRestaurant = lazy(() => import('./modules/restaurant/PublicRestaurant'));
 const PublicTourism = lazy(() => import('./modules/tourism/PublicTourism'));
@@ -74,14 +70,14 @@ function App() {
             <Route path="/workspace" element={<PrivateWorkspace><ForUWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/restaurant" element={<PrivateWorkspace><RestaurantWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/restaurant/editor" element={<PrivateWorkspace><RestaurantWorkspace /></PrivateWorkspace>} />
-            <Route path="/modules/hospitality" element={<PrivateWorkspace><HospitalityWorkspace /></PrivateWorkspace>} />
-            <Route path="/modules/hospitality/editor" element={<PrivateWorkspace><HospitalityWorkspace /></PrivateWorkspace>} />
-            <Route path="/modules/ecommerce" element={<PrivateWorkspace><EcommerceWorkspace /></PrivateWorkspace>} />
-            <Route path="/modules/ecommerce/editor" element={<PrivateWorkspace><EcommerceWorkspace /></PrivateWorkspace>} />
-            <Route path="/modules/tourism" element={<PrivateWorkspace><TourismWorkspace /></PrivateWorkspace>} />
-            <Route path="/modules/tourism/editor" element={<PrivateWorkspace><TourismWorkspace /></PrivateWorkspace>} />
-            <Route path="/modules/courses" element={<PrivateWorkspace><CoursesWorkspace /></PrivateWorkspace>} />
-            <Route path="/modules/courses/editor" element={<PrivateWorkspace><CoursesWorkspace /></PrivateWorkspace>} />
+            <Route path="/modules/hospitality" element={<PrivateWorkspace><ComingSoon /></PrivateWorkspace>} />
+            <Route path="/modules/hospitality/editor" element={<PrivateWorkspace><ComingSoon /></PrivateWorkspace>} />
+            <Route path="/modules/ecommerce" element={<PrivateWorkspace><ComingSoon /></PrivateWorkspace>} />
+            <Route path="/modules/ecommerce/editor" element={<PrivateWorkspace><ComingSoon /></PrivateWorkspace>} />
+            <Route path="/modules/tourism" element={<PrivateWorkspace><ComingSoon /></PrivateWorkspace>} />
+            <Route path="/modules/tourism/editor" element={<PrivateWorkspace><ComingSoon /></PrivateWorkspace>} />
+            <Route path="/modules/courses" element={<PrivateWorkspace><ComingSoon /></PrivateWorkspace>} />
+            <Route path="/modules/courses/editor" element={<PrivateWorkspace><ComingSoon /></PrivateWorkspace>} />
             <Route path="/content-creator" element={<PrivateWorkspace><ContentCreator /></PrivateWorkspace>} />
             <Route path="/negocio/:slug" element={<PublicRestaurant />} />
             <Route path="/experiencias/:slug" element={<PublicTourism />} />
@@ -94,12 +90,13 @@ function App() {
             <Route path="/studio" element={<StudioAccess />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/register-wizard" element={<RegisterWizard />} />
+            <Route path="/register-wizard" element={<Navigate to="/register" replace />} />
             <Route path="/dashboard" element={<PrivateWorkspace><Dashboard /></PrivateWorkspace>} />
             <Route path="/studio/dashboard" element={<PrivateStudio><LegacyDashboard /></PrivateStudio>} />
             <Route path="/editor" element={<PrivateStudio><WorldEditor /></PrivateStudio>} />
             <Route path="/reservas" element={<PrivateStudio><ReservationsAdmin /></PrivateStudio>} />
             <Route path="/p/:slug" element={<PublicLanding />} />
+            <Route path="/:slug" element={<PublicRestaurant />} />
           </Routes>
         </Suspense>
       </Router>

@@ -12,7 +12,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const next = searchParams.get('next') || '/workspace';
+  const requestedNext = searchParams.get('next');
+  const next = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') ? requestedNext : '/dashboard';
 
   if (!loading && session) return <Navigate to={next} replace />;
 
@@ -28,7 +29,7 @@ export default function LoginPage() {
       const message = error instanceof Error ? error.message : 'No pudimos iniciar sesion. Intenta otra vez.';
       setErrorMessage(
         message.toLowerCase().includes('invalid login credentials')
-          ? 'Supabase no acepto esas credenciales. Si acabas de registrarte, probablemente falta confirmar el email o desactivar Confirm email en Supabase para pruebas.'
+          ? 'Revisa tu email y contraseña. Si acabas de registrarte, confirma primero el enlace que recibiste por correo.'
           : message,
       );
     } finally {

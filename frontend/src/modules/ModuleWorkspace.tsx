@@ -37,9 +37,9 @@ export default function ModuleWorkspace<T>({ config }: { config: ModuleConfigura
     return () => { active = false; };
   }, [userId, loadKey, config.type]);
   if (loadedFor !== loadKey || !user) return <main className={`${config.type}-module module-workspace`}><p role="status">Cargando tus proyectos…</p></main>;
-  if (error) return <main className={`${config.type}-module module-workspace`}><p role="alert">{error}</p><button onClick={() => setAttempt(value => value + 1)}>Reintentar</button><Link to="/workspace">Volver a mis proyectos</Link></main>;
+  if (error) return <main className={`${config.type}-module module-workspace`}><p role="alert">{error}</p><button onClick={() => setAttempt(value => value + 1)}>Reintentar</button><Link to="/dashboard">Volver a mis proyectos</Link></main>;
   const current = projectId ? projects.find(project => project.id === projectId) : projects[0];
-  if (!current) return <main className={`${config.type}-module module-workspace`}><h1>{projectId ? 'Proyecto no disponible' : 'Tu proyecto empieza aquí'}</h1><p>{projectId ? 'Elige un proyecto de este rubro para continuar.' : 'Crea un proyecto de este rubro desde tu tablero.'}</p><Link to="/workspace">Ir a mis proyectos</Link></main>;
+  if (!current) return <main className={`${config.type}-module module-workspace`}><h1>{projectId ? 'Proyecto no disponible' : 'Tu proyecto empieza aquí'}</h1><p>{projectId ? 'Elige un proyecto de este rubro para continuar.' : 'Crea un proyecto de este rubro desde tu tablero.'}</p><Link to="/dashboard">Ir a mis proyectos</Link></main>;
   return <ModuleSession config={config} key={`${user.id}:${current.id}`} userId={user.id} project={current} projects={projects} />;
 }
 
@@ -106,6 +106,7 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
       </MediaScope.Provider>
       </ModuleDraftContext.Provider>
     </fieldset>
+    {config.type === 'restaurant' && <div className="restaurant-save-step"><button disabled={!dirty || saving || pendingDraft} onClick={save}>{saving ? 'Guardando…' : '2. Guardar mi menú'}</button><p>{dirty ? 'Guarda antes de publicar para conservar tus productos.' : 'Tus cambios están guardados. Puedes publicar el menú.'}</p></div>}
     {Publication && <Publication data={data} userId={userId} project={project} disabled={dirty || pendingDraft || saving} />}
   </main>;
 }

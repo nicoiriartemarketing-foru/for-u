@@ -1,23 +1,18 @@
-import { lazy, Suspense, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useActiveProjectsStore } from '../../stores/useActiveProjectsStore';
 import { moduleLabels, projectModuleType, type ModuleType } from '../../modules/moduleProjects';
+import { isModuleEnabled } from '../../modules/validationLaunch';
 import { loadModuleProjects, persistModuleProject } from '../../services/moduleDocuments';
-import type { ForUIndustryKey } from '../../templates/industryTemplates';
 import './moduleProjects.css';
-const World3D = lazy(() => import('../World3D'));
-const industryForModule: Record<ModuleType, ForUIndustryKey> = { restaurant: 'gastronomy', ecommerce: 'handmade', hospitality: 'services', tourism: 'tourism', courses: 'education' };
-const descriptions: Record<ModuleType, string> = { restaurant: 'Menú, recetas e inventario', ecommerce: 'Catálogo, carrito y ventas', hospitality: 'Habitaciones, reservas y huéspedes', tourism: 'Tours, itinerarios y reservas', courses: 'Lecciones, alumnos y contenido' };
 
 export default function ModuleProjects() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const userId = user?.id;
   const navigate = useNavigate();
   const projectsById = useActiveProjectsStore(state => state.projectsById);
   const cloudUserId = useActiveProjectsStore(state => state.cloudUserId);
-  const coins = useActiveProjectsStore(state => state.coins);
-  const streak = useActiveProjectsStore(state => state.dailyStreak);
   const hydrate = useActiveProjectsStore(state => state.hydrateFromSupabase);
   const [attempt, setAttempt] = useState(0);
   const [loadedFor, setLoadedFor] = useState('');
@@ -26,12 +21,11 @@ export default function ModuleProjects() {
   const [message, setMessage] = useState('');
   const [creating, setCreating] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
-  const [world, setWorld] = useState(false);
   const [name, setName] = useState('');
-  const [type, setType] = useState<ModuleType>('restaurant');
   const [unsynced, setUnsynced] = useState<string | null>(null);
   const submitting = useRef(false);
   const projects = cloudUserId === userId ? Object.values(projectsById) : [];
+  const restaurants = projects.filter(project => projectModuleType(project) === 'restaurant');
   useEffect(() => {
     if (!userId) return;
     let active = true;
@@ -42,10 +36,10 @@ export default function ModuleProjects() {
     return () => { active = false; };
   }, [userId, hydrate, loadKey]);
   function open(id: string) {
-    const project = projectsById[id]; if (!project) return;
+    const project = projectsById[id];
+    if (!project || !isModuleEnabled(projectModuleType(project))) return;
     useActiveProjectsStore.getState().switchProject(id);
-    const module = projectModuleType(project);
-    navigate(module ? `/modules/${module}?project=${encodeURIComponent(id)}` : '/workspace');
+    navigate(`/modules/restaurant/editor?project=${encodeURIComponent(id)}`);
   }
   async function sync(id: string) {
     if (!userId || submitting.current) return;
@@ -55,31 +49,33 @@ export default function ModuleProjects() {
       if (!project) throw new Error('Proyecto no encontrado.');
       await persistModuleProject(userId, project);
       if (useActiveProjectsStore.getState().cloudUserId !== userId) return;
-      setUnsynced(null); setName(''); setFormOpen(false); setMessage('Proyecto guardado en tu cuenta.');
+      setUnsynced(null); setName(''); setFormOpen(false);
+      open(id);
     } catch (error) { setUnsynced(id); setMessage((error as Error).message); }
     finally { submitting.current = false; setCreating(false); }
   }
   async function create(event: FormEvent) {
-    event.preventDefault(); if (!name.trim() || submitting.current || unsynced || !loaded || cloudUserId !== userId) return;
+    event.preventDefault();
+    if (!name.trim() || submitting.current || unsynced || !loaded || cloudUserId !== userId) return;
     const store = useActiveProjectsStore.getState();
     const before = new Set(Object.keys(store.projectsById));
-    const id = store.openProject({ name: name.trim(), industryKey: industryForModule[type], strategyProfile: { moduleType: type } });
-    if (!id || before.has(id)) { setMessage(useActiveProjectsStore.getState().planLimitNotice?.message ?? 'No se pudo crear el proyecto.'); return; }
+    const id = store.openProject({ name: name.trim(), industryKey: 'gastronomy', strategyProfile: { moduleType: 'restaurant' } });
+    if (!id || before.has(id)) { setMessage(useActiveProjectsStore.getState().planLimitNotice?.message ?? 'No se pudo crear la ruta.'); return; }
     await sync(id);
   }
   return <main className="module-projects">
-    <header><div><span>FOR U</span><h1>Mis proyectos</h1><p>Elige el negocio con el que quieres avanzar hoy.</p></div><details><summary>Mi espacio</summary><nav><Link to="/workspace">Mi ruta y herramientas</Link><Link to="/dashboard?view=studio">Estudio de contenido anterior</Link><button onClick={() => setWorld(value => !value)}>{world ? 'Ver proyectos' : 'Ver mis islas'}</button><span>{coins} monedas · {streak} días de racha</span></nav></details></header>
+    <header><div><span>FOR U · Tu negocio, paso a paso</span><h1>Tu Ruta Digital</h1><p>Crea tu menú, publícalo y recibe pedidos por WhatsApp.</p></div><details><summary>Mi cuenta</summary><nav><Link to="/workspace">Mis otras herramientas</Link><button onClick={async () => { try { await signOut(); navigate('/login'); } catch (error) { setMessage((error as Error).message); } }}>Cerrar sesión</button></nav></details></header>
+    <ol className="module-launch-steps"><li>Crear mi ruta</li><li>Configurar mi menú</li><li>Publicar y compartir</li></ol>
     <p role="status">{message || (!loaded ? 'Cargando tus proyectos…' : '')}</p>
     {!loaded && message && <button onClick={() => setAttempt(value => value + 1)}>Reintentar carga</button>}
-    {unsynced && <button disabled={creating} onClick={() => sync(unsynced)}>Reintentar sincronización del proyecto</button>}
+    {unsynced && <button disabled={creating} onClick={() => sync(unsynced)}>Reintentar guardado de mi ruta</button>}
     {loaded && <>
-      {projects.some(project => projectModuleType(project)) && <Link className="module-create-content" to="/content-creator">Crear Contenido</Link>}
-      {world ? <Suspense fallback={<p>Cargando tus islas…</p>}><World3D onBackToMap={() => setWorld(false)} onOpenProject={open} /></Suspense> : <div className="module-project-grid">{projects.map(project => {
-        const module = projectModuleType(project);
-        return <article key={project.id} className={`module-project-card module-project-${module ?? 'general'}`}><span>{module ? moduleLabels[module] : 'Proyecto'}</span><h2>{project.name}</h2><p>{module ? descriptions[module] : 'Tu Ruta Digital'}</p><button disabled={creating || project.id === unsynced} onClick={() => open(project.id)}>Abrir {project.name}</button></article>;
-      })}</div>}
-      {!formOpen && <button className="module-create-project" disabled={!!unsynced} onClick={() => setFormOpen(true)}>Crear nuevo proyecto</button>}
-      {formOpen && <form onSubmit={create}><h2>Un nuevo proyecto</h2><label>Nombre del proyecto<input required maxLength={120} value={name} onChange={event => setName(event.target.value)} /></label><label>Rubro<select value={type} onChange={event => setType(event.target.value as ModuleType)}>{Object.entries(moduleLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label><div className="module-project-actions"><button type="submit" disabled={creating || !!unsynced}>{creating ? 'Guardando proyecto…' : 'Crear proyecto'}</button><button type="button" disabled={creating} onClick={() => setFormOpen(false)}>Cancelar</button></div></form>}
+      {restaurants.length > 0 && <section aria-label="Mis restaurantes" className="module-project-grid">{restaurants.map(project => <article key={project.id} className="module-project-card module-project-restaurant"><span>Restaurante · Ruta Digital</span><h2>{project.name}</h2><p>Tu menú y enlace público.</p><button disabled={creating || project.id === unsynced} onClick={() => open(project.id)}>Continuar con {project.name}</button></article>)}</section>}
+      {(!restaurants.length || formOpen) ? <form onSubmit={create}><h2>Crea tu Ruta Digital</h2><label>Nombre de tu negocio<input required maxLength={120} value={name} placeholder="Alfajores del Valle" onChange={event => setName(event.target.value)} autoComplete="organization" /></label><p>Tipo de negocio: <strong>Restaurante</strong> · También para pastelerías, cafeterías y comida por encargo.</p><div className="module-project-actions"><button type="submit" disabled={creating || !!unsynced || !name.trim()}>{creating ? 'Guardando tu ruta…' : 'Crear mi Ruta Digital'}</button>{restaurants.length > 0 && <button type="button" disabled={creating} onClick={() => setFormOpen(false)}>Cancelar</button>}</div></form> : <button className="module-create-project" disabled={!!unsynced} onClick={() => setFormOpen(true)}>Crear otra Ruta Digital</button>}
     </>}
+    <section aria-label="Módulos disponibles"><h2>Empieza con Restaurante</h2><div className="module-project-grid">{Object.entries(moduleLabels).map(([key, label]) => {
+      const enabled = isModuleEnabled(key as ModuleType);
+      return <article key={key} className={`module-project-card ${enabled ? 'module-project-restaurant' : 'module-coming-soon'}`}><span>{enabled ? 'Disponible' : 'Muy pronto'}</span><h3>{label}</h3><p>{enabled ? 'Menú, página pública y pedidos por WhatsApp.' : 'Estamos preparando este módulo.'}</p>{!enabled && <button disabled aria-label={`${label}: Muy pronto`}>Muy pronto</button>}</article>;
+    })}</div></section>
   </main>;
 }
