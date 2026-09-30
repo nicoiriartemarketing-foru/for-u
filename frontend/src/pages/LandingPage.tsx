@@ -7,40 +7,40 @@ const steps = [
   {
     icon: '🫙',
     title: 'Captura',
-    text: 'Echa tus ideas sin orden. For U las guarda como perlitas y las ordena cuando estes lista.',
+    text: 'Echa tus ideas sin orden. For U las guarda como perlitas y las ordena cuando estés lista.',
     className: 'is-jar',
   },
   {
     icon: '✅',
     title: 'Ejecuta',
-    text: 'Te dice exactamente que hacer hoy. Una accion concreta, un bloque corto, cero drama.',
+    text: 'Te dice exactamente qué hacer hoy. Una acción concreta, un bloque corto, cero drama.',
     className: 'is-check',
   },
   {
-    icon: '🌍',
+    icon: '',
     title: 'Explora',
-    text: 'Tus proyectos viven como casitas e islas. Avanzas y el mundo se vuelve mas tuyo.',
+    text: 'Tus proyectos viven como casitas e islas. Avanzas y el mundo se vuelve más tuyo.',
     className: 'is-world',
   },
 ];
 
 const audiences = [
-  { icon: '🧠', text: 'Mentes creativas con demasiadas pestanas abiertas en la cabeza.' },
-  { icon: '☕', text: 'Emprendedoras que necesitan una jefa amable, no otro panel frio.' },
-  { icon: '🏝️', text: 'Soniadoras que quieren ver sus proyectos cobrar vida.' },
+  { icon: '🧠', text: 'Mentes creativas con demasiadas pestañas abiertas en la cabeza.' },
+  { icon: '☕', text: 'Emprendedoras que necesitan una jefa amable, no otro panel frío.' },
+  { icon: '🏝️', text: 'Soñadoras que quieren ver sus proyectos cobrar vida.' },
 ];
 
 const plans = [
   {
     name: 'Gratis',
     price: '$0',
-    text: 'Para sentarte y saber que hacer ahora.',
+    text: 'Para sentarte y saber qué hacer ahora.',
     features: ['1 proyecto activo', '5 acciones al mes', 'Tablero personal'],
   },
   {
     name: 'Pro',
     price: '$12',
-    text: 'Para trabajar sin friccion y jugar con tu mundo.',
+    text: 'Para trabajar sin fricción y jugar con tu mundo.',
     features: ['Proyectos ilimitados', 'Mundo 3D', 'Kanban + Mapa'],
     featured: true,
   },
@@ -70,12 +70,13 @@ export default function LandingPage() {
   const scrollScaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   const particles = useMemo(
-    () => Array.from({ length: 28 }, (_, index) => ({
-      id: index,
-      left: `${(index * 37) % 100}%`,
-      delay: `${(index % 9) * 0.35}s`,
-      duration: `${5 + (index % 6)}s`,
-    })),
+    () =>
+      Array.from({ length: 28 }, (_, index) => ({
+        id: index,
+        left: `${(index * 37) % 100}%`,
+        delay: `${(index % 9) * 0.35}s`,
+        duration: `${5 + (index % 6)}s`,
+      })),
     [],
   );
 
@@ -109,7 +110,9 @@ export default function LandingPage() {
           <Logo />
         </Link>
         <nav>
-          <button type="button" onClick={scrollToFeatures}>Cómo funciona</button>
+          <button type="button" onClick={scrollToFeatures}>
+            Cómo funciona
+          </button>
           <Link to="/pricing">Precios</Link>
           <Link to="/login">Entrar</Link>
         </nav>
@@ -118,13 +121,22 @@ export default function LandingPage() {
       <section className="foru-landing-hero">
         <motion.div className="foru-hero-magic-layer" style={{ y: heroY }} aria-hidden="true">
           {floatingItems.map((item) => (
-            <span key={item.className} className={`foru-floating-charm ${item.className}`}>{item.label}</span>
+            <span
+              key={item.className}
+              className={`foru-floating-charm ${item.className}`}
+            >
+              {item.label}
+            </span>
           ))}
           {particles.map((particle) => (
             <i
               key={particle.id}
               className="foru-ambient-particle"
-              style={{ left: particle.left, animationDelay: particle.delay, animationDuration: particle.duration }}
+              style={{
+                left: particle.left,
+                animationDelay: particle.delay,
+                animationDuration: particle.duration,
+              }}
             />
           ))}
         </motion.div>
@@ -142,11 +154,20 @@ export default function LandingPage() {
           >
             ✨ Nueva experiencia gamificada
           </motion.span>
-          <h1><span>Deja de abrumarte con tus ideas.</span></h1>
-          <p>For U las convierte en acciones claras. Tan útil como una jefa amable, tan divertida como entrar a tu propio mundo.</p>
+          <h1>
+            <span>Deja de abrumarte con tus ideas.</span>
+          </h1>
+          <p>
+            For U las convierte en acciones claras. Tan útil como una jefa amable, tan divertida
+            como entrar a tu propio mundo.
+          </p>
           <div className="foru-landing-actions">
-            <Link to="/register" className="foru-ripple-button">Empezar gratis</Link>
-            <button type="button" className="foru-ripple-button is-soft" onClick={scrollToFeatures}>Ver cómo funciona</button>
+            <Link to="/register" className="foru-ripple-button">
+              Empezar gratis
+            </Link>
+            <button type="button" className="foru-ripple-button is-soft" onClick={scrollToFeatures}>
+              Ver cómo funciona
+            </button>
           </div>
         </motion.div>
 
@@ -160,7 +181,11 @@ export default function LandingPage() {
         >
           <div className="foru-mockup-aura" />
           <div className="foru-mockup-window">
-            <div className="foru-mockup-dots"><i /><i /><i /></div>
+            <div className="foru-mockup-dots">
+              <i />
+              <i />
+              <i />
+            </div>
             <strong>☀️ Buenos días, Nicole</strong>
             <p>Hoy tienes 3 proyectos pidiendo atención. Empecemos por el más urgente.</p>
             <article>
@@ -259,17 +284,32 @@ export default function LandingPage() {
             >
               {plan.featured ? <em>Más Popular</em> : null}
               <h3>{plan.name}</h3>
-              <strong>{plan.price}<small>/mes</small></strong>
+              <strong>
+                {plan.price}
+                <small>/mes</small>
+              </strong>
               <p>{plan.text}</p>
               <ul>
-                {plan.features.map((feature) => <li key={feature}>✓ {feature}</li>)}
+                {plan.features.map((feature) => (
+                  <li key={feature}>✓ {feature}</li>
+                ))}
               </ul>
-              {plan.featured ? <div className="foru-price-confetti" aria-hidden="true"><i /><i /><i /><i /><i /></div> : null}
+              {plan.featured ? (
+                <div className="foru-price-confetti" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                </div>
+              ) : null}
             </motion.article>
           ))}
         </div>
         <div className="foru-landing-center-action">
-          <Link to="/pricing" className="foru-ripple-button">Ver todos los detalles</Link>
+          <Link to="/pricing" className="foru-ripple-button">
+            Ver todos los detalles
+          </Link>
         </div>
       </section>
 
@@ -285,9 +325,15 @@ export default function LandingPage() {
           <a href="/privacidad">Privacidad</a>
         </nav>
         <div>
-          <a href="https://instagram.com" aria-label="Instagram">IG</a>
-          <a href="https://tiktok.com" aria-label="TikTok">TT</a>
-          <a href="https://linkedin.com" aria-label="LinkedIn">IN</a>
+          <a href="https://instagram.com" aria-label="Instagram">
+            IG
+          </a>
+          <a href="https://tiktok.com" aria-label="TikTok">
+            TT
+          </a>
+          <a href="https://linkedin.com" aria-label="LinkedIn">
+            IN
+          </a>
         </div>
       </footer>
 
@@ -296,7 +342,11 @@ export default function LandingPage() {
         className="foru-back-to-top"
         onClick={scrollToTop}
         initial={false}
-        animate={showTopButton ? { opacity: 1, y: 0, pointerEvents: 'auto' } : { opacity: 0, y: 20, pointerEvents: 'none' }}
+        animate={
+          showTopButton
+            ? { opacity: 1, y: 0, pointerEvents: 'auto' }
+            : { opacity: 0, y: 20, pointerEvents: 'none' }
+        }
         aria-label="Volver arriba"
       >
         ↑

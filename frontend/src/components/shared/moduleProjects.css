@@ -24,3 +24,9 @@
 .module-projects .module-project-actions { display: flex; gap: 12px; }
 .module-projects :focus-visible { outline: 3px solid #059669; outline-offset: 3px; }
 @media(max-width:650px){.module-projects{padding:20px 16px}.module-projects header{flex-direction:column}.module-projects .module-project-grid{grid-template-columns:minmax(0,1fr)}}
+
+.module-projects .module-launch-steps { display: flex; flex-wrap: wrap; gap: 12px 32px; padding: 20px 24px; background: #f8fafc; border-radius: 12px; }
+.module-projects .module-coming-soon { background: #f8fafc; border-style: dashed; }
+.module-projects .module-coming-soon > span { display: inline-block; padding: 6px 10px; background: #e2e8f0; border-radius: 20px; color: #334155; }
+.module-projects h3 { font-size: 20px; margin: 12px 0; }
+.module-projects .module-project-actions { flex-wrap: wrap; }

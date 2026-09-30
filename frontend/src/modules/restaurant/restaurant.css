@@ -175,3 +175,15 @@
 .restaurant-module.restaurant-public .restaurant-menu-preview { margin-top: 0; }
 .restaurant-module .publication-qr { display: grid; justify-items: start; gap: 12px; margin: 20px 0; }
 .restaurant-module .publication-qr img { max-width: 100%; height: auto; background: white; }
+
+.restaurant-module .restaurant-quick-start { border-color: #059669; background: #f0fdf4; }
+.restaurant-module .restaurant-advanced > summary { padding: 18px 0; cursor: pointer; font-weight: 600; }
+.restaurant-module .restaurant-publishing > summary { cursor: pointer; font-weight: 700; font-size: 21px; }
+.restaurant-module .restaurant-public-url { overflow-wrap: anywhere; }
+.restaurant-module .restaurant-save-step { padding: 20px 0; }
+.restaurant-module .restaurant-order-cta, .restaurant-module .restaurant-menu-preview aside a { display: inline-block; min-height: 44px; padding: 12px 18px; margin: 12px 0; border-radius: 10px; background: #047857; color: white; text-decoration: none; font-weight: 600; }
+.restaurant-module .restaurant-order-summary { position: sticky; bottom: 12px; display: block; width: fit-content; max-width: 100%; padding: 16px 22px; margin: 16px auto; border-radius: 14px; background: #0f172a; color: white; text-align: center; text-decoration: none; z-index: 5; }
+.restaurant-module .restaurant-menu-preview section { scroll-margin-top: 16px; }
+.restaurant-module .restaurant-menu-preview p { overflow-wrap: anywhere; }
+.restaurant-module .restaurant-menu-preview img { aspect-ratio: 20 / 13; }
+@media(max-width:600px) { .restaurant-module input, .restaurant-module select, .restaurant-module textarea { font-size: 16px; } .restaurant-module.restaurant-public { padding: 12px; } .restaurant-module .restaurant-order-summary { width: 100%; box-sizing: border-box; } }

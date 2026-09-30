@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { externalImageUrl, isPrivateMedia, privateMediaPath } from '../components/shared/mediaReference';
+import { isRestaurantSlug } from '../modules/validationLaunch';
 import { restaurantSnapshot } from '../modules/restaurant/publicMenu';
 import type { RestaurantData } from '../modules/restaurant/model';
 import type { TourismData } from '../modules/tourism/model';
@@ -40,6 +41,7 @@ function imagePublisher(userId: string, projectId: string) {
 }
 export async function publishRestaurant(userId: string, projectId: string, data: RestaurantData, slug: string, previous: ModulePublication | null): Promise<ModulePublication> {
   validatePublicationSlug(slug);
+  if (!isRestaurantSlug(slug)) throw new Error('Ese enlace está reservado para la app. Elige otro nombre para tu negocio.');
   const content = restaurantSnapshot(data);
   const publicImage = imagePublisher(userId, projectId);
   content.menu.settings.coverImage = await publicImage(content.menu.settings.coverImage);
