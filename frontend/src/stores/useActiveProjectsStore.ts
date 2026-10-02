@@ -3,6 +3,7 @@ import { create, type StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../lib/supabaseClient';
 import { explorationProjectsAreUnlimited } from '../modules/validationLaunch';
+import { projectModuleType } from '../modules/moduleProjects';
 import { getDigitalRouteTemplate, getStepCompletionStatus } from '../templates/digitalRouteTemplates';
 import { industryTemplates, type ForUIndustryKey } from '../templates/industryTemplates';
 import type { ForUDigitalRouteStepStatus, ForUDigitalRouteStepTemplate } from '../templates/digitalRouteTemplates';
@@ -88,6 +89,7 @@ export type ForURouteStep = {
 };
 
 export type ForUActiveProject = {
+  cloudPending?: boolean;
   id: string;
   name: string;
   tangibleGoal?: string;
@@ -295,6 +297,15 @@ type ActiveProjectsState = {
 };
 
 function createId(prefix: string) {
+  // Production stores project IDs as UUID, without the UI-only "project-" prefix.
+  if (prefix === 'project') {
+    if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  }
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return `${prefix}-${crypto.randomUUID()}`;
   }
@@ -506,36 +517,31 @@ function getBranchPosition(branchKey: ForUBranchKey, index: number) {
 async function upsertCloudProject(userId: string | null, project: ForUActiveProject) {
   if (!canSyncCloud(userId) || !supabase) return;
 
-  const payload = {
+  const basePayload = {
     id: project.id,
     user_id: userId,
     name: project.name,
-    description: '',
+    business_type: projectModuleType(project) ?? 'restaurant',
     tangible_goal: project.tangibleGoal ?? '',
-    industry_key: project.industryKey ?? null,
-    strategy_profile: project.strategyProfile ?? {},
-    template_source: project.templateSource ?? null,
     status: project.status,
     created_at: project.createdAt,
   };
+  const payloads = [
+    { ...basePayload, description: '', industry_key: project.industryKey ?? null, strategy_profile: project.strategyProfile ?? {}, template_source: project.templateSource ?? null },
+    { ...basePayload, industry_key: project.industryKey ?? null, strategy_profile: project.strategyProfile ?? {}, template_source: project.templateSource ?? null },
+  ];
 
-  const { error } = await supabase.from('projects').upsert(payload);
-  if (!error) return;
-
-  if (error.message.includes('industry_key') || error.message.includes('strategy_profile') || error.message.includes('template_source')) {
-    await supabase.from('projects').upsert({
-      id: project.id,
-      user_id: userId,
-      name: project.name,
-      description: '',
-      tangible_goal: project.tangibleGoal ?? '',
-      status: project.status,
-      created_at: project.createdAt,
-    });
-    return;
+  let lastError = '';
+  for (const payload of payloads) {
+    const { error } = await supabase.from('projects').upsert(payload);
+    if (!error) {
+      if (useActiveProjectsStore.getState().cloudUserId === userId) useActiveProjectsStore.setState(state => ({ projectsById: { ...state.projectsById, [project.id]: { ...(state.projectsById[project.id] ?? project), cloudPending: false } } }));
+      return;
+    }
+    lastError = error.message;
   }
 
-  console.warn('No se pudo guardar el proyecto en Supabase:', error.message);
+  console.warn('No se pudo guardar el proyecto en Supabase:', lastError);
 }
 
 async function deleteCloudProject(userId: string | null, projectId: string) {
@@ -915,6 +921,7 @@ function createProject(input: CreateProjectInput): ForUActiveProject {
 
   const project: ForUActiveProject = {
     id: projectId,
+    cloudPending: true,
     name,
     tangibleGoal: input.tangibleGoal?.trim() || template?.tangibleGoal,
     targetFeelings: input.targetFeelings ?? template?.targetFeelings ?? [],
@@ -1260,6 +1267,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           }));
           const project: ForUActiveProject = normalizeProject({
             id: row.id,
+            cloudPending: false,
             name: row.name,
             tangibleGoal: row.tangible_goal ?? '',
             targetFeelings: rowFeelings,
@@ -1285,15 +1293,20 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           return [project.id, applyIndustryTemplate(project, timestamp)];
         }));
 
-        const firstProjectId = cleanProjects[0]?.id ?? null;
+        const previousId = get().activeProjectId;
+        const firstProjectId = previousId && nextProjects[previousId] ? previousId : cleanProjects[0]?.id ?? null;
 
         if (get().cloudUserId !== userId) return;
+
+        const pendingProjects = Object.fromEntries(Object.entries(get().projectsById as Record<string, ForUActiveProject>)
+          .filter(([id]) => !nextProjects[id])
+          .map(([id, project]) => [id, { ...project, cloudPending: true }]));
 
         set({
           activeProjectIds: projectIds,
           activeProjectId: firstProjectId,
           currentProjectId: firstProjectId,
-          projectsById: nextProjects,
+          projectsById: { ...pendingProjects, ...nextProjects },
           rawNotes: [],
           selectedNodeId: null,
           focusedBranch: null,

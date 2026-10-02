@@ -13,11 +13,11 @@ export default function DashboardTool() {
   const [params] = useSearchParams();
   const hydrate = useActiveProjectsStore(state => state.hydrateFromSupabase);
   const projectId = params.get('project');
-  const project = useActiveProjectsStore(state => projectId ? state.projectsById[projectId] : undefined);
+  const project = useActiveProjectsStore(state => projectId ? state.projectsById[projectId] : state.projectsById[state.activeProjectId ?? ''] ?? state.getActiveProjects()[0]);
   const cloudUserId = useActiveProjectsStore(state => state.cloudUserId);
   useEffect(() => { if (user?.id && cloudUserId !== user.id) void hydrate(user.id); }, [cloudUserId, hydrate, user?.id]);
   if (!user || cloudUserId !== user.id) return <main className="dashboard-tool-loader"><p>Cargando tus herramientas…</p></main>;
   if (!project || !tools.has(tool as ToolId)) return <main className="dashboard-tool-loader"><h1>Esta herramienta no está disponible</h1><Link to="/dashboard">Volver al tablero</Link></main>;
   const templates = params.get('page') === 'templates';
-  return <Toolkit project={project} initialTool={templates ? undefined : tool as ToolId} initialPage={templates ? 'templates' : undefined} onBack={() => window.history.back()} />;
+  return <Toolkit embedded key={`${project.id}:${tool}:${templates}`} project={project} initialTool={templates ? undefined : tool as ToolId} initialPage={templates ? 'templates' : undefined} onBack={() => window.history.back()} />;
 }

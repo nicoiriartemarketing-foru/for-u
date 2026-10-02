@@ -3,11 +3,13 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { useAuth } from '../contexts/AuthContext';
 import ProjectSelector from '../components/shared/ProjectSelector';
 import { loadModuleDocument, loadModuleProjects, saveModuleDocument } from '../services/moduleDocuments';
-import { moduleLabels, type ModuleProject, type ModuleType } from './moduleProjects';
+import { moduleLabels, projectModuleType, type ModuleProject, type ModuleType } from './moduleProjects';
 import type { ComponentType } from 'react';
 import './moduleWorkspace.css';
 import { ModuleDraftContext } from './useModuleDraft';
 import { MediaScope } from '../components/shared/mediaScope';
+import { useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import { useUnsavedNavigation } from '../lib/useUnsavedNavigation';
 export type ModuleConfiguration<T> = {
   type: ModuleType;
   create: (name: string) => T;
@@ -28,6 +30,11 @@ export default function ModuleWorkspace<T>({ config }: { config: ModuleConfigura
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
   const [loadedFor, setLoadedFor] = useState('');
+  const projectsById = useActiveProjectsStore(state => state.projectsById);
+  const cloudUserId = useActiveProjectsStore(state => state.cloudUserId);
+  const localModuleProjects = (cloudUserId === userId ? Object.values(projectsById) : []).flatMap(project => (
+    !project.cloudPending && projectModuleType(project) === config.type ? [{ id: project.id, name: project.name, type: config.type }] : []
+  ));
   const loadKey = `${userId ?? ''}:${config.type}:${attempt}`;
   useEffect(() => {
     if (!userId) return;
@@ -37,10 +44,11 @@ export default function ModuleWorkspace<T>({ config }: { config: ModuleConfigura
     return () => { active = false; };
   }, [userId, loadKey, config.type]);
   if (loadedFor !== loadKey || !user) return <main className={`${config.type}-module module-workspace`}><p role="status">Cargando tus proyectos…</p></main>;
-  if (error) return <main className={`${config.type}-module module-workspace`}><p role="alert">{error}</p><button onClick={() => setAttempt(value => value + 1)}>Reintentar</button><Link to="/dashboard">Volver a mis proyectos</Link></main>;
-  const current = projectId ? projects.find(project => project.id === projectId) : projects[0];
+  const availableProjects = [...projects, ...localModuleProjects.filter(local => !projects.some(project => project.id === local.id))];
+  if (error && availableProjects.length === 0) return <main className={`${config.type}-module module-workspace`}><p role="alert">{error}</p><button onClick={() => setAttempt(value => value + 1)}>Reintentar</button><Link to="/dashboard">Volver a mis proyectos</Link></main>;
+  const current = projectId ? availableProjects.find(project => project.id === projectId) : availableProjects[0];
   if (!current) return <main className={`${config.type}-module module-workspace`}><h1>{projectId ? 'Proyecto no disponible' : 'Tu proyecto empieza aquí'}</h1><p>{projectId ? 'Elige un proyecto de este rubro para continuar.' : 'Crea un proyecto de este rubro desde tu tablero.'}</p><Link to="/dashboard">Ir a mis proyectos</Link></main>;
-  return <ModuleSession config={config} key={`${user.id}:${current.id}`} userId={user.id} project={current} projects={projects} />;
+  return <ModuleSession config={config} key={`${user.id}:${current.id}`} userId={user.id} project={current} projects={availableProjects} />;
 }
 
 function ModuleSession<T>({ userId, project, projects, config }: { userId: string; project: ModuleProject; projects: ModuleProject[]; config: ModuleConfiguration<T> }) {
@@ -56,6 +64,7 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
   const [status, setStatus] = useState('');
   const [attempt, setAttempt] = useState(0);
   const busy = useRef(false);
+  useUnsavedNavigation(dirty || pendingDraft);
   useEffect(() => {
     let active = true;
     loadModuleDocument(userId, project.id, config.type).then(document => {
@@ -92,12 +101,12 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
   }
   if (!data) return <main className={`${config.type}-module module-workspace`}><p role="status">{status || 'Cargando el proyecto…'}</p>{status && <button onClick={() => setAttempt(value => value + 1)}>Reintentar carga</button>}</main>;
   return <main className={`${config.type}-module module-workspace`}>
+    {location.state?.notice && <p role="alert">{location.state.notice}</p>}
     <header className="module-header"><div><span>For U · {moduleLabels[config.type]}</span><h1>{project.name}</h1></div><button disabled={!dirty || saving || pendingDraft} onClick={save}>{saving ? 'Guardando…' : 'Guardar cambios'}</button></header>
     <p role="status">{status}</p>
     <button disabled={saving} onClick={() => { if ((!dirty && !pendingDraft) || window.confirm('Actualizar recupera los datos guardados y descarta los cambios pendientes. ¿Continuar?')) { setData(null); setAttempt(value => value + 1); } }}>Actualizar datos</button>
     {pendingDraft && <p role="status">Termina y aplica el formulario abierto, o cancélalo, antes de guardar el proyecto.</p>}
     <button disabled={saving} onClick={() => leave(`/content-creator?project=${encodeURIComponent(project.id)}`)}>Crear Contenido</button>
-    <ProjectSelector projects={projects} value={project.id} disabled={saving} onChange={id => leave(`/modules/${config.type}${editing ? '/editor' : ''}?project=${encodeURIComponent(id)}`)} />
     <nav className="module-navigation" aria-label={moduleLabels[config.type]}><button disabled={saving} onClick={() => leave('/dashboard?view=projects')}>Mis proyectos</button><button disabled={saving} aria-current={editing ? undefined : 'page'} onClick={() => changeView(`/modules/${config.type}?project=${encodeURIComponent(project.id)}`)}>{config.dashboardLabel}</button><button disabled={saving} aria-current={editing ? 'page' : undefined} onClick={() => changeView(`/modules/${config.type}/editor?project=${encodeURIComponent(project.id)}`)}>{config.editorLabel}</button></nav>
     <fieldset className="module-editing-area" disabled={saving}>
       <ModuleDraftContext.Provider value={setPendingDraft}>

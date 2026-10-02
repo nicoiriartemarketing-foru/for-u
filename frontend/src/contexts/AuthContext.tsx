@@ -50,18 +50,32 @@ async function ensureProfile(
 ) {
   const client = requireSupabase();
   const normalizedWhatsapp = normalizeWhatsappNumber(whatsappNumber);
-  const { error } = await client.from("profiles").upsert({
+  const display_name =
+    displayName ||
+    user.user_metadata?.display_name ||
+    user.email?.split("@")[0] ||
+    "Mi cuenta";
+  const payload = {
     id: user.id,
     email: user.email ?? "",
-    display_name:
-      displayName ||
-      user.user_metadata?.display_name ||
-      user.email?.split("@")[0] ||
-      "Mi cuenta",
+    display_name,
     ...(normalizedWhatsapp
       ? { whatsapp_number: normalizedWhatsapp, whatsapp_enabled: true }
       : {}),
-  });
+  };
+  const { error } = await client.from("profiles").upsert(payload);
+  if (error?.message.includes("display_name")) {
+    const { error: fallbackError } = await client.from("profiles").upsert({
+      id: user.id,
+      email: user.email ?? "",
+      ...(normalizedWhatsapp
+        ? { whatsapp_number: normalizedWhatsapp, whatsapp_enabled: true }
+        : {}),
+    });
+    if (!fallbackError) return;
+    console.warn("No se pudo sincronizar el perfil todavia:", fallbackError.message);
+    return;
+  }
 
   if (error) {
     console.warn("No se pudo sincronizar el perfil todavia:", error.message);
