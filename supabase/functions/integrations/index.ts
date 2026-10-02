@@ -52,12 +52,13 @@ Deno.serve(async (req) => {
         ? reply({ error: "No se pudo desconectar." }, 500)
         : reply({ connected: false });
     }
-    const { data: previous } = await admin
+    const { data: previous, error: previousError } = await admin
       .from("integration_connections")
       .select("*")
       .eq("user_id", user.id)
       .eq("provider", provider)
       .maybeSingle();
+    if (previousError) return reply({ error: 'No se pudo consultar la conexión guardada.' }, 500);
     if (
       action === "verify" &&
       previous?.checked_at &&
@@ -66,12 +67,13 @@ Deno.serve(async (req) => {
       return reply(previous);
     let credential = accessToken;
     if (action === "verify") {
-      const { data } = await admin
+      const { data, error: credentialError } = await admin
         .from("integration_credentials")
         .select("access_token")
         .eq("user_id", user.id)
         .eq("provider", provider)
         .maybeSingle();
+      if (credentialError) return reply({ error: 'No se pudo consultar la autorización guardada.' }, 500);
       credential = data?.access_token;
     }
     if (
@@ -94,7 +96,7 @@ Deno.serve(async (req) => {
       },
       signal: AbortSignal.timeout(10_000),
     });
-    const data = await result.json();
+    const data = await result.json().catch(() => ({}));
     const connected =
       result.ok &&
       (provider === "manychat"
@@ -119,6 +121,10 @@ Deno.serve(async (req) => {
       checked_at: new Date().toISOString(),
       account_label:
         connected && typeof label === "string" ? label.slice(0, 150) : null,
+      verification_state: connected ? 'verified' : [401, 403].includes(result.status) ? 'expired' : 'error',
+      last_error: connected ? null : [401, 403].includes(result.status)
+        ? 'Renueva la autorización y comprueba los permisos de acceso.'
+        : 'El servicio no confirmó acceso. Vuelve a verificar en unos minutos.',
     };
     const { error } = await admin.from("integration_connections").upsert(row);
     if (error)
