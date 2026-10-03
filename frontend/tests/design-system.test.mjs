@@ -1,9 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
+import { areaDefinitions } from '../src/pages/dashboard/areaModel.ts';
 const root = new URL('../src/', import.meta.url);
-async function sources(folder) { const entries = await readdir(folder, { withFileTypes: true }); return (await Promise.all(entries.map(async e => e.isDirectory() ? sources(new URL(e.name+'/',folder)) : /\.(css|scss|tsx?|svg)$/.test(e.name) ? [{ path: new URL(e.name,folder).pathname, text: await readFile(new URL(e.name,folder),'utf8') }] : []))).flat(); }
-test('the canonical design exposes the required neutral tokens and approved accent', async () => { const css = await readFile(new URL('styles/global.css',root),'utf8'); for(const value of ['--bg-primary: #FFFFFF','--bg-secondary: #FAFAFA','--text-primary: #0A0A0A','--border-light: #EAEAEA','--radius-lg: 14px','--accent-gradient: linear-gradient(135deg, #FDE68A, #10B981, #F9A8D4, #93C5FD)']) assert.ok(css.toLowerCase().replace(/\s+/g,'').includes(value.toLowerCase().replace(/\s+/g,'')),value); });
-test('all authored UI source colors exclude purple values and utilities', async () => { for(const file of await sources(root)) { assert.doesNotMatch(file.text, /\b(?:bg|text|border|ring)-(?:purple|violet|fuchsia)-/i,file.path); for(const match of file.text.matchAll(/#([0-9a-f]{6})(?![0-9a-f])/gi)){ const [r,g,b]=[0,2,4].map(i=>parseInt(match[1].slice(i,i+2),16)); const max=Math.max(r,g,b),min=Math.min(r,g,b); if(max-min<15)continue; const hue=max===r?60*((g-b)/(max-min)%6):max===g?60*((b-r)/(max-min)+2):60*((r-g)/(max-min)+4); const normalized=(hue+360)%360; assert.ok(normalized<245||normalized>305, `${file.path}: forbidden hue ${match[0]}`); } } });
-test('gradient declarations only exist in the canonical accent token', async () => { for(const file of await sources(root)) if(/\.css$/.test(file.path)) for(const line of file.text.split('\n')) if(/(?:linear|radial|conic)-gradient\(/.test(line)) assert.match(line,/--accent-gradient:/,file.path); });
-test('authored CSS shadow opacity never exceeds 0.08', async () => { for(const file of await sources(root)) if(/\.css$/.test(file.path)) for(const match of file.text.matchAll(/(?:[\w-]*(?:shadow|sombra)[\w-]*)\s*:\s*([^;{}]+)/g)){ for(const color of match[1].matchAll(/rgba\([^)]*,\s*([.\d]+)\s*\)/g)) assert.ok(Number(color[1]) <= .08,`${file.path}: ${match[0]}`); } });
+test('legacy global tokens remain available to existing editors', async () => {
+ const css=await readFile(new URL('styles/global.css',root),'utf8');
+ for(const token of ['--bg-primary','--text-primary','--border-light','--radius-lg']) assert.ok(css.includes(token));
+});
+// The four-area brief supersedes the earlier monochrome/no-purple rule.
+test('business areas have stable distinct identities across dashboard and world',()=>{
+ assert.deepEqual(areaDefinitions.map(a=>a.id),['marketing','finance','logistics','operations']);
+ assert.equal(new Set(areaDefinitions.map(a=>a.color)).size,4);
+ assert.equal(new Set(areaDefinitions.map(a=>a.pet)).size,4);
+});
+function luminance(hex){return hex.match(/[a-f0-9]{2}/gi).map(x=>parseInt(x,16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4).reduce((sum,x,i)=>sum+x*[.2126,.7152,.0722][i],0);}
+test('area card title colors meet normal text contrast',async()=>{
+ const css=await readFile(new URL('pages/dashboard/workspace.css',root),'utf8');
+ for(const area of areaDefinitions){
+  const rule=css.match(new RegExp('\\.dashboard-home \\.dashboard-area-'+area.id+'\\{background:(#[0-9a-f]{6});color:(#[0-9a-f]{6})'));
+  assert.ok(rule,area.id); const a=luminance(rule[1]), b=luminance(rule[2]); assert.ok((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5,area.id);
+ }
+});

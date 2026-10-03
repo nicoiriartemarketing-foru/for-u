@@ -3,6 +3,7 @@ import { useToolkit } from "./ToolkitContext";
 import { localDate } from "./engine";
 import { downloadBlob } from "./api";
 import type { CalendarEntry } from "./types";
+import { useUnsavedNavigation } from '../lib/useUnsavedNavigation';
 export default function Calendar() {
   const { docs, save, track } = useToolkit();
   const [entries, setEntries] = useState<CalendarEntry[]>(
@@ -15,8 +16,12 @@ export default function Calendar() {
   const [time, setTime] = useState("10:00");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
+  const savingRef = useRef(false);
   const [notifications, setNotifications] = useState(false);
   const reminded = useRef(new Set<string>());
+  const original = entries.find(entry => entry.id === editing);
+  useUnsavedNavigation(editing ? Boolean(original && (original.title !== title || original.date !== date || original.time !== time)) : Boolean(title.trim()));
   const start = new Date(
     anchor.getFullYear(),
     anchor.getMonth(),
@@ -55,16 +60,20 @@ export default function Calendar() {
     return () => clearInterval(timer);
   }, [entries, notifications]);
   async function update(next: CalendarEntry[]) {
+    if (savingRef.current) return false;
+    savingRef.current = true;
     setBusy(true);
     try {
       await save("calendar", next);
       setEntries(next);
+      setNotice('Agenda guardada en tu cuenta.');
       return true;
     } catch (e) {
       setNotice((e as Error).message);
       return false;
     } finally {
       setBusy(false);
+      savingRef.current = false;
     }
   }
   function shift(direction: number) {
@@ -149,27 +158,33 @@ export default function Calendar() {
         </div>
         <small>
           Los avisos de FOR U funcionan con la app abierta. Importa la agenda en
-          tu calendario para recibirlos cuando la cierres.
+          tu calendario para recibirlos cuando la cierres. La exportación es una
+          copia de tu agenda; no sincroniza cambios posteriores.
         </small>
         <form
           className="tk-toolbar"
           onSubmit={async (e) => {
             e.preventDefault();
-            if (!title.trim()) return;
+            const form = new FormData(e.currentTarget);
+            const nextTitle = String(form.get('title') ?? '').trim();
+            const nextDate = String(form.get('date') ?? '');
+            const nextTime = String(form.get('time') ?? '');
+            if (!nextTitle || !/^\d{4}-\d{2}-\d{2}$/.test(nextDate) || !/^\d{2}:\d{2}$/.test(nextTime) || !Number.isFinite(new Date(`${nextDate}T${nextTime}`).getTime())) { setNotice('Revisa el título, la fecha y la hora.'); return; }
             if (
-              await update([
+              await update(editing ? entries.map(entry => entry.id === editing ? { ...entry, title: nextTitle, date: nextDate, time: nextTime } : entry) : [
                 ...entries,
                 {
                   id: crypto.randomUUID(),
-                  title: title.trim(),
-                  date,
-                  time,
+                  title: nextTitle,
+                  date: nextDate,
+                  time: nextTime,
                   format: "contenido",
                   done: false,
                 },
               ])
             ) {
               setTitle("");
+              setEditing(null);
               track("calendar", true);
             }
           }}
@@ -178,6 +193,7 @@ export default function Calendar() {
             Publicación o tarea
             <input
               required
+              name="title"
               value={title}
               maxLength={200}
               onChange={(e) => setTitle(e.target.value)}
@@ -189,7 +205,9 @@ export default function Calendar() {
             <input
               required
               type="date"
+              name="date"
               value={date}
+              onInput={(e) => setDate(e.currentTarget.value)}
               onChange={(e) => setDate(e.target.value)}
             />
           </label>
@@ -198,13 +216,16 @@ export default function Calendar() {
             <input
               required
               type="time"
+              name="time"
               value={time}
+              onInput={(e) => setTime(e.currentTarget.value)}
               onChange={(e) => setTime(e.target.value)}
             />
           </label>
           <button className="tk-primary" disabled={busy}>
-            Agregar
+            {editing ? 'Guardar actividad' : 'Agregar'}
           </button>
+          {editing && <button type="button" onClick={() => { setEditing(null); setTitle(''); }}>Cancelar edición</button>}
         </form>
         <p className="tk-tip">
           Aún no hay datos suficientes para recomendar una hora de publicación.
@@ -266,6 +287,7 @@ export default function Calendar() {
                     >
                       <span>{entry.time}</span>
                       <strong>{entry.title}</strong>
+                      <button disabled={busy} onClick={() => { setEditing(entry.id); setTitle(entry.title); setDate(entry.date); setTime(entry.time); }}>Editar actividad</button>
                       <label className="tk-check">
                         <input
                           type="checkbox"

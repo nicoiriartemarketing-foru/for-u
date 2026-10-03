@@ -2,11 +2,13 @@ import { Float, Html } from '@react-three/drei';
 
 type MascotGuideProps = {
   message: string;
+  animated?: boolean;
+  fixedLabel?: boolean;
 };
 
-export default function MascotGuide({ message }: MascotGuideProps) {
+export default function MascotGuide({ message, animated = true, fixedLabel = false }: MascotGuideProps) {
   return (
-    <Float speed={1.4} rotationIntensity={0.08} floatIntensity={0.18}>
+    <Float speed={animated ? 1.4 : 0} rotationIntensity={animated ? 0.08 : 0} floatIntensity={animated ? 0.18 : 0}>
       <group position={[-1.6, 0.24, 1.2]}>
         <mesh position={[0, 0.36, 0]} castShadow>
           <sphereGeometry args={[0.32, 24, 18]} />
@@ -24,11 +26,11 @@ export default function MascotGuide({ message }: MascotGuideProps) {
           <cylinderGeometry args={[0.22, 0.28, 0.34, 20]} />
           <meshPhysicalMaterial color="#EAEAEA" roughness={0.86} metalness={0.03} clearcoat={0.12} />
         </mesh>
-        <Html position={[0.1, 1.1, 0]} center distanceFactor={6}>
+        {message && <Html position={[0.1, 1.1, 0]} center distanceFactor={fixedLabel ? undefined : 6}>
           <div className="foru-world-speech">
             {message}
           </div>
-        </Html>
+        </Html>}
       </group>
     </Float>
   );

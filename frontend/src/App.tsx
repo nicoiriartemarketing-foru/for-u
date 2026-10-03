@@ -1,5 +1,9 @@
 import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react';
-import { BrowserRouter as Router, Navigate, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Routes, Route, useLocation } from 'react-router-dom';
+import WorkspaceShell from './pages/dashboard/WorkspaceShell';
+import { AreaDocumentsProvider } from './pages/dashboard/AreaDocuments';
+const WorldPage = lazy(() => import('./pages/dashboard/WorldPage'));
+const WorkspaceSettings = lazy(() => import('./pages/dashboard/WorkspaceSettings'));
 import { useAuth } from './contexts/AuthContext';
 import { PomodoroProvider } from './contexts/PomodoroContext';
 import FloatingPomodoro from './components/FloatingPomodoro';
@@ -44,6 +48,7 @@ function PrivateStudio({ children }: { children: ReactNode }) {
 }
 
 function PrivateWorkspace({ children }: { children: ReactNode }) {
+  const location = useLocation();
   const { session, loading } = useAuth();
   const nextPath = `${window.location.pathname}${window.location.search}`;
 
@@ -59,14 +64,15 @@ function PrivateWorkspace({ children }: { children: ReactNode }) {
     );
   }
 
-  return session ? <>{children}<FloatingPomodoro /></> : <Navigate to={`/login?next=${encodeURIComponent(nextPath)}`} replace />;
+  const unified = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/modules/') || location.pathname === '/content-creator';
+  return session ? <>{unified ? <WorkspaceShell>{children}</WorkspaceShell> : children}<FloatingPomodoro /></> : <Navigate to={`/login?next=${encodeURIComponent(nextPath)}`} replace />;
 }
 
 function App() {
   return (
     <AppErrorBoundary>
       <Router>
-        <PomodoroProvider><Suspense fallback={<RouteLoader />}>
+        <AreaDocumentsProvider><PomodoroProvider><Suspense fallback={<RouteLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/ia" element={<AiForU />} />
@@ -98,6 +104,8 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/register-wizard" element={<Navigate to="/register" replace />} />
             <Route path="/dashboard" element={<PrivateWorkspace><Dashboard /></PrivateWorkspace>} />
+            <Route path="/dashboard/world" element={<PrivateWorkspace><WorldPage /></PrivateWorkspace>} />
+            <Route path="/dashboard/settings" element={<PrivateWorkspace><WorkspaceSettings /></PrivateWorkspace>} />
             <Route path="/dashboard/tools/:tool" element={<PrivateWorkspace><DashboardTool /></PrivateWorkspace>} />
             <Route path="/studio/dashboard" element={<PrivateStudio><LegacyDashboard /></PrivateStudio>} />
             <Route path="/editor" element={<PrivateStudio><WorldEditor /></PrivateStudio>} />
@@ -105,7 +113,7 @@ function App() {
             <Route path="/p/:slug" element={<PublicLanding />} />
             <Route path="/:slug" element={<PublicRestaurant />} />
           </Routes>
-        </Suspense></PomodoroProvider>
+        </Suspense></PomodoroProvider></AreaDocumentsProvider>
       </Router>
     </AppErrorBoundary>
   );

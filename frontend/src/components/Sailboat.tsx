@@ -8,12 +8,21 @@ const clayMaterial = {
   metalness: 0.05,
 };
 
-export default function Sailboat() {
+export default function Sailboat({ destination, reduced = false }: { destination?: [number, number, number]; reduced?: boolean }) {
   const boatRef = useRef<Group>(null);
   const wakeRef = useRef<Group>(null);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!boatRef.current) return;
+    if (destination) {
+      const boat = boatRef.current;
+      const dx = destination[0] - boat.position.x;
+      boat.position.x += reduced ? dx : dx * (1 - Math.exp(-delta * 3));
+      boat.position.y = destination[1];
+      boat.position.z = destination[2];
+      if (Math.abs(dx) > 0.02) boat.rotation.y = dx > 0 ? 0 : Math.PI;
+      return;
+    }
 
     const time = state.clock.elapsedTime * 0.22;
     const radius = 4.15;
@@ -32,11 +41,11 @@ export default function Sailboat() {
 
   return (
     <group ref={boatRef}>
-      <Float speed={1.4} rotationIntensity={0.04} floatIntensity={0.18}>
+      <Float speed={reduced ? 0 : 1.4} rotationIntensity={reduced ? 0 : 0.04} floatIntensity={reduced ? 0 : 0.18}>
         <group>
           <mesh position={[0, 0, 0]} scale={[1, 0.72, 1]} castShadow>
             <sphereGeometry args={[0.58, 24, 16]} />
-            <meshPhysicalMaterial color="#FAFAFA" roughness={0.76} metalness={0.04} clearcoat={0.25} />
+            <meshPhysicalMaterial color={destination ? "#bd784d" : "#FAFAFA"} roughness={0.76} metalness={0.04} clearcoat={0.25} />
           </mesh>
           <mesh position={[0, -0.08, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
             <cylinderGeometry args={[0.18, 0.32, 1.1, 16]} />
@@ -48,7 +57,7 @@ export default function Sailboat() {
           </mesh>
           <mesh position={[0.24, 0.72, 0.03]} rotation={[0, 0, -0.18]} castShadow>
             <shapeGeometry args={[createTriangularSailShape()]} />
-            <meshPhysicalMaterial color="#FAFAFA" side={2} roughness={0.7} metalness={0.05} clearcoat={0.22} />
+            <meshPhysicalMaterial color={destination ? "#fff4cb" : "#FAFAFA"} side={2} roughness={0.7} metalness={0.05} clearcoat={0.22} />
           </mesh>
           <mesh position={[0.22, 1.25, 0]} castShadow>
             <boxGeometry args={[0.28, 0.18, 0.035]} />

@@ -4,6 +4,7 @@ import { supabase } from '../../services/supabase';
 import RestaurantMenu from './RestaurantMenu';
 import { parsePublishedRestaurant, type PublishedRestaurant } from './publicMenu';
 import './restaurant.css';
+import { usePublicModuleAnalytics } from '../usePublicModuleAnalytics';
 
 export default function PublicRestaurant() {
   const { slug } = useParams();
@@ -14,6 +15,7 @@ function PublicRestaurantSession({ slug }: { slug: string }) {
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState('');
   const [attempt, setAttempt] = useState(0);
+  const trackContact = usePublicModuleAnalytics(slug, Boolean(site));
   useEffect(() => {
     let active = true;
     async function refresh() {
@@ -35,7 +37,7 @@ function PublicRestaurantSession({ slug }: { slug: string }) {
     document.title = site ? `${site.menu.settings.title} · Carta` : 'Carta · For U';
     return () => { document.title = previous; };
   }, [site]);
-  return <main className="restaurant-module restaurant-public">
+  return <main className="restaurant-module restaurant-public" onClickCapture={trackContact}>
     {loading ? <p role="status">Cargando la carta…</p> : site ? <RestaurantMenu data={site.menu} /> : <><h1>Carta no disponible</h1><p role="status">{notice}</p><button type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar</button></>}
   </main>;
 }

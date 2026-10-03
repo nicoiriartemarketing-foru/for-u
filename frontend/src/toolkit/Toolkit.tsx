@@ -24,6 +24,8 @@ import { useDialogFocus } from "./useDialogFocus";
 import TodayView from "./TodayView";
 import { todayRoute, type TodayProgress } from "./todayModel";
 import "./toolkit.css";
+import { useAreaDocuments } from '../pages/dashboard/AreaDocuments';
+import { projectModuleType } from '../modules/moduleProjects';
 const TemplateLibrary = lazy(() => import("./TemplateLibrary"));
 const ConnectionStatus = lazy(() => import("./ConnectionStatus"));
 const ContentStudio = lazy(() => import("./ContentStudio"));
@@ -162,12 +164,14 @@ export default function Toolkit({
   demo = false,
   initialTool,
   initialPage,
+  embedded = false,
 }: {
   project: ForUActiveProject;
   onBack?: () => void;
   demo?: boolean;
   initialTool?: ToolId;
   initialPage?: 'today' | 'templates';
+  embedded?: boolean;
 }) {
   const { user } = useAuth();
   const userId = demo ? "demo" : user?.id;
@@ -180,7 +184,7 @@ export default function Toolkit({
       business={businessFromProject(project)}
       demo={demo}
     >
-      <ToolkitShell project={project} onBack={onBack} initialTool={initialTool} initialPage={initialPage} />
+      <ToolkitShell project={project} onBack={onBack} initialTool={initialTool} initialPage={initialPage} embedded={embedded} />
     </ToolkitProvider>
   );
 }
@@ -192,11 +196,13 @@ function ToolkitShell({
   onBack,
   initialTool,
   initialPage,
+  embedded = false,
 }: {
   project: ForUActiveProject;
   onBack?: () => void;
   initialTool?: ToolId;
   initialPage?: 'today' | 'templates';
+  embedded?: boolean;
 }) {
   const { user, signOut } = useAuth();
   const {
@@ -205,6 +211,9 @@ function ToolkitShell({
     adaptive,
     setAdaptive,
     loading,
+    loadError,
+    status,
+    reload,
     business,
     demo,
     docs,
@@ -252,7 +261,7 @@ function ToolkitShell({
     });
   return (
     <div className="tk-app hoy-shell" data-focus={state}>
-      <header className="hoy-topbar" inert={menu}>
+      {!embedded && <header className="hoy-topbar" inert={menu}>
         <button
           className="hoy-menu-toggle"
           onClick={() => {
@@ -272,7 +281,7 @@ function ToolkitShell({
         <span className="hoy-wordmark" aria-label="FOR U">
           for u
         </span>
-      </header>
+      </header>}
       <main
         className={"hoy-main" + (page === "today" ? " is-today" : "")}
         inert={menu}
@@ -281,7 +290,7 @@ function ToolkitShell({
           <p className="hoy-loading" role="status">
             Preparando tu siguiente paso…
           </p>
-        ) : page === "today" ? (
+        ) : loadError ? <section className="tk-card"><p role="alert">{status}</p><button onClick={() => void reload()}>Reintentar carga</button></section> : page === "today" ? (
           <TodayView project={project} onHelp={() => setChatOpen(true)} />
         ) : page === "templates" ? (
           <Suspense fallback={<p>Cargando plantillas…</p>}>
@@ -319,26 +328,23 @@ function ToolkitShell({
               {tool === "calendar" && (
                 <>
                   <Calendar />
-                  <ConnectionStatus />
+                  <ConnectionStatus calendarOnly readOnly />
                 </>
               )}
               {tool === "landing" && <LandingBuilder />}
               {tool === "bookings" && (
                 <>
                   <Bookings />
-                  <ConnectionStatus />
                 </>
               )}
               {tool === "analytics" && (
                 <>
-                  <Analytics completed={completed} total={tasks.length} />
-                  <ConnectionStatus />
+                  {embedded ? <SharedAreaAnalytics project={project} /> : <Analytics completed={completed} total={tasks.length} />}
                 </>
               )}
               {tool === "automation" && (
                 <>
                   <Automation />
-                  <ConnectionStatus />
                 </>
               )}
               {tool === "assistant" && (
@@ -513,4 +519,10 @@ function ToolkitShell({
       )}
     </div>
   );
+}
+
+function SharedAreaAnalytics({ project }: { project: ForUActiveProject }) {
+  const { entry } = useAreaDocuments(project.id, projectModuleType(project) ?? 'restaurant');
+  const tasks = entry?.tasks?.tasks ?? [];
+  return <Analytics completed={tasks.filter(task => task.done).length} total={tasks.length} />;
 }

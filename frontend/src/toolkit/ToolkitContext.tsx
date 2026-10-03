@@ -23,6 +23,7 @@ type ToolkitContextValue = {
   business: Business;
   demo: boolean;
   loading: boolean;
+  loadError: boolean;
   docs: Record<string, unknown>;
   status: string;
   state: FocusState;
@@ -77,6 +78,7 @@ export function ToolkitProvider({
 }) {
   const [docs, setDocs] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(!demo);
+  const [loadError, setLoadError] = useState(false);
   const [status, setStatus] = useState(
     demo
       ? "Prueba · los cambios duran esta sesión"
@@ -93,10 +95,13 @@ export function ToolkitProvider({
   const lastIntervention = useRef(0);
   const shown = useRef(new Set<string>());
   const queues = useRef(new Map<string, Promise<void>>());
+  const revisions = useRef(new Map<string, string>());
+  const documentsReady = useRef(demo);
 
   const reload = useCallback(async () => {
     if (demo) return;
     if (!supabase) {
+      setLoadError(true);
       setStatus("Conecta tu cuenta para guardar tus herramientas.");
       setLoading(false);
       return;
@@ -105,7 +110,7 @@ export function ToolkitProvider({
     const [documents, history, preferences] = await Promise.all([
       supabase
         .from("toolkit_documents")
-        .select("kind,payload")
+        .select("kind,payload,updated_at")
         .eq("user_id", userId)
         .eq("project_id", projectId),
       supabase
@@ -121,11 +126,14 @@ export function ToolkitProvider({
         .maybeSingle(),
     ]);
     if (!mounted.current) return;
+    documentsReady.current = !documents.error;
+    setLoadError(Boolean(documents.error));
     if (documents.error)
       setStatus(
         "No pudimos cargar la nube. Reintenta para guardar tus cambios.",
       );
     else {
+      revisions.current = new Map((documents.data ?? []).map(row => [row.kind, row.updated_at]));
       setDocs(
         Object.fromEntries(
           (documents.data ?? []).map((row) => [row.kind, row.payload]),
@@ -166,22 +174,25 @@ export function ToolkitProvider({
         return;
       }
       if (!supabase) throw new Error("Conecta tu cuenta para guardar.");
+      if (!documentsReady.current) throw new Error('No se cargaron los datos guardados. Recarga antes de editar para no sobrescribirlos.');
       const client = supabase;
       const previous = queues.current.get(kind) ?? Promise.resolve();
       const pending = previous
         .catch(() => {})
         .then(async () => {
-          const { error } = await client
-            .from("toolkit_documents")
-            .upsert(
-              { user_id: userId, project_id: projectId, kind, payload: value },
-              { onConflict: "user_id,project_id,kind" },
-            );
+          const revision = revisions.current.get(kind);
+          const updated_at = new Date().toISOString();
+          const record = { user_id: userId, project_id: projectId, kind, payload: value, updated_at };
+          const { data, error } = revision
+            ? await client.from('toolkit_documents').update({ payload: value, updated_at }).eq('user_id', userId).eq('project_id', projectId).eq('kind', kind).eq('updated_at', revision).select('updated_at').maybeSingle()
+            : await client.from('toolkit_documents').insert(record).select('updated_at').single();
+          if (error?.code === '23505' || (!error && !data)) throw new Error('Esta herramienta cambió en otra pestaña. Conserva tus cambios y recarga antes de guardar.');
           if (error)
             throw new Error(
               "No se guardó en la nube. Conserva esta pantalla y vuelve a intentar.",
             );
           if (mounted.current) {
+            revisions.current.set(kind, data!.updated_at);
             setDocs((current) => ({ ...current, [kind]: value }));
             setStatus("Guardado en tu cuenta");
           }
@@ -350,6 +361,7 @@ export function ToolkitProvider({
         business,
         demo,
         loading,
+        loadError,
         docs,
         status,
         state,

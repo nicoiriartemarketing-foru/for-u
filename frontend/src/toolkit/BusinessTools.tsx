@@ -246,10 +246,11 @@ export function Analytics({
       if (!active) return;
       setLoading(false);
       if (error) {
+        setCounts(null);
         setNotice("No pudimos actualizar las métricas. Inténtalo de nuevo.");
         return;
       }
-      setCounts(data);
+      setCounts(data ?? { unique_visitors: 0, page_views: 0, cta_clicks: 0, pages: [], sources: [], updated_at: new Date().toISOString() });
       setNotice(
         data ? "" : "Publica tu página para empezar a medir visitas y clics.",
       );
