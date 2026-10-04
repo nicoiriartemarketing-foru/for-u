@@ -18,3 +18,19 @@
 .content-creator .creator-gallery{padding:24px;border:1px solid #e2e8f0;border-radius:16px}.content-creator .creator-media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;margin:20px 0}.content-creator .creator-media-grid img{width:100%;aspect-ratio:1;object-fit:cover}
 .content-creator .creator-saved-grid button{display:grid;gap:10px;text-align:left}
 @media(max-width:750px){.content-creator{padding:20px 16px}.content-creator .creator-editor{grid-template-columns:minmax(0,1fr)}.content-creator .creator-template-grid,.content-creator .creator-saved-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Identidad pastel: cambia el marco del editor, no los colores del diseño exportado. */
+.content-creator{background:#fff;color:#1f2937;padding:32px}
+.content-creator>header{background:#fff;border-bottom:2px solid #f3f4f6;padding:0 0 24px}
+.content-creator h1,.content-creator h2{font-weight:400}
+.content-creator button{min-height:44px;border-radius:12px;border-color:#e5e7eb;transition:transform .2s,box-shadow .2s,background .2s}
+.content-creator button:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 3px 8px #1f293710;background:#fce7f3}
+.content-creator button:not(:disabled):active{transform:scale(.98)}
+.content-creator .creator-scratch{background:#111827;color:#fff}
+.content-creator .creator-fields{background:#fafafa;padding:24px;border:1px solid #e5e7eb;border-radius:16px}
+.content-creator input,.content-creator select,.content-creator textarea{border-radius:12px;border-color:#e5e7eb}
+.content-creator :focus-visible{outline:3px solid #374151;outline-offset:3px}
+.content-creator .creator-preview{border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 3px 8px #1f293708}
+.content-creator .creator-template,.content-creator .creator-gallery{border-color:#e5e7eb;border-radius:16px;box-shadow:0 2px 5px #1f293708}
+@media(max-width:750px){.content-creator{padding:20px 16px}.content-creator .creator-fields{padding:16px}}
+@media(prefers-reduced-motion:reduce){.content-creator button{transition:none!important;transform:none!important}}

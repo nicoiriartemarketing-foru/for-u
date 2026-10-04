@@ -15,9 +15,9 @@
 
 /* FOR U identity: readable timer text on every stop of the iridescent surface. */
 .floating-pomodoro-toggle{background:#334155}
-.floating-pomodoro.is-running .floating-pomodoro-toggle{background:linear-gradient(110deg,#fcd34d,#f472b6,#a855f7,#22d3ee);color:#0b1220}
+.floating-pomodoro.is-running .floating-pomodoro-toggle{background:linear-gradient(110deg,#fde68a,#fbcfe8,#e9d5ff,#a5f3fc);color:#0b1220}
 .floating-pomodoro.is-running .floating-pomodoro-toggle small{color:#0b1220}
 .floating-pomodoro.is-running .pomodoro-orbit-track{stroke:#ffffffb3}
 .floating-pomodoro.is-running .pomodoro-orbit-progress{stroke:#0b1220}
-.foru-pomodoro-ring.is-iridescent{background:linear-gradient(110deg,#fcd34d,#f472b6,#a855f7,#22d3ee);border-radius:50%;color:#0b1220}
+.foru-pomodoro-ring.is-iridescent{background:linear-gradient(110deg,#fde68a,#fbcfe8,#e9d5ff,#a5f3fc);border-radius:50%;color:#0b1220}
 .foru-pomodoro-ring.is-iridescent strong,.foru-pomodoro-ring.is-iridescent span{color:#0b1220}
