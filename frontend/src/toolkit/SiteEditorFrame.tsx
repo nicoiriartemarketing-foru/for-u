@@ -1,3 +1,6 @@
+import { LandingExtras } from "./LandingPreview";
+import { ButtonGhost, Card } from "../components/ui/DesignSystem";
+import "./professionalEditor.css";
 import { useEffect, useRef, useState } from "react";
 import type { LandingDraft } from "./types";
 import { parseSiteData } from "./publicData";
@@ -58,6 +61,8 @@ function Editable({
   );
 }
 export default function SiteEditorFrame() {
+  const drag = useRef<string | null>(null);
+  const [selected, setSelected] = useState("hero");
   const [draft, setDraft] = useState<LandingDraft | null>(null);
   const channel = new URLSearchParams(window.location.search).get("channel");
   const send = (type: string, payload: object = {}) => {
@@ -91,12 +96,12 @@ export default function SiteEditorFrame() {
   const edit = (field: string, value: string, blockId?: string) =>
     send("foru:edit", { field, value, blockId });
   return (
-    <article className={"tk-landing-preview tk-template-" + draft.template}>
+    <article className={"pe-editable-page tk-landing-preview tk-template-" + draft.template} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); const preset = event.dataTransfer.getData('application/foru-section'); if (preset) send('foru:add', { preset }); }}>
       <header>
         <strong>{draft.name}</strong>
         <span>Haz clic en un texto para editarlo</span>
       </header>
-      <section className="tk-site-hero">
+      <Card as="section" className={`tk-site-hero pe-editable-section ${selected === 'hero' ? 'pe-selected' : ''}`} onClick={() => { setSelected('hero'); send('foru:select', { id: 'hero' }); }} onFocus={() => { setSelected('hero'); send('foru:select', { id: 'hero' }); }}>
         {draft.heroImage && (
           <img
             src={draft.heroImage}
@@ -117,9 +122,14 @@ export default function SiteEditorFrame() {
           onEdit={edit}
         />
         <Editable value={draft.cta} field="cta" onEdit={edit} />
-      </section>
-      {draft.blocks.map((block) => (
-        <section key={block.id} className="tk-site-block">
+      </Card>
+      {draft.blocks.map((block, index) => (
+        <Card as="section" key={block.id} data-block-id={block.id} className={`tk-site-block pe-editable-section ${selected === block.id ? 'pe-selected' : ''}`} onClick={() => { setSelected(block.id); send('foru:select', { id: block.id }); }} onFocus={() => { setSelected(block.id); send('foru:select', { id: block.id }); }} onDragOver={event => event.preventDefault()} onDrop={event => { if (!drag.current) return; event.preventDefault(); event.stopPropagation(); send('foru:move', { from: drag.current, to: block.id }); drag.current = null; }}>
+          <div className="pe-block-controls" contentEditable={false}>
+            <ButtonGhost type="button" draggable aria-label={`Arrastrar ${block.title}`} tooltip="Arrastra para mover esta sección. También puedes usar los botones Subir y Bajar." onDragStart={event => { drag.current = block.id; event.dataTransfer.setData('text/plain', block.id); event.dataTransfer.effectAllowed = 'move'; }} onDragEnd={() => { drag.current = null; }}>⠿</ButtonGhost>
+            <ButtonGhost type="button" aria-label={`Subir ${block.title}`} disabled={index === 0} onClick={() => send('foru:move', { from: block.id, to: draft.blocks[index - 1].id })}>↑</ButtonGhost>
+            <ButtonGhost type="button" aria-label={`Bajar ${block.title}`} disabled={index === draft.blocks.length - 1} onClick={() => send('foru:move', { from: block.id, to: draft.blocks[index + 1].id })}>↓</ButtonGhost>
+          </div>
           <Editable
             value={block.title}
             field="title"
@@ -134,8 +144,9 @@ export default function SiteEditorFrame() {
             tag="p"
             onEdit={edit}
           />
-        </section>
+        </Card>
       ))}
+      <LandingExtras draft={draft} />
       <footer>{draft.name} · Creado con FOR U</footer>
     </article>
   );

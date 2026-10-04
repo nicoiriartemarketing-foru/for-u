@@ -1,3 +1,7 @@
+import { useUnsavedNavigation } from "../lib/useUnsavedNavigation";
+import { Textarea, InfoIcon } from "../components/ui/DesignSystem";
+import { createEditorSection, editorIndustry, reorderEditorSections, sectionPresets } from "./editorSections";
+import "./professionalEditor.css";
 import { editorHistory, type EditorHistory } from "./editorHistory";
 import { Card as DSCard } from '../components/ui/DesignSystem';
 import { ButtonSecondary as DSButtonSecondary, Input as DSInput, ButtonPrimary as DSButtonPrimary } from '../components/ui/DesignSystem';
@@ -19,7 +23,12 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   const [notice, setNotice] = useState("");
   const [publishedUrl, setPublishedUrl] = useState("");
   const [dirty, setDirty] = useState(false);
+  useUnsavedNavigation(!wizard && (dirty || busy));
   const drag = useRef(-1);
+  const [selectedId, setSelectedId] = useState('hero');
+  const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
+  const industry = editorIndustry(business.moduleType || business.industry);
+  const selectedBlock = draft.blocks.find(block => block.id === selectedId);
   const frame = useRef<HTMLIFrameElement>(null);
   const [channel] = useState(() => crypto.randomUUID());
   const [autosaveStatus, setAutosaveStatus] = useState("");
@@ -45,6 +54,18 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
           { type: "foru:render", channel, draft: draftRef.current },
           window.location.origin,
         );
+        return;
+      }
+      if (busy) return;
+      if (event.data.type === 'foru:select' && typeof event.data.id === 'string') {
+        setSelectedId(event.data.id); return;
+      }
+      if (event.data.type === 'foru:move' && typeof event.data.from === 'string' && typeof event.data.to === 'string') {
+        setDraft(current => ({ ...current, blocks: reorderEditorSections(current.blocks, event.data.from, event.data.to) })); setDirty(true); return;
+      }
+      if (event.data.type === 'foru:add' && typeof event.data.preset === 'string') {
+        const block = createEditorSection(business.moduleType || business.industry, event.data.preset);
+        if (block && draftRef.current.blocks.length < 8) { setDraft(current => ({ ...current, blocks: [...current.blocks, block] })); setSelectedId(block.id); setDirty(true); }
         return;
       }
       if (
@@ -85,7 +106,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
     };
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);
-  }, [channel, busy]);
+  }, [channel, busy, business.industry, business.moduleType, setDraft]);
   useEffect(() => {
     if (!dirty || busy || wizard) return;
     const snapshot = draft;
@@ -242,9 +263,11 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   }
   if (wizard) return <LandingWizard draft={draft} update={update} busy={busy} dirty={dirty} demo={demo} notice={notice} publishedUrl={publishedUrl} onSave={saveDraft} onPublish={publish} onUpload={uploadCover} onSuggest={suggestStory} />;
   return (
-    <div className="tk-visual-editor" inert={busy} aria-busy={busy}>
+    <div className="foru-professional-editor tk-visual-editor" inert={busy} aria-busy={busy}>
+      <header className="pe-topbar"><div><small>EDITOR VISUAL · {industry.name}</small><h2>Tu página, a tu manera</h2><p>Selecciona un texto para escribir. Arrastra secciones para cambiar su orden.</p></div><span role="status">{autosaveStatus || (dirty ? 'Cambios pendientes' : 'Borrador cargado')}</span></header>
       <DSCard as="section" className="tk-card tk-stack tk-editor-sections">
-        <h2>Secciones</h2>
+        <h2>Secciones <InfoIcon text="Arrastra una sección para reordenarla o usa Subir y Bajar. Selecciónala para editar sus propiedades." /></h2>
+        <DSButtonSecondary type="button" aria-pressed={selectedId === 'hero'} tooltip="Edita el título, la historia y el botón principal." onClick={() => setSelectedId('hero')}>Portada</DSButtonSecondary>
         <div className="tk-toolbar" aria-label="Historial de edición">
           <DSButtonSecondary type="button" tooltip="Deshace el último cambio del borrador. No retira una publicación existente." disabled={busy || !history.past.length} onClick={() => { dispatchHistory({ type: 'undo' }); setDirty(true); }}>↶ Deshacer</DSButtonSecondary>
           <DSButtonSecondary type="button" tooltip="Recupera el cambio que acabas de deshacer." disabled={busy || !history.future.length} onClick={() => { dispatchHistory({ type: 'redo' }); setDirty(true); }}>↷ Rehacer</DSButtonSecondary>
@@ -266,7 +289,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
               drag.current = -1;
             }}
           >
-            <strong>{block.title}</strong>
+            <DSButtonSecondary type="button" aria-pressed={selectedId === block.id} tooltip={`Editar la sección ${block.title}`} onClick={() => setSelectedId(block.id)}>{block.title}</DSButtonSecondary>
             <div className="tk-toolbar">
               <DSButtonSecondary
                 aria-label={"Subir " + block.title}
@@ -299,6 +322,8 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
             </div>
           </article>
         ))}
+        <h3>Bloques para {industry.name.toLowerCase()}</h3>
+        {sectionPresets(business.moduleType || business.industry).map(preset => <DSButtonSecondary key={preset.key} type="button" draggable={!busy && draft.blocks.length < 8} onDragStart={event => { event.dataTransfer.setData('application/foru-section', preset.key); event.dataTransfer.effectAllowed = 'copy'; }} disabled={busy || draft.blocks.length >= 8} tooltip={preset.description} onClick={() => { const block = createEditorSection(business.moduleType || business.industry, preset.key); if (block) { update({ blocks: [...draft.blocks, block] }); setSelectedId(block.id); } }}>＋ {preset.title}</DSButtonSecondary>)}
         <DSButtonSecondary
           disabled={busy || draft.blocks.length >= 8}
           onClick={() =>
@@ -318,20 +343,22 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         </DSButtonSecondary>
       </DSCard>
       <section className="tk-editor-preview tk-stack">
-        <h2>Vista previa</h2>
+        <div className="pe-preview-toolbar"><h2>Vista previa</h2><div><DSButtonSecondary type="button" aria-pressed={viewport === 'desktop'} tooltip="Revisa la página con un ancho de escritorio." onClick={() => setViewport('desktop')}>Escritorio</DSButtonSecondary><DSButtonSecondary type="button" aria-pressed={viewport === 'mobile'} tooltip="Revisa la página a 360 píxeles de ancho." onClick={() => setViewport('mobile')}>Móvil</DSButtonSecondary></div></div>
         <p>Haz clic sobre cualquier título o párrafo para editarlo.</p>
-        <iframe
+        <div className={`pe-canvas pe-canvas-${viewport}`}><iframe
           ref={frame}
           title="Vista previa editable de tu página"
           src={"/site-preview?channel=" + channel}
-        />
+        /></div>
         <p role="status">
           {autosaveStatus ||
             (dirty ? "Cambios pendientes" : "Borrador guardado")}
         </p>
       </section>
       <DSCard as="section" className="tk-card tk-stack tk-editor-tools">
-        <h2>Herramientas</h2>
+        <h2>Propiedades</h2>
+        {selectedBlock ? <div className="pe-properties"><h3>Sección seleccionada</h3><DSInput label="Título de sección" info="Este título se muestra en tu página pública al publicar los cambios." value={selectedBlock.title} maxLength={150} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, title: event.target.value } : block) })} /><Textarea label="Texto de sección" info="Describe esta parte de tu oferta con información real de tu negocio." value={selectedBlock.body} maxLength={2000} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, body: event.target.value } : block) })} /></div> : <div className="pe-properties"><h3>Portada</h3><DSInput label="Título principal" info="La primera frase que verán tus visitantes." value={draft.headline} maxLength={180} onChange={event => update({ headline: event.target.value })} /><Textarea label="Historia de tu negocio" info="Explica qué ofreces y qué hace especial a tu negocio." value={draft.description} maxLength={1000} onChange={event => update({ description: event.target.value })} /><DSInput label="Texto del botón" info="Describe la acción que quieres que realice tu visitante." value={draft.cta} maxLength={50} onChange={event => update({ cta: event.target.value })} /></div>}
+        <h3>Datos de la página</h3>
         <label>
           Plantilla
           <select

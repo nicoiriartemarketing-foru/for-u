@@ -45,10 +45,15 @@ export function LandingPreview({
           <p>{block.body}</p>
         </section>
       ))}
-      {!!draft.gallery?.length && <section className="tk-site-gallery">{draft.gallery.map(photo => <figure key={photo.role}><img src={photo.url} alt={photo.alt} loading="lazy" /><figcaption>{photo.role}</figcaption></figure>)}</section>}
-      {!!draft.menuItems?.length && <section className="tk-site-block"><h2>Nuestros productos</h2><ul className="tk-site-products">{draft.menuItems.map(item => <li key={item.id}><strong>{item.name}</strong><span>{new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(item.price)}</span></li>)}</ul></section>}
+      <LandingExtras draft={draft} />
       {children}
       <footer>{draft.name} · Creado con FOR U</footer>
     </article>
   );
 }
+
+export function LandingExtras({ draft }: { draft: LandingDraft }) { return <>
+      {!!draft.gallery?.length && <section className="tk-site-gallery">{draft.gallery.map(photo => <figure key={photo.role}><img src={photo.url} alt={photo.alt} loading="lazy" /><figcaption>{photo.role}</figcaption></figure>)}</section>}
+      {!!draft.menuItems?.length && <section className="tk-site-block"><h2>Nuestros productos</h2><ul className="tk-site-products">{draft.menuItems.map(item => <li key={item.id}><strong>{item.name}</strong><span>{new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(item.price)}</span></li>)}</ul></section>}
+
+</>; }

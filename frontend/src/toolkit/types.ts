@@ -11,6 +11,7 @@ export type ToolId =
   | "bookings"
   | "automation";
 export type Business = {
+  moduleType?: string;
   name: string;
   industry: string;
   objective: string;
@@ -23,6 +24,7 @@ export function businessFromProject(project: ForUActiveProject): Business {
   return {
     name: project.name,
     industry: project.industryKey ?? "servicios",
+    moduleType: typeof p.moduleType === "string" ? p.moduleType : undefined,
     objective: String(p.objective ?? project.tangibleGoal ?? "ventas"),
     audience: String(p.idealTraveler ?? "mi comunidad"),
     offer: String(p.offerType ?? "mi servicio"),
