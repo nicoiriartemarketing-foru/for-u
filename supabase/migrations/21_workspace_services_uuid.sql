@@ -110,7 +110,7 @@ end $$;
 revoke insert, update, delete on public.toolkit_events from authenticated;
 revoke insert, delete on public.toolkit_bookings from authenticated;
 
-create or replace function public.toolkit_touch() returns trigger language plpgsql set search_path = '' as $$ begin new.updated_at = now(); return new; end $$;
+create or replace function public.toolkit_touch() returns trigger language plpgsql set search_path = '' as $$ begin new.updated_at = greatest(clock_timestamp(), old.updated_at + interval '1 microsecond'); return new; end $$;
 drop trigger if exists toolkit_documents_touch on public.toolkit_documents;
 create trigger toolkit_documents_touch before update on public.toolkit_documents for each row execute function public.toolkit_touch();
 drop trigger if exists toolkit_preferences_touch on public.user_preferences;
@@ -351,21 +351,30 @@ begin
     raise exception 'Proyecto no disponible' using errcode = '42501';
   end if;
   with events as (
-    select a.visitor_id,a.event_type,a.page_path,a.referrer from public.site_analytics a
+    select a.visitor_id,a.event_type,a.page_path,a.referrer,a.created_at from public.site_analytics a
       join public.toolkit_sites s on s.id=a.site_id and s.user_id=a.user_id
       where s.project_id::text=project and a.user_id=auth.uid() and a.created_at > now()-interval '30 days'
     union all
-    select a.visitor_id,a.event_type,a.page_path,a.referrer from public.module_site_analytics a
+    select a.visitor_id,a.event_type,a.page_path,a.referrer,a.created_at from public.module_site_analytics a
       join public.module_sites s on s.id=a.site_id and s.user_id=a.user_id
       where s.project_id::text=project and a.user_id=auth.uid() and a.created_at > now()-interval '30 days'
   ), pages as (select page_path as path,count(*) as views from events where event_type='page_view' group by page_path order by count(*) desc),
-  sources as (select referrer as source,count(*) as views from events where event_type='page_view' group by referrer order by count(*) desc)
+  sources as (select referrer as source,count(*) as views from events where event_type='page_view' group by referrer order by count(*) desc),
+  daily as (
+    select to_char(d.day,'YYYY-MM-DD') as day,
+      count(*) filter(where e.event_type='page_view') as views,
+      count(*) filter(where e.event_type='cta_click') as clicks
+    from generate_series(date_trunc('day',now() at time zone 'UTC') - interval '6 days', date_trunc('day',now() at time zone 'UTC'), interval '1 day') as d(day)
+    left join events e on (e.created_at at time zone 'UTC')::date = d.day::date
+    group by d.day order by d.day
+  )
   select jsonb_build_object(
     'unique_visitors',(select count(distinct visitor_id) from events where event_type='page_view'),
     'page_views',(select count(*) from events where event_type='page_view'),
     'cta_clicks',(select count(*) from events where event_type='cta_click'),
     'pages',coalesce((select jsonb_agg(pages) from pages),'[]'::jsonb),
     'sources',coalesce((select jsonb_agg(sources) from sources),'[]'::jsonb),
+    'daily',coalesce((select jsonb_agg(daily order by day) from daily),'[]'::jsonb),
     'updated_at',now()) into result;
   return result;
 end $$;

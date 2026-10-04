@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { usePomodoro } from '../../contexts/PomodoroContext';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { ModuleType } from '../../modules/moduleProjects';
 import { useAreaDocuments } from './AreaDocuments';
 import { areaDefinitions, areaProgress, areaToolPath, mascotMessage, rewardTask, type AreaId } from './areaModel';
 
 export default function AreaPanel({ projectId, type, area, play = false }: { projectId: string; type: ModuleType; area: AreaId; play?: boolean }) {
+  const { setAreaColor } = usePomodoro();
+  useEffect(() => { setAreaColor(areaDefinitions.find(value => value.id === area)!.color); }, [area, setAreaColor]);
   const { entry, change, save, reload } = useAreaDocuments(projectId, type);
   const [title, setTitle] = useState('');
   const [showAll, setShowAll] = useState(false);

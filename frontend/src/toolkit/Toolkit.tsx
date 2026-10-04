@@ -1,3 +1,4 @@
+import { areaDefinitions, areaProgress } from '../pages/dashboard/areaModel';
 import { lazy, Suspense, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -524,5 +525,5 @@ function ToolkitShell({
 function SharedAreaAnalytics({ project }: { project: ForUActiveProject }) {
   const { entry } = useAreaDocuments(project.id, projectModuleType(project) ?? 'restaurant');
   const tasks = entry?.tasks?.tasks ?? [];
-  return <Analytics completed={tasks.filter(task => task.done).length} total={tasks.length} />;
+  return <Analytics completed={tasks.filter(task => task.done).length} total={tasks.length} proUnlocked={Boolean(entry?.loaded && areaDefinitions.every(area => areaProgress(tasks, area.id).complete))} />;
 }

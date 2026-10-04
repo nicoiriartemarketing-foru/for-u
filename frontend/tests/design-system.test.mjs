@@ -1,4 +1,5 @@
 import test from 'node:test';
+import colors from 'tailwindcss/colors.js';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { areaDefinitions } from '../src/pages/dashboard/areaModel.ts';
@@ -14,10 +15,14 @@ test('business areas have stable distinct identities across dashboard and world'
  assert.equal(new Set(areaDefinitions.map(a=>a.pet)).size,4);
 });
 function luminance(hex){return hex.match(/[a-f0-9]{2}/gi).map(x=>parseInt(x,16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4).reduce((sum,x,i)=>sum+x*[.2126,.7152,.0722][i],0);}
-test('area card title colors meet normal text contrast',async()=>{
+test('gradient area cards meet normal text contrast at both endpoints',async()=>{
  const css=await readFile(new URL('pages/dashboard/workspace.css',root),'utf8');
  for(const area of areaDefinitions){
-  const rule=css.match(new RegExp('\\.dashboard-home \\.dashboard-area-'+area.id+'\\{background:(#[0-9a-f]{6});color:(#[0-9a-f]{6})'));
-  assert.ok(rule,area.id); const a=luminance(rule[1]), b=luminance(rule[2]); assert.ok((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5,area.id);
+  const start=css.indexOf('.dashboard-home .dashboard-area-'+area.id+'{');
+  const rule=css.slice(start,css.indexOf('}',start));
+  const stops=[...rule.matchAll(/(?:from|to)-(\w+)-(\d+)/g)].map(match=>colors[match[1]][match[2]]);
+  assert.equal(stops.length,2,area.id);
+  const text=rule.match(/color:(#[a-f0-9]{6})/)[1];
+  for(const stop of stops){const a=luminance(stop),b=luminance(text);assert.ok((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5,area.id+' '+stop);}
  }
 });

@@ -1,3 +1,4 @@
+import AnimatedMetric from '../pages/dashboard/AnimatedMetric';
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { AvailabilityManager } from "./Reservations";
@@ -213,14 +214,17 @@ export function Bookings() {
 export function Analytics({
   completed,
   total,
+  proUnlocked = false,
 }: {
   completed: number;
   total: number;
+  proUnlocked?: boolean;
 }) {
   const { userId, projectId, demo, business, actions } = useToolkit();
   const [counts, setCounts] = useState<{
     unique_visitors: number;
     page_views: number;
+    daily?: { day: string; views: number; clicks: number }[];
     cta_clicks: number;
     pages: { path: string; views: number }[];
     sources: { source: string; views: number }[];
@@ -293,7 +297,7 @@ export function Analytics({
     { key: "views", name: "Páginas vistas", value: counts?.page_views },
     {
       key: "conversions",
-      name: "Conversiones · clics en CTA",
+      name: "Clics de contacto",
       value: counts?.cta_clicks,
     },
   ].sort((a, b) =>
@@ -302,7 +306,8 @@ export function Analytics({
       : 0,
   );
   return (
-    <div className="tk-stack">
+    <div className={`tk-stack analytics-experience ${proUnlocked ? 'is-pro' : ''}`} >
+      {proUnlocked && <span className="pro-gold-badge">✦ Pro Desbloqueado</span>}
       <section className="tk-card">
         <div className="tk-toolbar">
           <div>
@@ -314,12 +319,12 @@ export function Analytics({
             {loading ? "Actualizando…" : "Actualizar métricas"}
           </button>
         </div>
-        <div className="tk-metrics">
+        <div className="tk-metrics visual-metrics">
           {metrics.map((m) => (
             <article key={m.key}>
               <span>{m.name}</span>
               <strong>
-                {m.value === undefined ? "—" : m.value.toLocaleString("es-PE")}
+                {m.value === undefined ? loading ? <span className="metric-skeleton" aria-label="Cargando métrica" /> : "—" : <AnimatedMetric value={m.value} />}
               </strong>
             </article>
           ))}
@@ -333,8 +338,7 @@ export function Analytics({
           </article>
         </div>
         <small>
-          Visitantes únicos por navegador durante 30 días. Las conversiones son
-          clics en los botones de contacto; no equivalen a ventas. Actualización
+          Visitantes únicos por navegador durante 30 días. Los clics de contacto no equivalen a ventas. Actualización
           en vivo con revisión adicional cada 15 segundos.
         </small>
         {(demo || notice) && (
@@ -345,6 +349,7 @@ export function Analytics({
           </p>
         )}
       </section>
+      <section className="tk-card weekly-activity"><h3>Tu actividad esta semana</h3><p>Visitas a tus páginas · últimos 7 días (UTC)</p>{counts?.daily?.length ? <div className="weekly-bars" role="img" aria-label={counts.daily.map(day => `${day.day}: ${day.views} visitas`).join('; ')}>{counts.daily.map(day => <div key={day.day} className="weekly-day"><strong>{day.views}</strong><div className="weekly-column"><span style={{ height: `${day.views / Math.max(1, ...counts.daily!.map(item => item.views)) * 100}%` }} /></div><small>{new Date(`${day.day}T12:00:00Z`).toLocaleDateString('es-PE', { weekday: 'short', timeZone: 'UTC' })}</small></div>)}</div> : <p role="status">{loading ? 'Cargando actividad…' : counts ? 'El resumen semanal todavía no está disponible. Actualiza la función de métricas en Supabase.' : 'No se pudo consultar la actividad. Reintenta con Actualizar métricas.'}</p>}</section>
       <div className="tk-two-columns">
         <section className="tk-card tk-stack">
           <h3>Páginas más vistas</h3>
@@ -366,7 +371,7 @@ export function Analytics({
               </tbody>
             </table>
           ) : (
-            <p>Aún no hay páginas vistas registradas.</p>
+            <p>{counts ? 'Aún no hay páginas vistas registradas.' : 'Datos pendientes de consulta.'}</p>
           )}
         </section>
         <section className="tk-card tk-stack">

@@ -1,3 +1,4 @@
+import { Toaster } from 'react-hot-toast';
 import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react';
 import { BrowserRouter as Router, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import WorkspaceShell from './pages/dashboard/WorkspaceShell';
@@ -72,6 +73,7 @@ function App() {
   return (
     <AppErrorBoundary>
       <Router>
+        <Toaster position="top-right" toastOptions={{ duration: 3500, success: { style: { background: '#f0fdf4', color: '#14532d', border: '1px solid #86efac' } } }} />
         <AreaDocumentsProvider><PomodoroProvider><Suspense fallback={<RouteLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />

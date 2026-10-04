@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useEffect, useRef, useState } from "react";
 import { useToolkit } from "./ToolkitContext";
 import { localDate } from "./engine";
@@ -67,6 +68,7 @@ export default function Calendar() {
       await save("calendar", next);
       setEntries(next);
       setNotice('Agenda guardada en tu cuenta.');
+      toast.success('Agenda guardada', { id: `calendar-saved` });
       return true;
     } catch (e) {
       setNotice((e as Error).message);

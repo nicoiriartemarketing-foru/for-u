@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { usePomodoro } from '../contexts/PomodoroContext';
 
 type PomodoroTimerProps = {
@@ -36,19 +35,18 @@ export default function PomodoroTimer({
       <div className="foru-pomodoro-ring">
         <svg viewBox="0 0 128 128" role="img" aria-label={`${minutes}:${seconds}`}>
           <circle cx="64" cy="64" r="54" className="foru-pomodoro-track" />
-          <motion.circle
+          <circle
             cx="64"
             cy="64"
             r="54"
             className="foru-pomodoro-progress"
             strokeDasharray={circumference}
-            animate={{ strokeDashoffset: circumference * (1 - progress) }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
+            style={{ strokeDashoffset: circumference * (1 - progress), transition: 'stroke-dashoffset 350ms ease-out' }}
           />
         </svg>
         <div>
           <strong>{hasCompleted ? 'BINGO' : `${minutes}:${seconds}`}</strong>
-          <span>{hasCompleted ? '+10 monedas' : '25 min'}</span>
+          <span>{hasCompleted ? 'Un paso a tu ritmo' : `${Math.ceil(durationSeconds / 60)} min`}</span>
         </div>
       </div>
 
