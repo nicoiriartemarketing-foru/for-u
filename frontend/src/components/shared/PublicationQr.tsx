@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from '../ui/DesignSystem';
 import { useMemo } from 'react';
 import qrcode from 'qrcode-generator';
 import { downloadBlob } from '../../toolkit/api';
@@ -12,6 +13,6 @@ export default function PublicationQr({ url, label = 'tu carta publicada', filen
   return <figure className="publication-qr">
     <img width="220" height="220" src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`} alt={`Código QR de ${label}`} />
     <figcaption>{caption}</figcaption>
-    <button type="button" onClick={() => downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), filename)}>Descargar QR</button>
+    <DSButtonSecondary type="button" onClick={() => downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), filename)}>Descargar QR</DSButtonSecondary>
   </figure>;
 }

@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from '../ui/DesignSystem';
 import { useContext, useEffect, useState } from 'react';
 import { MediaScope } from './mediaScope';
 import { externalImageUrl, isPrivateMedia, privateMediaPath } from './mediaReference';
@@ -23,6 +24,6 @@ export default function ProjectImage({ value, alt, className }: { value: string;
   if (!isPrivateMedia(value)) { const url = externalImageUrl(value); return url ? <img className={className} src={url} alt={alt} /> : null; }
   if (!path) return <span role="status">Esta imagen no pertenece al proyecto abierto.</span>;
   if (resolved.path !== path) return <span role="status">Cargando imagen…</span>;
-  if (resolved.error) return <span role="status">{resolved.error} <button type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar imagen</button></span>;
+  if (resolved.error) return <span role="status">{resolved.error} <DSButtonSecondary type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar imagen</DSButtonSecondary></span>;
   return <img className={className} src={resolved.url} alt={alt} />;
 }

@@ -1,3 +1,4 @@
+import { Textarea as DSTextarea, ButtonSecondary as DSButtonSecondary, ButtonPrimary as DSButtonPrimary } from '../../components/ui/DesignSystem';
 import toast from 'react-hot-toast';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -32,10 +33,10 @@ export default function EmotionalCompass({ projectId, onDone }: { projectId: str
     catch (reason) { setError((reason as Error).message); }
     finally { lock.current = false; setBusy(false); }
   }}><span className="compass-symbol" aria-hidden="true">🧭</span><small>Tu negocio empieza contigo</small><h2 id="compass-title">¿Qué quieres lograr con este proyecto?</h2><p>Un propósito que te inspire. Puedes avanzar a tu ritmo.</p>
-    <label htmlFor="compass-goal">Mi propósito<textarea id="compass-goal" required maxLength={500} rows={3} value={goal} disabled={busy} onChange={e => setGoal(e.target.value)} placeholder="Ej: Lanzar mi taller de alfajores para Navidad" /></label>
-    <fieldset disabled={busy}><legend>¿Qué te gustaría sentir al lograrlo?</legend><div className="compass-emotions">{compassEmotions.map(item => <button type="button" key={item.id} aria-pressed={emotion === item.id} onClick={() => setEmotion(item.id)}><span aria-hidden="true">{item.icon}</span> {item.label}</button>)}</div></fieldset>
-    {error && <div role="alert"><p>{error}</p><button type="button" disabled={busy} onClick={() => { setConfig(undefined); setAttempt(value => value + 1); }}>Recargar perfil</button></div>}
-    <button className="project-modal-submit" disabled={busy || config === undefined || !goal.trim() || !emotion}>{busy ? 'Guardando tu propósito…' : '¡Comenzar mi ruta!'}</button><button type="button" disabled={busy} onClick={onDone}>Explorar primero</button>
+    <label htmlFor="compass-goal">Mi propósito<DSTextarea id="compass-goal" required maxLength={500} rows={3} value={goal} disabled={busy} onChange={e => setGoal(e.target.value)} placeholder="Ej: Lanzar mi taller de alfajores para Navidad" /></label>
+    <fieldset disabled={busy}><legend>¿Qué te gustaría sentir al lograrlo?</legend><div className="compass-emotions">{compassEmotions.map(item => <DSButtonSecondary type="button" key={item.id} aria-pressed={emotion === item.id} onClick={() => setEmotion(item.id)}><span aria-hidden="true">{item.icon}</span> {item.label}</DSButtonSecondary>)}</div></fieldset>
+    {error && <div role="alert"><p>{error}</p><DSButtonSecondary type="button" disabled={busy} onClick={() => { setConfig(undefined); setAttempt(value => value + 1); }}>Recargar perfil</DSButtonSecondary></div>}
+    <DSButtonPrimary className="project-modal-submit" disabled={busy || config === undefined || !goal.trim() || !emotion}>{busy ? 'Guardando tu propósito…' : '¡Comenzar mi ruta!'}</DSButtonPrimary><DSButtonSecondary type="button" disabled={busy} onClick={onDone}>Explorar primero</DSButtonSecondary>
   </form></div>;
 }
 export function CompassBadge({ projectId }: { projectId: string }) {

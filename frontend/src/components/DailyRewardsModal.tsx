@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from './ui/DesignSystem';
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { dailyRewards, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
@@ -78,12 +79,12 @@ export default function DailyRewardsModal({ isOpen, onClose }: DailyRewardsModal
               })}
             </div>
 
-            <button type="button" onClick={claim} disabled={isClaiming || !rewardStatus.shouldShow}>
+            <DSButtonSecondary type="button" onClick={claim} disabled={isClaiming || !rewardStatus.shouldShow}>
               {isClaiming ? 'Reclamando...' : rewardStatus.shouldShow ? `Reclamar ${rewardStatus.reward} monedas` : 'Ya reclamaste hoy ✓'}
-            </button>
-            <button type="button" className="foru-daily-reward-close" onClick={onClose}>
+            </DSButtonSecondary>
+            <DSButtonSecondary type="button" className="foru-daily-reward-close" onClick={onClose}>
               Cerrar
-            </button>
+            </DSButtonSecondary>
           </motion.section>
         </motion.div>
       ) : null}

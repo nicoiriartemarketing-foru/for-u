@@ -1,3 +1,5 @@
+import { Card as DSCard } from '../components/ui/DesignSystem';
+import { Textarea as DSTextarea, Input as DSInput, ButtonSecondary as DSButtonSecondary, ButtonPrimary as DSButtonPrimary } from '../components/ui/DesignSystem';
 import { useEffect, useRef, useState } from "react";
 import { useToolkit } from "./ToolkitContext";
 import { downloadBlob } from "./api";
@@ -203,12 +205,12 @@ export default function Teleprompter({
   }
   return (
     <div className="tk-two-columns">
-      <section className="tk-card tk-stack">
+      <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-eyebrow">TU VOZ, TU NEGOCIO</div>
         <h2>Habla con confianza</h2>
         <label>
           Tu guion
-          <textarea
+          <DSTextarea
             rows={10}
             value={script}
             onChange={(e) => setScript(e.target.value)}
@@ -217,7 +219,7 @@ export default function Teleprompter({
         </label>
         <label>
           Velocidad · {speed} píxeles/s
-          <input
+          <DSInput
             type="range"
             min="8"
             max="70"
@@ -232,7 +234,7 @@ export default function Teleprompter({
         </small>
         <label>
           Tamaño · {fontSize}px
-          <input
+          <DSInput
             type="range"
             min="20"
             max="60"
@@ -241,7 +243,7 @@ export default function Teleprompter({
           />
         </label>
         <label className="tk-check">
-          <input
+          <DSInput
             type="checkbox"
             checked={autoPause}
             onChange={(e) => setAutoPause(e.target.checked)}
@@ -253,7 +255,7 @@ export default function Teleprompter({
           afectar la detección.
         </small>
         <label className="tk-check">
-          <input
+          <DSInput
             type="checkbox"
             checked={liveCaptions}
             disabled={recording || !hasLiveSpeech()}
@@ -266,9 +268,9 @@ export default function Teleprompter({
             ? "Opcional: el servicio de voz de tu navegador procesa el audio. Los tiempos son aproximados y puedes editarlos después."
             : "Este navegador no admite reconocimiento de voz en vivo. Puedes transcribir el archivo desde el editor."}
         </small>
-        <button onClick={saveSettings}>Guardar guion y ritmo</button>
-      </section>
-      <section className="tk-card tk-stack">
+        <DSButtonSecondary onClick={saveSettings}>Guardar guion y ritmo</DSButtonSecondary>
+      </DSCard>
+      <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-camera">
           <video ref={video} muted playsInline className="tk-camera-feed" />
           {!ready && (
@@ -316,25 +318,25 @@ export default function Teleprompter({
         </div>
         <div className="tk-toolbar">
           {!ready ? (
-            <button
+            <DSButtonPrimary
               className="tk-primary"
               onClick={enableCamera}
               disabled={busy}
             >
               {busy ? "Abriendo cámara…" : "Activar cámara"}
-            </button>
+            </DSButtonPrimary>
           ) : (
-            <button
+            <DSButtonSecondary
               className={recording ? "tk-danger" : "tk-primary"}
               onClick={() => (recording ? recorder.current?.stop() : start())}
             >
               {recording ? "Terminar grabación" : "Grabar video"}
-            </button>
+            </DSButtonSecondary>
           )}
-          <button onClick={() => setPlaying((p) => !p)}>
+          <DSButtonSecondary onClick={() => setPlaying((p) => !p)}>
             {playing ? "Pausar texto" : "Reproducir texto"}
-          </button>
-          <button
+          </DSButtonSecondary>
+          <DSButtonSecondary
             onClick={() => {
               setPlaying(false);
               setActiveLine(0);
@@ -342,9 +344,9 @@ export default function Teleprompter({
             }}
           >
             Reiniciar texto
-          </button>
+          </DSButtonSecondary>
           {ready && !recording && (
-            <button
+            <DSButtonSecondary
               onClick={() => {
                 stream.current?.getTracks().forEach((t) => t.stop());
                 stream.current = null;
@@ -353,7 +355,7 @@ export default function Teleprompter({
               }}
             >
               Apagar cámara
-            </button>
+            </DSButtonSecondary>
           )}
         </div>
         {autoPause && quiet && playing && (
@@ -373,7 +375,7 @@ export default function Teleprompter({
               className="tk-video-preview"
             />
             <div className="tk-toolbar">
-              <button
+              <DSButtonSecondary
                 onClick={() =>
                   downloadBlob(
                     clip,
@@ -382,8 +384,8 @@ export default function Teleprompter({
                 }
               >
                 Descargar video
-              </button>
-              <button
+              </DSButtonSecondary>
+              <DSButtonPrimary
                 className="tk-primary"
                 onClick={() =>
                   onEdit(
@@ -397,7 +399,7 @@ export default function Teleprompter({
                 }
               >
                 Abrir en el editor
-              </button>
+              </DSButtonPrimary>
             </div>
           </>
         )}
@@ -406,7 +408,7 @@ export default function Teleprompter({
             {error}
           </p>
         )}
-      </section>
+      </DSCard>
     </div>
   );
 }

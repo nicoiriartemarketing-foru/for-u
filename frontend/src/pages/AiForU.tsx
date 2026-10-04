@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary, Textarea as DSTextarea } from '../components/ui/DesignSystem';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BookOpen, Bot, CalendarDays, CheckCircle2, Clapperboard, Clock, Edit3, Mic2, Send, Sparkles } from '../lib/icons';
@@ -200,7 +201,7 @@ export default function AiForU() {
                 const Icon = icons[index];
                 const colors = ['#EAEAEA', '#9A9A9A', '#9A9A9A', '#9A9A9A'];
                 return (
-                <button
+                <DSButtonSecondary
                   key={prompt}
                   type="button"
                   onClick={() => askAiForU(prompt)}
@@ -208,7 +209,7 @@ export default function AiForU() {
                 >
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: colors[index] }}><Icon size={17} /></span>
                   <span>{prompt}</span>
-                </button>
+                </DSButtonSecondary>
                 );
               })}
             </div>
@@ -276,7 +277,7 @@ export default function AiForU() {
 
           <div className="sticky bottom-0 mt-auto bg-[#FAFAFA] pb-2 pt-5">
             <div className="flex items-end gap-2 rounded-2xl border border-black/10 bg-white p-2 shadow-xl">
-              <textarea
+              <DSTextarea
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
                 onKeyDown={(event) => {
@@ -288,7 +289,7 @@ export default function AiForU() {
                 className="min-h-12 max-h-28 flex-1 resize-none bg-transparent px-3 py-3 text-sm font-semibold outline-none"
                 placeholder="Escribe aquí lo que no sabes cómo resolver..."
               />
-              <button
+              <DSButtonSecondary
                 type="button"
                 onClick={() => askAiForU()}
                 disabled={!question.trim() || isThinking}
@@ -296,7 +297,7 @@ export default function AiForU() {
                 title="Enviar"
               >
                 <Send size={18} />
-              </button>
+              </DSButtonSecondary>
             </div>
             <div className="mt-2 flex justify-center">
               <div className="flex gap-4">

@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from '../../components/ui/DesignSystem';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import { useEffect, useRef } from 'react';
@@ -28,7 +29,7 @@ export default function WorldScene({ projects, activeId, onSelect, onArea, reduc
     <FrameWatchdog onFailure={onFailure} /><color attach="background" args={['#c9eced']} /><ambientLight intensity={1.8} /><directionalLight position={[6, 12, 8]} intensity={2} /><CameraTravel x={index * 12} reduced={reduced || !visible} zoom={zoom} />
     <mesh position={[index * 12, -1.35, 0]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[150, 100]} /><meshStandardMaterial color="#76c9d6" roughness={1} /></mesh>
     {projects.map((p, i) => Math.abs(i - index) <= 2 && <Island3D key={p.id} project={p} position={[i * 12, 0, 0]} isSelected={p.id === activeId} onSelect={() => onSelect(p.id)} animated={!reduced && visible} subtitle="Tu proyecto · cuatro espacios">
-      {areaDefinitions.map((a, j) => <group key={a.id} position={[(j % 2 ? 1 : -1) * 1.35, 0.7, (j < 2 ? -1 : 1) * 1.3]} onClick={event => { event.stopPropagation(); onSelect(p.id); onArea(a.id); }}><mesh position={[0, 0.55, 0]}><boxGeometry args={[1.25, 1.4, 1.15]} /><meshStandardMaterial color={a.color} roughness={0.85} /></mesh><mesh position={[0, 1.45, 0]} rotation={[0, Math.PI / 4, 0]}><coneGeometry args={[1, 0.75, 4]} /><meshStandardMaterial color="#fff3da" /></mesh>{p.id === activeId && <Html position={[0, 2.05, 0]} center><button className="world-tower-label" onClick={() => onArea(a.id)}>{a.title}</button></Html>}</group>)}
+      {areaDefinitions.map((a, j) => <group key={a.id} position={[(j % 2 ? 1 : -1) * 1.35, 0.7, (j < 2 ? -1 : 1) * 1.3]} onClick={event => { event.stopPropagation(); onSelect(p.id); onArea(a.id); }}><mesh position={[0, 0.55, 0]}><boxGeometry args={[1.25, 1.4, 1.15]} /><meshStandardMaterial color={a.color} roughness={0.85} /></mesh><mesh position={[0, 1.45, 0]} rotation={[0, Math.PI / 4, 0]}><coneGeometry args={[1, 0.75, 4]} /><meshStandardMaterial color="#fff3da" /></mesh>{p.id === activeId && <Html position={[0, 2.05, 0]} center><DSButtonSecondary className="world-tower-label" onClick={() => onArea(a.id)}>{a.title}</DSButtonSecondary></Html>}</group>)}
       {p.id === activeId && <MascotGuide fixedLabel message="" animated={!reduced && visible} />}
     </Island3D>)}
     <Sailboat destination={[index * 12, -0.6, 5]} reduced={reduced || !visible} />

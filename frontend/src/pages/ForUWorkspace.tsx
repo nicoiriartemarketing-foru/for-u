@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import '../toolkit/toolkit.css';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
@@ -191,7 +192,7 @@ export default function ForUWorkspace() {
   }
 
   if (user && (cloudUserId !== user.id || isCloudSyncing)) return <ScreenLoader label="Preparando tus proyectos..." />;
-  if (screen === 'dashboard' && !currentProject) return <main className="hoy-shell"><section className="hoy-view"><p className="hoy-greeting">Hola, {user?.user_metadata?.display_name || 'emprendedora'}</p><div className="hoy-task"><h1>Elige el rubro de tu negocio</h1><p className="hoy-description">Solo necesitamos la base para preparar tu primer paso.</p></div><button className="hoy-action-btn" onClick={()=>setIsIndustryModalOpen(true)}>Empezar ahora</button></section><IndustryOnboardingModal isOpen={isIndustryModalOpen} onClose={()=>setIsIndustryModalOpen(false)} onCreateIndustryProject={createIndustryProject}/></main>;
+  if (screen === 'dashboard' && !currentProject) return <main className="hoy-shell"><section className="hoy-view"><p className="hoy-greeting">Hola, {user?.user_metadata?.display_name || 'emprendedora'}</p><div className="hoy-task"><h1>Elige el rubro de tu negocio</h1><p className="hoy-description">Solo necesitamos la base para preparar tu primer paso.</p></div><DSButtonSecondary className="hoy-action-btn" onClick={()=>setIsIndustryModalOpen(true)}>Empezar ahora</DSButtonSecondary></section><IndustryOnboardingModal isOpen={isIndustryModalOpen} onClose={()=>setIsIndustryModalOpen(false)} onCreateIndustryProject={createIndustryProject}/></main>;
   if ((screen === 'dashboard' || screen === 'tools') && currentProject) return <Suspense fallback={<ScreenLoader label="Abriendo tu estudio..." />}><Toolkit project={currentProject} onBack={() => setScreen('projects')} /></Suspense>;
 
   return (
@@ -230,8 +231,8 @@ export default function ForUWorkspace() {
         </label>
 
         <div className="foru-personal-header-stats">
-          <button type="button" className="magic-button magic-button-soft" disabled={!currentProject} onClick={() => setScreen('tools')}>Mi estudio · Herramientas</button>
-          <button
+          <DSButtonSecondary type="button" className="magic-button magic-button-soft" disabled={!currentProject} onClick={() => setScreen('tools')}>Mi estudio · Herramientas</DSButtonSecondary>
+          <DSButtonSecondary
             type="button"
             className="magic-button magic-button-soft"
             onClick={() => (screen === 'project' ? openDashboard(currentProjectId ?? undefined) : currentProjectId && viewProject(currentProjectId))}
@@ -242,20 +243,20 @@ export default function ForUWorkspace() {
             }}
           >
             {screen === 'project' ? 'Volver al tablero' : 'Continuar ruta'}
-          </button>
+          </DSButtonSecondary>
 
           <details className="foru-header-more">
             <summary style={{ fontFamily: 'var(--font-principal)' }}>Más</summary>
             <div>
               <Link to="/dashboard?view=projects">Mis proyectos por rubro</Link>
               {currentProject && projectModuleType(currentProject) === 'restaurant' && <Link to={`/modules/restaurant?project=${encodeURIComponent(currentProject.id)}`}>Mi restaurante · Menú y logística</Link>}
-              <button type="button" onClick={() => setIsChatOpen(true)}>Chat con For U</button>
-              <button type="button" onClick={openWorld}>Mi Mundo</button>
+              <DSButtonSecondary type="button" onClick={() => setIsChatOpen(true)}>Chat con For U</DSButtonSecondary>
+              <DSButtonSecondary type="button" onClick={openWorld}>Mi Mundo</DSButtonSecondary>
               <span>Monedas: {coins}</span>
               <Link to="/whatsapp">WhatsApp</Link>
               <Link to="/pricing">Plan {planLabel}</Link>
               <span>Racha: {dailyStreak} {dailyStreak === 1 ? 'dia' : 'dias'}</span>
-              <button type="button" onClick={handleSignOut}>Salir</button>
+              <DSButtonSecondary type="button" onClick={handleSignOut}>Salir</DSButtonSecondary>
             </div>
           </details>
         </div>
@@ -263,9 +264,9 @@ export default function ForUWorkspace() {
 
       {screen === 'world' ? (
         <section className="foru-integrated-view">
-          <button type="button" className="foru-integrated-back" onClick={() => openDashboard(currentProjectId ?? undefined)}>
+          <DSButtonSecondary type="button" className="foru-integrated-back" onClick={() => openDashboard(currentProjectId ?? undefined)}>
             ← Volver al tablero
-          </button>
+          </DSButtonSecondary>
           <Suspense fallback={<WorldLoader />}>
             <World3D onBackToMap={() => openDashboard(currentProjectId ?? undefined)} onOpenProject={viewProject} />
           </Suspense>
@@ -273,28 +274,28 @@ export default function ForUWorkspace() {
       ) : screen === 'project' ? (
         <section className="foru-integrated-view">
           <div className="foru-project-workbar">
-            <button type="button" onClick={() => openDashboard(currentProjectId ?? undefined)}>
+            <DSButtonSecondary type="button" onClick={() => openDashboard(currentProjectId ?? undefined)}>
               ← Volver al tablero
-            </button>
+            </DSButtonSecondary>
             <p>{currentProject?.name ? `Aquí tienes todo lo de ${currentProject.name}.` : 'Aquí tienes el proyecto completo.'}</p>
             <div className="foru-project-subtabs" aria-label="Vistas del proyecto">
-              <button type="button" className={projectSubview === 'route' ? 'is-active' : ''} onClick={() => setProjectSubview('route')}>
+              <DSButtonSecondary type="button" className={projectSubview === 'route' ? 'is-active' : ''} onClick={() => setProjectSubview('route')}>
                 🗺️ Ruta
-              </button>
+              </DSButtonSecondary>
               {currentProject?.industryKey ? (
-                <button type="button" className={projectSubview === 'kit' ? 'is-active' : ''} onClick={() => setProjectSubview('kit')}>
+                <DSButtonSecondary type="button" className={projectSubview === 'kit' ? 'is-active' : ''} onClick={() => setProjectSubview('kit')}>
                   🧳 Kit
-                </button>
+                </DSButtonSecondary>
               ) : null}
-              <button type="button" className={projectSubview === 'kanban' ? 'is-active' : ''} onClick={() => changeProjectSubview('kanban')}>
+              <DSButtonSecondary type="button" className={projectSubview === 'kanban' ? 'is-active' : ''} onClick={() => changeProjectSubview('kanban')}>
                 📋 Tareas
-              </button>
-              <button type="button" className={projectSubview === 'map' ? 'is-active' : ''} onClick={() => changeProjectSubview('map')}>
+              </DSButtonSecondary>
+              <DSButtonSecondary type="button" className={projectSubview === 'map' ? 'is-active' : ''} onClick={() => changeProjectSubview('map')}>
                 🧠 Mapa
-              </button>
-              <button type="button" className={projectSubview === 'gantt' ? 'is-active' : ''} onClick={() => changeProjectSubview('gantt')}>
+              </DSButtonSecondary>
+              <DSButtonSecondary type="button" className={projectSubview === 'gantt' ? 'is-active' : ''} onClick={() => changeProjectSubview('gantt')}>
                 📊 Tiempo
-              </button>
+              </DSButtonSecondary>
             </div>
           </div>
 
@@ -369,8 +370,8 @@ export default function ForUWorkspace() {
               <h2>{planLimitNotice.title}</h2>
               <p>{planLimitNotice.message}</p>
               <div>
-                <button type="button" onClick={() => navigate('/pricing')}>Ver planes</button>
-                <button type="button" onClick={clearPlanLimitNotice}>Ahora no</button>
+                <DSButtonSecondary type="button" onClick={() => navigate('/pricing')}>Ver planes</DSButtonSecondary>
+                <DSButtonSecondary type="button" onClick={clearPlanLimitNotice}>Ahora no</DSButtonSecondary>
               </div>
             </div>
           </div>

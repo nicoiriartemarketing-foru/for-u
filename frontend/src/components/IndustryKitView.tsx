@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from './ui/DesignSystem';
 import { useMemo, type ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import type { ForUActiveProject, ForUBranchKey, ForUNodePriority } from '../stores/useActiveProjectsStore';
@@ -386,9 +387,9 @@ export default function IndustryKitView({ project, onStart, onOpenTasks }: Indus
                   {isCreated ? 'Ver tareas' : 'Crear tareas'}
                 </MagicButton>
                 {isCreated ? (
-                  <button type="button" className="foru-kit-secondary-action" onClick={onOpenTasks}>
+                  <DSButtonSecondary type="button" className="foru-kit-secondary-action" onClick={onOpenTasks}>
                     Abrir Kanban
-                  </button>
+                  </DSButtonSecondary>
                 ) : null}
               </div>
             </MagicCard>

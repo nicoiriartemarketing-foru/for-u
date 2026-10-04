@@ -1,3 +1,5 @@
+import { Card as DSCard } from '../components/ui/DesignSystem';
+import { Input as DSInput, ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
 import { supabase } from "../lib/supabaseClient";
@@ -117,7 +119,7 @@ export default function ConnectionStatus({ calendarOnly = false, readOnly = fals
     }
   }
   return (
-    <section className="tk-card tk-stack">
+    <DSCard as="section" className="tk-card tk-stack">
       <h3>Tus conexiones</h3>
       <p>
         El estado conectado requiere una verificación válida durante los últimos
@@ -162,7 +164,7 @@ export default function ConnectionStatus({ calendarOnly = false, readOnly = fals
                 >
                   <label>
                     Autorización del servicio
-                    <input
+                    <DSInput
                       name="token"
                       type="password"
                       autoComplete="off"
@@ -176,24 +178,24 @@ export default function ConnectionStatus({ calendarOnly = false, readOnly = fals
                     navegador. Verifica acceso; no activa envíos ni
                     sincronización automática.
                   </small>
-                  <button disabled={demo || Boolean(busy)}>
+                  <DSButtonSecondary disabled={demo || Boolean(busy)}>
                     Conectar y verificar
-                  </button>
+                  </DSButtonSecondary>
                 </form>
                 {row && (
                   <div className="tk-toolbar">
-                    <button
+                    <DSButtonSecondary
                       disabled={Boolean(busy)}
                       onClick={() => void update(provider.id, "verify")}
                     >
                       Verificar estado
-                    </button>
-                    <button
+                    </DSButtonSecondary>
+                    <DSButtonSecondary
                       disabled={Boolean(busy)}
                       onClick={() => void update(provider.id, "disconnect")}
                     >
                       Desconectar
-                    </button>
+                    </DSButtonSecondary>
                   </div>
                 )}
               </details>}
@@ -203,8 +205,8 @@ export default function ConnectionStatus({ calendarOnly = false, readOnly = fals
       </div>
       {demo && <p>Las conexiones están desactivadas en la prueba.</p>}
       {notice && <p role="status">{notice}</p>}
-      {queryError && <button onClick={() => setAttempt(value => value + 1)}>Reintentar consulta</button>}
+      {queryError && <DSButtonSecondary onClick={() => setAttempt(value => value + 1)}>Reintentar consulta</DSButtonSecondary>}
       {readOnly && <Link to={`/dashboard/settings?project=${encodeURIComponent(projectId)}`}>Gestionar en Configuración →</Link>}
-    </section>
+    </DSCard>
   );
 }

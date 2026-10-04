@@ -1,3 +1,5 @@
+import { Card as DSCard } from '../components/ui/DesignSystem';
+import { ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import { useState } from "react";
 import { businessTemplates } from "../data/templates";
 import { useToolkit } from "./ToolkitContext";
@@ -10,7 +12,7 @@ export default function TemplateLibrary() {
   );
   const template = businessTemplates.find((t) => t.key === key)!;
   return (
-    <section className="tk-card tk-stack">
+    <DSCard as="section" className="tk-card tk-stack">
       <h2>Una ruta para tu rubro</h2>
       <label>
         Plantilla
@@ -49,7 +51,7 @@ export default function TemplateLibrary() {
           <p>
             <strong>Ejemplo ilustrativo:</strong> {step.example}
           </p>
-          <button
+          <DSButtonSecondary
             onClick={() =>
               downloadBlob(
                 new Blob([step.resource.content], {
@@ -60,9 +62,9 @@ export default function TemplateLibrary() {
             }
           >
             Descargar hoja de {step.title.toLowerCase()}
-          </button>
+          </DSButtonSecondary>
         </details>
       ))}
-    </section>
+    </DSCard>
   );
 }

@@ -1,3 +1,4 @@
+import { Input as DSInput, ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
@@ -121,7 +122,7 @@ function PublicSiteView({ slug }: { slug?: string }) {
             >
               <label>
                 Tu nombre
-                <input
+                <DSInput
                   required
                   name="name"
                   minLength={2}
@@ -131,27 +132,27 @@ function PublicSiteView({ slug }: { slug?: string }) {
               </label>
               <label>
                 Correo o WhatsApp
-                <input required name="contact" minLength={5} maxLength={200} />
+                <DSInput required name="contact" minLength={5} maxLength={200} />
               </label>
               <div style={{ display: "none" }} aria-hidden="true">
                 <label>
                   Sitio web
-                  <input name="website" tabIndex={-1} autoComplete="off" />
+                  <DSInput name="website" tabIndex={-1} autoComplete="off" />
                 </label>
               </div>
               {draft.fields.slice(0, 8).map((field, i) => (
                 <label key={`${field}-${i}`}>
                   {field}
-                  <input name={`field-${i}`} required maxLength={300} />
+                  <DSInput name={`field-${i}`} required maxLength={300} />
                 </label>
               ))}
               <label className="tk-check">
-                <input type="checkbox" required /> Acepto que {draft.name} use
+                <DSInput type="checkbox" required /> Acepto que {draft.name} use
                 estos datos para responder mi solicitud.
               </label>
-              <button disabled={busy} type="submit">
+              <DSButtonSecondary disabled={busy} type="submit">
                 {busy ? "Enviando…" : "Enviar solicitud"}
-              </button>
+              </DSButtonSecondary>
             </form>
           )}
           {notice && <p role="status">{notice}</p>}

@@ -1,4 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { editorHistory, type EditorHistory } from "./editorHistory";
+import { Card as DSCard } from '../components/ui/DesignSystem';
+import { ButtonSecondary as DSButtonSecondary, Input as DSInput, ButtonPrimary as DSButtonPrimary } from '../components/ui/DesignSystem';
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import LandingWizard from "../components/LandingWizard";
 import { supabase } from "../lib/supabaseClient";
 import { useToolkit } from "./ToolkitContext";
@@ -9,9 +12,9 @@ import { defaultLanding, type LandingDraft } from "./types";
 export { LandingPreview } from "./LandingPreview";
 export default function LandingBuilder({ wizard = false }: { wizard?: boolean }) {
   const { business, docs, save, userId, projectId, demo, track } = useToolkit();
-  const [draft, setDraft] = useState<LandingDraft>(
-    (docs.landing as LandingDraft) ?? defaultLanding(business),
-  );
+  const [history, dispatchHistory] = useReducer(editorHistory<LandingDraft>, { past: [], present: (docs.landing as LandingDraft) ?? defaultLanding(business), future: [] } as EditorHistory<LandingDraft>);
+  const draft = history.present;
+  const setDraft = useCallback((value: LandingDraft | ((current: LandingDraft) => LandingDraft)) => dispatchHistory({ type: 'edit', value }), []);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [publishedUrl, setPublishedUrl] = useState("");
@@ -240,8 +243,12 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   if (wizard) return <LandingWizard draft={draft} update={update} busy={busy} dirty={dirty} demo={demo} notice={notice} publishedUrl={publishedUrl} onSave={saveDraft} onPublish={publish} onUpload={uploadCover} onSuggest={suggestStory} />;
   return (
     <div className="tk-visual-editor" inert={busy} aria-busy={busy}>
-      <section className="tk-card tk-stack tk-editor-sections">
+      <DSCard as="section" className="tk-card tk-stack tk-editor-sections">
         <h2>Secciones</h2>
+        <div className="tk-toolbar" aria-label="Historial de edición">
+          <DSButtonSecondary type="button" tooltip="Deshace el último cambio del borrador. No retira una publicación existente." disabled={busy || !history.past.length} onClick={() => { dispatchHistory({ type: 'undo' }); setDirty(true); }}>↶ Deshacer</DSButtonSecondary>
+          <DSButtonSecondary type="button" tooltip="Recupera el cambio que acabas de deshacer." disabled={busy || !history.future.length} onClick={() => { dispatchHistory({ type: 'redo' }); setDirty(true); }}>↷ Rehacer</DSButtonSecondary>
+        </div>
         <p>Arrastra para ordenar o usa las flechas.</p>
         {draft.blocks.map((block, i) => (
           <article
@@ -261,7 +268,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
           >
             <strong>{block.title}</strong>
             <div className="tk-toolbar">
-              <button
+              <DSButtonSecondary
                 aria-label={"Subir " + block.title}
                 disabled={i === 0 || busy}
                 onClick={() =>
@@ -269,8 +276,8 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
                 }
               >
                 ↑
-              </button>
-              <button
+              </DSButtonSecondary>
+              <DSButtonSecondary
                 aria-label={"Bajar " + block.title}
                 disabled={i === draft.blocks.length - 1 || busy}
                 onClick={() =>
@@ -278,8 +285,8 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
                 }
               >
                 ↓
-              </button>
-              <button
+              </DSButtonSecondary>
+              <DSButtonSecondary
                 disabled={busy}
                 onClick={() =>
                   update({
@@ -288,11 +295,11 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
                 }
               >
                 Quitar
-              </button>
+              </DSButtonSecondary>
             </div>
           </article>
         ))}
-        <button
+        <DSButtonSecondary
           disabled={busy || draft.blocks.length >= 8}
           onClick={() =>
             update({
@@ -308,8 +315,8 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
           }
         >
           Agregar sección
-        </button>
-      </section>
+        </DSButtonSecondary>
+      </DSCard>
       <section className="tk-editor-preview tk-stack">
         <h2>Vista previa</h2>
         <p>Haz clic sobre cualquier título o párrafo para editarlo.</p>
@@ -323,7 +330,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
             (dirty ? "Cambios pendientes" : "Borrador guardado")}
         </p>
       </section>
-      <section className="tk-card tk-stack tk-editor-tools">
+      <DSCard as="section" className="tk-card tk-stack tk-editor-tools">
         <h2>Herramientas</h2>
         <label>
           Plantilla
@@ -340,7 +347,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         </label>
         <label>
           Nombre
-          <input
+          <DSInput
             disabled={busy}
             value={draft.name}
             maxLength={100}
@@ -349,7 +356,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         </label>
         <label>
           Dirección de tu página
-          <input
+          <DSInput
             disabled={busy}
             value={draft.slug}
             maxLength={60}
@@ -358,7 +365,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         </label>
         <label>
           Foto de portada
-          <input
+          <DSInput
             disabled={busy || demo}
             type="file"
             accept="image/jpeg,image/png,image/webp"
@@ -404,24 +411,24 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
           <>
             <label>
               Descripción de la imagen
-              <input
+              <DSInput
                 disabled={busy}
                 value={draft.heroImageAlt ?? ""}
                 maxLength={160}
                 onChange={(e) => update({ heroImageAlt: e.target.value })}
               />
             </label>
-            <button
+            <DSButtonSecondary
               disabled={busy}
               onClick={() =>
                 update({ heroImage: undefined, heroImageAlt: undefined })
               }
             >
               Quitar portada
-            </button>
+            </DSButtonSecondary>
           </>
         )}
-        <button
+        <DSButtonSecondary
           disabled={busy || demo}
           onClick={async () => {
             setBusy(true);
@@ -444,10 +451,10 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
           }}
         >
           Sugerir texto con IA
-        </button>
+        </DSButtonSecondary>
         <label>
           WhatsApp
-          <input
+          <DSInput
             disabled={busy}
             value={draft.whatsapp}
             maxLength={15}
@@ -457,7 +464,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         </label>
         <label>
           Calendly (opcional)
-          <input
+          <DSInput
             disabled={busy}
             value={draft.calendly}
             maxLength={400}
@@ -465,20 +472,20 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
             onChange={(e) => update({ calendly: e.target.value })}
           />
         </label>
-        <button disabled={busy} onClick={saveDraft}>
+        <DSButtonSecondary disabled={busy} onClick={saveDraft}>
           Guardar borrador
-        </button>
-        <button
+        </DSButtonSecondary>
+        <DSButtonPrimary
           className="tk-primary"
           disabled={busy || demo}
           onClick={publish}
         >
           {busy ? "Guardando…" : "Publicar página"}
-        </button>
+        </DSButtonPrimary>
         {draft.published && (
-          <button disabled={busy || demo} onClick={unpublish}>
+          <DSButtonSecondary disabled={busy || demo} onClick={unpublish}>
             Retirar publicación
-          </button>
+          </DSButtonSecondary>
         )}
         {demo && (
           <small>
@@ -496,7 +503,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
             {notice}
           </p>
         )}
-      </section>
+      </DSCard>
     </div>
   );
 }

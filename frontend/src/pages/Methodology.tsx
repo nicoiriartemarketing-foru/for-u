@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary, Textarea as DSTextarea } from '../components/ui/DesignSystem';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -241,7 +242,7 @@ export default function Methodology() {
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/15">
                   <div className="h-full rounded-full foru-gradient-button transition-all duration-500" style={{ width: `${progress}%` }} />
                 </div>
-                <button
+                <DSButtonSecondary
                   type="button"
                   onClick={() => {
                     setCourseOpen(true);
@@ -252,7 +253,7 @@ export default function Methodology() {
                   className="tap-boost mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-4 text-sm font-black text-gray-950"
                 >
                   {completedCount ? 'Continuar mi radar' : 'Comenzar el curso'} <ArrowRight size={17} />
-                </button>
+                </DSButtonSecondary>
               </div>
             </div>
 
@@ -277,7 +278,7 @@ export default function Methodology() {
                         const index = radarSteps.findIndex((item) => item.id === step.id);
                         const isComplete = Boolean(answers[step.id]);
                         return (
-                          <button
+                          <DSButtonSecondary
                             key={step.id}
                             type="button"
                             onClick={() => {
@@ -292,7 +293,7 @@ export default function Methodology() {
                           >
                             {isComplete ? <CheckCircle2 size={20} /> : <span className="text-xs font-black">{step.symbol}</span>}
                             <span className="mt-1 max-w-full truncate text-[10px] font-black">{step.short}</span>
-                          </button>
+                          </DSButtonSecondary>
                         );
                       })}
                     </div>
@@ -314,9 +315,9 @@ export default function Methodology() {
                     <span className="rounded-full bg-[#FAFAFA] px-3 py-2 text-xs font-black text-[#6B6B6B]">
                       Paso {activeStep + 1} de {radarSteps.length}
                     </span>
-                    <button type="button" onClick={() => setCourseOpen(false)} className="text-xs font-black text-gray-500">
+                    <DSButtonSecondary type="button" onClick={() => setCourseOpen(false)} className="text-xs font-black text-gray-500">
                       Ocultar curso
-                    </button>
+                    </DSButtonSecondary>
                   </div>
                   <div className="mt-5 flex items-center gap-4">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl foru-gradient-button">
@@ -340,7 +341,7 @@ export default function Methodology() {
                   <h3 className="font-serif text-2xl font-bold leading-tight">{currentRadarStep.question}</h3>
                   <div className="mt-5 grid gap-2 sm:grid-cols-3">
                     {currentRadarStep.options.map((option) => (
-                      <button
+                      <DSButtonSecondary
                         key={option.label}
                         type="button"
                         onClick={() => {
@@ -354,14 +355,14 @@ export default function Methodology() {
                         }`}
                       >
                         {option.label}
-                      </button>
+                      </DSButtonSecondary>
                     ))}
                   </div>
 
                   <label className="mt-5 block text-sm font-black text-gray-800" htmlFor="radar-note">
                     Escríbelo a tu manera <span className="font-semibold text-gray-400">(opcional)</span>
                   </label>
-                  <textarea
+                  <DSTextarea
                     id="radar-note"
                     value={note}
                     onChange={(event) => setNote(event.target.value)}
@@ -370,7 +371,7 @@ export default function Methodology() {
                   />
 
                   <div className="mt-5 flex items-center justify-between gap-3">
-                    <button
+                    <DSButtonSecondary
                       type="button"
                       disabled={activeStep === 0}
                       onClick={() => openRadarStep(activeStep - 1)}
@@ -378,8 +379,8 @@ export default function Methodology() {
                       title="Paso anterior"
                     >
                       <ChevronLeft size={20} />
-                    </button>
-                    <button
+                    </DSButtonSecondary>
+                    <DSButtonSecondary
                       type="button"
                       disabled={selectedScore === null}
                       onClick={saveRadarStep}
@@ -387,7 +388,7 @@ export default function Methodology() {
                     >
                       {activeStep === radarSteps.length - 1 ? 'Ver mi diagnóstico' : 'Guardar y seguir'}
                       {activeStep === radarSteps.length - 1 ? <Sparkles size={17} /> : <ChevronRight size={17} />}
-                    </button>
+                    </DSButtonSecondary>
                   </div>
                 </div>
               </div>
@@ -409,7 +410,7 @@ export default function Methodology() {
         <section className="mt-5">
           <div className="flex gap-2 overflow-x-auto pb-2">
             {phaseOrder.map((phase) => (
-              <button
+              <DSButtonSecondary
                 key={phase}
                 type="button"
                 onClick={() => {
@@ -421,7 +422,7 @@ export default function Methodology() {
                 }`}
               >
                 {phaseLabels[phase]}
-              </button>
+              </DSButtonSecondary>
             ))}
           </div>
         </section>
@@ -501,9 +502,9 @@ function RadarDiagnosis({ answers, onReview }: { answers: Record<string, RadarAn
             </span>
           ))}
         </div>
-        <button type="button" onClick={onReview} className="mt-6 text-sm font-black text-[#6B6B6B]">
+        <DSButtonSecondary type="button" onClick={onReview} className="mt-6 text-sm font-black text-[#6B6B6B]">
           Revisar mis respuestas
-        </button>
+        </DSButtonSecondary>
       </div>
     </div>
   );

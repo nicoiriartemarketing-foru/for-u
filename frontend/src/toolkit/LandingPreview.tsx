@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import type { LandingDraft } from "./types";
 export function LandingPreview({
   draft,
@@ -36,7 +37,7 @@ export function LandingPreview({
         </span>
         <h1>{draft.headline}</h1>
         <p>{draft.description}</p>
-        <button onClick={onCTA}>{draft.cta}</button>
+        <DSButtonSecondary onClick={onCTA}>{draft.cta}</DSButtonSecondary>
       </section>
       {draft.blocks.map((block) => (
         <section key={block.id} className="tk-site-block">

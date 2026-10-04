@@ -1,3 +1,4 @@
+import { Input as DSInput, ButtonSecondary as DSButtonSecondary } from '../ui/DesignSystem';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../services/supabase';
 import { compressImage } from '../../toolkit/media';
@@ -41,8 +42,8 @@ function MediaGallerySession({ userId, projectId, onSelect }: GalleryProps) {
     } catch (error) { setNotice((error as Error).message); }
     finally { uploading.current = false; setBusy(false); }
   }
-  return <section className="creator-gallery" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); void upload(event.dataTransfer.files[0]); }}><h3>Imágenes de este proyecto</h3><p role="status">{notice}</p><p>Arrastra una imagen aquí o elígela desde tu dispositivo.</p><label>Subir imagen<input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={event => { void upload(event.target.files?.[0]); event.target.value = ''; }} /></label>
-    <div className="creator-media-grid">{images.map(image => <button type="button" key={image.path} onClick={() => onSelect(image)}><img src={image.url} alt="Imagen de tu biblioteca" /><span>Usar imagen</span></button>)}</div>
-    <div className="creator-actions"><button type="button" disabled={page === 0} onClick={() => setPage(value => value - 1)}>Imágenes anteriores</button><button type="button" disabled={!more} onClick={() => setPage(value => value + 1)}>Más imágenes</button><button type="button" onClick={() => setRevision(value => value + 1)}>Actualizar biblioteca</button></div>
+  return <section className="creator-gallery" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); void upload(event.dataTransfer.files[0]); }}><h3>Imágenes de este proyecto</h3><p role="status">{notice}</p><p>Arrastra una imagen aquí o elígela desde tu dispositivo.</p><label>Subir imagen<DSInput type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={event => { void upload(event.target.files?.[0]); event.target.value = ''; }} /></label>
+    <div className="creator-media-grid">{images.map(image => <DSButtonSecondary type="button" key={image.path} onClick={() => onSelect(image)}><img src={image.url} alt="Imagen de tu biblioteca" /><span>Usar imagen</span></DSButtonSecondary>)}</div>
+    <div className="creator-actions"><DSButtonSecondary type="button" disabled={page === 0} onClick={() => setPage(value => value - 1)}>Imágenes anteriores</DSButtonSecondary><DSButtonSecondary type="button" disabled={!more} onClick={() => setPage(value => value + 1)}>Más imágenes</DSButtonSecondary><DSButtonSecondary type="button" onClick={() => setRevision(value => value + 1)}>Actualizar biblioteca</DSButtonSecondary></div>
   </section>;
 }

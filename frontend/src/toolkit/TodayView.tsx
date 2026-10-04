@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary, Input as DSInput, Textarea as DSTextarea } from '../components/ui/DesignSystem';
 import { useEffect, useRef, useState } from "react";
 import { Check, X } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
@@ -109,14 +110,14 @@ export default function TodayView({
         inert={Boolean(panel)}
       >
         {exhausted ? (
-          <button
+          <DSButtonSecondary
             ref={startButton}
             className="hoy-action-btn hoy-only-action"
             onClick={() => setPanelStep(route.current.index)}
           >
             <span>Solo 5 minutos. Te lo prometo.</span>
             <strong>Empezar ahora</strong>
-          </button>
+          </DSButtonSecondary>
         ) : (
           <>
             {!anxious && (
@@ -155,14 +156,14 @@ export default function TodayView({
                 </p>
               )}
             </div>
-            <button
+            <DSButtonSecondary
               ref={startButton}
               className="hoy-action-btn"
               onClick={() => setPanelStep(route.current.index)}
             >
               {route.finished ? "Revisar mi trabajo" : "Empezar ahora"}{" "}
               <span aria-hidden="true">→</span>
-            </button>
+            </DSButtonSecondary>
             {!anxious && state !== "low-motivation" && (
               <div className="hoy-progress">
                 <progress
@@ -181,14 +182,14 @@ export default function TodayView({
                 {route.steps.map((step) => (
                   <span key={step.id} className="hoy-dot-wrap">
                     {step.index === route.current.index && !route.finished ? (
-                      <button
+                      <DSButtonSecondary
                         className="hoy-dot is-current"
                         onClick={() => setPanelStep(step.index)}
                         aria-label={"Abrir paso actual: " + step.title}
                         aria-current="step"
                       >
                         ●
-                      </button>
+                      </DSButtonSecondary>
                     ) : (
                       <span
                         className={"hoy-dot" + (step.done ? " is-done" : "")}
@@ -222,7 +223,7 @@ export default function TodayView({
                   const id = route.task.id + "/micro/" + index;
                   return (
                     <label key={id}>
-                      <input
+                      <DSInput
                         type="checkbox"
                         checked={progress.micro?.includes(id) ?? false}
                         disabled={busy}
@@ -297,14 +298,14 @@ export default function TodayView({
             aria-modal="true"
             aria-labelledby="hoy-panel-title"
           >
-            <button
+            <DSButtonSecondary
               ref={closeButton}
               className="hoy-close"
               aria-label="Cerrar paso"
               onClick={closePanel}
             >
               <X size={20} />
-            </button>
+            </DSButtonSecondary>
             <p className="hoy-step-label">Paso {panel.index + 1} de 5</p>
             <h2 id="hoy-panel-title">{panel.title}</h2>
             <p>{panel.tip}</p>
@@ -330,7 +331,7 @@ export default function TodayView({
                 )
                 .map((task) => (
                   <label key={task.id}>
-                    <input
+                    <DSInput
                       type="checkbox"
                       checked={task.done}
                       disabled={busy}
@@ -353,7 +354,7 @@ export default function TodayView({
             </div>
             <label className="hoy-notes">
               Tu primera respuesta
-              <textarea
+              <DSTextarea
                 value={notes[panel.id] ?? ""}
                 maxLength={4000}
                 rows={4}
@@ -363,7 +364,7 @@ export default function TodayView({
                 placeholder="Puedes empezar con una frase."
               />
             </label>
-            <button
+            <DSButtonSecondary
               className="hoy-save-note"
               disabled={busy}
               onClick={async () => {
@@ -379,8 +380,8 @@ export default function TodayView({
               }}
             >
               Guardar mi respuesta
-            </button>
-            <button
+            </DSButtonSecondary>
+            <DSButtonSecondary
               className="hoy-action-btn"
               disabled={!panel.done || busy}
               onClick={closePanel}
@@ -390,11 +391,11 @@ export default function TodayView({
                   ? "Volver a Hoy"
                   : "Continuar al siguiente paso"
                 : "Completa las tareas para avanzar"}
-            </button>
+            </DSButtonSecondary>
             <details>
               <summary>Ver un ejemplo o pedir ayuda</summary>
               <p>{panel.example}</p>
-              <button
+              <DSButtonSecondary
                 onClick={() => {
                   track(
                     "task",
@@ -406,8 +407,8 @@ export default function TodayView({
                 }}
               >
                 Dejar para después
-              </button>
-              <button
+              </DSButtonSecondary>
+              <DSButtonSecondary
                 onClick={() =>
                   downloadBlob(
                     new Blob([panel.resource.content], {
@@ -418,8 +419,8 @@ export default function TodayView({
                 }
               >
                 Descargar hoja de trabajo
-              </button>
-              <button
+              </DSButtonSecondary>
+              <DSButtonSecondary
                 onClick={() => {
                   track("help");
                   closePanel();
@@ -427,7 +428,7 @@ export default function TodayView({
                 }}
               >
                 Pedir ayuda
-              </button>
+              </DSButtonSecondary>
             </details>
             {notice && <p role="status">{notice}</p>}
           </section>

@@ -1,3 +1,5 @@
+import { Card as DSCard } from './ui/DesignSystem';
+import { ButtonSecondary as DSButtonSecondary } from './ui/DesignSystem';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { MouseEvent } from 'react';
@@ -384,9 +386,9 @@ export default function ProjectCanvas() {
           <h2>¡Hola! Este proyecto está vacío.</h2>
           <p>Empecemos suave. Puedes soltar ideas desordenadas, crear una primera tarea o pedirle a la IA que arme el punto de partida.</p>
           <div className="foru-empty-project-actions">
-            <button type="button" onClick={openIdeaJar}>✨ Echar ideas al frasco</button>
-            <button type="button" onClick={createManualStarterTask}>Agregar tarea manualmente</button>
-            <button type="button" onClick={askAiToStart}>🤖 Que la IA me ayude a empezar</button>
+            <DSButtonSecondary type="button" onClick={openIdeaJar}>✨ Echar ideas al frasco</DSButtonSecondary>
+            <DSButtonSecondary type="button" onClick={createManualStarterTask}>Agregar tarea manualmente</DSButtonSecondary>
+            <DSButtonSecondary type="button" onClick={askAiToStart}>🤖 Que la IA me ayude a empezar</DSButtonSecondary>
           </div>
         </div>
       ) : (
@@ -435,7 +437,7 @@ export default function ProjectCanvas() {
 
       {branchFocus ? (
         <aside className="foru-branch-focus-panel">
-          <button type="button" onClick={() => setBranchFocus(null)}>Volver al mapa completo</button>
+          <DSButtonSecondary type="button" onClick={() => setBranchFocus(null)}>Volver al mapa completo</DSButtonSecondary>
           <h2>{baseBranches.find((branch) => branch.key === branchFocus)?.icon} {baseBranches.find((branch) => branch.key === branchFocus)?.title}</h2>
           <p>{branchStats[branchFocus].pending} pendientes · {branchStats[branchFocus].completed}/{branchStats[branchFocus].total} completadas</p>
           <div>
@@ -451,24 +453,24 @@ export default function ProjectCanvas() {
         </aside>
       ) : null}
 
-      <button type="button" className="foru-canvas-help" onClick={() => setIsGuideOpen(true)} aria-label="Mostrar guia del mapa">
+      <DSButtonSecondary type="button" className="foru-canvas-help" onClick={() => setIsGuideOpen(true)} aria-label="Mostrar guia del mapa">
         ?
-      </button>
+      </DSButtonSecondary>
 
-      <button
+      <DSButtonSecondary
         type="button"
         className={`foru-map-lock-toggle ${isMapMovementUnlocked ? 'is-unlocked' : 'is-locked'}`}
         onClick={() => setIsMapMovementUnlocked((current) => !current)}
       >
         {isMapMovementUnlocked ? '🔒 Bloquear Movimiento' : '🔓 Mover Mapa'}
-      </button>
+      </DSButtonSecondary>
 
-      <button type="button" className="foru-canvas-route-toggle" onClick={() => setIsRouteViewOpen((current) => !current)}>
+      <DSButtonSecondary type="button" className="foru-canvas-route-toggle" onClick={() => setIsRouteViewOpen((current) => !current)}>
         {isRouteViewOpen ? 'Volver al mapa' : '🗺️ Ver Ruta'}
-      </button>
+      </DSButtonSecondary>
 
       <div className="foru-focus-popover">
-        <button
+        <DSButtonSecondary
           type="button"
           className={`foru-focus-menu-toggle ${isStepFocusOpen || isRouteFocusOpen ? 'is-active' : ''}`}
           onClick={() => {
@@ -484,10 +486,10 @@ export default function ProjectCanvas() {
           disabled={!activeProject?.digitalRoute.length}
         >
           {isStepFocusOpen || isRouteFocusOpen ? 'Salir del Enfoque' : '🔍 Enfoque'}
-        </button>
+        </DSButtonSecondary>
         {isFocusMenuOpen ? (
-          <div className="foru-focus-menu-card">
-            <button
+          <DSCard as="div" className="foru-focus-menu-card">
+            <DSButtonSecondary
               type="button"
               onClick={() => {
                 setIsStepFocusOpen((current) => !current);
@@ -496,8 +498,8 @@ export default function ProjectCanvas() {
               }}
             >
               Paso actual
-            </button>
-            <button
+            </DSButtonSecondary>
+            <DSButtonSecondary
               type="button"
               onClick={() => {
                 setIsRouteFocusOpen((current) => !current);
@@ -506,14 +508,14 @@ export default function ProjectCanvas() {
               }}
             >
               Ruta completa
-            </button>
-          </div>
+            </DSButtonSecondary>
+          </DSCard>
         ) : null}
       </div>
 
       {isGuideOpen ? (
         <div className="foru-project-guide" role="dialog" aria-modal="true" aria-label="Guia del mapa mental">
-          <div className="foru-project-guide-card">
+          <DSCard as="div" className="foru-project-guide-card">
             <span>Guía rápida</span>
             <h2>Así se ordena tu proyecto</h2>
             <div className="foru-project-guide-grid">
@@ -523,10 +525,10 @@ export default function ProjectCanvas() {
               <p><strong>📱 Marketing</strong> Contenido, campañas, redes y promoción.</p>
               <p><strong>📚 Recursos</strong> Links, archivos, plantillas y material útil.</p>
             </div>
-            <button type="button" onClick={() => setIsGuideOpen(false)}>
+            <DSButtonSecondary type="button" onClick={() => setIsGuideOpen(false)}>
               Entendido, comenzar
-            </button>
-          </div>
+            </DSButtonSecondary>
+          </DSCard>
         </div>
       ) : null}
 
@@ -535,32 +537,32 @@ export default function ProjectCanvas() {
           <div className="foru-canvas-add-menu foru-canvas-branch-picker">
             <strong>¿Conectar a qué rama?</strong>
             {baseBranches.map((branch) => (
-              <button
+              <DSButtonSecondary
                 key={branch.key}
                 type="button"
                 onClick={() => createNode(branch.key)}
               >
                 {branch.icon} {branch.title}
-              </button>
+              </DSButtonSecondary>
             ))}
-            <button type="button" onClick={() => setSelectedOption(null)}>
+            <DSButtonSecondary type="button" onClick={() => setSelectedOption(null)}>
               Cancelar
-            </button>
+            </DSButtonSecondary>
           </div>
         ) : isMenuOpen ? (
           <div className="foru-canvas-add-menu">
             {addOptions.map((option) => (
-              <button
+              <DSButtonSecondary
                 key={option.kind}
                 type="button"
                 onClick={() => setSelectedOption({ kind: option.kind, title: option.title })}
               >
                 {option.label}
-              </button>
+              </DSButtonSecondary>
             ))}
           </div>
         ) : null}
-        <button
+        <DSButtonSecondary
           type="button"
           className="foru-canvas-add-button"
           onClick={() => {
@@ -570,7 +572,7 @@ export default function ProjectCanvas() {
           aria-label="Agregar nodo al canvas"
         >
           <Plus size={22} />
-        </button>
+        </DSButtonSecondary>
       </div>
       <FloatingReward burst={rewardBurst} />
     </section>

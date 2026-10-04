@@ -1,3 +1,5 @@
+import { Card as DSCard } from '../components/ui/DesignSystem';
+import { Input as DSInput, ButtonSecondary as DSButtonSecondary, ButtonPrimary as DSButtonPrimary } from '../components/ui/DesignSystem';
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useToolkit } from "./ToolkitContext";
@@ -130,7 +132,7 @@ export function ReservationForm({ slug }: { slug: string }) {
         >
           <label>
             Fecha
-            <input
+            <DSInput
               type="date"
               required
               min={localDate(new Date())}
@@ -144,12 +146,12 @@ export function ReservationForm({ slug }: { slug: string }) {
           </label>
           {loading ? (
             <p role="status">Consultando horarios…</p>
-          ) : loadError ? <div role="alert"><p>{loadError}</p><button type="button" onClick={() => { setLoading(true); setAttempt(value => value + 1); }}>Reintentar disponibilidad</button></div> : todaySlots.length ? (
+          ) : loadError ? <div role="alert"><p>{loadError}</p><DSButtonSecondary type="button" onClick={() => { setLoading(true); setAttempt(value => value + 1); }}>Reintentar disponibilidad</DSButtonSecondary></div> : todaySlots.length ? (
             <fieldset className="tk-slot-list">
               <legend>Horarios disponibles</legend>
               {todaySlots.map((slot) => (
                 <label className="tk-check" key={slot.id}>
-                  <input
+                  <DSInput
                     type="radio"
                     name="slot"
                     required
@@ -169,7 +171,7 @@ export function ReservationForm({ slug }: { slug: string }) {
             <p>No hay horarios disponibles este día.</p>
           )}
           {!loading && !loadError && slots.some(slot => slot.remaining > 0) && !todaySlots.length && (
-            <button
+            <DSButtonSecondary
               type="button"
               onClick={() => {
                 const next = slots.find((slot) => slot.remaining > 0);
@@ -177,11 +179,11 @@ export function ReservationForm({ slug }: { slug: string }) {
               }}
             >
               Ver el próximo día disponible
-            </button>
+            </DSButtonSecondary>
           )}
           <label>
             Nombre
-            <input
+            <DSInput
               name="name"
               required
               minLength={2}
@@ -191,7 +193,7 @@ export function ReservationForm({ slug }: { slug: string }) {
           </label>
           <label>
             Email
-            <input
+            <DSInput
               name="email"
               type="email"
               required
@@ -201,7 +203,7 @@ export function ReservationForm({ slug }: { slug: string }) {
           </label>
           <label>
             Teléfono
-            <input
+            <DSInput
               name="phone"
               type="tel"
               required
@@ -212,19 +214,19 @@ export function ReservationForm({ slug }: { slug: string }) {
           </label>
           <label style={{ display: "none" }} aria-hidden="true">
             Sitio web
-            <input name="website" tabIndex={-1} autoComplete="off" />
+            <DSInput name="website" tabIndex={-1} autoComplete="off" />
           </label>
           <label className="tk-check">
-            <input required type="checkbox" /> Acepto que el negocio use estos
+            <DSInput required type="checkbox" /> Acepto que el negocio use estos
             datos para gestionar mi reserva y enviarme su confirmación.
           </label>
-          <button
+          <DSButtonPrimary
             type="submit"
             className="tk-primary"
             disabled={busy || loading || Boolean(loadError) || !todaySlots.some((slot) => slot.id === selected)}
           >
             {busy ? "Confirmando…" : "Confirmar reserva"}
-          </button>
+          </DSButtonPrimary>
         </form>
       )}
       {notice && (
@@ -302,7 +304,7 @@ export function AvailabilityManager() {
     };
   }, [demo, projectId, userId]);
   return (
-    <section className="tk-card tk-stack">
+    <DSCard as="section" className="tk-card tk-stack">
       <h2>Tu disponibilidad real</h2>
       <p>Crea los horarios que quieres ofrecer. Zona horaria: {zone()}.</p>
       <form
@@ -359,7 +361,7 @@ export function AvailabilityManager() {
       >
         <label>
           Inicio
-          <input
+          <DSInput
             type="datetime-local"
             required
             value={start}
@@ -368,7 +370,7 @@ export function AvailabilityManager() {
         </label>
         <label>
           Duración (minutos)
-          <input
+          <DSInput
             type="number"
             min={15}
             max={480}
@@ -379,7 +381,7 @@ export function AvailabilityManager() {
         </label>
         <label>
           Cupos
-          <input
+          <DSInput
             type="number"
             min={1}
             max={100}
@@ -387,7 +389,7 @@ export function AvailabilityManager() {
             onChange={(e) => setCapacity(Number(e.target.value))}
           />
         </label>
-        <button disabled={busy}>Abrir horario</button>
+        <DSButtonSecondary disabled={busy}>Abrir horario</DSButtonSecondary>
       </form>
       <div className="tk-stack">
         {slots.map((slot) => (
@@ -400,7 +402,7 @@ export function AvailabilityManager() {
                 {slot.capacity} cupos · {slot.enabled ? "Abierto" : "Cerrado"}
               </p>
             </div>
-            <button
+            <DSButtonSecondary
               disabled={busy}
               onClick={async () => {
                 setBusy(true);
@@ -424,7 +426,7 @@ export function AvailabilityManager() {
               }}
             >
               {slot.enabled ? "Cerrar nuevas reservas" : "Abrir reservas"}
-            </button>
+            </DSButtonSecondary>
           </article>
         ))}
       </div>
@@ -474,7 +476,7 @@ export function AvailabilityManager() {
                 </select>
               </label>
               {mail?.status !== "sent" && (
-                <button
+                <DSButtonSecondary
                   disabled={busy}
                   onClick={async () => {
                     if (!supabase) return;
@@ -492,7 +494,7 @@ export function AvailabilityManager() {
                   }}
                 >
                   Reintentar confirmación
-                </button>
+                </DSButtonSecondary>
               )}
             </div>
           </article>
@@ -503,6 +505,6 @@ export function AvailabilityManager() {
           {notice}
         </p>
       )}
-    </section>
+    </DSCard>
   );
 }

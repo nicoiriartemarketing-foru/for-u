@@ -1,3 +1,5 @@
+import { Card as DSCard } from '../components/ui/DesignSystem';
+import { ButtonSecondary as DSButtonSecondary, Input as DSInput } from '../components/ui/DesignSystem';
 import { areaDefinitions, areaProgress } from '../pages/dashboard/areaModel';
 import { lazy, Suspense, useRef, useState } from "react";
 import {
@@ -254,16 +256,16 @@ function ToolkitShell({
     ids.map((id) => {
       const item = tools.find((t) => t.id === id)!;
       return (
-        <button key={id} onClick={() => open(id)}>
+        <DSButtonSecondary key={id} onClick={() => open(id)}>
           <item.Icon size={20} />
           <span>{item.name}</span>
-        </button>
+        </DSButtonSecondary>
       );
     });
   return (
     <div className="tk-app hoy-shell" data-focus={state}>
       {!embedded && <header className="hoy-topbar" inert={menu}>
-        <button
+        <DSButtonSecondary
           className="hoy-menu-toggle"
           onClick={() => {
             setMenuPage("root");
@@ -273,11 +275,11 @@ function ToolkitShell({
           aria-expanded={menu}
         >
           <Menu size={22} />
-        </button>
+        </DSButtonSecondary>
         {page !== "today" && (
-          <button className="hoy-home" onClick={home}>
+          <DSButtonSecondary className="hoy-home" onClick={home}>
             <ArrowLeft size={16} /> Hoy
-          </button>
+          </DSButtonSecondary>
         )}
         <span className="hoy-wordmark" aria-label="FOR U">
           for u
@@ -291,7 +293,7 @@ function ToolkitShell({
           <p className="hoy-loading" role="status">
             Preparando tu siguiente paso…
           </p>
-        ) : loadError ? <section className="tk-card"><p role="alert">{status}</p><button onClick={() => void reload()}>Reintentar carga</button></section> : page === "today" ? (
+        ) : loadError ? <DSCard as="section" className="tk-card"><p role="alert">{status}</p><DSButtonSecondary onClick={() => void reload()}>Reintentar carga</DSButtonSecondary></DSCard> : page === "today" ? (
           <TodayView project={project} onHelp={() => setChatOpen(true)} />
         ) : page === "templates" ? (
           <Suspense fallback={<p>Cargando plantillas…</p>}>
@@ -364,14 +366,14 @@ function ToolkitShell({
             aria-modal="true"
             aria-labelledby="hoy-menu-title"
           >
-            <button
+            <DSButtonSecondary
               autoFocus
               className="hoy-close"
               aria-label="Cerrar menú"
               onClick={() => setMenu(false)}
             >
               <X size={20} />
-            </button>
+            </DSButtonSecondary>
             <h2 id="hoy-menu-title">
               {menuPage === "root"
                 ? "A tu ritmo"
@@ -382,46 +384,46 @@ function ToolkitShell({
                     : "Herramientas"}
             </h2>
             {menuPage !== "root" && (
-              <button
+              <DSButtonSecondary
                 className="hoy-menu-back"
                 onClick={() => setMenuPage("root")}
               >
                 ← Volver
-              </button>
+              </DSButtonSecondary>
             )}
             <nav className="hoy-menu-options">
               {menuPage === "root" && (
                 <>
-                  <button onClick={() => setMenuPage("tools")}>
+                  <DSButtonSecondary onClick={() => setMenuPage("tools")}>
                     Herramientas
-                  </button>
-                  <button onClick={() => setMenuPage("rhythm")}>
+                  </DSButtonSecondary>
+                  <DSButtonSecondary onClick={() => setMenuPage("rhythm")}>
                     Mi ritmo
-                  </button>
-                  <button onClick={() => setMenuPage("account")}>
+                  </DSButtonSecondary>
+                  <DSButtonSecondary onClick={() => setMenuPage("account")}>
                     Mi espacio
-                  </button>
+                  </DSButtonSecondary>
                 </>
               )}
               {menuPage === "tools" && (
                 <>
-                  <button onClick={() => setMenuPage("create")}>
+                  <DSButtonSecondary onClick={() => setMenuPage("create")}>
                     Crear contenido
-                  </button>
-                  <button onClick={() => setMenuPage("manage")}>
+                  </DSButtonSecondary>
+                  <DSButtonSecondary onClick={() => setMenuPage("manage")}>
                     Gestionar mi negocio
-                  </button>
-                  <button onClick={() => setMenuPage("plan")}>
+                  </DSButtonSecondary>
+                  <DSButtonSecondary onClick={() => setMenuPage("plan")}>
                     Organizarme y pedir ayuda
-                  </button>
+                  </DSButtonSecondary>
                 </>
               )}
               {menuPage === "create" && (
                 <>
                   {group(["content", "images"])}
-                  <button onClick={() => setMenuPage("video")}>
+                  <DSButtonSecondary onClick={() => setMenuPage("video")}>
                     Grabar o editar video
-                  </button>
+                  </DSButtonSecondary>
                 </>
               )}
               {menuPage === "video" && group(["teleprompter", "video"])}
@@ -431,28 +433,28 @@ function ToolkitShell({
                 group(["calendar", "analytics", "assistant"])}
               {menuPage === "account" && (
                 <>
-                  <button
+                  <DSButtonSecondary
                     onClick={() => {
                       setPage("templates");
                       setMenu(false);
                     }}
                   >
                     Plantillas de mi rubro
-                  </button>
+                  </DSButtonSecondary>
                   {onBack ? (
-                    <button onClick={onBack}>Mis proyectos</button>
+                    <DSButtonSecondary onClick={onBack}>Mis proyectos</DSButtonSecondary>
                   ) : (
                     <Link to="/login">Iniciar sesión</Link>
                   )}
                   {!demo && (
-                    <button
+                    <DSButtonSecondary
                       onClick={async () => {
                         await signOut();
                         window.location.assign("/login");
                       }}
                     >
                       Salir de mi cuenta
-                    </button>
+                    </DSButtonSecondary>
                   )}
                 </>
               )}
@@ -478,7 +480,7 @@ function ToolkitShell({
                   </select>
                 </label>
                 <label>
-                  <input
+                  <DSInput
                     type="checkbox"
                     checked={adaptive}
                     onChange={(event) => setAdaptive(event.target.checked)}
@@ -503,13 +505,13 @@ function ToolkitShell({
           aria-modal="true"
           aria-label="Asistente contextual"
         >
-          <button
+          <DSButtonSecondary
             className="tk-drawer-close"
             aria-label="Cerrar ayuda"
             onClick={() => setChatOpen(false)}
           >
             <X size={20} />
-          </button>
+          </DSButtonSecondary>
           <Suspense fallback={<p>Cargando ayuda…</p>}>
             <ContextAssistant
               currentTool={current?.name ?? "Hoy"}

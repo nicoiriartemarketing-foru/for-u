@@ -1,3 +1,4 @@
+import { Input as DSInput } from '../components/ui/DesignSystem';
 import { type FormEvent, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -49,7 +50,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="foru-auth-form">
           <label>
             Email
-            <input
+            <DSInput
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -60,7 +61,7 @@ export default function LoginPage() {
           </label>
           <label>
             Password
-            <input
+            <DSInput
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}

@@ -1,3 +1,5 @@
+import { Card as DSCard } from '../components/ui/DesignSystem';
+import { Input as DSInput, ButtonSecondary as DSButtonSecondary, Textarea as DSTextarea, ButtonPrimary as DSButtonPrimary } from '../components/ui/DesignSystem';
 import { useEffect, useRef, useState } from "react";
 import { detectSilences, keptSegments, moveItem, type Segment } from "./engine";
 import { decodeAudio, exportVideo } from "./media";
@@ -136,7 +138,7 @@ export default function VideoEditor({
   }
   return (
     <div className="tk-stack">
-      <section
+      <DSCard as="section"
         className="tk-card tk-stack"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
@@ -148,7 +150,7 @@ export default function VideoEditor({
           <h2>Tu video, con lo esencial</h2>
           <label className="tk-file-button">
             Elegir video
-            <input
+            <DSInput
               type="file"
               accept="video/*"
               disabled={!!busy}
@@ -197,7 +199,7 @@ export default function VideoEditor({
             <div className="tk-toolbar">
               <label>
                 Umbral de silencio · {threshold} dB
-                <input
+                <DSInput
                   type="range"
                   min="-55"
                   max="-20"
@@ -206,16 +208,16 @@ export default function VideoEditor({
                   onChange={(e) => setThreshold(Number(e.target.value))}
                 />
               </label>
-              <button disabled={!!busy || !duration} onClick={analyze}>
+              <DSButtonSecondary disabled={!!busy || !duration} onClick={analyze}>
                 Detectar silencios
-              </button>
-              <button
+              </DSButtonSecondary>
+              <DSButtonSecondary
                 disabled={!!busy || !silences.length}
                 onClick={() => setSegments(keptSegments(duration, silences))}
               >
                 Aplicar {silences.length} cortes suaves
-              </button>
-              <button
+              </DSButtonSecondary>
+              <DSButtonSecondary
                 disabled={!!busy || !duration}
                 onClick={() => {
                   setSegments([{ start: 0, end: duration }]);
@@ -223,7 +225,7 @@ export default function VideoEditor({
                 }}
               >
                 Restaurar original
-              </button>
+              </DSButtonSecondary>
             </div>
             <small>
               Conservamos 120 ms junto a cada borde para respetar el inicio y el
@@ -231,10 +233,10 @@ export default function VideoEditor({
             </small>
           </>
         )}
-      </section>
+      </DSCard>
       {!!duration && (
         <div className="tk-two-columns">
-          <section className="tk-card tk-stack">
+          <DSCard as="section" className="tk-card tk-stack">
             <h3>Orden de los fragmentos</h3>
             <p>Arrastra para cambiar el orden o usa las flechas.</p>
             {segments.map((segment, i) => (
@@ -257,7 +259,7 @@ export default function VideoEditor({
                 <span>⋮⋮ {i + 1}</span>
                 <label>
                   Inicio
-                  <input
+                  <DSInput
                     type="number"
                     min="0"
                     max={segment.end - 0.05}
@@ -286,7 +288,7 @@ export default function VideoEditor({
                 </label>
                 <label>
                   Fin
-                  <input
+                  <DSInput
                     type="number"
                     min={segment.start + 0.05}
                     max={duration}
@@ -313,21 +315,21 @@ export default function VideoEditor({
                     }
                   />
                 </label>
-                <button
+                <DSButtonSecondary
                   aria-label={`Subir fragmento ${i + 1}`}
                   disabled={!!busy || i === 0}
                   onClick={() => setSegments(moveItem(segments, i, i - 1))}
                 >
                   ↑
-                </button>
-                <button
+                </DSButtonSecondary>
+                <DSButtonSecondary
                   aria-label={`Bajar fragmento ${i + 1}`}
                   disabled={!!busy || i === segments.length - 1}
                   onClick={() => setSegments(moveItem(segments, i, i + 1))}
                 >
                   ↓
-                </button>
-                <button
+                </DSButtonSecondary>
+                <DSButtonSecondary
                   disabled={!!busy}
                   aria-label={`Quitar fragmento ${i + 1}`}
                   onClick={() =>
@@ -335,10 +337,10 @@ export default function VideoEditor({
                   }
                 >
                   ×
-                </button>
+                </DSButtonSecondary>
               </div>
             ))}
-            <button
+            <DSButtonSecondary
               disabled={!!busy || time <= 0 || time >= duration}
               onClick={() => {
                 const i = segments.findIndex(
@@ -358,20 +360,20 @@ export default function VideoEditor({
               }}
             >
               Dividir en {time.toFixed(1)} s
-            </button>
+            </DSButtonSecondary>
             <strong>
               Duración final:{" "}
               {segments.reduce((sum, s) => sum + s.end - s.start, 0).toFixed(1)}{" "}
               s
             </strong>
-          </section>
-          <section className="tk-card tk-stack">
+          </DSCard>
+          <DSCard as="section" className="tk-card tk-stack">
             <h3>Subtítulos</h3>
             <div className="tk-toolbar">
-              <button disabled={!!busy || demo} onClick={captions}>
+              <DSButtonSecondary disabled={!!busy || demo} onClick={captions}>
                 Transcribir con IA
-              </button>
-              <button
+              </DSButtonSecondary>
+              <DSButtonSecondary
                 disabled={!!busy}
                 onClick={() =>
                   setSubtitles([
@@ -385,7 +387,7 @@ export default function VideoEditor({
                 }
               >
                 Agregar subtítulo
-              </button>
+              </DSButtonSecondary>
             </div>
             {demo && (
               <small>
@@ -398,7 +400,7 @@ export default function VideoEditor({
                 <div className="tk-toolbar">
                   <label>
                     Desde
-                    <input
+                    <DSInput
                       aria-label={`Inicio de subtítulo ${i + 1}`}
                       type="number"
                       min="0"
@@ -428,7 +430,7 @@ export default function VideoEditor({
                   </label>
                   <label>
                     Hasta
-                    <input
+                    <DSInput
                       aria-label={`Fin de subtítulo ${i + 1}`}
                       type="number"
                       min={s.start + 0.01}
@@ -456,7 +458,7 @@ export default function VideoEditor({
                       }
                     />
                   </label>
-                  <button
+                  <DSButtonSecondary
                     aria-label={`Eliminar subtítulo ${i + 1}`}
                     disabled={!!busy}
                     onClick={() =>
@@ -464,9 +466,9 @@ export default function VideoEditor({
                     }
                   >
                     ×
-                  </button>
+                  </DSButtonSecondary>
                 </div>
-                <textarea
+                <DSTextarea
                   aria-label={`Texto de subtítulo ${i + 1}`}
                   value={s.text}
                   disabled={!!busy}
@@ -480,27 +482,27 @@ export default function VideoEditor({
                 />
               </div>
             ))}
-          </section>
+          </DSCard>
         </div>
       )}
       {file && (
-        <section className="tk-card tk-toolbar">
-          <button
+        <DSCard as="section" className="tk-card tk-toolbar">
+          <DSButtonPrimary
             className="tk-primary"
             disabled={!!busy || !segments.length}
             onClick={exportClip}
           >
             Exportar con subtítulos
-          </button>
+          </DSButtonPrimary>
           {busy && <span role="status">{busy}</span>}
           {busy.startsWith("Exportando") && (
             <>
               <progress value={progress} max={1} />
-              <button onClick={() => abort.current?.abort()}>Cancelar</button>
+              <DSButtonSecondary onClick={() => abort.current?.abort()}>Cancelar</DSButtonSecondary>
             </>
           )}
           <small>Deja esta pestaña visible durante la exportación.</small>
-        </section>
+        </DSCard>
       )}
       {notice && (
         <p role="status" className="tk-notice">

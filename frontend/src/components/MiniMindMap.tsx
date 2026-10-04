@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from './ui/DesignSystem';
 import type { CSSProperties } from 'react';
 import { baseBranches, type ForUBranchKey, type ForUProjectNode, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 
@@ -49,7 +50,7 @@ export default function MiniMindMap({ centerLabel, nodes }: MiniMindMapProps) {
         const branch = baseBranches.find((item) => item.key === node.branchKey);
 
         return (
-          <button
+          <DSButtonSecondary
             key={node.id}
             type="button"
             className={`foru-mini-mind-node is-${node.priority ?? 'low'}`}
@@ -63,7 +64,7 @@ export default function MiniMindMap({ centerLabel, nodes }: MiniMindMapProps) {
           >
             <span>{node.icon ?? branch?.icon ?? '•'}</span>
             <strong>{node.title}</strong>
-          </button>
+          </DSButtonSecondary>
         );
       })}
     </div>

@@ -1,3 +1,5 @@
+import { Card as DSCard } from '../components/ui/DesignSystem';
+import { ButtonSecondary as DSButtonSecondary, Input as DSInput, ButtonPrimary as DSButtonPrimary, Textarea as DSTextarea } from '../components/ui/DesignSystem';
 import AnimatedMetric from '../pages/dashboard/AnimatedMetric';
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
@@ -80,7 +82,7 @@ export function Bookings() {
   return (
     <div className="tk-stack">
       <AvailabilityManager />
-      <section className="tk-card tk-stack">
+      <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-eyebrow">DEL INTERÉS A LA CONVERSACIÓN</div>
         <h2>Reservas y pedidos</h2>
         <p>
@@ -89,12 +91,12 @@ export function Bookings() {
         </p>
         <div className="tk-toolbar">
           {fields.map((field) => (
-            <button
+            <DSButtonSecondary
               key={field}
               onClick={() => setFields(fields.filter((f) => f !== field))}
             >
               {field} ×
-            </button>
+            </DSButtonSecondary>
           ))}
         </div>
         <form
@@ -113,32 +115,32 @@ export function Bookings() {
         >
           <label>
             Agregar campo
-            <input
+            <DSInput
               value={extra}
               maxLength={60}
               onChange={(e) => setExtra(e.target.value)}
               placeholder="Ej. Horario preferido"
             />
           </label>
-          <button disabled={fields.length >= 8 || !extra.trim()}>
+          <DSButtonSecondary disabled={fields.length >= 8 || !extra.trim()}>
             Agregar
-          </button>
+          </DSButtonSecondary>
         </form>
-        <button className="tk-primary" disabled={busy} onClick={saveFields}>
+        <DSButtonPrimary className="tk-primary" disabled={busy} onClick={saveFields}>
           Guardar formulario
-        </button>
+        </DSButtonPrimary>
         <p className="tk-tip">
           En «Tu página» puedes agregar tu enlace de Calendly. Las solicitudes
           del formulario llegan aquí; los turnos de Calendly se gestionan en tu
           cuenta de Calendly.
         </p>
-      </section>
-      <section className="tk-card tk-stack">
+      </DSCard>
+      <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-toolbar">
           <h3>Solicitudes recibidas</h3>
-          <button onClick={load} disabled={demo}>
+          <DSButtonSecondary onClick={load} disabled={demo}>
             Actualizar
-          </button>
+          </DSButtonSecondary>
         </div>
         <small>
           Se revisan nuevas solicitudes cada 30 segundos mientras esta vista
@@ -201,7 +203,7 @@ export function Bookings() {
             </label>
           </article>
         ))}
-      </section>
+      </DSCard>
       {notice && (
         <p className="tk-notice" role="status">
           {notice}
@@ -308,16 +310,16 @@ export function Analytics({
   return (
     <div className={`tk-stack analytics-experience ${proUnlocked ? 'is-pro' : ''}`} >
       {proUnlocked && <span className="pro-gold-badge">✦ Pro Desbloqueado</span>}
-      <section className="tk-card">
+      <DSCard as="section" className="tk-card">
         <div className="tk-toolbar">
           <div>
             <div className="tk-eyebrow">CADA PASO CUENTA</div>
             <h2>Lo que está funcionando</h2>
             <p>Últimos 30 días · priorizado según tu objetivo.</p>
           </div>
-          <button onClick={load} disabled={loading || demo}>
+          <DSButtonSecondary onClick={load} disabled={loading || demo}>
             {loading ? "Actualizando…" : "Actualizar métricas"}
-          </button>
+          </DSButtonSecondary>
         </div>
         <div className="tk-metrics visual-metrics">
           {metrics.map((m) => (
@@ -348,10 +350,10 @@ export function Analytics({
               : notice}
           </p>
         )}
-      </section>
-      <section className="tk-card weekly-activity"><h3>Tu actividad esta semana</h3><p>Visitas a tus páginas · últimos 7 días (UTC)</p>{counts?.daily?.length ? <div className="weekly-bars" role="img" aria-label={counts.daily.map(day => `${day.day}: ${day.views} visitas`).join('; ')}>{counts.daily.map(day => <div key={day.day} className="weekly-day"><strong>{day.views}</strong><div className="weekly-column"><span style={{ height: `${day.views / Math.max(1, ...counts.daily!.map(item => item.views)) * 100}%` }} /></div><small>{new Date(`${day.day}T12:00:00Z`).toLocaleDateString('es-PE', { weekday: 'short', timeZone: 'UTC' })}</small></div>)}</div> : <p role="status">{loading ? 'Cargando actividad…' : counts ? 'El resumen semanal todavía no está disponible. Actualiza la función de métricas en Supabase.' : 'No se pudo consultar la actividad. Reintenta con Actualizar métricas.'}</p>}</section>
+      </DSCard>
+      <DSCard as="section" className="tk-card weekly-activity"><h3>Tu actividad esta semana</h3><p>Visitas a tus páginas · últimos 7 días (UTC)</p>{counts?.daily?.length ? <div className="weekly-bars" role="img" aria-label={counts.daily.map(day => `${day.day}: ${day.views} visitas`).join('; ')}>{counts.daily.map(day => <div key={day.day} className="weekly-day"><strong>{day.views}</strong><div className="weekly-column"><span style={{ height: `${day.views / Math.max(1, ...counts.daily!.map(item => item.views)) * 100}%` }} /></div><small>{new Date(`${day.day}T12:00:00Z`).toLocaleDateString('es-PE', { weekday: 'short', timeZone: 'UTC' })}</small></div>)}</div> : <p role="status">{loading ? 'Cargando actividad…' : counts ? 'El resumen semanal todavía no está disponible. Actualiza la función de métricas en Supabase.' : 'No se pudo consultar la actividad. Reintenta con Actualizar métricas.'}</p>}</DSCard>
       <div className="tk-two-columns">
-        <section className="tk-card tk-stack">
+        <DSCard as="section" className="tk-card tk-stack">
           <h3>Páginas más vistas</h3>
           {counts?.pages.length ? (
             <table>
@@ -373,8 +375,8 @@ export function Analytics({
           ) : (
             <p>{counts ? 'Aún no hay páginas vistas registradas.' : 'Datos pendientes de consulta.'}</p>
           )}
-        </section>
-        <section className="tk-card tk-stack">
+        </DSCard>
+        <DSCard as="section" className="tk-card tk-stack">
           <h3>Origen del tráfico</h3>
           {counts?.sources.length ? (
             <table>
@@ -400,10 +402,10 @@ export function Analytics({
           ) : (
             <p>Aún no hay fuentes de tráfico registradas.</p>
           )}
-        </section>
+        </DSCard>
       </div>
       <div className="tk-two-columns">
-        <section className="tk-card tk-stack">
+        <DSCard as="section" className="tk-card tk-stack">
           <h3>Tu Ruta Digital</h3>
           <strong className="tk-big-number">
             {total ? Math.round((completed / total) * 100) : 0}%
@@ -417,8 +419,8 @@ export function Analytics({
             Sin conectar. Las métricas de Instagram y WhatsApp requieren una
             integración autorizada con tu cuenta de negocio.
           </p>
-        </section>
-        <section className="tk-card tk-stack">
+        </DSCard>
+        <DSCard as="section" className="tk-card tk-stack">
           <h3>Aprendiendo de tu ritmo</h3>
           {patterns.sampleSize < 3 ? (
             <p>
@@ -443,7 +445,7 @@ export function Analytics({
             Las sugerencias usan tu actividad en FOR U. Puedes desactivar la
             adaptación desde el selector de ritmo.
           </p>
-        </section>
+        </DSCard>
       </div>
     </div>
   );
@@ -483,7 +485,7 @@ export function Automation() {
   );
   return (
     <div className="tk-two-columns">
-      <section className="tk-card tk-stack">
+      <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-eyebrow">
           UNA BIENVENIDA, INCLUSO CUANDO NO ESTÁS
         </div>
@@ -504,7 +506,7 @@ export function Automation() {
         </label>
         <label>
           Palabras que activan la respuesta
-          <input
+          <DSInput
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
             maxLength={300}
@@ -512,7 +514,7 @@ export function Automation() {
         </label>
         <label>
           Mensaje de bienvenida
-          <textarea
+          <DSTextarea
             rows={6}
             value={reply}
             onChange={(e) => setReply(e.target.value)}
@@ -520,7 +522,7 @@ export function Automation() {
           />
         </label>
         <div className="tk-toolbar">
-          <button
+          <DSButtonPrimary
             className="tk-primary"
             onClick={async () => {
               try {
@@ -532,8 +534,8 @@ export function Automation() {
             }}
           >
             Guardar flujo
-          </button>
-          <button
+          </DSButtonPrimary>
+          <DSButtonSecondary
             onClick={() =>
               downloadBlob(
                 new Blob(
@@ -547,15 +549,15 @@ export function Automation() {
             }
           >
             Descargar guía
-          </button>
+          </DSButtonSecondary>
         </div>
         {notice && (
           <p role="status" className="tk-notice">
             {notice}
           </p>
         )}
-      </section>
-      <section className="tk-card tk-stack">
+      </DSCard>
+      <DSCard as="section" className="tk-card tk-stack">
         <h3>De borrador a conexión</h3>
         {[
           "Conecta tu cuenta de negocio en ManyChat.",
@@ -563,7 +565,7 @@ export function Automation() {
           "Prueba desde otra cuenta y activa el flujo en ManyChat.",
         ].map((step, i) => (
           <label className="tk-check" key={step}>
-            <input
+            <DSInput
               type="checkbox"
               checked={steps[i]}
               onChange={(e) =>
@@ -584,7 +586,7 @@ export function Automation() {
         <h3>Prueba tu respuesta</h3>
         <label>
           Mensaje del cliente
-          <input
+          <DSInput
             value={test}
             onChange={(e) => setTest(e.target.value)}
             placeholder="Hola, ¿me compartes el precio?"
@@ -601,7 +603,7 @@ export function Automation() {
           Simulador local. Marcar los pasos no confirma una conexión ni activa
           mensajes en tus redes.
         </small>
-      </section>
+      </DSCard>
     </div>
   );
 }

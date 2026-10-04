@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from './ui/DesignSystem';
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { Check } from "lucide-react";
@@ -105,7 +106,7 @@ export default function JourneyMap({
           <path d={lines.d} pathLength="1" />
         </svg>
         {steps.slice(0, 5).map((step, index) => (
-          <button
+          <DSButtonSecondary
             key={step.id}
             ref={(element) => {
               nodes.current[index] = element;
@@ -128,7 +129,7 @@ export default function JourneyMap({
               {step.complete ? <Check size={20} /> : "0" + (index + 1)}
             </span>
 
-          </button>
+          </DSButtonSecondary>
         ))}
       </div>
     </section>
@@ -147,9 +148,9 @@ export function JourneyMapDemo() {
       <JourneyMap steps={steps} onSelect={setSelected} />
       {selected && (
         <aside className="foru-journey-panel" aria-label="Detalles del paso">
-          <button onClick={() => setSelected(null)} aria-label="Cerrar paso">
+          <DSButtonSecondary onClick={() => setSelected(null)} aria-label="Cerrar paso">
             ×
-          </button>
+          </DSButtonSecondary>
           <h2>{selected.title}</h2>
           <p>{selected.description}</p>
           <p>

@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from '../../components/ui/DesignSystem';
 import { lazy, Suspense, useState } from 'react';
 import { ToolkitProvider } from '../../toolkit/ToolkitContext';
 import type { Segment } from '../../toolkit/engine';
@@ -9,7 +10,7 @@ export default function CourseRecorder({ userId, project, script }: { userId: st
   const [clip, setClip] = useState<{ file: File; captions: Segment[] } | null>(null);
   return <ToolkitProvider key={`${userId}:${project.id}`} userId={userId} projectId={project.id} business={{ name: project.name, industry: 'courses', objective: 'Enseñar', audience: 'Mis alumnos', offer: 'Mis cursos', location: '' }}>
     <div className="foru-toolkit"><Suspense fallback={<p>Cargando estudio de grabación…</p>}>
-      {clip ? <><button onClick={() => setClip(null)}>Volver al teleprompter</button><VideoEditor initialFile={clip.file} initialSubtitles={clip.captions} /></> : <Teleprompter initialScript={script} onEdit={(file, captions) => setClip({ file, captions })} />}
+      {clip ? <><DSButtonSecondary onClick={() => setClip(null)}>Volver al teleprompter</DSButtonSecondary><VideoEditor initialFile={clip.file} initialSubtitles={clip.captions} /></> : <Teleprompter initialScript={script} onEdit={(file, captions) => setClip({ file, captions })} />}
     </Suspense></div>
   </ToolkitProvider>;
 }

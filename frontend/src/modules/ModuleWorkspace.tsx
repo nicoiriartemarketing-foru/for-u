@@ -1,3 +1,4 @@
+import { ButtonPrimary as DSButtonPrimary, ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -45,7 +46,7 @@ export default function ModuleWorkspace<T>({ config }: { config: ModuleConfigura
   }, [userId, loadKey, config.type]);
   if (loadedFor !== loadKey || !user) return <main className={`${config.type}-module module-workspace`}><p role="status">Cargando tus proyectos…</p></main>;
   const availableProjects = [...projects, ...localModuleProjects.filter(local => !projects.some(project => project.id === local.id))];
-  if (error && availableProjects.length === 0) return <main className={`${config.type}-module module-workspace`}><p role="alert">{error}</p><button onClick={() => setAttempt(value => value + 1)}>Reintentar</button><Link to="/dashboard">Volver a mis proyectos</Link></main>;
+  if (error && availableProjects.length === 0) return <main className={`${config.type}-module module-workspace`}><p role="alert">{error}</p><DSButtonSecondary onClick={() => setAttempt(value => value + 1)}>Reintentar</DSButtonSecondary><Link to="/dashboard">Volver a mis proyectos</Link></main>;
   const current = projectId ? availableProjects.find(project => project.id === projectId) : availableProjects[0];
   if (!current) return <main className={`${config.type}-module module-workspace`}><h1>{projectId ? 'Proyecto no disponible' : 'Tu proyecto empieza aquí'}</h1><p>{projectId ? 'Elige un proyecto de este rubro para continuar.' : 'Crea un proyecto de este rubro desde tu tablero.'}</p><Link to="/dashboard">Ir a mis proyectos</Link></main>;
   return <ModuleSession config={config} key={`${user.id}:${current.id}`} userId={user.id} project={current} projects={availableProjects} />;
@@ -99,15 +100,15 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
     if (pendingDraft && !window.confirm('Hay un formulario sin aplicar. ¿Quieres descartarlo y cambiar de vista?')) return;
     navigate(path);
   }
-  if (!data) return <main className={`${config.type}-module module-workspace`}><p role="status">{status || 'Cargando el proyecto…'}</p>{status && <button onClick={() => setAttempt(value => value + 1)}>Reintentar carga</button>}</main>;
+  if (!data) return <main className={`${config.type}-module module-workspace`}><p role="status">{status || 'Cargando el proyecto…'}</p>{status && <DSButtonSecondary onClick={() => setAttempt(value => value + 1)}>Reintentar carga</DSButtonSecondary>}</main>;
   return <main className={`${config.type}-module module-workspace`}>
     {location.state?.notice && <p role="alert">{location.state.notice}</p>}
-    <header className="module-header"><div><span>For U · {moduleLabels[config.type]}</span><h1>{project.name}</h1></div><button disabled={!dirty || saving || pendingDraft} onClick={save}>{saving ? 'Guardando…' : 'Guardar cambios'}</button></header>
+    <header className="module-header"><div><span>For U · {moduleLabels[config.type]}</span><h1>{project.name}</h1></div><DSButtonPrimary disabled={!dirty || saving || pendingDraft} onClick={save}>{saving ? 'Guardando…' : 'Guardar cambios'}</DSButtonPrimary></header>
     <p role="status">{status}</p>
-    <button disabled={saving} onClick={() => { if ((!dirty && !pendingDraft) || window.confirm('Actualizar recupera los datos guardados y descarta los cambios pendientes. ¿Continuar?')) { setData(null); setAttempt(value => value + 1); } }}>Actualizar datos</button>
+    <DSButtonSecondary disabled={saving} onClick={() => { if ((!dirty && !pendingDraft) || window.confirm('Actualizar recupera los datos guardados y descarta los cambios pendientes. ¿Continuar?')) { setData(null); setAttempt(value => value + 1); } }}>Actualizar datos</DSButtonSecondary>
     {pendingDraft && <p role="status">Termina y aplica el formulario abierto, o cancélalo, antes de guardar el proyecto.</p>}
-    <button disabled={saving} onClick={() => leave(`/content-creator?project=${encodeURIComponent(project.id)}`)}>Crear Contenido</button>
-    <nav className="module-navigation" aria-label={moduleLabels[config.type]}><button disabled={saving} onClick={() => leave('/dashboard?view=projects')}>Mis proyectos</button><button disabled={saving} aria-current={editing ? undefined : 'page'} onClick={() => changeView(`/modules/${config.type}?project=${encodeURIComponent(project.id)}`)}>{config.dashboardLabel}</button><button disabled={saving} aria-current={editing ? 'page' : undefined} onClick={() => changeView(`/modules/${config.type}/editor?project=${encodeURIComponent(project.id)}`)}>{config.editorLabel}</button></nav>
+    <DSButtonSecondary disabled={saving} onClick={() => leave(`/content-creator?project=${encodeURIComponent(project.id)}`)}>Crear Contenido</DSButtonSecondary>
+    <nav className="module-navigation" aria-label={moduleLabels[config.type]}><DSButtonSecondary disabled={saving} onClick={() => leave('/dashboard?view=projects')}>Mis proyectos</DSButtonSecondary><DSButtonSecondary disabled={saving} aria-current={editing ? undefined : 'page'} onClick={() => changeView(`/modules/${config.type}?project=${encodeURIComponent(project.id)}`)}>{config.dashboardLabel}</DSButtonSecondary><DSButtonSecondary disabled={saving} aria-current={editing ? 'page' : undefined} onClick={() => changeView(`/modules/${config.type}/editor?project=${encodeURIComponent(project.id)}`)}>{config.editorLabel}</DSButtonSecondary></nav>
     <fieldset className="module-editing-area" disabled={saving}>
       <ModuleDraftContext.Provider value={setPendingDraft}>
       <MediaScope.Provider value={{ userId, projectId: project.id }}>
@@ -115,7 +116,7 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
       </MediaScope.Provider>
       </ModuleDraftContext.Provider>
     </fieldset>
-    {config.type === 'restaurant' && <div className="restaurant-save-step"><button disabled={!dirty || saving || pendingDraft} onClick={save}>{saving ? 'Guardando…' : '2. Guardar mi menú'}</button><p>{dirty ? 'Guarda antes de publicar para conservar tus productos.' : 'Tus cambios están guardados. Puedes publicar el menú.'}</p></div>}
+    {config.type === 'restaurant' && <div className="restaurant-save-step"><DSButtonPrimary disabled={!dirty || saving || pendingDraft} onClick={save}>{saving ? 'Guardando…' : '2. Guardar mi menú'}</DSButtonPrimary><p>{dirty ? 'Guarda antes de publicar para conservar tus productos.' : 'Tus cambios están guardados. Puedes publicar el menú.'}</p></div>}
     {Publication && <Publication data={data} userId={userId} project={project} disabled={dirty || pendingDraft || saving} />}
   </main>;
 }

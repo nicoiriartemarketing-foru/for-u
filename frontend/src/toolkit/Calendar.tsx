@@ -1,3 +1,5 @@
+import { Card as DSCard } from '../components/ui/DesignSystem';
+import { ButtonSecondary as DSButtonSecondary, Input as DSInput, ButtonPrimary as DSButtonPrimary } from '../components/ui/DesignSystem';
 import toast from 'react-hot-toast';
 import { useEffect, useRef, useState } from "react";
 import { useToolkit } from "./ToolkitContext";
@@ -128,19 +130,19 @@ export default function Calendar() {
   }
   return (
     <div className="tk-stack">
-      <section className="tk-card tk-stack">
+      <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-toolbar">
           <div>
             <div className="tk-eyebrow">ESPACIO PARA LO QUE IMPORTA</div>
             <h2>Tu calendario</h2>
           </div>
-          <button onClick={() => setView(view === "week" ? "month" : "week")}>
+          <DSButtonSecondary onClick={() => setView(view === "week" ? "month" : "week")}>
             {view === "week" ? "Ver mes" : "Ver semana"}
-          </button>
-          <button onClick={exportCalendar} disabled={!entries.length}>
+          </DSButtonSecondary>
+          <DSButtonSecondary onClick={exportCalendar} disabled={!entries.length}>
             Exportar agenda
-          </button>
-          <button
+          </DSButtonSecondary>
+          <DSButtonSecondary
             onClick={async () => {
               if (!("Notification" in window)) {
                 setNotice("Este navegador no admite notificaciones.");
@@ -156,7 +158,7 @@ export default function Calendar() {
             }}
           >
             Activar recordatorios
-          </button>
+          </DSButtonSecondary>
         </div>
         <small>
           Los avisos de FOR U funcionan con la app abierta. Importa la agenda en
@@ -193,7 +195,7 @@ export default function Calendar() {
         >
           <label>
             Publicación o tarea
-            <input
+            <DSInput
               required
               name="title"
               value={title}
@@ -204,7 +206,7 @@ export default function Calendar() {
           </label>
           <label>
             Fecha
-            <input
+            <DSInput
               required
               type="date"
               name="date"
@@ -215,7 +217,7 @@ export default function Calendar() {
           </label>
           <label>
             Hora
-            <input
+            <DSInput
               required
               type="time"
               name="time"
@@ -224,31 +226,31 @@ export default function Calendar() {
               onChange={(e) => setTime(e.target.value)}
             />
           </label>
-          <button className="tk-primary" disabled={busy}>
+          <DSButtonPrimary className="tk-primary" disabled={busy}>
             {editing ? 'Guardar actividad' : 'Agregar'}
-          </button>
-          {editing && <button type="button" onClick={() => { setEditing(null); setTitle(''); }}>Cancelar edición</button>}
+          </DSButtonPrimary>
+          {editing && <DSButtonSecondary type="button" onClick={() => { setEditing(null); setTitle(''); }}>Cancelar edición</DSButtonSecondary>}
         </form>
         <p className="tk-tip">
           Aún no hay datos suficientes para recomendar una hora de publicación.
           Prueba horarios y compara tus resultados.
         </p>
-      </section>
-      <section className="tk-card tk-stack">
+      </DSCard>
+      <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-toolbar">
-          <button aria-label="Periodo anterior" onClick={() => shift(-1)}>
+          <DSButtonSecondary aria-label="Periodo anterior" onClick={() => shift(-1)}>
             ←
-          </button>
+          </DSButtonSecondary>
           <h3>
             {anchor.toLocaleDateString("es-PE", {
               month: "long",
               year: "numeric",
             })}
           </h3>
-          <button aria-label="Periodo siguiente" onClick={() => shift(1)}>
+          <DSButtonSecondary aria-label="Periodo siguiente" onClick={() => shift(1)}>
             →
-          </button>
-          <button onClick={() => setAnchor(new Date())}>Hoy</button>
+          </DSButtonSecondary>
+          <DSButtonSecondary onClick={() => setAnchor(new Date())}>Hoy</DSButtonSecondary>
         </div>
         <div className="tk-calendar">
           {days.map((day) => {
@@ -289,9 +291,9 @@ export default function Calendar() {
                     >
                       <span>{entry.time}</span>
                       <strong>{entry.title}</strong>
-                      <button disabled={busy} onClick={() => { setEditing(entry.id); setTitle(entry.title); setDate(entry.date); setTime(entry.time); }}>Editar actividad</button>
+                      <DSButtonSecondary disabled={busy} onClick={() => { setEditing(entry.id); setTitle(entry.title); setDate(entry.date); setTime(entry.time); }}>Editar actividad</DSButtonSecondary>
                       <label className="tk-check">
-                        <input
+                        <DSInput
                           type="checkbox"
                           checked={entry.done}
                           disabled={busy}
@@ -309,7 +311,7 @@ export default function Calendar() {
                       </label>
                       <label>
                         Mover a
-                        <input
+                        <DSInput
                           type="date"
                           value={entry.date}
                           disabled={busy}
@@ -343,21 +345,21 @@ export default function Calendar() {
                       >
                         Agregar a Google Calendar ↗
                       </a>
-                      <button
+                      <DSButtonSecondary
                         disabled={busy}
                         onClick={() =>
                           update(entries.filter((item) => item.id !== entry.id))
                         }
                       >
                         Eliminar
-                      </button>
+                      </DSButtonSecondary>
                     </div>
                   ))}
               </div>
             );
           })}
         </div>
-      </section>
+      </DSCard>
       {notice && (
         <p role="status" className="tk-notice">
           {notice}

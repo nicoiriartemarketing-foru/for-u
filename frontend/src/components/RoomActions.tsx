@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from './ui/DesignSystem';
 import { Html } from '@react-three/drei';
 import type { ForUProjectNode } from '../stores/useActiveProjectsStore';
 
@@ -32,7 +33,7 @@ export default function RoomActions({ tasks, onCompleteTask }: RoomActionsProps)
             <meshPhysicalMaterial color={task.priority === 'high' ? '#EAEAEA' : task.priority === 'medium' ? '#EAEAEA' : '#EAEAEA'} roughness={0.78} metalness={0.02} />
           </mesh>
           <Html position={[0, 0.24, 0]} center distanceFactor={6}>
-            <button type="button" className="foru-world-room-chip">{task.title.slice(0, 24)}</button>
+            <DSButtonSecondary type="button" className="foru-world-room-chip">{task.title.slice(0, 24)}</DSButtonSecondary>
           </Html>
         </group>
       ))}
@@ -59,9 +60,9 @@ function RoomBase({ color }: { color: string }) {
 function PomodoroDesk() {
   return (
     <Html position={[1.05, 0.9, -0.25]} center distanceFactor={6}>
-      <button type="button" className="foru-world-room-action" onClick={() => window.alert('Pomodoro iniciado: 15 minutos.')}>
+      <DSButtonSecondary type="button" className="foru-world-room-action" onClick={() => window.alert('Pomodoro iniciado: 15 minutos.')}>
         Pomodoro
-      </button>
+      </DSButtonSecondary>
     </Html>
   );
 }

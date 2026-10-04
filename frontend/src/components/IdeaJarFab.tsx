@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary, Textarea as DSTextarea } from './ui/DesignSystem';
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Camera, FileText, Mic2, Sparkles, X } from '../lib/icons';
@@ -122,9 +123,9 @@ export default function IdeaJarFab({ centered = false, hiddenLauncher = false, t
           <h2>{title}</h2>
           <p>{description}</p>
           {rawNotes.length > 0 ? <strong>{rawNotes.length === 1 ? 'Tienes 1 idea lista para organizar ✨' : `Tienes ${rawNotes.length} ideas listas para organizar ✨`}</strong> : null}
-          <button type="button" onClick={openIdeaJar}>
+          <DSButtonSecondary type="button" onClick={openIdeaJar}>
             {rawNotes.length > 0 ? '✨ Organizar con IA' : '✨ Echar ideas al frasco'}
-          </button>
+          </DSButtonSecondary>
         </section>
       ) : (
         <motion.button
@@ -164,16 +165,16 @@ export default function IdeaJarFab({ centered = false, hiddenLauncher = false, t
                   <span className="foru-step-kicker">Brain dump</span>
                   <h2 id="idea-jar-title">Frasco de Ideas</h2>
                 </div>
-                <button type="button" onClick={closeIdeaJar} aria-label="Cerrar Frasco de Ideas">
+                <DSButtonSecondary type="button" onClick={closeIdeaJar} aria-label="Cerrar Frasco de Ideas">
                   <X size={18} />
-                </button>
+                </DSButtonSecondary>
               </header>
 
               <div className="foru-idea-jar-modes" aria-label="Tipo de captura">
                 {noteModes.map((mode) => {
                   const Icon = mode.icon;
                   return (
-                    <button
+                    <DSButtonSecondary
                       key={mode.kind}
                       type="button"
                       className={kind === mode.kind ? 'is-active' : ''}
@@ -181,12 +182,12 @@ export default function IdeaJarFab({ centered = false, hiddenLauncher = false, t
                     >
                       <Icon size={17} />
                       {mode.label}
-                    </button>
+                    </DSButtonSecondary>
                   );
                 })}
               </div>
 
-              <textarea
+              <DSTextarea
                 value={content}
                 onChange={(event) => setContent(event.target.value)}
                 placeholder={placeholderByKind[kind]}
@@ -194,19 +195,19 @@ export default function IdeaJarFab({ centered = false, hiddenLauncher = false, t
 
               <div className="foru-idea-jar-footer">
                 <p>Se guarda como nota cruda. No tienes que ordenarla ahora.</p>
-                <button type="button" className="foru-primary-action" onClick={saveNote}>
+                <DSButtonSecondary type="button" className="foru-primary-action" onClick={saveNote}>
                   Guardar en el frasco
-                </button>
+                </DSButtonSecondary>
               </div>
 
-              <button
+              <DSButtonSecondary
                 type="button"
                 className="foru-ai-action"
                 onClick={organizeWithAi}
                 disabled={rawNotes.length === 0 || isProcessing || !activeProjectId}
               >
                 {isProcessing ? 'La IA está organizando tus ideas... ⚓' : '✨ Organizar mi Cerebro con IA'}
-              </button>
+              </DSButtonSecondary>
             </motion.section>
           </motion.div>
         )}
@@ -254,9 +255,9 @@ export default function IdeaJarFab({ centered = false, hiddenLauncher = false, t
                   </article>
                 ))}
               </div>
-              <button type="button" onClick={startRoute}>
+              <DSButtonSecondary type="button" onClick={startRoute}>
                 🚀 Empezar mi Ruta
-              </button>
+              </DSButtonSecondary>
             </motion.section>
           </motion.div>
         ) : null}

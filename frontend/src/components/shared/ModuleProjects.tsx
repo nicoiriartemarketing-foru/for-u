@@ -1,3 +1,5 @@
+import { Card as DSCard } from '../ui/DesignSystem';
+import { ButtonSecondary as DSButtonSecondary, Input as DSInput } from '../ui/DesignSystem';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -67,18 +69,18 @@ export default function ModuleProjects() {
     await sync(id);
   }
   return <main className="module-projects">
-    <header><div><span>FOR U · Tu negocio, paso a paso</span><h1>Tu Ruta Digital</h1><p>Crea tu menú, publícalo y recibe pedidos por WhatsApp.</p></div><details><summary>Mi cuenta</summary><nav><Link to="/workspace">Mis otras herramientas</Link><button onClick={async () => { try { await signOut(); navigate('/login'); } catch (error) { setMessage((error as Error).message); } }}>Cerrar sesión</button></nav></details></header>
+    <header><div><span>FOR U · Tu negocio, paso a paso</span><h1>Tu Ruta Digital</h1><p>Crea tu menú, publícalo y recibe pedidos por WhatsApp.</p></div><details><summary>Mi cuenta</summary><nav><Link to="/workspace">Mis otras herramientas</Link><DSButtonSecondary onClick={async () => { try { await signOut(); navigate('/login'); } catch (error) { setMessage((error as Error).message); } }}>Cerrar sesión</DSButtonSecondary></nav></details></header>
     <ol className="module-launch-steps"><li>Crear mi ruta</li><li>Configurar mi menú</li><li>Publicar y compartir</li></ol>
     <p role="status">{message || (!loaded ? 'Cargando tus proyectos…' : '')}</p>
-    {!loaded && message && <button onClick={() => setAttempt(value => value + 1)}>Reintentar carga</button>}
-    {unsynced && <button disabled={creating} onClick={() => sync(unsynced)}>Reintentar guardado de mi ruta</button>}
+    {!loaded && message && <DSButtonSecondary onClick={() => setAttempt(value => value + 1)}>Reintentar carga</DSButtonSecondary>}
+    {unsynced && <DSButtonSecondary disabled={creating} onClick={() => sync(unsynced)}>Reintentar guardado de mi ruta</DSButtonSecondary>}
     {loaded && <>
-      {restaurants.length > 0 && <section aria-label="Mis restaurantes" className="module-project-grid">{restaurants.map(project => <article key={project.id} className="module-project-card module-project-restaurant"><span>Restaurante · Ruta Digital</span><h2>{project.name}</h2><p>Tu menú y enlace público.</p><button disabled={creating || project.id === unsynced} onClick={() => open(project.id)}>Continuar con {project.name}</button></article>)}</section>}
-      {(!restaurants.length || formOpen) ? <form onSubmit={create}><h2>Crea tu Ruta Digital</h2><label>Nombre de tu negocio<input required maxLength={120} value={name} placeholder="Alfajores del Valle" onChange={event => setName(event.target.value)} autoComplete="organization" /></label><p>Tipo de negocio: <strong>Restaurante</strong> · También para pastelerías, cafeterías y comida por encargo.</p><div className="module-project-actions"><button type="submit" disabled={creating || !!unsynced || !name.trim()}>{creating ? 'Guardando tu ruta…' : 'Crear mi Ruta Digital'}</button>{restaurants.length > 0 && <button type="button" disabled={creating} onClick={() => setFormOpen(false)}>Cancelar</button>}</div></form> : <button className="module-create-project" disabled={!!unsynced} onClick={() => setFormOpen(true)}>Crear otra Ruta Digital</button>}
+      {restaurants.length > 0 && <section aria-label="Mis restaurantes" className="module-project-grid">{restaurants.map(project => <DSCard as="article" key={project.id} className="module-project-card module-project-restaurant"><span>Restaurante · Ruta Digital</span><h2>{project.name}</h2><p>Tu menú y enlace público.</p><DSButtonSecondary disabled={creating || project.id === unsynced} onClick={() => open(project.id)}>Continuar con {project.name}</DSButtonSecondary></DSCard>)}</section>}
+      {(!restaurants.length || formOpen) ? <form onSubmit={create}><h2>Crea tu Ruta Digital</h2><label>Nombre de tu negocio<DSInput required maxLength={120} value={name} placeholder="Alfajores del Valle" onChange={event => setName(event.target.value)} autoComplete="organization" /></label><p>Tipo de negocio: <strong>Restaurante</strong> · También para pastelerías, cafeterías y comida por encargo.</p><div className="module-project-actions"><DSButtonSecondary type="submit" disabled={creating || !!unsynced || !name.trim()}>{creating ? 'Guardando tu ruta…' : 'Crear mi Ruta Digital'}</DSButtonSecondary>{restaurants.length > 0 && <DSButtonSecondary type="button" disabled={creating} onClick={() => setFormOpen(false)}>Cancelar</DSButtonSecondary>}</div></form> : <DSButtonSecondary className="module-create-project" disabled={!!unsynced} onClick={() => setFormOpen(true)}>Crear otra Ruta Digital</DSButtonSecondary>}
     </>}
     <section aria-label="Módulos disponibles"><h2>Empieza con Restaurante</h2><div className="module-project-grid">{Object.entries(moduleLabels).map(([key, label]) => {
       const enabled = isModuleEnabled(key as ModuleType);
-      return <article key={key} className={`module-project-card ${enabled ? 'module-project-restaurant' : 'module-coming-soon'}`}><span>{enabled ? 'Disponible' : 'Muy pronto'}</span><h3>{label}</h3><p>{enabled ? 'Menú, página pública y pedidos por WhatsApp.' : 'Estamos preparando este módulo.'}</p>{!enabled && <button disabled aria-label={`${label}: Muy pronto`}>Muy pronto</button>}</article>;
+      return <article key={key} className={`module-project-card ${enabled ? 'module-project-restaurant' : 'module-coming-soon'}`}><span>{enabled ? 'Disponible' : 'Muy pronto'}</span><h3>{label}</h3><p>{enabled ? 'Menú, página pública y pedidos por WhatsApp.' : 'Estamos preparando este módulo.'}</p>{!enabled && <DSButtonSecondary disabled aria-label={`${label}: Muy pronto`}>Muy pronto</DSButtonSecondary>}</article>;
     })}</div></section>
   </main>;
 }

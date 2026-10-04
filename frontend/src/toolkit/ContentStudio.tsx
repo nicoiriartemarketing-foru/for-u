@@ -1,3 +1,5 @@
+import { Card as DSCard } from '../components/ui/DesignSystem';
+import { Textarea as DSTextarea, ButtonPrimary as DSButtonPrimary, ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import { useState } from "react";
 import { askAI, downloadBlob, templateContent } from "./api";
 import { useToolkit } from "./ToolkitContext";
@@ -45,7 +47,7 @@ export default function ContentStudio({
   }
   return (
     <div className="tk-two-columns">
-      <section className="tk-card tk-stack">
+      <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-eyebrow">DE UNA IDEA A UNA PUBLICACIÓN</div>
         <h2>Algo que vale la pena contar</h2>
         <p>
@@ -53,7 +55,7 @@ export default function ContentStudio({
         </p>
         <label>
           ¿Qué quieres contar?
-          <textarea
+          <DSTextarea
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder={`Por qué elegir ${business.offer}`}
@@ -78,14 +80,14 @@ export default function ContentStudio({
             <option>Inspirador</option>
           </select>
         </label>
-        <button
+        <DSButtonPrimary
           className="tk-primary"
           disabled={busy || !topic.trim() || demo}
           onClick={generate}
         >
           {busy ? "Escribiendo contigo…" : "Generar con IA"}
-        </button>
-        <button
+        </DSButtonPrimary>
+        <DSButtonSecondary
           disabled={busy}
           onClick={() => {
             setText(templateContent(business, topic, format));
@@ -93,7 +95,7 @@ export default function ContentStudio({
           }}
         >
           Empezar con una plantilla
-        </button>
+        </DSButtonSecondary>
         {demo && (
           <small>
             La IA se activa con tu cuenta. Las plantillas están listas para
@@ -107,15 +109,15 @@ export default function ContentStudio({
             : "un carrusel que responda tres dudas de tus clientes."}{" "}
           Ajustaremos las recomendaciones cuando tengas resultados.
         </div>
-      </section>
-      <section className="tk-card tk-stack">
+      </DSCard>
+      <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-toolbar">
           <h3>Tu borrador</h3>
           <span className="tk-badge">
             {source === "ai" ? "Generado con IA" : "Plantilla editable"}
           </span>
         </div>
-        <textarea
+        <DSTextarea
           aria-label="Contenido generado"
           className="tk-content-output"
           value={text}
@@ -128,10 +130,10 @@ export default function ContentStudio({
           los datos de tu negocio antes de publicar.
         </small>
         <div className="tk-toolbar">
-          <button disabled={!text || busy} onClick={saveDraft}>
+          <DSButtonSecondary disabled={!text || busy} onClick={saveDraft}>
             Guardar borrador
-          </button>
-          <button
+          </DSButtonSecondary>
+          <DSButtonSecondary
             disabled={!text}
             onClick={async () => {
               try {
@@ -143,8 +145,8 @@ export default function ContentStudio({
             }}
           >
             Copiar
-          </button>
-          <button
+          </DSButtonSecondary>
+          <DSButtonSecondary
             disabled={!text}
             onClick={() =>
               downloadBlob(
@@ -154,21 +156,21 @@ export default function ContentStudio({
             }
           >
             Descargar
-          </button>
-          <button
+          </DSButtonSecondary>
+          <DSButtonSecondary
             className="tk-secondary"
             disabled={!text}
             onClick={() => onScript(text)}
           >
             Practicar en teleprompter →
-          </button>
+          </DSButtonSecondary>
         </div>
         {notice && (
           <p role="status" className="tk-notice">
             {notice}
           </p>
         )}
-      </section>
+      </DSCard>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { ButtonPrimary as DSButtonPrimary, ButtonSecondary as DSButtonSecondary, Input as DSInput, Textarea as DSTextarea } from '../ui/DesignSystem';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -25,7 +26,7 @@ export default function ContentCreator({ currentProject, onProjectChange }: Cont
     loadModuleProjects(userId).then(value => { if (active) { setProjects(value); setLoadedFor(userId); setError(''); } }).catch(reason => { if (active) setError(reason.message); });
     return () => { active = false; };
   }, [userId, attempt]);
-  if (error) return <main className="content-creator"><p role="alert">{error}</p><button onClick={() => setAttempt(value => value + 1)}>Reintentar</button><Link to="/dashboard?view=projects">Mis proyectos</Link></main>;
+  if (error) return <main className="content-creator"><p role="alert">{error}</p><DSButtonSecondary onClick={() => setAttempt(value => value + 1)}>Reintentar</DSButtonSecondary><Link to="/dashboard?view=projects">Mis proyectos</Link></main>;
   if (!userId || loadedFor !== userId) return <main className="content-creator"><p role="status">Cargando tus proyectos…</p></main>;
   const requested = currentProject?.id ?? params.get('project');
   const project = requested ? projects.find(item => item.id === requested) : projects[0];
@@ -84,23 +85,23 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
     try { if (draft.imagePath && !imageUrl) throw new Error('Espera a que cargue la imagen antes de exportar.'); downloadBlob(await exportContentImage(draft, imageUrl), `${project.type}-${draft.format}.png`); setNotice('Imagen lista para descargar.'); }
     catch (error) { setNotice((error as Error).message); } finally { setBusy(false); }
   }
-  if (!document) return <main className="content-creator"><p role="status">{notice || 'Cargando el contenido del proyecto…'}</p>{notice && <button onClick={() => setAttempt(value => value + 1)}>Reintentar carga</button>}</main>;
-  return <main className="content-creator"><header><div><span>FOR U · {moduleLabels[project.type]}</span><h1>Creador de Contenido</h1></div><button disabled={busy} onClick={() => { if (mayDiscard()) navigate(`/modules/${project.type}?project=${encodeURIComponent(project.id)}`); }}>Volver a {project.name}</button></header>
+  if (!document) return <main className="content-creator"><p role="status">{notice || 'Cargando el contenido del proyecto…'}</p>{notice && <DSButtonSecondary onClick={() => setAttempt(value => value + 1)}>Reintentar carga</DSButtonSecondary>}</main>;
+  return <main className="content-creator"><header><div><span>FOR U · {moduleLabels[project.type]}</span><h1>Creador de Contenido</h1></div><DSButtonSecondary disabled={busy} onClick={() => { if (mayDiscard()) navigate(`/modules/${project.type}?project=${encodeURIComponent(project.id)}`); }}>Volver a {project.name}</DSButtonSecondary></header>
     <p role="status">{notice}</p><ProjectSelector projects={projects} value={project.id} disabled={busy} onChange={id => { if (mayDiscard()) onProjectChange(id); }} />
     <fieldset className="creator-controls" disabled={busy}>
       {draft ? <>
-        <div className="creator-section-heading"><h2>{draft.templateId ? 'Personaliza tu plantilla' : 'Tu diseño desde cero'}</h2><button onClick={() => { if (mayDiscard()) { setDraft(null); setDirty(false); } }}>Elegir otra plantilla</button></div>
+        <div className="creator-section-heading"><h2>{draft.templateId ? 'Personaliza tu plantilla' : 'Tu diseño desde cero'}</h2><DSButtonSecondary onClick={() => { if (mayDiscard()) { setDraft(null); setDirty(false); } }}>Elegir otra plantilla</DSButtonSecondary></div>
         <div className="creator-editor"><section className="creator-fields">
-          <label>Título<input maxLength={160} value={draft.title} onChange={event => update({ title: event.target.value })} /></label><label>Subtítulo<input maxLength={240} value={draft.subtitle} onChange={event => update({ subtitle: event.target.value })} /></label>
-          <label>Texto de la publicación<textarea value={draft.caption} onChange={event => update({ caption: event.target.value })} /></label>
+          <label>Título<DSInput maxLength={160} value={draft.title} onChange={event => update({ title: event.target.value })} /></label><label>Subtítulo<DSInput maxLength={240} value={draft.subtitle} onChange={event => update({ subtitle: event.target.value })} /></label>
+          <label>Texto de la publicación<DSTextarea value={draft.caption} onChange={event => update({ caption: event.target.value })} /></label>
           <label>Formato<select value={draft.format} onChange={event => update({ format: event.target.value as ContentDraft['format'] })}><option value="post">Publicación cuadrada · 1080 × 1080</option><option value="story">Historia · 1080 × 1920</option></select></label>
-          <div className="creator-colors"><label>Fondo<input type="color" value={draft.background} onChange={event => update({ background: event.target.value })} /></label><label>Texto<input type="color" value={draft.foreground} onChange={event => update({ foreground: event.target.value })} /></label></div>
-          <div className="creator-actions"><button onClick={() => setGallery(value => !value)}>{gallery ? 'Cerrar biblioteca' : 'Elegir imagen'}</button>{draft.imagePath && <button onClick={() => update({ imagePath: '' })}>Quitar imagen</button>}</div>
-          <div className="creator-actions"><button onClick={save} disabled={!dirty}>Guardar contenido</button><button onClick={download}>Descargar imagen</button><button onClick={async () => { try { await navigator.clipboard.writeText(draft.caption); setNotice('Texto copiado.'); } catch { setNotice('No se pudo copiar. Selecciona y copia el texto desde el campo.'); } }}>Copiar texto</button></div>
+          <div className="creator-colors"><label>Fondo<DSInput type="color" value={draft.background} onChange={event => update({ background: event.target.value })} /></label><label>Texto<DSInput type="color" value={draft.foreground} onChange={event => update({ foreground: event.target.value })} /></label></div>
+          <div className="creator-actions"><DSButtonSecondary onClick={() => setGallery(value => !value)}>{gallery ? 'Cerrar biblioteca' : 'Elegir imagen'}</DSButtonSecondary>{draft.imagePath && <DSButtonSecondary onClick={() => update({ imagePath: '' })}>Quitar imagen</DSButtonSecondary>}</div>
+          <div className="creator-actions"><DSButtonPrimary tooltip="Guarda este diseño en tu proyecto. Guarda antes de salir para conservar los cambios." onClick={save} disabled={!dirty}>Guardar contenido</DSButtonPrimary><DSButtonSecondary tooltip="Descarga el diseño como imagen PNG para compartirlo." onClick={download}>Descargar imagen</DSButtonSecondary><DSButtonSecondary onClick={async () => { try { await navigator.clipboard.writeText(draft.caption); setNotice('Texto copiado.'); } catch { setNotice('No se pudo copiar. Selecciona y copia el texto desde el campo.'); } }}>Copiar texto</DSButtonSecondary></div>
         </section><section className={`creator-preview creator-preview-${draft.format}`} aria-label="Vista previa del contenido" style={{ background: draft.background, color: draft.foreground }}>{imageUrl && <img src={imageUrl} alt="Imagen seleccionada para el contenido" />}<div><h2>{draft.title || 'Tu título'}</h2><p>{draft.subtitle}</p></div></section></div>
         {gallery && <MediaGallery userId={userId} projectId={project.id} onSelect={media => { setImage({ path: media.path, url: media.url }); update({ imagePath: media.path }); setGallery(false); }} />}
       </> : <TemplateLibrary key={project.type} type={project.type} onSelect={template => open(contentFromTemplate(project, template), true)} onCreateFromScratch={() => open(blankContent(project.id), true)} />}
-      {document.drafts.length > 0 && <section><h2>Contenido guardado</h2><div className="creator-saved-grid">{document.drafts.map(item => <button key={item.id} onClick={() => open({ ...item }, false)}><strong>{item.title || item.caption.slice(0, 60)}</strong><span>{item.format === 'post' ? 'Publicación' : 'Historia'}</span></button>)}</div></section>}
+      {document.drafts.length > 0 && <section><h2>Contenido guardado</h2><div className="creator-saved-grid">{document.drafts.map(item => <DSButtonSecondary key={item.id} onClick={() => open({ ...item }, false)}><strong>{item.title || item.caption.slice(0, 60)}</strong><span>{item.format === 'post' ? 'Publicación' : 'Historia'}</span></DSButtonSecondary>)}</div></section>}
     </fieldset>
   </main>;
 }

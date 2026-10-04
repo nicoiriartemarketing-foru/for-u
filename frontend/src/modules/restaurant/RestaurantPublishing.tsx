@@ -1,3 +1,4 @@
+import { ButtonPrimary as DSButtonPrimary, ButtonSecondary as DSButtonSecondary, Input as DSInput } from '../../components/ui/DesignSystem';
 import { useEffect, useRef, useState } from 'react';
 import { loadRestaurantPublication, publishRestaurant, unpublishRestaurant, type ModulePublication } from '../../services/modulePublishing';
 import type { ModuleProject } from '../moduleProjects';
@@ -30,15 +31,15 @@ export default function RestaurantPublishing({ data, userId, project, disabled, 
   }
   const url = publication?.published ? `${window.location.origin}${restaurantPublicPath(publication.slug)}` : '';
   const localLink = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
-  return <details open className="component-card restaurant-publishing"><summary>3. Publicar y compartir mi menú</summary><p role="status">{notice}</p>
-    {!loaded ? <><p>Comprobando el estado de publicación.</p>{notice && <button type="button" onClick={() => setAttempt(value => value + 1)}>Revisar estado</button>}</> : <>
+  return <details id="restaurant-publish" open className="component-card restaurant-publishing"><summary>3. Publicar y compartir mi menú</summary><p role="status">{notice}</p>
+    {!loaded ? <><p>Comprobando el estado de publicación.</p>{notice && <DSButtonSecondary type="button" onClick={() => setAttempt(value => value + 1)}>Revisar estado</DSButtonSecondary>}</> : <>
       <p>Publica los platos disponibles y las secciones visibles de tu carta. Las fotos seleccionadas también serán públicas.</p>
-      <label>Dirección de tu carta<input value={slug} disabled={busy} maxLength={60} placeholder="alfajores-del-valle" onChange={event => setSlug(event.target.value.toLowerCase())} /></label>
+      <label>Dirección de tu carta<DSInput value={slug} disabled={busy} maxLength={60} placeholder="alfajores-del-valle" onChange={event => setSlug(event.target.value.toLowerCase())} /></label>
       <p className="restaurant-public-url">Tu enlace: {window.location.origin}/{slug || "nombre-de-tu-negocio"}</p>
       {disabled && <p>Aplica los formularios y guarda tus cambios antes de publicar.</p>}
       {localLink && <p>Estás usando una dirección local. Abre For U desde su dominio publicado para generar el enlace y QR que compartirás con tus clientes.</p>}
-      <button type="button" disabled={busy || disabled} onClick={() => change(true)}>{busy ? 'Actualizando…' : publication?.published ? 'Actualizar carta publicada' : 'Publicar mi menú'}</button>
-      {url && <><p className="restaurant-public-url"><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></p><button type="button" onClick={async () => { try { await navigator.clipboard.writeText(url); setNotice('Enlace copiado.'); } catch { setNotice(`Copia este enlace: ${url}`); } }}>Copiar enlace</button><PublicationQr url={url} /><button type="button" disabled={busy} onClick={() => { if (window.confirm('¿Retirar la carta pública? Las copias públicas de las fotos conservarán sus enlaces.')) void change(false); }}>Retirar publicación</button></>}
+      <DSButtonPrimary type="button" disabled={busy || disabled} onClick={() => change(true)}>{busy ? 'Actualizando…' : publication?.published ? 'Actualizar carta publicada' : 'Publicar mi menú'}</DSButtonPrimary>
+      {url && <><p className="restaurant-public-url"><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></p><DSButtonSecondary type="button" onClick={async () => { try { await navigator.clipboard.writeText(url); setNotice('Enlace copiado.'); } catch { setNotice(`Copia este enlace: ${url}`); } }}>Copiar enlace</DSButtonSecondary><PublicationQr url={url} /><DSButtonSecondary type="button" disabled={busy} onClick={() => { if (window.confirm('¿Retirar la carta pública? Las copias públicas de las fotos conservarán sus enlaces.')) void change(false); }}>Retirar publicación</DSButtonSecondary></>}
     </>}
   </details>;
 }

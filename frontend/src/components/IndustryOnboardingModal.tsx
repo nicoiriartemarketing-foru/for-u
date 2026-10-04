@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary, Input as DSInput } from './ui/DesignSystem';
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import MagicBadge from "./ui/MagicBadge";
@@ -267,19 +268,19 @@ export default function IndustryOnboardingModal({
                     : activeCopy.intro}
                 </p>
               </div>
-              <button
+              <DSButtonSecondary
                 type="button"
                 onClick={resetAndClose}
                 aria-label="Cerrar selector de rubro"
               >
                 ×
-              </button>
+              </DSButtonSecondary>
             </header>
 
             {step === "industry" ? (
               <div className="foru-industry-grid">
                 {industryOptions.map((industry) => (
-                  <button
+                  <DSButtonSecondary
                     type="button"
                     key={industry.key}
                     className={
@@ -296,7 +297,7 @@ export default function IndustryOnboardingModal({
                     <strong>{industry.title}</strong>
                     <span>{industry.description}</span>
                     <em>Disponible</em>
-                  </button>
+                  </DSButtonSecondary>
                 ))}
               </div>
             ) : (
@@ -304,14 +305,14 @@ export default function IndustryOnboardingModal({
                 <MagicCard as="div" className="foru-tourism-form-card">
                   <label>
                     <span>Nombre del proyecto</span>
-                    <input
+                    <DSInput
                       value={projectName}
                       onChange={(event) => setProjectName(event.target.value)}
                     />
                   </label>
                   <label>
                     <span>{activeCopy.offerLabel}</span>
-                    <input
+                    <DSInput
                       value={offerType}
                       onChange={(event) => setOfferType(event.target.value)}
                       placeholder={activeCopy.offerPlaceholder}
@@ -319,7 +320,7 @@ export default function IndustryOnboardingModal({
                   </label>
                   <label>
                     <span>{activeCopy.locationLabel}</span>
-                    <input
+                    <DSInput
                       value={location}
                       onChange={(event) => setLocation(event.target.value)}
                       placeholder={activeCopy.locationPlaceholder}
@@ -327,7 +328,7 @@ export default function IndustryOnboardingModal({
                   </label>
                   <label>
                     <span>{activeCopy.customerLabel}</span>
-                    <input
+                    <DSInput
                       value={idealTraveler}
                       onChange={(event) => setIdealTraveler(event.target.value)}
                       placeholder={activeCopy.customerPlaceholder}
@@ -337,7 +338,7 @@ export default function IndustryOnboardingModal({
                     <span>¿Qué quieres lograr primero?</span>
                     <div>
                       {objectiveOptions.map((option) => (
-                        <button
+                        <DSButtonSecondary
                           type="button"
                           key={option.key}
                           className={
@@ -347,7 +348,7 @@ export default function IndustryOnboardingModal({
                         >
                           <strong>{option.title}</strong>
                           <small>{option.description}</small>
-                        </button>
+                        </DSButtonSecondary>
                       ))}
                     </div>
                   </div>
@@ -372,14 +373,14 @@ export default function IndustryOnboardingModal({
                   <p>Esto ayuda a priorizar las tareas iniciales.</p>
                   <div>
                     {activeCopy.assets.map((asset) => (
-                      <button
+                      <DSButtonSecondary
                         type="button"
                         key={asset}
                         className={assets.includes(asset) ? "is-selected" : ""}
                         onClick={() => toggleAsset(asset)}
                       >
                         {asset}
-                      </button>
+                      </DSButtonSecondary>
                     ))}
                   </div>
                 </MagicCard>

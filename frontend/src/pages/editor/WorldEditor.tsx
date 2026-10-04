@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary, Input as DSInput, Textarea as DSTextarea } from '../../components/ui/DesignSystem';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import defaultBusinessWorld from '../../assets/landing/default-business-world.jpg';
@@ -159,13 +160,13 @@ export default function WorldEditor() {
             >
               Abrir landing <Eye size={17} />
             </Link>
-            <button
+            <DSButtonSecondary
               type="button"
               onClick={savePage}
               className="tap-boost inline-flex items-center gap-2 rounded-xl foru-dark-gradient px-4 py-3 text-sm font-black text-white shadow-lg"
             >
               <Save size={17} /> {saved ? 'Guardado' : 'Guardar'}
-            </button>
+            </DSButtonSecondary>
           </div>
         </div>
       </header>
@@ -180,7 +181,7 @@ export default function WorldEditor() {
                 const active = activeTab === tab.id;
 
                 return (
-                  <button
+                  <DSButtonSecondary
                     key={tab.id}
                     type="button"
                     onClick={() => {
@@ -192,7 +193,7 @@ export default function WorldEditor() {
                     }`}
                   >
                     <Icon size={15} /> {tab.label}
-                  </button>
+                  </DSButtonSecondary>
                 );
               })}
             </div>
@@ -225,18 +226,18 @@ export default function WorldEditor() {
                   <div className="flex-1">
                     <Field label="Título de esta sección" hint="Ej. Servicios, menú, productos o planes." value={page.featuredTitle} onChange={(value) => updatePage({ featuredTitle: value })} />
                   </div>
-                  <button type="button" onClick={addFeaturedItem} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl foru-dark-gradient text-white" title="Agregar producto">
+                  <DSButtonSecondary type="button" onClick={addFeaturedItem} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl foru-dark-gradient text-white" title="Agregar producto">
                     <Plus size={18} />
-                  </button>
+                  </DSButtonSecondary>
                 </div>
                 {page.featuredItems.map((item, index) => (
                   <div key={index} className="foru-soft-panel rounded-2xl p-4">
                     <div className="mb-3 flex items-center justify-between">
                       <p className="text-xs font-black uppercase text-gray-500">Producto o servicio {index + 1}</p>
                       {page.featuredItems.length > 1 && (
-                        <button type="button" onClick={() => removeFeaturedItem(index)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-gray-700" title="Eliminar">
+                        <DSButtonSecondary type="button" onClick={() => removeFeaturedItem(index)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-gray-700" title="Eliminar">
                           <Trash2 size={15} />
-                        </button>
+                        </DSButtonSecondary>
                       )}
                     </div>
                     <div className="grid gap-3">
@@ -274,7 +275,7 @@ export default function WorldEditor() {
                     const selected = option.id === page.themeId;
 
                     return (
-                      <button
+                      <DSButtonSecondary
                         key={option.id}
                         type="button"
                         onClick={() => applyTheme(option.id)}
@@ -289,7 +290,7 @@ export default function WorldEditor() {
                         <span className="mt-1 block text-sm font-semibold leading-6 text-gray-600">{option.description}</span>
                         <span className="mt-3 inline-flex rounded-full bg-white/70 px-3 py-1 text-xs font-black text-gray-600">{option.bestFor}</span>
                         {selected && <span className="ml-2 mt-3 inline-flex rounded-full bg-[#6B6B6B] px-3 py-1 text-xs font-black text-white">Activo</span>}
-                      </button>
+                      </DSButtonSecondary>
                     );
                   })}
                 </div>
@@ -308,7 +309,7 @@ export default function WorldEditor() {
                     const active = page.heroVisual === option.id;
 
                     return (
-                      <button
+                      <DSButtonSecondary
                         key={option.id}
                         type="button"
                         onClick={() => updatePage({ heroVisual: option.id as DigitalWorldPage['heroVisual'] })}
@@ -316,7 +317,7 @@ export default function WorldEditor() {
                       >
                         <Icon size={20} className="mb-3 text-[#6B6B6B]" />
                         <span className="block text-sm font-black text-gray-950">{option.label}</span>
-                      </button>
+                      </DSButtonSecondary>
                     );
                   })}
                 </div>
@@ -338,14 +339,14 @@ export default function WorldEditor() {
                       ['modern', 'Moderna'],
                       ['rounded', 'Amable'],
                     ].map(([id, label]) => (
-                      <button
+                      <DSButtonSecondary
                         key={id}
                         type="button"
                         onClick={() => updatePage({ fontStyle: id as DigitalWorldPage['fontStyle'] })}
                         className={`tap-boost rounded-xl px-4 py-3 text-sm font-black ${page.fontStyle === id ? 'foru-gradient-button' : 'foru-soft-panel text-gray-700'}`}
                       >
                         {label}
-                      </button>
+                      </DSButtonSecondary>
                     ))}
                   </div>
                 </div>
@@ -358,14 +359,14 @@ export default function WorldEditor() {
                       ['steps', 'Pasos'],
                       ['spotlight', 'Destacado'],
                     ].map(([id, label]) => (
-                      <button
+                      <DSButtonSecondary
                         key={id}
                         type="button"
                         onClick={() => updatePage({ offerLayout: id as DigitalWorldPage['offerLayout'] })}
                         className={`tap-boost rounded-xl px-4 py-3 text-sm font-black ${page.offerLayout === id ? 'foru-gradient-button' : 'foru-soft-panel text-gray-700'}`}
                       >
                         {label}
-                      </button>
+                      </DSButtonSecondary>
                     ))}
                   </div>
                 </div>
@@ -378,14 +379,14 @@ export default function WorldEditor() {
                       ['cards', 'Ordenado'],
                       ['bold', 'Fuerte'],
                     ].map(([id, label]) => (
-                      <button
+                      <DSButtonSecondary
                         key={id}
                         type="button"
                         onClick={() => updatePage({ blockStyle: id as DigitalWorldPage['blockStyle'] })}
                         className={`tap-boost rounded-xl px-4 py-3 text-sm font-black ${page.blockStyle === id ? 'foru-gradient-button' : 'foru-soft-panel text-gray-700'}`}
                       >
                         {label}
-                      </button>
+                      </DSButtonSecondary>
                     ))}
                   </div>
                 </div>
@@ -422,14 +423,14 @@ export default function WorldEditor() {
                 const Icon = mode.icon;
 
                 return (
-                  <button
+                  <DSButtonSecondary
                     key={mode.id}
                     type="button"
                     onClick={() => setPreviewMode(mode.id as 'desktop' | 'mobile')}
                     className={`tap-boost inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black ${previewMode === mode.id ? 'foru-gradient-button' : 'text-gray-600'}`}
                   >
                     <Icon size={15} /> {mode.label}
-                  </button>
+                  </DSButtonSecondary>
                 );
               })}
             </div>
@@ -445,9 +446,9 @@ export default function WorldEditor() {
                 <p className="mb-5 text-xs font-black uppercase" style={{ color: theme.accent }}>{draft.businessTitle}</p>
                 <h2 className={`${fontClass} text-4xl font-bold leading-tight ${previewMode === 'mobile' ? '' : 'md:text-6xl'}`}>{page.heroTitle}</h2>
                 <p className="mt-6 text-base font-semibold leading-8" style={{ color: theme.muted }}>{page.heroSubtitle}</p>
-                <button type="button" className="mt-8 inline-flex items-center gap-2 rounded-lg px-5 py-4 text-sm font-black" style={{ backgroundColor: theme.button, color: theme.buttonText }}>
+                <DSButtonSecondary type="button" className="mt-8 inline-flex items-center gap-2 rounded-lg px-5 py-4 text-sm font-black" style={{ backgroundColor: theme.button, color: theme.buttonText }}>
                   {page.ctaLabel} <MessageCircle size={17} />
-                </button>
+                </DSButtonSecondary>
               </div>
             </div>
 
@@ -490,7 +491,7 @@ export default function WorldEditor() {
 
             <section className="p-7 text-center" style={{ backgroundColor: theme.accentSoft }}>
               <h3 className="font-serif text-3xl font-bold" style={{ color: theme.text }}>{page.contactLine}</h3>
-              <button type="button" className="mt-5 rounded-lg px-5 py-3 text-sm font-black" style={{ backgroundColor: theme.button, color: theme.buttonText }}>{page.ctaLabel}</button>
+              <DSButtonSecondary type="button" className="mt-5 rounded-lg px-5 py-3 text-sm font-black" style={{ backgroundColor: theme.button, color: theme.buttonText }}>{page.ctaLabel}</DSButtonSecondary>
             </section>
           </div>
         </section>
@@ -504,7 +505,7 @@ function Field({ label, hint, value, onChange }: { label: string; hint?: string;
     <label className="block">
       <span className="text-sm font-black text-gray-700">{label}</span>
       {hint && <span className="mt-1 block text-xs font-semibold leading-5 text-gray-500">{hint}</span>}
-      <input
+      <DSInput
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className="foru-input mt-2 w-full rounded-xl p-4 text-sm font-semibold text-gray-800 outline-none transition"
@@ -518,7 +519,7 @@ function Area({ label, hint, value, onChange, compact = false }: { label: string
     <label className="block">
       <span className="text-sm font-black text-gray-700">{label}</span>
       {hint && <span className="mt-1 block text-xs font-semibold leading-5 text-gray-500">{hint}</span>}
-      <textarea
+      <DSTextarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className={`foru-input mt-2 w-full rounded-xl p-4 text-sm font-semibold leading-7 text-gray-800 outline-none transition ${compact ? 'min-h-24' : 'min-h-36'}`}

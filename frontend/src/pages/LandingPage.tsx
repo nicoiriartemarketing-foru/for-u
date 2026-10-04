@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
@@ -110,9 +111,9 @@ export default function LandingPage() {
           <Logo />
         </Link>
         <nav>
-          <button type="button" onClick={scrollToFeatures}>
+          <DSButtonSecondary type="button" onClick={scrollToFeatures}>
             Cómo funciona
-          </button>
+          </DSButtonSecondary>
           <Link to="/pricing">Precios</Link>
           <Link to="/login">Entrar</Link>
         </nav>
@@ -165,9 +166,9 @@ export default function LandingPage() {
             <Link to="/register" className="foru-ripple-button">
               Empezar gratis
             </Link>
-            <button type="button" className="foru-ripple-button is-soft" onClick={scrollToFeatures}>
+            <DSButtonSecondary type="button" className="foru-ripple-button is-soft" onClick={scrollToFeatures}>
               Ver cómo funciona
-            </button>
+            </DSButtonSecondary>
           </div>
         </motion.div>
 
@@ -192,13 +193,13 @@ export default function LandingPage() {
               <span>Kiosco dulce</span>
               <b>Llamar a 2 proveedores de golosinas</b>
               <small>15 min · 20 monedas</small>
-              <button type="button">Empezar</button>
+              <DSButtonSecondary type="button">Empezar</DSButtonSecondary>
             </article>
             <article>
               <span>Velas artesanales</span>
               <b>Investigar 3 proveedores de cera de soja</b>
               <small>15 min · 20 monedas</small>
-              <button type="button">Empezar</button>
+              <DSButtonSecondary type="button">Empezar</DSButtonSecondary>
             </article>
             <div className="foru-mockup-world">
               <span>🏝️</span>

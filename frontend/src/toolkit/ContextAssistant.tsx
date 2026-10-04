@@ -1,3 +1,5 @@
+import { Card as DSCard } from '../components/ui/DesignSystem';
+import { Textarea as DSTextarea, ButtonPrimary as DSButtonPrimary } from '../components/ui/DesignSystem';
 import { useState } from "react";
 import { useToolkit } from "./ToolkitContext";
 import { askAI } from "./api";
@@ -38,7 +40,7 @@ export default function ContextAssistant({
     }
   }
   return (
-    <section className="tk-card tk-stack tk-assistant">
+    <DSCard as="section" className="tk-card tk-stack tk-assistant">
       <div className="tk-eyebrow">ESTOY AQUÍ CONTIGO</div>
       <h2>Una cosa a la vez</h2>
       <p>
@@ -70,7 +72,7 @@ export default function ContextAssistant({
       >
         <label>
           ¿En qué te ayudo?
-          <textarea
+          <DSTextarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             maxLength={3000}
@@ -78,9 +80,9 @@ export default function ContextAssistant({
             rows={3}
           />
         </label>
-        <button className="tk-primary" disabled={busy || !draft.trim() || demo}>
+        <DSButtonPrimary className="tk-primary" disabled={busy || !draft.trim() || demo}>
           {busy ? "Pensando en tu siguiente paso…" : "Conversar con FOR U"}
-        </button>
+        </DSButtonPrimary>
       </form>
       {demo && (
         <p>
@@ -93,6 +95,6 @@ export default function ContextAssistant({
           {error}
         </p>
       )}
-    </section>
+    </DSCard>
   );
 }

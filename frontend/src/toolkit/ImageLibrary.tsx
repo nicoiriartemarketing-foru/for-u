@@ -1,3 +1,5 @@
+import { Card as DSCard } from '../components/ui/DesignSystem';
+import { Input as DSInput, ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { askAI } from "./api";
@@ -165,7 +167,7 @@ export default function ImageLibrary() {
     }
   }
   return (
-    <section className="tk-card tk-stack">
+    <DSCard as="section" className="tk-card tk-stack">
       <div className="tk-toolbar">
         <div>
           <div className="tk-eyebrow">LA ESENCIA DE TU MARCA</div>
@@ -173,7 +175,7 @@ export default function ImageLibrary() {
         </div>
         <label className="tk-file-button">
           Subir imágenes
-          <input
+          <DSInput
             type="file"
             accept="image/jpeg,image/png,image/webp"
             multiple
@@ -203,7 +205,7 @@ export default function ImageLibrary() {
       </p>
       <label>
         Buscar por nombre o etiqueta
-        <input
+        <DSInput
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="producto, local, proceso…"
@@ -223,7 +225,7 @@ export default function ImageLibrary() {
               .includes(search.toLowerCase()),
           )
           .map((i) => (
-            <article key={i.id} className="tk-image-card">
+            <DSCard as="article" key={i.id} className="tk-image-card">
               {urls[i.path] ? (
                 <img src={urls[i.path]} alt={i.name} loading="lazy" />
               ) : (
@@ -233,7 +235,7 @@ export default function ImageLibrary() {
               <small>{new Date(i.createdAt).toLocaleDateString("es-PE")}</small>
               <label>
                 Etiquetas
-                <input
+                <DSInput
                   key={i.tags.join(",")}
                   defaultValue={i.tags.join(", ")}
                   disabled={busy}
@@ -244,19 +246,19 @@ export default function ImageLibrary() {
                 />
               </label>
               <div className="tk-toolbar">
-                <button disabled={busy || demo} onClick={() => tags(i)}>
+                <DSButtonSecondary disabled={busy || demo} onClick={() => tags(i)}>
                   Etiquetar con IA
-                </button>
-                <button disabled={busy} onClick={() => remove(i)}>
+                </DSButtonSecondary>
+                <DSButtonSecondary disabled={busy} onClick={() => remove(i)}>
                   Eliminar
-                </button>
+                </DSButtonSecondary>
               </div>
-            </article>
+            </DSCard>
           ))}
       </div>
       {!images.length && (
         <p>Tus fotos aparecerán aquí. Solo tú puedes ver esta biblioteca.</p>
       )}
-    </section>
+    </DSCard>
   );
 }

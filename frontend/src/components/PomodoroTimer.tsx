@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from './ui/DesignSystem';
 import { useEffect, useMemo, useRef } from 'react';
 import { usePomodoro } from '../contexts/PomodoroContext';
 
@@ -56,14 +57,14 @@ export default function PomodoroTimer({
       </div>
 
       <div className="foru-pomodoro-actions">
-        <button
+        <DSButtonSecondary
           type="button"
           onClick={() => start(remainingSeconds || durationSeconds)}
           disabled={isRunning}
         >
           {isRunning ? 'En foco' : hasCompleted ? 'Empezar otro Pomodoro' : 'Empezar Pomodoro'}
-        </button>
-        <button
+        </DSButtonSecondary>
+        <DSButtonSecondary
           type="button"
           onClick={() => {
             if (isRunning) pause(); else reset();
@@ -71,7 +72,7 @@ export default function PomodoroTimer({
           disabled={!isRunning && remainingSeconds === durationSeconds && !hasCompleted}
         >
           {isRunning ? 'Pausar' : 'Reiniciar'}
-        </button>
+        </DSButtonSecondary>
       </div>
 
       {isRunning ? <div className="foru-pomodoro-dim" aria-hidden="true" /> : null}

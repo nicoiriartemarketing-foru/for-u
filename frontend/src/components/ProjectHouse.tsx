@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from './ui/DesignSystem';
 import { Float, Html } from '@react-three/drei';
 import type { ForUActiveProject, ForUNextAction, ForUBranchKey, ForUProjectNode, ForURawNote } from '../stores/useActiveProjectsStore';
 import MascotGuide from './MascotGuide';
@@ -53,9 +54,9 @@ export default function ProjectHouse({
         />
       ))}
       <Html position={[0, 2.65, 1.7]} center distanceFactor={7}>
-        <button type="button" className="foru-world-room-action" onClick={() => onSelectRoom('hall')}>
+        <DSButtonSecondary type="button" className="foru-world-room-action" onClick={() => onSelectRoom('hall')}>
           Ir al hall principal
-        </button>
+        </DSButtonSecondary>
       </Html>
 
       <RoomIdeas
@@ -151,9 +152,9 @@ function Door({
         <meshPhysicalMaterial color={isActive ? '#EAEAEA' : '#EAEAEA'} roughness={0.74} metalness={0.04} clearcoat={0.18} />
       </mesh>
       <Html position={[0, 0.82, 0.12]} center distanceFactor={7}>
-        <button type="button" className={isActive ? 'foru-world-door is-active' : 'foru-world-door'}>
+        <DSButtonSecondary type="button" className={isActive ? 'foru-world-door is-active' : 'foru-world-door'}>
           {room.icon} {room.label}
-        </button>
+        </DSButtonSecondary>
       </Html>
     </group>
   );

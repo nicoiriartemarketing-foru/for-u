@@ -1,3 +1,4 @@
+import { ButtonSecondary as DSButtonSecondary } from './ui/DesignSystem';
 import { Html } from '@react-three/drei';
 import type { ForUProjectNode } from '../stores/useActiveProjectsStore';
 
@@ -25,9 +26,9 @@ export default function RoomResources({ resources }: RoomResourcesProps) {
         </group>
       ))}
       <Html position={[0, 2.05, -0.8]} center distanceFactor={7}>
-        <button type="button" className="foru-world-room-action" onClick={() => window.alert('Aquí agregaremos recursos pronto.')}>
+        <DSButtonSecondary type="button" className="foru-world-room-action" onClick={() => window.alert('Aquí agregaremos recursos pronto.')}>
           Agregar recurso
-        </button>
+        </DSButtonSecondary>
       </Html>
     </group>
   );

@@ -1,3 +1,4 @@
+import { Card as DSCard } from './components/ui/DesignSystem';
 import { Toaster } from 'react-hot-toast';
 import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react';
 import { BrowserRouter as Router, Navigate, Routes, Route, useLocation } from 'react-router-dom';
@@ -56,11 +57,11 @@ function PrivateWorkspace({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <main className="foru-auth-page">
-        <section className="foru-auth-card">
+        <DSCard as="section" className="foru-auth-card">
           <span className="foru-auth-kicker">FOR U</span>
           <h1>Cargando tu espacio...</h1>
           <p>Un segundo, estamos buscando tus proyectos.</p>
-        </section>
+        </DSCard>
       </main>
     );
   }
@@ -137,13 +138,13 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: bo
 
     return (
       <main className="foru-auth-page">
-        <section className="foru-auth-card">
+        <DSCard as="section" className="foru-auth-card">
           <span className="foru-auth-kicker">FOR U</span>
           <h1>La app cargó con un error.</h1>
           <p>Ya no dejamos la pantalla en blanco. Refresca la página o vuelve al inicio.</p>
           {this.state.message ? <small>{this.state.message}</small> : null}
           <a href="/" className="foru-ripple-button">Volver al inicio</a>
-        </section>
+        </DSCard>
       </main>
     );
   }
@@ -152,10 +153,10 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: bo
 function RouteLoader() {
   return (
     <main className="foru-auth-page">
-      <section className="foru-auth-card">
+      <DSCard as="section" className="foru-auth-card">
         <span className="foru-auth-kicker">FOR U</span>
         <h1>Cargando...</h1>
-      </section>
+      </DSCard>
     </main>
   );
 }

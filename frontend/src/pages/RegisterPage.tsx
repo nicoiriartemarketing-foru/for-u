@@ -1,3 +1,4 @@
+import { Input as DSInput } from '../components/ui/DesignSystem';
 import { type FormEvent, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -34,9 +35,9 @@ export default function RegisterPage() {
     {confirmation ? <div role="status"><p>Te enviamos un enlace a <strong>{email}</strong>. Confirma tu correo para entrar y crear tu Ruta Digital.</p><p>Si no lo encuentras, revisa spam. Si ya tienes una cuenta, entra con tu contraseña.</p><Link to="/login?next=%2Fdashboard">Ir a iniciar sesión</Link></div> : <>
       <p>Crea tu cuenta, arma tu menú y comparte un enlace para recibir pedidos.</p>
       <form onSubmit={handleSubmit} className="foru-auth-form">
-        <label>Nombre<input type="text" value={displayName} onChange={event => setDisplayName(event.target.value)} placeholder="Tu nombre" autoComplete="name" required maxLength={100} /></label>
-        <label>Email<input type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="tu@email.com" autoComplete="email" required /></label>
-        <label>Contraseña<input type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Mínimo 6 caracteres" autoComplete="new-password" minLength={6} required /></label>
+        <label>Nombre<DSInput type="text" value={displayName} onChange={event => setDisplayName(event.target.value)} placeholder="Tu nombre" autoComplete="name" required maxLength={100} /></label>
+        <label>Email<DSInput type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="tu@email.com" autoComplete="email" required /></label>
+        <label>Contraseña<DSInput type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Mínimo 6 caracteres" autoComplete="new-password" minLength={6} required /></label>
         <label>Tipo de negocio<select name="businessType" defaultValue="restaurant" required><option value="restaurant">Restaurante</option></select></label>
         <small>También para pastelerías, cafeterías y comida por encargo.</small>
         {errorMessage && <div role="alert" className="foru-auth-error">{errorMessage}</div>}
