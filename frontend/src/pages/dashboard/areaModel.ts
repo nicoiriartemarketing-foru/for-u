@@ -1,9 +1,9 @@
 import type { ModuleType } from '../../modules/moduleProjects';
 export const areaDefinitions = [
-  { id: 'marketing', title: 'Marketing', color: '#2875dd', pet: 'Lumi', accessory: '🎨' },
-  { id: 'finance', title: 'Finanzas', color: '#21866c', pet: 'Milo', accessory: '🌱' },
-  { id: 'logistics', title: 'Logística', color: '#dc812c', pet: 'Nori', accessory: '🧭' },
-  { id: 'operations', title: 'Operaciones', color: '#8b59ce', pet: 'Coco', accessory: '💌' },
+  { id: 'marketing', title: 'Marketing', color: '#fcd34d', pet: 'Oliver', gradient: 'from-amber-300 via-yellow-400 to-pink-400', accessory: '🎨' },
+  { id: 'finance', title: 'Finanzas', color: '#f472b6', pet: 'Shippo', gradient: 'from-pink-400 via-rose-400 to-purple-500', accessory: '🌱' },
+  { id: 'logistics', title: 'Logística', color: '#a855f7', pet: 'Emma', gradient: 'from-purple-500 via-violet-400 to-cyan-400', accessory: '🧭' },
+  { id: 'operations', title: 'Operaciones', color: '#22d3ee', pet: 'Munay', gradient: 'from-cyan-400 via-teal-400 to-amber-300', accessory: '💌' },
 ] as const;
 export type AreaId = typeof areaDefinitions[number]['id'];
 export type AreaTask = { id: string; area: AreaId; title: string; done: boolean; createdAt: string; completedAt?: string; tool?: string };

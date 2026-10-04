@@ -12,16 +12,16 @@ test('legacy global tokens remain available to existing editors', async () => {
 test('business areas have stable distinct identities across dashboard and world',()=>{
  assert.deepEqual(areaDefinitions.map(a=>a.id),['marketing','finance','logistics','operations']);
  assert.equal(new Set(areaDefinitions.map(a=>a.color)).size,4);
- assert.equal(new Set(areaDefinitions.map(a=>a.pet)).size,4);
+ assert.deepEqual(areaDefinitions.map(a=>a.pet),['Oliver','Shippo','Emma','Munay']);
 });
 function luminance(hex){return hex.match(/[a-f0-9]{2}/gi).map(x=>parseInt(x,16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4).reduce((sum,x,i)=>sum+x*[.2126,.7152,.0722][i],0);}
-test('gradient area cards meet normal text contrast at both endpoints',async()=>{
+test('gradient area cards meet normal text contrast at all logo gradient stops',async()=>{
  const css=await readFile(new URL('pages/dashboard/workspace.css',root),'utf8');
  for(const area of areaDefinitions){
   const start=css.indexOf('.dashboard-home .dashboard-area-'+area.id+'{');
   const rule=css.slice(start,css.indexOf('}',start));
-  const stops=[...rule.matchAll(/(?:from|to)-(\w+)-(\d+)/g)].map(match=>colors[match[1]][match[2]]);
-  assert.equal(stops.length,2,area.id);
+  const stops=[...rule.matchAll(/(?:from|via|to)-(\w+)-(\d+)/g)].map(match=>colors[match[1]][match[2]]);
+  assert.equal(stops.length,3,area.id);
   const text=rule.match(/color:(#[a-f0-9]{6})/)[1];
   for(const stop of stops){const a=luminance(stop),b=luminance(text);assert.ok((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5,area.id+' '+stop);}
  }

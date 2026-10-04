@@ -32,7 +32,7 @@ export default function PomodoroTimer({
 
   return (
     <section className={`foru-pomodoro ${isRunning ? 'is-running' : ''}`} aria-label="Pomodoro de enfoque">
-      <div className="foru-pomodoro-ring">
+      <div className={`foru-pomodoro-ring ${isRunning ? 'is-iridescent motion-safe:animate-pulse' : ''}`} >
         <svg viewBox="0 0 128 128" role="img" aria-label={`${minutes}:${seconds}`}>
           <circle cx="64" cy="64" r="54" className="foru-pomodoro-track" />
           <circle

@@ -12,3 +12,12 @@
 @keyframes focus-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:767px){.floating-pomodoro{right:12px;bottom:12px}.floating-pomodoro-toggle{width:72px;height:72px;font-size:14px}.floating-pomodoro-toggle small{font-size:9px}.pomodoro-stars{bottom:76px}}
 @media(prefers-reduced-motion:reduce){.floating-pomodoro *,.floating-pomodoro *:before{animation:none!important;transition:none!important}.floating-pomodoro-toggle:hover{transform:none}}
+
+/* FOR U identity: readable timer text on every stop of the iridescent surface. */
+.floating-pomodoro-toggle{background:#334155}
+.floating-pomodoro.is-running .floating-pomodoro-toggle{background:linear-gradient(110deg,#fcd34d,#f472b6,#a855f7,#22d3ee);color:#0b1220}
+.floating-pomodoro.is-running .floating-pomodoro-toggle small{color:#0b1220}
+.floating-pomodoro.is-running .pomodoro-orbit-track{stroke:#ffffffb3}
+.floating-pomodoro.is-running .pomodoro-orbit-progress{stroke:#0b1220}
+.foru-pomodoro-ring.is-iridescent{background:linear-gradient(110deg,#fcd34d,#f472b6,#a855f7,#22d3ee);border-radius:50%;color:#0b1220}
+.foru-pomodoro-ring.is-iridescent strong,.foru-pomodoro-ring.is-iridescent span{color:#0b1220}
