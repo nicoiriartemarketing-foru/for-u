@@ -35,6 +35,8 @@ export function ReservationForm({ slug }: { slug: string }) {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [receipt, setReceipt] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [attempt, setAttempt] = useState(0);
   const request = useRef(crypto.randomUUID());
   useEffect(() => {
     let active = true;
@@ -42,7 +44,7 @@ export function ReservationForm({ slug }: { slug: string }) {
       if (!supabase) {
         if (active) {
           setLoading(false);
-          setNotice("No se pudo conectar con la agenda.");
+          setLoadError("No se pudo conectar con la agenda.");
         }
         return;
       }
@@ -51,11 +53,12 @@ export function ReservationForm({ slug }: { slug: string }) {
       });
       if (!active) return;
       setLoading(false);
-      if (error)
-        setNotice("No se pudo cargar la disponibilidad. Revisa la conexión.");
-      else {
+      if (error) {
+        setLoadError("No se pudo cargar la disponibilidad. Puedes reintentar o contactar al negocio.");
+        setSelected("");
+      } else {
         setSlots(data ?? []);
-        setNotice("");
+        setLoadError("");
       }
     };
     void refresh();
@@ -66,7 +69,7 @@ export function ReservationForm({ slug }: { slug: string }) {
       active = false;
       clearInterval(timer);
     };
-  }, [slug]);
+  }, [slug, attempt]);
   const todaySlots = slots.filter(
     (slot) =>
       localDate(new Date(slot.starts_at)) === date && slot.remaining > 0,
@@ -86,7 +89,7 @@ export function ReservationForm({ slug }: { slug: string }) {
           className="tk-stack"
           onSubmit={async (e) => {
             e.preventDefault();
-            if (!supabase || busy || !selected) return;
+            if (!supabase || busy || loading || loadError || !todaySlots.some(slot => slot.id === selected)) return;
             setBusy(true);
             setNotice("");
             const form = new FormData(e.currentTarget);
@@ -141,7 +144,7 @@ export function ReservationForm({ slug }: { slug: string }) {
           </label>
           {loading ? (
             <p role="status">Consultando horarios…</p>
-          ) : todaySlots.length ? (
+          ) : loadError ? <div role="alert"><p>{loadError}</p><button type="button" onClick={() => { setLoading(true); setAttempt(value => value + 1); }}>Reintentar disponibilidad</button></div> : todaySlots.length ? (
             <fieldset className="tk-slot-list">
               <legend>Horarios disponibles</legend>
               {todaySlots.map((slot) => (
@@ -165,12 +168,12 @@ export function ReservationForm({ slug }: { slug: string }) {
           ) : (
             <p>No hay horarios disponibles este día.</p>
           )}
-          {!loading && slots.length > 0 && !todaySlots.length && (
+          {!loading && !loadError && slots.some(slot => slot.remaining > 0) && !todaySlots.length && (
             <button
               type="button"
               onClick={() => {
                 const next = slots.find((slot) => slot.remaining > 0);
-                if (next) setDate(localDate(new Date(next.starts_at)));
+                if (next) { setDate(localDate(new Date(next.starts_at))); setSelected(""); request.current = crypto.randomUUID(); }
               }}
             >
               Ver el próximo día disponible
@@ -218,7 +221,7 @@ export function ReservationForm({ slug }: { slug: string }) {
           <button
             type="submit"
             className="tk-primary"
-            disabled={busy || !todaySlots.some((slot) => slot.id === selected)}
+            disabled={busy || loading || Boolean(loadError) || !todaySlots.some((slot) => slot.id === selected)}
           >
             {busy ? "Confirmando…" : "Confirmar reserva"}
           </button>
