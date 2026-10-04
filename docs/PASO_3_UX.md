@@ -30,3 +30,17 @@ No se observó desbordamiento horizontal del dashboard en estas medidas. Esto va
 La última instrucción pide terminar el Prompt 1 y avisar antes de recibir el 2. No se inició el wizard ni el chat nuevos en este paso.
 
 El alcance restante conserva: wizard de landing real con plantillas, subida de fotos, historia/IA y publicación; chat contextual con navegación real; microinteracciones; brújula con hasta cuatro emociones conservando datos anteriores; barra inferior móvil; QA 360/768/1440; commits y despliegue. Los snippets con console.log, placeholders o publicación que solo cierra un modal deben conectarse con la lógica existente para cumplir los requisitos funcionales, no presentarse como funciones terminadas.
+
+## Continuación: wizard y transformación pastel
+
+El objetivo actualizado `b01d42a7-b27b-46b9-a8b8-9ef482d3e351/goal-objective.md` sustituye el wizard de cuatro pasos por cinco y los colores saturados por pasteles. Se implementaron:
+
+- Marketing → Crear landing, reutilizando ToolkitProvider y el borrador existente, sin retirar el editor anterior.
+- Cinco pasos: cuatro estilos, portada y fotos Logo/Productos/Ambiente, historia con IA existente, catálogo de productos en soles, revisión y publicación.
+- El catálogo pertenece a la landing y no sobrescribe el menú independiente de Restaurante. La interfaz lo aclara.
+- Guardado con control de revisión existente; errores conservan el contenido. Publicar no cierra el wizard ni anuncia éxito antes de la respuesta del servidor.
+- Corrección encontrada con prueba real: PublicSite consultaba `published_sites` mientras el editor escribía `toolkit_sites`. Ahora usa `toolkit_public_site`, la RPC pública del esquema existente.
+- Modelo público acotado: URLs HTTPS, hasta tres imágenes adicionales y treinta productos, precios finitos y no negativos. Dos pruebas nuevas cubren validación de estos datos.
+- Dashboard, Pomodoro y marco del creador visual usan la nueva paleta pastel; los colores del contenido exportable del usuario se conservan.
+
+Evidencia: se guardó una historia en QA Cursos MVP, se recargó y recuperó desde Supabase. Se publicó `qa-foru-wizard-cursos-20261004` y se abrió su contenido desde la pestaña sin sesión. Después se probó la versión de cinco pasos: agregar Alfajor del Valle a S/ 5.00, publicar, abrir el producto y precio desde la página pública y recuperar el catálogo tras recargar el wizard. La página pública además mostró un fallo preexistente de disponibilidad de reservas, pendiente de reparación. Subida de imágenes e IA todavía requieren prueba real. TypeScript, build Node20/Vite4 y 78/78 pruebas pasan con la versión de cinco pasos y la paleta pastel. No se ha hecho push ni deploy.

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
-import { LandingPreview } from "./LandingBuilder";
+import { LandingPreview } from "./LandingPreview";
 import { safeHttps } from "./engine";
 import type { LandingDraft } from "./types";
 import { parseSiteData } from "./publicData";
@@ -27,14 +27,11 @@ function PublicSiteView({ slug }: { slug?: string }) {
     if (!supabase || !slug) return;
     const refresh = () => {
       void supabase!
-        .from("published_sites")
-        .select("site_data")
-        .eq("slug", slug)
-        .maybeSingle()
+        .rpc("toolkit_public_site", { site_slug: slug })
         .then(({ data, error }) => {
           if (!active) return;
           setLoading(false);
-          const site = parseSiteData(data?.site_data);
+          const site = parseSiteData(data?.content);
           if (error || !site) {
             setDraft(null);
             setNotice("Esta página no está disponible.");

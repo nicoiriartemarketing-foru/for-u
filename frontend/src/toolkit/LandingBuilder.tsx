@@ -1,61 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import LandingWizard from "../components/LandingWizard";
 import { supabase } from "../lib/supabaseClient";
 import { useToolkit } from "./ToolkitContext";
 import { compressImage } from "./media";
 import { askAI } from "./api";
 import { moveItem, safeHttps } from "./engine";
 import { defaultLanding, type LandingDraft } from "./types";
-export function LandingPreview({
-  draft,
-  onCTA,
-  children,
-}: {
-  draft: LandingDraft;
-  onCTA?: () => void;
-  children?: React.ReactNode;
-}) {
-  return (
-    <article
-      className={`tk-landing-preview tk-template-${draft.template}`}
-      style={
-        {
-          "--site-color": /^#[0-9a-f]{6}$/i.test(draft.color)
-            ? draft.color
-            : "#6B6B6B",
-        } as React.CSSProperties
-      }
-    >
-      <header>
-        <strong>{draft.name}</strong>
-        <span>Hecho con dedicación</span>
-      </header>
-      <section className="tk-site-hero">
-        {draft.heroImage && (
-          <img
-            src={draft.heroImage}
-            alt={draft.heroImageAlt ?? ""}
-            className="tk-site-image"
-          />
-        )}
-        <span className="tk-eyebrow">
-          BIENVENIDA A {draft.name.toUpperCase()}
-        </span>
-        <h1>{draft.headline}</h1>
-        <p>{draft.description}</p>
-        <button onClick={onCTA}>{draft.cta}</button>
-      </section>
-      {draft.blocks.map((block) => (
-        <section key={block.id} className="tk-site-block">
-          <h2>{block.title}</h2>
-          <p>{block.body}</p>
-        </section>
-      ))}
-      {children}
-      <footer>{draft.name} · Creado con FOR U</footer>
-    </article>
-  );
-}
-export default function LandingBuilder() {
+export { LandingPreview } from "./LandingPreview";
+export default function LandingBuilder({ wizard = false }: { wizard?: boolean }) {
   const { business, docs, save, userId, projectId, demo, track } = useToolkit();
   const [draft, setDraft] = useState<LandingDraft>(
     (docs.landing as LandingDraft) ?? defaultLanding(business),
@@ -132,7 +84,7 @@ export default function LandingBuilder() {
     return () => window.removeEventListener("message", receive);
   }, [channel, busy]);
   useEffect(() => {
-    if (!dirty || busy) return;
+    if (!dirty || busy || wizard) return;
     const snapshot = draft;
     pending.current = snapshot;
     const timer = window.setTimeout(() => {
@@ -153,7 +105,7 @@ export default function LandingBuilder() {
       );
     }, 400);
     return () => clearTimeout(timer);
-  }, [draft, dirty, busy, save]);
+  }, [draft, dirty, busy, save, wizard]);
   useEffect(
     () => () => {
       if (pending.current)
@@ -200,8 +152,9 @@ export default function LandingBuilder() {
         );
       if (draft.calendly && !safeHttps(draft.calendly, "calendly.com"))
         throw new Error("Usa un enlace HTTPS de calendly.com.");
+      if (draft.menuItems?.some(item => !item.name.trim() || !Number.isFinite(item.price) || item.price < 0 || item.price > 1000000)) throw new Error("Revisa los nombres y precios de tus productos.");
       const snapshot = { ...draft, published: true };
-      await save("landing", snapshot);
+      await save("landing", draft);
       const { error } = await supabase.from("toolkit_sites").upsert(
         {
           user_id: userId,
@@ -224,6 +177,8 @@ export default function LandingBuilder() {
       setPublishedUrl(`${window.location.origin}/s/${draft.slug}`);
       track("landing", true);
       setNotice("Tu página está publicada. Puedes compartir el enlace.");
+      try { await save("landing", snapshot); }
+      catch { setNotice("La página está publicada, pero no pudimos actualizar el estado del borrador. Guarda el borrador para reintentar."); setDirty(true); }
     } catch (e) {
       setNotice((e as Error).message);
     } finally {
@@ -255,6 +210,34 @@ export default function LandingBuilder() {
       setBusy(false);
     }
   }
+  async function uploadCover(file: File, role = "Portada") {
+    if (!supabase || demo) return;
+    setBusy(true);
+    setNotice("");
+    try {
+      const blob = await compressImage(file);
+      const path = `${userId}/${projectId}/${crypto.randomUUID()}.jpg`;
+      const { error } = await supabase.storage.from("site-assets").upload(path, blob, { contentType: "image/jpeg", upsert: false });
+      if (error) throw new Error("No se pudo subir la imagen. Puedes reintentar.");
+      const url = supabase.storage.from("site-assets").getPublicUrl(path).data.publicUrl;
+      const alt = file.name.replace(/\.[^.]+$/, "");
+      if (role === "Portada") update({ heroImage: url, heroImageAlt: alt });
+      else update({ gallery: [...(draft.gallery || []).filter(photo => photo.role !== role), { role, url, alt }] });
+      setNotice("Foto subida. Guarda el borrador para conservar la portada.");
+    } catch (error) { setNotice((error as Error).message); }
+    finally { setBusy(false); }
+  }
+  async function suggestStory() {
+    setBusy(true);
+    setNotice("");
+    try {
+      const result = await askAI("landing", `Ayuda a escribir la historia de este negocio sin inventar datos. Texto actual: ${draft.description}`, business);
+      update({ description: result.slice(0, 1000) });
+      setNotice("Sugerencia preparada. Revísala antes de publicar.");
+    } catch (error) { setNotice((error as Error).message); }
+    finally { setBusy(false); }
+  }
+  if (wizard) return <LandingWizard draft={draft} update={update} busy={busy} dirty={dirty} demo={demo} notice={notice} publishedUrl={publishedUrl} onSave={saveDraft} onPublish={publish} onUpload={uploadCover} onSuggest={suggestStory} />;
   return (
     <div className="tk-visual-editor" inert={busy} aria-busy={busy}>
       <section className="tk-card tk-stack tk-editor-sections">
@@ -352,6 +335,7 @@ export default function LandingBuilder() {
             <option value="restaurant">Restaurante</option>
             <option value="shop">Tienda</option>
             <option value="services">Servicios</option>
+            <option value="event">Evento</option>
           </select>
         </label>
         <label>

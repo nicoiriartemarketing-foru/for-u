@@ -332,7 +332,7 @@ function ToolkitShell({
                   <ConnectionStatus calendarOnly readOnly />
                 </>
               )}
-              {tool === "landing" && <LandingBuilder />}
+              {tool === "landing" && <LandingBuilder wizard={new URLSearchParams(window.location.search).get("wizard") === "1"} />}
               {tool === "bookings" && (
                 <>
                   <Bookings />
