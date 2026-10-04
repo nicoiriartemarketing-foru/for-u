@@ -13,7 +13,17 @@ Objetivo vigente: archivo de la usuaria `f6e7811e-cb2f-470f-aece-6752f166c0ea/go
 - IDs persistidos `marketing`, `finance`, `logistics`, `operations` conservados. Dashboard, mundo y mensajes comparten los nuevos nombres.
 - Los estilos reales viven también en workspace.css y floatingPomodoro.css; se actualizaron allí, sin duplicar componentes ni cambiar datos.
 
-Validación: TypeScript app y build con Node 20/Vite 4 correctos; 76/76 pruebas. Contraste comprobado en los tres stops de cada área. La sesión del navegador volvió a login antes de revisar esta nueva paleta; revisión visual autenticada aún pendiente.
+Validación: TypeScript app y build con Node 20/Vite 4 correctos; 76/76 pruebas. Contraste comprobado en los tres stops de cada área.
+
+Revisión autenticada del 4 de octubre: tras recargar la pestaña existente, el dashboard muestra Oliver, Shippo, Emma y Munay, los nuevos gradientes y las 12 tareas del proyecto QA Cursos MVP. La pestaña conservaba el bundle anterior antes de recargar. Se revisó la captura del dashboard y se midió el mismo dashboard real en iframes locales de QA (sin mocks):
+
+| Ancho CSS | Ancho del documento / scroll | Tarjetas |
+| --- | --- | --- |
+| 360 px | 360 / 360 px | Una columna, 328 px por tarjeta; menú móvil disponible |
+| 768 px | 768 / 768 px | Dos columnas, 362 px por tarjeta |
+| 1440 px | 1440 / 1440 px | Dos columnas, 563 px por tarjeta; sidebar de escritorio |
+
+No se observó desbordamiento horizontal del dashboard en estas medidas. Esto valida distribución del tablero, no sustituye pruebas de todas las herramientas, interacción táctil ni rendimiento en un móvil físico. Las páginas auxiliares de QA están únicamente en el directorio temporal de preview. No se publicó en Hostinger.
 
 ## Secuencia solicitada
 
