@@ -82,7 +82,11 @@ export default function SiteEditorFrame() {
       )
         return;
       const next = parseSiteData(event.data.draft);
-      if (next) setDraft(next);
+      if (next) {
+        setDraft(next);
+        const id = event.data.selectedId;
+        if (id === 'hero' || next.blocks.some(block => block.id === id)) setSelected(id);
+      }
     };
     window.addEventListener("message", receive);
     if (window.parent !== window)

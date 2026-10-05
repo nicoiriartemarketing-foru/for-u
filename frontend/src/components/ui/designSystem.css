@@ -17,3 +17,16 @@
 
 .dashboard-home .area-open>.ds-info{position:absolute;right:12px;top:12px}.dashboard-home .area-open>.ds-button{margin-top:auto;width:100%}#restaurant-basics,#restaurant-menu-edit,#restaurant-publish{scroll-margin-top:110px}
 button.ds-button.ds-button-primary{background:#111827;color:#fff;border-color:#111827;font-weight:500}button.ds-button.ds-button-primary:hover:not(:disabled){background:#1f2937}
+
+/* Keep scrollbars understated without changing scrolling or canvas gestures. */
+:root{scrollbar-color:#d1d5db #fafafa;scrollbar-width:thin}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:#fafafa}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#9ca3af}
+@media(forced-colors:active){:root{scrollbar-color:auto}}
+
+.ds-select{box-sizing:border-box;width:100%;min-height:44px;border:1px solid var(--ds-line);border-radius:16px;padding:12px 16px;background:white;color:var(--ds-ink);font:inherit;transition:border-color .15s}
+.ds-select:focus-visible{outline:3px solid #374151;outline-offset:3px}
+.ds-select:disabled{opacity:.6;cursor:not-allowed}
+@media(prefers-reduced-motion:reduce){.ds-select{transition:none}}

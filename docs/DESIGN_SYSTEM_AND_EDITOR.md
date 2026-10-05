@@ -23,3 +23,22 @@ Auditar ayudas específicas en todos los enlaces, selectores y campos, migrar se
 Editor profesional: consolidar selección contextual, historial, reordenación por arrastre y teclado, imágenes y previsualización móvil/escritorio. Adaptar bloques a restaurante, tienda, hospedaje, turismo y cursos; conservar UUID, documentos existentes y control de revisiones. Validar guardado, recarga y publicación por rubro. No reescribir los datos de Inti Churín.
 
 Primer avance del editor basado en la referencia: historial de 40 estados con deshacer/rehacer, conservando objetos completos y eliminando la rama de rehacer cuando se introduce otro cambio. Se integra en el editor de páginas existente; no publica ni retira páginas por sí solo. TypeScript/build y 80 pruebas pasan. La adaptación profesional a los cinco rubros y la validación visual ampliada continúan pendientes.
+
+## Verificación directa del editor (4 octubre 2026)
+
+- Proyecto QA Cursos MVP: la biblioteca muestra los bloques de aprendizaje e inscripciones correspondientes a Cursos.
+- Al seleccionar «Detrás de nuestro negocio» en el lateral, `aria-pressed` cambia a verdadero y el iframe resalta el mismo bloque con `.pe-selected`. Verificado mediante controles y DOM visibles.
+- El selector Móvil cambia su estado activo; el selector Escritorio permite regresar.
+- Sin desbordamiento horizontal del documento a 360, 767 y 1440 píxeles CSS medidos (`scrollWidth === innerWidth`). El navegador tenía una escala que requiere medir el ancho real; 768 exactos todavía no se han comprobado. Estas mediciones no sustituyen la inspección visual de todas las herramientas.
+- Pendiente: prueba de arrastre real, cambios con guardado/recarga en esta versión y validación completa de los cinco rubros. No se modificaron datos durante esta revisión.
+
+### Persistencia de reordenación
+
+En QA Cursos MVP se bajó «Lo que ofrecemos», se observó «Borrador guardado» y se recargó. El iframe recuperó el orden «Detrás de nuestro negocio» → «Lo que ofrecemos». Luego se restauró el orden original y se confirmó nuevamente el guardado. Esto verifica persistencia mediante los controles de reordenación. El resultado del arrastre apareció después de la primera observación: se confirmó el orden invertido en el DOM del iframe. Se restauró nuevamente mediante Subir y se comprobaron tanto el orden original como «Borrador guardado». La prueba evidencia una actualización asíncrona; no debe evaluarse únicamente con la captura inmediata posterior al gesto.
+
+## Revisión del 5 octubre 2026
+
+- Se verificó en navegador el cambio de biblioteca mediante Proyecto activo: Restaurante → Nuestro menú; Tienda → Nuestros productos; Hospedaje → Habitaciones y servicios; Turismo → Tu experiencia paso a paso. Cursos fue verificado anteriormente. No se cambiaron contenidos durante esta prueba.
+- Marketing ofrece ahora «Editar mi página» directamente; se comprobó la llegada al editor en dos clics desde el tablero. «Diseñar para redes» distingue el creador gráfico del editor de páginas.
+- Los campos de los cinco editores recibieron ayudas específicas. Se añadió Select al sistema de diseño y se aplicó a plantilla, tipo de lección, respuesta correcta y zona horaria. Quedan controles y pantallas por auditar; no supone migración completa de toda la aplicación.
+- TypeScript, build Vite 4 y 82 pruebas pasan en el entorno local de validación con Node 20.

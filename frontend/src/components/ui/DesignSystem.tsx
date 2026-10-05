@@ -1,4 +1,4 @@
-import { cloneElement, forwardRef, isValidElement, useEffect, useId, useState, type ButtonHTMLAttributes, type HTMLAttributes, type InputHTMLAttributes, type ReactElement, type ReactNode, type TextareaHTMLAttributes } from 'react';
+import { cloneElement, forwardRef, isValidElement, useEffect, useId, useState, type ButtonHTMLAttributes, type HTMLAttributes, type InputHTMLAttributes, type ReactElement, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 import { createPortal } from 'react-dom';
 import './designSystem.css';
 
@@ -60,5 +60,11 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement> & FieldExtras>(function DesignTextarea({ label, info, id, className = '', ...props }, ref) {
   const autoId = useId(); const fieldId = id || (label ? autoId : undefined);
   const field = <textarea {...props} id={fieldId} ref={ref} className={`ds-textarea ${className}`} />;
+  return label ? <div className="ds-field"><div className="ds-label"><label htmlFor={fieldId}>{label}</label>{info && <InfoIcon text={info} label={`Ayuda: ${label}`} />}</div>{field}</div> : field;
+});
+
+export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement> & FieldExtras>(function DesignSelect({ label, info, id, className = '', ...props }, ref) {
+  const autoId = useId(); const fieldId = id || (label ? autoId : undefined);
+  const field = <select {...props} id={fieldId} ref={ref} className={`ds-select ${className}`} />;
   return label ? <div className="ds-field"><div className="ds-label"><label htmlFor={fieldId}>{label}</label>{info && <InfoIcon text={info} label={`Ayuda: ${label}`} />}</div>{field}</div> : field;
 });

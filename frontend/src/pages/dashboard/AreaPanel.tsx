@@ -1,4 +1,4 @@
-import { ButtonSecondary as DSButtonSecondary, Input as DSInput } from '../../components/ui/DesignSystem';
+import { ButtonSecondary as DSButtonSecondary, Input as DSInput, Tooltip } from '../../components/ui/DesignSystem';
 import { usePomodoro } from '../../contexts/PomodoroContext';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -24,7 +24,18 @@ export default function AreaPanel({ projectId, type, area, play = false }: { pro
   const state = entry.world.areas[area] ?? { decoration: 0, searchReward: false, taskReward: false };
   const suggestion = mascotMessage(area, type, entry.tasks.tasks);
   const progress = areaProgress(entry.tasks.tasks, area);
-  const tools: Record<AreaId, [string, string][]> = { marketing: [['Editor visual', 'creator'], ['Plantillas', 'landing&page=templates'], ['IA para contenido', 'content'], ['Teleprompter', 'teleprompter']], finance: [['Editar oferta', 'editor'], ['Ver resumen', 'summary']], logistics: [['Calendario', 'calendar'], ['Disponibilidad', 'summary']], operations: [['Pedidos y reservas', 'bookings'], ['WhatsApp y respuestas', 'automation']] };
+  const tools: Record<AreaId, [string, string][]> = { marketing: [['Diseñar para redes', 'creator'], ['Plantillas', 'landing&page=templates'], ['IA para contenido', 'content'], ['Teleprompter', 'teleprompter']], finance: [['Editar oferta', 'editor'], ['Ver resumen', 'summary']], logistics: [['Calendario', 'calendar'], ['Disponibilidad', 'summary']], operations: [['Pedidos y reservas', 'bookings'], ['WhatsApp y respuestas', 'automation']] };
+  const toolHelp: Record<string, string> = {
+    creator: 'Crea piezas gráficas para redes sociales y expórtalas como imagen.',
+    'landing&page=templates': 'Explora estilos para la página de tu negocio.',
+    content: 'Prepara propuestas de contenido con IA y revísalas antes de usarlas.',
+    teleprompter: 'Lee tu guion mientras preparas o grabas un video.',
+    editor: 'Edita la oferta de este proyecto: productos, habitaciones, experiencias o cursos.',
+    summary: 'Consulta el resumen y las herramientas operativas de este proyecto.',
+    calendar: 'Planifica actividades y consulta tu agenda sin necesitar una conexión externa.',
+    bookings: 'Revisa los pedidos o reservas registrados para este proyecto.',
+    automation: 'Configura los mensajes y las opciones de contacto disponibles para tu negocio.',
+  };
   const updateWorld = (value: Partial<typeof state>) => change({ world: { ...entry.world, areas: { ...entry.world.areas, [area]: { ...state, ...value } } } });
   return <section className="area-panel" style={{ '--area-color': meta.color } as React.CSSProperties}>
     <header><div><small>{meta.pet} te acompaña</small><h2>{meta.title}</h2></div><span>{progress.total ? `${progress.completed}/${progress.total} tareas` : 'Sin tareas'}</span></header>
@@ -35,7 +46,10 @@ export default function AreaPanel({ projectId, type, area, play = false }: { pro
     {mode === 'work' ? <>
       <ul className="area-task-list">{visibleTasks.map(task => <li key={task.id}><DSInput type="checkbox" aria-label={`Completar ${task.title}`} checked={task.done} onChange={() => change({ tasks: { ...entry.tasks, tasks: entry.tasks.tasks.map(t => t.id === task.id ? { ...t, done: !t.done, completedAt: !t.done ? new Date().toISOString() : undefined } : t) }, world: !task.done ? rewardTask(entry.world, area) : entry.world })} /><DSInput aria-label="Título de tarea" value={task.title} maxLength={200} onChange={event => { const value = event.target.value; change({ tasks: { ...entry.tasks, tasks: entry.tasks.tasks.map(t => t.id === task.id ? { ...t, title: value } : t) } }); }} />{task.tool && <Link aria-label={`Abrir herramienta: ${task.title}`} to={areaToolPath(task.tool, type, projectId)}>Abrir</Link>}<DSButtonSecondary aria-label={`Eliminar ${task.title}`} onClick={() => { if (window.confirm('¿Eliminar esta tarea?')) change({ tasks: { ...entry.tasks, tasks: entry.tasks.tasks.filter(t => t.id !== task.id) } }); }}>×</DSButtonSecondary></li>)}</ul>
       <div className="area-tabs">{tasks.length > 3 && <DSButtonSecondary onClick={() => setShowAll(value => !value)}>{showAll ? 'Ver tres próximos pasos' : `Ver todas las tareas (${tasks.length})`}</DSButtonSecondary>}</div><form className="area-add" onSubmit={event => { event.preventDefault(); if (!title.trim()) return; change({ tasks: { ...entry.tasks, tasks: [...entry.tasks.tasks, { id: crypto.randomUUID(), area, title: title.trim(), done: false, createdAt: new Date().toISOString() }] } }); setTitle(''); }}><DSInput aria-label="Nueva tarea" placeholder="Un paso pequeño…" value={title} maxLength={200} onChange={event => setTitle(event.target.value)} /><DSButtonSecondary>Añadir</DSButtonSecondary></form>
-      <div className="area-tools">{area === 'marketing' && <Link to={`/dashboard/tools/landing?project=${projectId}&wizard=1`}>✨ Crear landing →</Link>}{tools[area].map(([label, tool]) => <Link key={label} to={tool.includes('&') ? `/dashboard/tools/landing?project=${projectId}&page=templates` : areaToolPath(tool, type, projectId)}>{label} →</Link>)}</div>
+      <div className="area-tools">{area === 'marketing' && <>
+        <Tooltip text="Crea o revisa tu página con una guía de cinco pasos."><Link to={`/dashboard/tools/landing?project=${projectId}&wizard=1`}>✨ Crear landing paso a paso →</Link></Tooltip>
+        <Tooltip text="Abre tu borrador para editar textos, agregar bloques de tu rubro y arrastrar secciones."><Link to={`/dashboard/tools/landing?project=${projectId}`}>Editar mi página →</Link></Tooltip>
+      </>}{tools[area].map(([label, tool]) => <Tooltip key={label} text={toolHelp[tool]}><Link to={tool.includes('&') ? `/dashboard/tools/landing?project=${projectId}&page=templates` : areaToolPath(tool, type, projectId)}>{label} →</Link></Tooltip>)}</div>
     </> : <>
       <div className={`pet-playground decoration-${state.decoration}`}><span className="pet-decoration">{['🌿', '🌸', '⭐'][state.decoration]}</span><div key={reactionId} className={`pet-friend ${reaction ? 'pet-react' : ''}`} aria-label={`Mascota ${meta.pet}`}><span className="pet-ears">● ●</span><span className="pet-face">● ᴗ ●</span><span>{meta.accessory}</span></div><p role="status">{reaction || 'Aquí puedes jugar sin terminar ninguna tarea.'}</p></div>
       <div className="area-tabs"><DSButtonSecondary onClick={() => reactTo('¡Qué gusto verte! ♡')}>Acariciar</DSButtonSecondary><DSButtonSecondary onClick={() => reactTo('¡Ñam! Gracias por compartir un snack conmigo.')}>Dar un snack</DSButtonSecondary></div>

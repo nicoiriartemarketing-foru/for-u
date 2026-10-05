@@ -41,7 +41,7 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
       <h2 className="component-title">Portada principal</h2>
       <div className="restaurant-fields">
         <DSInput label="Nombre del restaurante" info="El nombre que tus clientes verán en la carta pública." value={settings.title} onChange={event => updateSettings({ title: event.target.value })} />
-        <label>WhatsApp con código de país<DSInput type="tel" value={settings.whatsapp} onChange={event => updateSettings({ whatsapp: event.target.value })} placeholder="+51 999 888 777" /></label>
+        <DSInput label="WhatsApp con código de país" info="Incluye el código del país. Los pedidos se enviarán a este número por WhatsApp." type="tel" value={settings.whatsapp} onChange={event => updateSettings({ whatsapp: event.target.value })} placeholder="+51 999 888 777" />
         <DSInput label="Frase de portada" info="Describe tu negocio en una frase. Por ejemplo: Alfajores artesanales del Valle Sagrado." value={settings.tagline} onChange={event => updateSettings({ tagline: event.target.value })} />
         <ProjectImageField label="Imagen de portada" value={settings.coverImage} onChange={value => updateSettings({ coverImage: value })} />
       </div>
@@ -54,10 +54,10 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
       <div className="component-header"><h2 className="component-title">Productos de tu menú</h2><DSButtonSecondary type="button" onClick={() => { setDish(blankDish()); setMessage(''); }}>Nuevo producto</DSButtonSecondary></div>
       {dish && <form className="restaurant-form" onSubmit={submitDish}>
         <h3>{data.dishes.some(item => item.id === dish.id) ? 'Editar producto' : 'Agregar producto'}</h3>
-        <label>Nombre<DSInput required value={dish.name} onChange={event => setDish({ ...dish, name: event.target.value })} /></label>
-        <label>Precio (S/)<DSInput type="number" required min="0" step="0.01" value={Number.isFinite(dish.price) ? dish.price : ''} onChange={event => setDish({ ...dish, price: event.target.valueAsNumber })} /></label>
-        <label>Categoría<DSInput required value={dish.category} onChange={event => setDish({ ...dish, category: event.target.value })} /></label>
-        <label>Descripción<DSTextarea value={dish.description} onChange={event => setDish({ ...dish, description: event.target.value })} /></label>
+        <DSInput label="Nombre" info="Nombre del plato o producto que aparecerá en tu menú." required value={dish.name} onChange={event => setDish({ ...dish, name: event.target.value })} />
+        <DSInput label="Precio (S/)" info="Precio por unidad en soles. Puedes usar dos decimales." type="number" required min="0" step="0.01" value={Number.isFinite(dish.price) ? dish.price : ''} onChange={event => setDish({ ...dish, price: event.target.valueAsNumber })} />
+        <DSInput label="Categoría" info="Agrupa productos similares, por ejemplo Alfajores o Bebidas." required value={dish.category} onChange={event => setDish({ ...dish, category: event.target.value })} />
+        <DSTextarea label="Descripción" info="Describe ingredientes, tamaño y detalles que ayuden a elegir." value={dish.description} onChange={event => setDish({ ...dish, description: event.target.value })} />
         <ProjectImageField label="Imagen del plato" value={dish.image} onChange={value => setDish({ ...dish, image: value })} />
         <label className="restaurant-check"><DSInput type="checkbox" checked={dish.available} onChange={event => setDish({ ...dish, available: event.target.checked })} />Disponible para pedir</label>
         <div className="restaurant-actions"><DSButtonPrimary className="btn-primary" type="submit">Aplicar producto</DSButtonPrimary><DSButtonSecondary type="button" onClick={() => setDish(null)}>Cancelar</DSButtonSecondary></div>
@@ -83,18 +83,18 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
     </DSCard>
     <DSCard as="section" className="component-card restaurant-fields">
       <h2 className="component-title">Conócenos, ubicación y fidelización</h2>
-      <label>Tu historia<DSTextarea value={settings.about} onChange={event => updateSettings({ about: event.target.value })} /></label>
-      <label>Dirección<DSInput value={settings.address} onChange={event => updateSettings({ address: event.target.value })} /></label>
-      <label>Horario<DSInput value={settings.hours} onChange={event => updateSettings({ hours: event.target.value })} /></label>
+      <DSTextarea label="Tu historia" info="Cuenta brevemente qué hace especial a tu negocio." value={settings.about} onChange={event => updateSettings({ about: event.target.value })} />
+      <DSInput label="Dirección" info="Indica dónde pueden encontrarte o recoger sus pedidos." value={settings.address} onChange={event => updateSettings({ address: event.target.value })} />
+      <DSInput label="Horario" info="Escribe los días y horas en que atiendes solicitudes." value={settings.hours} onChange={event => updateSettings({ hours: event.target.value })} />
       
-      <label>Beneficio para clientes frecuentes<DSTextarea value={settings.loyalty} onChange={event => updateSettings({ loyalty: event.target.value })} /></label>
+      <DSTextarea label="Beneficio para clientes frecuentes" info="Explica un beneficio que puedas ofrecer. Este texto no crea un programa automático de puntos." value={settings.loyalty} onChange={event => updateSettings({ loyalty: event.target.value })} />
     </DSCard>
     <DSCard as="section" className="component-card">
       <h2 className="component-title">Preguntas frecuentes</h2>
       {settings.faq.map(item => <fieldset key={item.id} className="restaurant-fields">
         <legend>Pregunta frecuente</legend>
-        <label>Pregunta<DSInput value={item.question} onChange={event => updateSettings({ faq: settings.faq.map(row => row.id === item.id ? { ...row, question: event.target.value } : row) })} /></label>
-        <label>Respuesta<DSTextarea value={item.answer} onChange={event => updateSettings({ faq: settings.faq.map(row => row.id === item.id ? { ...row, answer: event.target.value } : row) })} /></label>
+        <DSInput label="Pregunta" info="Escribe una duda habitual de tus clientes." value={item.question} onChange={event => updateSettings({ faq: settings.faq.map(row => row.id === item.id ? { ...row, question: event.target.value } : row) })} />
+        <DSTextarea label="Respuesta" info="Esta respuesta aparecerá junto a la pregunta en tu página." value={item.answer} onChange={event => updateSettings({ faq: settings.faq.map(row => row.id === item.id ? { ...row, answer: event.target.value } : row) })} />
         <DSButtonSecondary type="button" onClick={() => updateSettings({ faq: settings.faq.filter(row => row.id !== item.id) })}>Eliminar pregunta</DSButtonSecondary>
       </fieldset>)}
       <DSButtonSecondary type="button" onClick={() => updateSettings({ faq: [...settings.faq, { id: crypto.randomUUID(), question: '', answer: '' }] })}>Agregar pregunta</DSButtonSecondary>

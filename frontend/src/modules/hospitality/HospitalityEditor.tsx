@@ -30,31 +30,31 @@ export default function HospitalityEditor({ data, onChange }: HospitalityProps) 
     <DSCard as="section" className="component-card hospitality-form">
       <h3>{data.sections.find(section => section.id === selected)?.title}</h3>
       {selected === 'hero' && <>
-        <label>Nombre del hospedaje<DSInput value={settings.name} onChange={event => update({ name: event.target.value })} /></label>
-        <label>Frase de portada<DSInput value={settings.tagline} onChange={event => update({ tagline: event.target.value })} /></label>
+        <DSInput label="Nombre del hospedaje" info="Nombre que verán los huéspedes en tu página." value={settings.name} onChange={event => update({ name: event.target.value })} />
+        <DSInput label="Frase de portada" info="Resume en una frase lo especial de alojarse contigo." value={settings.tagline} onChange={event => update({ tagline: event.target.value })} />
         <ProjectImageField label="Imagen de portada" value={settings.heroImage} onChange={value => update({ heroImage: value })} />
       </>}
-      {selected === 'about' && <label>Tu historia<DSTextarea value={settings.about} onChange={event => update({ about: event.target.value })} /></label>}
+      {selected === 'about' && <DSTextarea label="Tu historia" info="Presenta tu hospedaje y la experiencia que ofreces." value={settings.about} onChange={event => update({ about: event.target.value })} />}
       {selected === 'rooms' && <p>Las habitaciones se editan desde el panel de Habitaciones. Aquí se muestra su precio y sus comodidades.</p>}
       {selected === 'contact' && <>
-        <label>Dirección<DSInput value={settings.address} onChange={event => update({ address: event.target.value })} /></label>
-        <label>WhatsApp con código de país<DSInput type="tel" value={settings.whatsapp} onChange={event => update({ whatsapp: event.target.value })} /></label>
-        <label>Correo de reservas<DSInput type="email" value={settings.email} onChange={event => update({ email: event.target.value })} /></label>
-        <label>Hora de entrada<DSInput type="time" value={settings.checkIn} onChange={event => update({ checkIn: event.target.value })} /></label>
-        <label>Hora de salida<DSInput type="time" value={settings.checkOut} onChange={event => update({ checkOut: event.target.value })} /></label>
+        <DSInput label="Dirección" info="Indica la dirección que necesitan tus huéspedes para llegar." value={settings.address} onChange={event => update({ address: event.target.value })} />
+        <DSInput label="WhatsApp con código de país" info="Incluye el código del país, por ejemplo +51 para Perú." type="tel" value={settings.whatsapp} onChange={event => update({ whatsapp: event.target.value })} />
+        <DSInput label="Correo de reservas" info="Correo donde deseas recibir consultas sobre alojamiento." type="email" value={settings.email} onChange={event => update({ email: event.target.value })} />
+        <DSInput label="Hora de entrada" info="Horario habitual a partir del cual pueden ingresar los huéspedes." type="time" value={settings.checkIn} onChange={event => update({ checkIn: event.target.value })} />
+        <DSInput label="Hora de salida" info="Hora límite habitual para dejar la habitación." type="time" value={settings.checkOut} onChange={event => update({ checkOut: event.target.value })} />
       </>}
       {selected === 'faq' && <>
         {settings.faqs.map(item => <fieldset key={item.id} className="hospitality-form"><legend>Pregunta frecuente</legend>
-          <label>Pregunta<DSInput value={item.question} onChange={event => update({ faqs: settings.faqs.map(row => row.id === item.id ? { ...row, question: event.target.value } : row) })} /></label>
-          <label>Respuesta<DSTextarea value={item.answer} onChange={event => update({ faqs: settings.faqs.map(row => row.id === item.id ? { ...row, answer: event.target.value } : row) })} /></label>
+          <DSInput label="Pregunta" info="Escribe la pregunta que quieres responder o evaluar." value={item.question} onChange={event => update({ faqs: settings.faqs.map(row => row.id === item.id ? { ...row, question: event.target.value } : row) })} />
+          <DSTextarea label="Respuesta" info="Esta explicación se mostrará junto a la pregunta frecuente." value={item.answer} onChange={event => update({ faqs: settings.faqs.map(row => row.id === item.id ? { ...row, answer: event.target.value } : row) })} />
           <DSButtonSecondary onClick={() => update({ faqs: settings.faqs.filter(row => row.id !== item.id) })}>Eliminar pregunta</DSButtonSecondary>
         </fieldset>)}
         <DSButtonSecondary onClick={() => update({ faqs: [...settings.faqs, { id: crypto.randomUUID(), question: '', answer: '' }] })}>Agregar pregunta</DSButtonSecondary>
       </>}
       {selected === 'promotions' && <>
         {settings.promotions.map(item => <fieldset key={item.id} className="hospitality-form"><legend>Promoción</legend>
-          <label>Título<DSInput value={item.title} onChange={event => update({ promotions: settings.promotions.map(row => row.id === item.id ? { ...row, title: event.target.value } : row) })} /></label>
-          <label>Descripción<DSTextarea value={item.description} onChange={event => update({ promotions: settings.promotions.map(row => row.id === item.id ? { ...row, description: event.target.value } : row) })} /></label>
+          <DSInput label="Título" info="Nombre breve de la promoción que verán tus huéspedes." value={item.title} onChange={event => update({ promotions: settings.promotions.map(row => row.id === item.id ? { ...row, title: event.target.value } : row) })} />
+          <DSTextarea label="Descripción" info="Explica los detalles que necesita conocer tu cliente antes de elegir." value={item.description} onChange={event => update({ promotions: settings.promotions.map(row => row.id === item.id ? { ...row, description: event.target.value } : row) })} />
           <label className="hospitality-check"><DSInput type="checkbox" checked={item.active} onChange={event => update({ promotions: settings.promotions.map(row => row.id === item.id ? { ...row, active: event.target.checked } : row) })} />Promoción activa</label>
           <DSButtonSecondary onClick={() => update({ promotions: settings.promotions.filter(row => row.id !== item.id) })}>Eliminar promoción</DSButtonSecondary>
         </fieldset>)}

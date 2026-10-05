@@ -1,3 +1,4 @@
+import { Select as DSSelect } from '../components/ui/DesignSystem';
 import { useUnsavedNavigation } from "../lib/useUnsavedNavigation";
 import { Textarea, InfoIcon } from "../components/ui/DesignSystem";
 import { createEditorSection, editorIndustry, reorderEditorSections, sectionPresets } from "./editorSections";
@@ -33,14 +34,21 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   const [channel] = useState(() => crypto.randomUUID());
   const [autosaveStatus, setAutosaveStatus] = useState("");
   const draftRef = useRef(draft);
+  const selectedRef = useRef(selectedId);
+  selectedRef.current = selectedId;
   const pending = useRef<LandingDraft | null>(null);
   useEffect(() => {
     draftRef.current = draft;
     frame.current?.contentWindow?.postMessage(
-      { type: "foru:render", channel, draft },
+      { type: "foru:render", channel, draft, selectedId },
       window.location.origin,
     );
-  }, [draft, channel]);
+  }, [draft, channel, selectedId]);
+  useEffect(() => {
+    if (selectedId !== 'hero' && !draft.blocks.some(block => block.id === selectedId)) {
+      setSelectedId('hero');
+    }
+  }, [draft.blocks, selectedId]);
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (
@@ -51,14 +59,15 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         return;
       if (event.data.type === "foru:ready") {
         frame.current?.contentWindow?.postMessage(
-          { type: "foru:render", channel, draft: draftRef.current },
+          { type: "foru:render", channel, draft: draftRef.current, selectedId: selectedRef.current },
           window.location.origin,
         );
         return;
       }
       if (busy) return;
       if (event.data.type === 'foru:select' && typeof event.data.id === 'string') {
-        setSelectedId(event.data.id); return;
+        if (event.data.id === 'hero' || draftRef.current.blocks.some(block => block.id === event.data.id)) setSelectedId(event.data.id);
+        return;
       }
       if (event.data.type === 'foru:move' && typeof event.data.from === 'string' && typeof event.data.to === 'string') {
         setDraft(current => ({ ...current, blocks: reorderEditorSections(current.blocks, event.data.from, event.data.to) })); setDirty(true); return;
@@ -359,9 +368,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         <h2>Propiedades</h2>
         {selectedBlock ? <div className="pe-properties"><h3>Sección seleccionada</h3><DSInput label="Título de sección" info="Este título se muestra en tu página pública al publicar los cambios." value={selectedBlock.title} maxLength={150} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, title: event.target.value } : block) })} /><Textarea label="Texto de sección" info="Describe esta parte de tu oferta con información real de tu negocio." value={selectedBlock.body} maxLength={2000} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, body: event.target.value } : block) })} /></div> : <div className="pe-properties"><h3>Portada</h3><DSInput label="Título principal" info="La primera frase que verán tus visitantes." value={draft.headline} maxLength={180} onChange={event => update({ headline: event.target.value })} /><Textarea label="Historia de tu negocio" info="Explica qué ofreces y qué hace especial a tu negocio." value={draft.description} maxLength={1000} onChange={event => update({ description: event.target.value })} /><DSInput label="Texto del botón" info="Describe la acción que quieres que realice tu visitante." value={draft.cta} maxLength={50} onChange={event => update({ cta: event.target.value })} /></div>}
         <h3>Datos de la página</h3>
-        <label>
-          Plantilla
-          <select
+        <DSSelect label="Plantilla" info="Cambia el estilo de la página sin reemplazar tus textos ni cambiar el rubro del proyecto."
             disabled={busy}
             value={draft.template}
             onChange={(e) => update({ template: e.target.value })}
@@ -370,29 +377,20 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
             <option value="shop">Tienda</option>
             <option value="services">Servicios</option>
             <option value="event">Evento</option>
-          </select>
-        </label>
-        <label>
-          Nombre
-          <DSInput
+          </DSSelect>
+        <DSInput label="Nombre" info="Nombre que identifica a tu negocio en la página pública."
             disabled={busy}
             value={draft.name}
             maxLength={100}
             onChange={(e) => update({ name: e.target.value })}
           />
-        </label>
-        <label>
-          Dirección de tu página
-          <DSInput
+        <DSInput label="Dirección de tu página" info="Usa un nombre breve con letras, números y guiones. Cambiarlo afecta la URL al publicar."
             disabled={busy}
             value={draft.slug}
             maxLength={60}
             onChange={(e) => update({ slug: e.target.value.toLowerCase() })}
           />
-        </label>
-        <label>
-          Foto de portada
-          <DSInput
+        <DSInput label="Foto de portada" info="Sube una imagen JPG, PNG o WebP autorizada. El archivo se almacenará públicamente."
             disabled={busy || demo}
             type="file"
             accept="image/jpeg,image/png,image/webp"
@@ -429,22 +427,18 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
               }
             }}
           />
-        </label>
         <small>
           La imagen de portada será pública. Usa una foto autorizada de tu
           negocio.
         </small>
         {draft.heroImage && (
           <>
-            <label>
-              Descripción de la imagen
-              <DSInput
+            <DSInput label="Descripción de la imagen" info="Describe la foto para quienes usan lectores de pantalla."
                 disabled={busy}
                 value={draft.heroImageAlt ?? ""}
                 maxLength={160}
                 onChange={(e) => update({ heroImageAlt: e.target.value })}
               />
-            </label>
             <DSButtonSecondary
               disabled={busy}
               onClick={() =>
@@ -457,6 +451,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         )}
         <DSButtonSecondary
           disabled={busy || demo}
+          tooltip="Genera una propuesta de título y descripción. Revisa el resultado antes de publicar."
           onClick={async () => {
             setBusy(true);
             try {
@@ -479,38 +474,32 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         >
           Sugerir texto con IA
         </DSButtonSecondary>
-        <label>
-          WhatsApp
-          <DSInput
+        <DSInput label="WhatsApp" info="Número con código de país y solo dígitos, por ejemplo 51999999999."
             disabled={busy}
             value={draft.whatsapp}
             maxLength={15}
             placeholder="51999999999"
             onChange={(e) => update({ whatsapp: e.target.value })}
           />
-        </label>
-        <label>
-          Calendly (opcional)
-          <DSInput
+        <DSInput label="Calendly (opcional)" info="Enlace a tu página de reservas de Calendly. No activa una sincronización automática."
             disabled={busy}
             value={draft.calendly}
             maxLength={400}
             placeholder="https://calendly.com/tu-negocio/cita"
             onChange={(e) => update({ calendly: e.target.value })}
           />
-        </label>
-        <DSButtonSecondary disabled={busy} onClick={saveDraft}>
+        <DSButtonSecondary disabled={busy} tooltip="Guarda el borrador de este proyecto sin actualizar la página pública." onClick={saveDraft}>
           Guardar borrador
         </DSButtonSecondary>
         <DSButtonPrimary
           className="tk-primary"
           disabled={busy || demo}
-          onClick={publish}
+          tooltip="Publica los cambios del borrador para que tus visitantes puedan verlos." onClick={publish}
         >
           {busy ? "Guardando…" : "Publicar página"}
         </DSButtonPrimary>
         {draft.published && (
-          <DSButtonSecondary disabled={busy || demo} onClick={unpublish}>
+          <DSButtonSecondary disabled={busy || demo} tooltip="Retira la página pública y conserva el borrador para seguir editándolo." onClick={unpublish}>
             Retirar publicación
           </DSButtonSecondary>
         )}
