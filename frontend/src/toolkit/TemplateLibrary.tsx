@@ -1,4 +1,4 @@
-import { Card as DSCard } from '../components/ui/DesignSystem';
+import { Card as DSCard, Select as DSSelect } from '../components/ui/DesignSystem';
 import { ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import { useState } from "react";
 import { businessTemplates } from "../data/templates";
@@ -14,9 +14,7 @@ export default function TemplateLibrary() {
   return (
     <DSCard as="section" className="tk-card tk-stack">
       <h2>Una ruta para tu rubro</h2>
-      <label>
-        Plantilla
-        <select
+      <DSSelect label="Rubro de la guía" info="Consulta una guía de trabajo. Elegir otra guía no cambia el rubro ni los datos del proyecto."
           value={key}
           onChange={(e) => setKey(e.target.value as typeof key)}
         >
@@ -25,8 +23,7 @@ export default function TemplateLibrary() {
               {t.name}
             </option>
           ))}
-        </select>
-      </label>
+        </DSSelect>
       <p>
         <strong>Entrada de venta:</strong> {template.entry}
       </p>
@@ -52,6 +49,7 @@ export default function TemplateLibrary() {
             <strong>Ejemplo ilustrativo:</strong> {step.example}
           </p>
           <DSButtonSecondary
+            tooltip="Descarga una hoja de trabajo en formato Markdown para este paso."
             onClick={() =>
               downloadBlob(
                 new Blob([step.resource.content], {

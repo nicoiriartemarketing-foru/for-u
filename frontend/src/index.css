@@ -45,7 +45,9 @@
 }
 
 /* 2. Base y elementos compartidos */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -280,7 +282,8 @@ h1 {
   backdrop-filter: blur(18px);
 }
 
-.foru-landing-logo, .foru-footer-logo {
+.foru-landing-logo,
+.foru-footer-logo {
   position: relative;
   display: inline-flex;
   text-decoration: none;
@@ -297,7 +300,9 @@ h1 {
   box-shadow: 0 16px 46px rgba(0, 0, 0, 0.08);
 }
 
-.foru-landing-nav nav a, .foru-landing-nav nav button, .foru-landing-footer a {
+.foru-landing-nav nav a,
+.foru-landing-nav nav button,
+.foru-landing-footer a {
   position: relative;
   color: #0A0A0A;
   cursor: pointer;
@@ -307,7 +312,8 @@ h1 {
   text-decoration: none;
 }
 
-.foru-landing-nav nav a, .foru-landing-nav nav button {
+.foru-landing-nav nav a,
+.foru-landing-nav nav button {
   min-height: 2.6rem;
   border: 0;
   border-radius: 999px;
@@ -317,7 +323,9 @@ h1 {
   align-items: center;
 }
 
-.foru-landing-nav nav a::after, .foru-landing-nav nav button::after, .foru-landing-footer a::after {
+.foru-landing-nav nav a::after,
+.foru-landing-nav nav button::after,
+.foru-landing-footer a::after {
   content: "";
   position: absolute;
   right: 0.75rem;
@@ -331,7 +339,9 @@ h1 {
   transition: transform 0.2s ease;
 }
 
-.foru-landing-nav nav a:hover::after, .foru-landing-nav nav button:hover::after, .foru-landing-footer a:hover::after {
+.foru-landing-nav nav a:hover::after,
+.foru-landing-nav nav button:hover::after,
+.foru-landing-footer a:hover::after {
   transform: scaleX(1);
 }
 
@@ -383,7 +393,8 @@ h1 {
   animation-delay: -2s;
 }
 
-.foru-floating-charm.coin-one, .foru-floating-charm.coin-two {
+.foru-floating-charm.coin-one,
+.foru-floating-charm.coin-two {
   width: 3rem;
   height: 3rem;
   font-size: 1.35rem;
@@ -401,7 +412,9 @@ h1 {
   animation-delay: -1.6s;
 }
 
-.foru-floating-charm.star-one, .foru-floating-charm.star-two, .foru-floating-charm.star-three {
+.foru-floating-charm.star-one,
+.foru-floating-charm.star-two,
+.foru-floating-charm.star-three {
   width: 2.2rem;
   height: 2.2rem;
   color: #0A0A0A;
@@ -438,7 +451,8 @@ h1 {
   animation: ambient-particle-rise linear infinite;
 }
 
-.foru-landing-hero-copy, .foru-landing-mockup {
+.foru-landing-hero-copy,
+.foru-landing-mockup {
   position: relative;
   z-index: 1;
 }
@@ -495,7 +509,10 @@ h1 {
   margin-top: 0.4rem;
 }
 
-.foru-ripple-button, .foru-landing-actions button, .foru-landing-actions a, .foru-landing-center-action a {
+.foru-ripple-button,
+.foru-landing-actions button,
+.foru-landing-actions a,
+.foru-landing-center-action a {
   position: relative;
   isolation: isolate;
   min-height: 3.45rem;
@@ -516,14 +533,18 @@ h1 {
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.foru-ripple-button.is-soft, .foru-landing-actions button.is-soft {
+.foru-ripple-button.is-soft,
+.foru-landing-actions button.is-soft {
   border: 1px solid rgba(212, 212, 212, 0.74);
   background: rgba(250, 250, 250, 0.72);
   color: #0A0A0A;
   backdrop-filter: blur(14px);
 }
 
-.foru-ripple-button::after, .foru-landing-actions button::after, .foru-landing-actions a::after, .foru-landing-center-action a::after {
+.foru-ripple-button::after,
+.foru-landing-actions button::after,
+.foru-landing-actions a::after,
+.foru-landing-center-action a::after {
   content: "";
   position: absolute;
   inset: auto auto 50% 50%;
@@ -536,12 +557,18 @@ h1 {
   z-index: -1;
 }
 
-.foru-ripple-button:active::after, .foru-landing-actions button:active::after, .foru-landing-actions a:active::after, .foru-landing-center-action a:active::after {
+.foru-ripple-button:active::after,
+.foru-landing-actions button:active::after,
+.foru-landing-actions a:active::after,
+.foru-landing-center-action a:active::after {
   width: 18rem;
   height: 18rem;
 }
 
-.foru-ripple-button:hover, .foru-landing-actions button:hover, .foru-landing-actions a:hover, .foru-landing-center-action a:hover {
+.foru-ripple-button:hover,
+.foru-landing-actions button:hover,
+.foru-landing-actions a:hover,
+.foru-landing-center-action a:hover {
   transform: translateY(-3px);
   box-shadow: 0 24px 52px rgba(0, 0, 0, 0.08);
 }
@@ -550,7 +577,8 @@ h1 {
   perspective: 1000px;
 }
 
-.foru-mockup-aura, .foru-landing-mockup::before {
+.foru-mockup-aura,
+.foru-landing-mockup::before {
   content: "";
   position: absolute;
   inset: 7% -8% -7% 10%;
@@ -595,13 +623,13 @@ h1 {
   background: #FAFAFA;
 }
 
-.foru-mockup-window > strong {
+.foru-mockup-window>strong {
   color: #0A0A0A;
   font-size: 1.55rem;
   font-weight: 700;
 }
 
-.foru-mockup-window > p {
+.foru-mockup-window>p {
   margin: 0;
   color: var(--color-texto-suave);
   font-size: 0.96rem;
@@ -619,7 +647,9 @@ h1 {
   background: rgba(250, 250, 250, 0.86);
 }
 
-.foru-mockup-window article::after, .foru-landing-steps article::after, .foru-landing-pricing article::after {
+.foru-mockup-window article::after,
+.foru-landing-steps article::after,
+.foru-landing-pricing article::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -629,11 +659,14 @@ h1 {
   pointer-events: none;
 }
 
-.foru-mockup-window article:hover::after, .foru-landing-steps article:hover::after, .foru-landing-pricing article:hover::after {
+.foru-mockup-window article:hover::after,
+.foru-landing-steps article:hover::after,
+.foru-landing-pricing article:hover::after {
   transform: translateX(120%);
 }
 
-.foru-mockup-window article span, .foru-mockup-window article small {
+.foru-mockup-window article span,
+.foru-mockup-window article small {
   color: #6B6B6B;
   font-size: 0.78rem;
   font-weight: 700;
@@ -685,7 +718,8 @@ h1 {
   animation-delay: -1.4s;
 }
 
-.foru-landing-section, .foru-landing-audience {
+.foru-landing-section,
+.foru-landing-audience {
   position: relative;
   width: min(1180px, calc(100% - 2rem));
   display: grid;
@@ -700,7 +734,8 @@ h1 {
   text-align: center;
 }
 
-.foru-landing-section-heading span, .foru-landing-audience > div > span {
+.foru-landing-section-heading span,
+.foru-landing-audience>div>span {
   width: fit-content;
   margin: 0 auto;
   border-radius: 999px;
@@ -712,7 +747,8 @@ h1 {
   text-transform: uppercase;
 }
 
-.foru-landing-section-heading h2, .foru-landing-audience h2 {
+.foru-landing-section-heading h2,
+.foru-landing-audience h2 {
   max-width: 54rem;
   margin: 0 auto;
   color: var(--color-texto);
@@ -723,14 +759,17 @@ h1 {
   line-height: 1.04;
 }
 
-.foru-landing-steps, .foru-landing-pricing {
+.foru-landing-steps,
+.foru-landing-pricing {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
   perspective: 1200px;
 }
 
-.foru-landing-steps article, .foru-landing-pricing article, .foru-landing-audience {
+.foru-landing-steps article,
+.foru-landing-pricing article,
+.foru-landing-audience {
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(212, 212, 212, 0.72);
@@ -742,7 +781,7 @@ h1 {
   transform-style: preserve-3d;
 }
 
-.foru-landing-steps article > span {
+.foru-landing-steps article>span {
   display: grid;
   width: 4.25rem;
   height: 4.25rem;
@@ -753,29 +792,35 @@ h1 {
   font-size: 1.9rem;
 }
 
-.foru-landing-steps article.is-jar > span {
+.foru-landing-steps article.is-jar>span {
   animation: jar-fill 2.8s ease-in-out infinite;
 }
 
-.foru-landing-steps article.is-check > span {
+.foru-landing-steps article.is-check>span {
   animation: check-bounce 1.8s ease-in-out infinite;
 }
 
-.foru-landing-steps article.is-world > span {
+.foru-landing-steps article.is-world>span {
   animation: world-spin 4s linear infinite;
 }
 
-.foru-landing-steps h3, .foru-landing-pricing h3, .foru-landing-steps p, .foru-landing-pricing p {
+.foru-landing-steps h3,
+.foru-landing-pricing h3,
+.foru-landing-steps p,
+.foru-landing-pricing p {
   margin: 0;
 }
 
-.foru-landing-steps h3, .foru-landing-pricing h3 {
+.foru-landing-steps h3,
+.foru-landing-pricing h3 {
   color: #0A0A0A;
   font-size: 1.35rem;
   font-weight: 700;
 }
 
-.foru-landing-steps p, .foru-landing-pricing p, .foru-landing-audience li {
+.foru-landing-steps p,
+.foru-landing-pricing p,
+.foru-landing-audience li {
   color: var(--color-texto-suave);
   font-weight: 400;
   line-height: 1.6;
@@ -802,11 +847,12 @@ h1 {
   text-align: left;
 }
 
-.foru-landing-audience > div > span {
+.foru-landing-audience>div>span {
   margin: 0 0 0.75rem;
 }
 
-.foru-landing-audience ul, .foru-landing-pricing ul {
+.foru-landing-audience ul,
+.foru-landing-pricing ul {
   position: relative;
   z-index: 1;
   display: grid;
@@ -946,7 +992,8 @@ h1 {
   animation: footer-wave 8s linear infinite;
 }
 
-.foru-landing-footer nav, .foru-landing-footer div {
+.foru-landing-footer nav,
+.foru-landing-footer div {
   position: relative;
   z-index: 1;
   display: flex;
@@ -1094,7 +1141,7 @@ h1 {
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.08);
 }
 
-.foru-personal-dashboard-hero > span {
+.foru-personal-dashboard-hero>span {
   display: grid;
   width: 4.4rem;
   height: 4.4rem;
@@ -1105,7 +1152,8 @@ h1 {
   font-size: 2rem;
 }
 
-.foru-personal-dashboard-hero h1, .foru-personal-dashboard-hero p {
+.foru-personal-dashboard-hero h1,
+.foru-personal-dashboard-hero p {
   margin: 0;
 }
 
@@ -1172,7 +1220,8 @@ h1 {
   letter-spacing: 0;
 }
 
-.foru-personal-project-main > strong, .foru-personal-project-status {
+.foru-personal-project-main>strong,
+.foru-personal-project-status {
   width: fit-content;
   border-radius: 999px;
   padding: 0.34rem 0.6rem;
@@ -1182,7 +1231,7 @@ h1 {
   font-weight: 950;
 }
 
-.foru-personal-project-main > strong {
+.foru-personal-project-main>strong {
   background: #FFFFFF;
   color: #0A0A0A;
 }
@@ -1192,7 +1241,8 @@ h1 {
   gap: 0.25rem;
 }
 
-.foru-personal-next-action span, .foru-personal-next-action small {
+.foru-personal-next-action span,
+.foru-personal-next-action small {
   color: #6B6B6B;
   font-size: 0.75rem;
   font-weight: 900;
@@ -1271,12 +1321,14 @@ h1 {
   pointer-events: none;
 }
 
-.foru-world-house-ui button, .foru-world-house-ui label {
+.foru-world-house-ui button,
+.foru-world-house-ui label {
   pointer-events: auto;
   font-family: "Outfit", "Inter", sans-serif;
 }
 
-.foru-world-house-ui button, .foru-world-house-ui label {
+.foru-world-house-ui button,
+.foru-world-house-ui label {
   min-height: 2.65rem;
   display: inline-flex;
   align-items: center;
@@ -1483,7 +1535,8 @@ h1 {
   transform: translateY(-1px);
 }
 
-.foru-world3d-archipelago-reset:hover, .foru-world3d-lock-toggle:hover {
+.foru-world3d-archipelago-reset:hover,
+.foru-world3d-lock-toggle:hover {
   transform: translateY(-1px);
   background: #FFFFFF;
 }
@@ -1506,7 +1559,8 @@ h1 {
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
 }
 
-.foru-world3d-island-label strong, .foru-world3d-island-label span {
+.foru-world3d-island-label strong,
+.foru-world3d-island-label span {
   display: block;
 }
 
@@ -1534,7 +1588,8 @@ h1 {
   pointer-events: none;
 }
 
-.foru-world3d-tooltip strong, .foru-world3d-tooltip span {
+.foru-world3d-tooltip strong,
+.foru-world3d-tooltip span {
   display: block;
 }
 
@@ -1686,7 +1741,10 @@ h1 {
   background: #FAFAFA;
 }
 
-.foru-world-lite-land, .foru-world-lite-house, .foru-world-lite-tree, .foru-world-lite-pearl {
+.foru-world-lite-land,
+.foru-world-lite-house,
+.foru-world-lite-tree,
+.foru-world-lite-pearl {
   position: absolute;
   display: block;
 }
@@ -1823,7 +1881,7 @@ h1 {
   text-align: center;
 }
 
-.foru-world-lite-empty > span {
+.foru-world-lite-empty>span {
   font-size: 3rem;
 }
 
@@ -1973,6 +2031,7 @@ h1 {
   0% {
     background-position: 0% 20%;
   }
+
   100% {
     background-position: 100% 80%;
   }
@@ -1983,6 +2042,7 @@ h1 {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
+
   to {
     opacity: 0;
     transform: translate(-50%, -120%) scale(0);
@@ -1990,37 +2050,50 @@ h1 {
 }
 
 @keyframes logo-shine {
-  0%, 54% {
+
+  0%,
+  54% {
     transform: translateX(-130%);
   }
-  75%, 100% {
+
+  75%,
+  100% {
     transform: translateX(130%);
   }
 }
 
 @keyframes floating-charm {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) rotate(-2deg);
   }
+
   50% {
     transform: translateY(-14px) rotate(3deg);
   }
 }
 
 @keyframes floating-coin {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) rotateY(0deg);
   }
+
   50% {
     transform: translateY(-18px) rotateY(180deg);
   }
 }
 
 @keyframes twinkle {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.45;
     transform: scale(0.86);
   }
+
   50% {
     opacity: 1;
     transform: scale(1.18);
@@ -2032,9 +2105,11 @@ h1 {
     opacity: 0;
     transform: translateY(0) scale(0.7);
   }
+
   18% {
     opacity: 1;
   }
+
   to {
     opacity: 0;
     transform: translateY(-110vh) scale(1.35);
@@ -2045,15 +2120,19 @@ h1 {
   from {
     clip-path: inset(0 100% 0 0);
   }
+
   to {
     clip-path: inset(0 0 0 0);
   }
 }
 
 @keyframes text-gradient-flow {
-  0%, 100% {
+
+  0%,
+  100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -2064,6 +2143,7 @@ h1 {
     opacity: 0.7;
     transform: scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: scale(1.04);
@@ -2071,30 +2151,40 @@ h1 {
 }
 
 @keyframes mockup-float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) rotateX(0deg) rotateY(0deg);
   }
+
   50% {
     transform: translateY(-10px) rotateX(1.5deg) rotateY(-1.5deg);
   }
 }
 
 @keyframes jar-fill {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.08), 0 16px 38px rgba(0, 0, 0, 0.08);
   }
+
   50% {
     box-shadow: inset 0 -34px 0 rgba(0, 0, 0, 0.08), 0 20px 44px rgba(0, 0, 0, 0.08);
   }
 }
 
 @keyframes check-bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   35% {
     transform: scale(1.12) rotate(-4deg);
   }
+
   55% {
     transform: scale(0.96) rotate(3deg);
   }
@@ -2104,6 +2194,7 @@ h1 {
   from {
     transform: rotateY(0deg);
   }
+
   to {
     transform: rotateY(360deg);
   }
@@ -2114,6 +2205,7 @@ h1 {
     opacity: 0.18;
     background-size: 18px 18px;
   }
+
   to {
     opacity: 0.45;
     background-size: 26px 26px;
@@ -2121,9 +2213,12 @@ h1 {
 }
 
 @keyframes icon-bob {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-5px);
   }
@@ -2133,15 +2228,19 @@ h1 {
   from {
     background-position: 0 0, 0% 50%;
   }
+
   to {
     background-position: 0 0, 220% 50%;
   }
 }
 
 @keyframes popular-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.06);
   }
@@ -2152,6 +2251,7 @@ h1 {
     opacity: 1;
     transform: translate(0, 0) rotate(0deg);
   }
+
   to {
     opacity: 0;
     transform: translate(calc((var(--x, 1) * 56px)), -72px) rotate(180deg);
@@ -2162,6 +2262,7 @@ h1 {
   from {
     transform: translateX(0);
   }
+
   to {
     transform: translateX(-12rem);
   }
@@ -2172,16 +2273,20 @@ h1 {
     opacity: 1;
     transform: translate(-50%, -50%) rotate(0deg) scale(0.6);
   }
+
   100% {
     opacity: 0;
-    transform: translate( calc(-50% + (var(--i) - 12) * 17px), calc(-170px + (var(--i) % 6) * 16px) ) rotate(280deg) scale(1);
+    transform: translate(calc(-50% + (var(--i) - 12) * 17px), calc(-170px + (var(--i) % 6) * 16px)) rotate(280deg) scale(1);
   }
 }
 
 @keyframes foru-reference-float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-6px);
   }
@@ -2191,9 +2296,11 @@ h1 {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -2203,15 +2310,19 @@ h1 {
   from {
     transform: translateX(-2rem);
   }
+
   to {
     transform: translateX(2rem);
   }
 }
 
 @keyframes foru-boat-bob {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) rotate(-3deg);
   }
+
   50% {
     transform: translateY(-0.75rem) rotate(3deg);
   }
@@ -2222,6 +2333,7 @@ h1 {
     opacity: 0;
     transform: scale(0.72) rotate(-8deg);
   }
+
   to {
     opacity: 1;
     transform: scale(1) rotate(0);
@@ -2233,6 +2345,7 @@ h1 {
     opacity: 0;
     transform: translateY(16px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -2244,9 +2357,10 @@ h1 {
     opacity: 1;
     transform: translate(-50%, -50%) rotate(0deg) scale(0.6);
   }
+
   100% {
     opacity: 0;
-    transform: translate( calc(-50% + (var(--i) - 9) * 18px), calc(-160px + (var(--i) % 5) * 18px) ) rotate(260deg) scale(1);
+    transform: translate(calc(-50% + (var(--i) - 9) * 18px), calc(-160px + (var(--i) % 5) * 18px)) rotate(260deg) scale(1);
   }
 }
 
@@ -2254,6 +2368,7 @@ h1 {
   from {
     transform: translateX(-2%) rotate(-2deg);
   }
+
   to {
     transform: translateX(2%) rotate(2deg);
   }
@@ -2264,6 +2379,7 @@ h1 {
     opacity: 0;
     transform: translateY(20px) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -2271,9 +2387,12 @@ h1 {
 }
 
 @keyframes foru-pearl-float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-0.75rem);
   }
@@ -2284,6 +2403,7 @@ h1 {
     opacity: 0;
     transform: scale(0.92);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -2291,10 +2411,13 @@ h1 {
 }
 
 @keyframes foru-priority-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 16px 34px rgba(0, 0, 0, 0.08);
     filter: brightness(1);
   }
+
   50% {
     box-shadow: 0 20px 46px rgba(0, 0, 0, 0.08);
     filter: brightness(1.04);
@@ -2307,11 +2430,13 @@ h1 {
     transform: scale(0) translateY(5rem);
     filter: blur(6px);
   }
+
   64% {
     opacity: 1;
     transform: scale(1.12) translateY(-0.6rem);
     filter: blur(0);
   }
+
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -2323,6 +2448,7 @@ h1 {
     background-position: 0 0, 0 0, 0 0;
     filter: saturate(0.96);
   }
+
   100% {
     background-position: 4rem 2rem, -3rem 3rem, 0 0;
     filter: saturate(1.05);
@@ -2333,16 +2459,20 @@ h1 {
   0% {
     stroke-dashoffset: 0;
   }
+
   100% {
     stroke-dashoffset: -52;
   }
 }
 
 @keyframes foru-route-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 0 0 8px rgba(0, 0, 0, 0.08), 0 16px 34px rgba(0, 0, 0, 0.08);
   }
+
   50% {
     transform: scale(1.08);
     box-shadow: 0 0 0 14px rgba(0, 0, 0, 0.08), 0 20px 42px rgba(0, 0, 0, 0.08);
@@ -2350,9 +2480,12 @@ h1 {
 }
 
 @keyframes foru-skeleton-float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-0.45rem);
   }
@@ -2363,6 +2496,7 @@ h1 {
     opacity: 0.58;
     transform: scale(0.98);
   }
+
   100% {
     opacity: 1;
     transform: scale(1.02);
@@ -2370,10 +2504,13 @@ h1 {
 }
 
 @keyframes foru-daily-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
     box-shadow: 0 20px 44px rgba(0, 0, 0, 0.08);
   }
+
   50% {
     transform: translateY(-0.28rem);
     box-shadow: 0 24px 52px rgba(0, 0, 0, 0.08);
@@ -2385,9 +2522,10 @@ h1 {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
+
   100% {
     opacity: 0;
-    transform: translate( calc(-50% + (var(--particle-index) - 9) * 0.42rem), calc(-50% - 3rem + (var(--particle-index) % 5) * 0.42rem) ) scale(0.45);
+    transform: translate(calc(-50% + (var(--particle-index) - 9) * 0.42rem), calc(-50% - 3rem + (var(--particle-index) % 5) * 0.42rem)) scale(0.45);
   }
 }
 
@@ -2396,10 +2534,12 @@ h1 {
     transform: scale(1);
     filter: saturate(1);
   }
+
   38% {
     transform: scale(1.035);
     filter: saturate(1.45) brightness(1.05);
   }
+
   100% {
     transform: scale(1);
     filter: saturate(1);
@@ -2411,6 +2551,7 @@ h1 {
     opacity: 1;
     transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, -165%) scale(1.25) rotate(22deg);
@@ -2418,10 +2559,14 @@ h1 {
 }
 
 @keyframes foru-celebrate {
-  0%, 100% {
+
+  0%,
+  100% {
     background: rgba(250, 250, 250, 0);
   }
-  18%, 78% {
+
+  18%,
+  78% {
     background: rgba(250, 250, 250, 0.12);
   }
 }
@@ -2431,9 +2576,11 @@ h1 {
     opacity: 0;
     transform: translateY(-1rem) rotate(0deg);
   }
+
   18% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
     transform: translateY(8rem) rotate(260deg);
@@ -2441,9 +2588,12 @@ h1 {
 }
 
 @keyframes pulse-soft {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
   }
+
   50% {
     box-shadow: 0 18px 42px rgba(0, 0, 0, 0.08);
   }
@@ -2454,6 +2604,7 @@ h1 {
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -2461,10 +2612,13 @@ h1 {
 }
 
 @keyframes foru-soft-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.4;
     transform: scale(0.88);
   }
+
   50% {
     opacity: 0.9;
     transform: scale(1.06);
@@ -2472,10 +2626,13 @@ h1 {
 }
 
 @keyframes foru-breathing-dot {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.25;
     transform: translateY(0) scale(0.86);
   }
+
   50% {
     opacity: 0.75;
     transform: translateY(-2px) scale(1);
@@ -2483,10 +2640,13 @@ h1 {
 }
 
 @keyframes foru-chat-breathe {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.28;
     transform: scale(0.82);
   }
+
   50% {
     opacity: 0.78;
     transform: scale(1.08);
@@ -2499,31 +2659,43 @@ h1 {
     align-items: flex-start;
     flex-direction: column;
   }
+
   .foru-landing-nav nav {
     width: 100%;
     justify-content: space-between;
   }
-  .foru-landing-hero, .foru-landing-audience, .foru-landing-footer {
+
+  .foru-landing-hero,
+  .foru-landing-audience,
+  .foru-landing-footer {
     grid-template-columns: 1fr;
   }
+
   .foru-landing-hero {
     min-height: auto;
     padding-top: 1rem;
   }
+
   .foru-landing-hero h1 {
     font-size: clamp(2.6rem, 5vw, 4.5rem);
   }
-  .foru-landing-steps, .foru-landing-pricing {
+
+  .foru-landing-steps,
+  .foru-landing-pricing {
     grid-template-columns: 1fr;
   }
+
   .foru-floating-charm.island-one {
     top: 5%;
     left: auto;
     right: 5%;
   }
-  .foru-floating-charm.coin-one, .foru-floating-charm.star-one {
+
+  .foru-floating-charm.coin-one,
+  .foru-floating-charm.star-one {
     display: none;
   }
+
   .foru-landing-audience li {
     align-items: flex-start;
     border-radius: 22px;
@@ -2531,7 +2703,10 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .foru-cursor-trail, .foru-hero-magic-layer, .foru-scroll-progress {
+
+  .foru-cursor-trail,
+  .foru-hero-magic-layer,
+  .foru-scroll-progress {
     display: none;
   }
 }
@@ -2540,12 +2715,17 @@ h1 {
   .foru-personal-dashboard .foru-next-route-card {
     grid-template-columns: 1fr;
   }
-  .foru-personal-header, .foru-personal-project-card {
+
+  .foru-personal-header,
+  .foru-personal-project-card {
     grid-template-columns: 1fr;
   }
-  .foru-personal-header-stats, .foru-personal-project-actions {
+
+  .foru-personal-header-stats,
+  .foru-personal-project-actions {
     justify-content: flex-start;
   }
+
   .foru-personal-project-actions button {
     flex: 1;
   }
@@ -2555,6 +2735,7 @@ h1 {
   .foru-world-lite-island {
     grid-template-columns: 1fr;
   }
+
   .foru-world-lite-island-art {
     min-height: 12rem;
   }
@@ -2564,17 +2745,121 @@ h1 {
   .foru-world3d-toggle {
     width: 100%;
   }
-  .foru-world3d-shell, .foru-world3d-canvas {
+
+  .foru-world3d-shell,
+  .foru-world3d-canvas {
     min-height: 30rem;
     border-radius: 18px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* =========================================
+   ANIMACIONES GLOBALES FOR U
+   ========================================= */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* =========================================
+   SCROLLBAR SUTIL Y ELEGANTE
+   ========================================= */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* =========================================
+   SUAVIZAR FUENTES EN TODA LA APP
+   ========================================= */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Animaciones globales FOR U */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
