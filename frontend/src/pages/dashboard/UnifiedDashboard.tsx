@@ -12,6 +12,7 @@ import { useAreaDocuments } from './AreaDocuments';
 import AreaPanel from './AreaPanel';
 import './unifiedDashboard.css';
 import { useDialogFocus } from '../../toolkit/useDialogFocus';
+import AgentChat from '../../components/AgentChat';
 export default function UnifiedDashboard() {
   const { user } = useAuth();
   const store = useActiveProjectsStore();
@@ -55,6 +56,8 @@ const areaHelp = { marketing: 'Crea contenido, prepara tu página y encuentra he
 function ProjectAreas({ projectId, type }: { projectId: string; type: ModuleType }) {
   const { entry, reload } = useAreaDocuments(projectId, type);
   const [area, setArea] = useState<AreaId | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [activeArea, setActiveArea] = useState<'marketing' | 'finanzas' | 'logistica' | 'operaciones'>('marketing');
   const areaDialog = useRef<HTMLDivElement>(null);
   useDialogFocus(areaDialog, area !== null, () => setArea(null));
   useEffect(() => {
@@ -64,5 +67,25 @@ function ProjectAreas({ projectId, type }: { projectId: string; type: ModuleType
     return () => { document.body.style.overflow = previous; };
   }, [area]);
   const completed = areaDefinitions.filter(a => areaProgress(entry?.tasks?.tasks ?? [], a.id).complete).length;
-  return <><CompassBadge projectId={projectId} />{entry?.error && <div role="alert" className="recovery-notice">{entry.error} <DSButtonSecondary onClick={() => void reload()}>Reintentar carga</DSButtonSecondary></div>}<div className="dashboard-areas">{areaDefinitions.map(a => { const progress = areaProgress(entry?.tasks?.tasks ?? [], a.id); return <Card as="article" key={a.id} onClick={event => { if (!(event.target as HTMLElement).closest('button,a,input')) setArea(a.id); }} className={`dashboard-area dashboard-area-${a.id} area-open bg-gradient-to-br ${a.gradient} rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300`} ><InfoIcon text={areaHelp[a.id]} label={`Ayuda de ${a.title}`} /><span className="area-icon">{a.accessory}</span><h2>{a.title}</h2><p>{a.pet} te ayuda a elegir el siguiente paso</p>{entry?.loaded ? <><div className="area-progress-track" role="progressbar" aria-label={`Progreso de ${a.title}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.percent}><span style={{ width: `${progress.percent}%` }} /></div><span key={progress.percent} className="area-progress-number">{progress.percent}% completado</span><span>{progress.total ? `${progress.completed} de ${progress.total} pasos` : 'Sin tareas'}</span>{progress.complete && <span className="area-gold-check" aria-label={`${a.title} completada`}>✓</span>}</> : <div className="area-progress-skeleton" role="status" aria-label="Cargando progreso"><span /><span /></div>}<DSButtonSecondary type="button" aria-label={`Abrir ${a.title}`} tooltip={`Abrir tareas y herramientas de ${a.title}`} onClick={() => setArea(a.id)}>Abrir espacio →</DSButtonSecondary></Card>; })}</div>{area && <div className="area-modal-backdrop"><div ref={areaDialog} className="area-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="area-modal-title"><header className="area-modal-heading"><h2 id="area-modal-title">Tu espacio de {areaDefinitions.find(item => item.id === area)?.title}</h2><DSButtonSecondary type="button" aria-label="Cerrar área" onClick={() => setArea(null)}>Cerrar ×</DSButtonSecondary></header><AreaPanel key={area} projectId={projectId} type={type} area={area} /></div></div>}<section className={`dashboard-pro ${completed === 4 ? 'is-unlocked' : ''}`}><span>🚀</span><div><strong>{completed === 4 ? 'Modo Pro desbloqueado' : 'Modo Pro · Tu negocio, paso a paso'}</strong><p>{completed}/4 áreas completas. Las estadísticas básicas siempre están disponibles.</p><Link className={completed === 4 ? 'pro-unlocked-button' : ''} to={`/dashboard/tools/analytics?project=${projectId}${completed === 4 ? '&celebrate=1' : ''}`}>{completed === 4 ? '✨ Ver mis logros y estadísticas' : 'Ver estadísticas básicas'}</Link></div></section><Link className="world-invitation" to={`/dashboard/world?project=${projectId}`}>🏝️ Visita tu isla y juega con tus mascotas →</Link></>;
+
+  const mapAreaIdToChatArea = (id: string): 'marketing' | 'finanzas' | 'logistica' | 'operaciones' => {
+    switch (id) {
+      case 'marketing': return 'marketing';
+      case 'finance': return 'finanzas';
+      case 'logistics': return 'logistica';
+      case 'operations': return 'operaciones';
+      default: return 'marketing';
+    }
+  };
+
+  return <><CompassBadge projectId={projectId} />{entry?.error && <div role="alert" className="recovery-notice">{entry.error} <DSButtonSecondary onClick={() => void reload()}>Reintentar carga</DSButtonSecondary></div>}<div className="dashboard-areas">{areaDefinitions.map(a => { const progress = areaProgress(entry?.tasks?.tasks ?? [], a.id); return <Card as="article" key={a.id} onClick={event => { if (!(event.target as HTMLElement).closest('button,a,input')) { setActiveArea(mapAreaIdToChatArea(a.id)); setChatOpen(true); } }} className={`dashboard-area dashboard-area-${a.id} area-open bg-gradient-to-br ${a.gradient} rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300`} ><InfoIcon text={areaHelp[a.id]} label={`Ayuda de ${a.title}`} /><span className="area-icon">{a.accessory}</span><h2>{a.title}</h2><p>{a.pet} te ayuda a elegir el siguiente paso</p>{entry?.loaded ? <><div className="area-progress-track" role="progressbar" aria-label={`Progreso de ${a.title}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.percent}><span style={{ width: `${progress.percent}%` }} /></div><span key={progress.percent} className="area-progress-number">{progress.percent}% completado</span><span>{progress.total ? `${progress.completed} de ${progress.total} pasos` : 'Sin tareas'}</span>{progress.complete && <span className="area-gold-check" aria-label={`${a.title} completada`}>✓</span>}</> : <div className="area-progress-skeleton" role="status" aria-label="Cargando progreso"><span /><span /></div>}<DSButtonSecondary type="button" aria-label={`Abrir ${a.title}`} tooltip={`Abrir tareas y herramientas de ${a.title}`} onClick={() => { setActiveArea(mapAreaIdToChatArea(a.id)); setChatOpen(true); }}>Abrir espacio →</DSButtonSecondary></Card>; })}</div>{area && <div className="area-modal-backdrop"><div ref={areaDialog} className="area-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="area-modal-title"><header className="area-modal-heading"><h2 id="area-modal-title">Tu espacio de {areaDefinitions.find(item => item.id === area)?.title}</h2><DSButtonSecondary type="button" aria-label="Cerrar área" onClick={() => setArea(null)}>Cerrar ×</DSButtonSecondary></header><AreaPanel key={area} projectId={projectId} type={type} area={area} /></div></div>}<section className={`dashboard-pro ${completed === 4 ? 'is-unlocked' : ''}`}><span>🚀</span><div><strong>{completed === 4 ? 'Modo Pro desbloqueado' : 'Modo Pro · Tu negocio, paso a paso'}</strong><p>{completed}/4 áreas completas. Las estadísticas básicas siempre están disponibles.</p><Link className={completed === 4 ? 'pro-unlocked-button' : ''} to={`/dashboard/tools/analytics?project=${projectId}${completed === 4 ? '&celebrate=1' : ''}`}>{completed === 4 ? '✨ Ver mis logros y estadísticas' : 'Ver estadísticas básicas'}</Link></div></section><Link className="world-invitation" to={`/dashboard/world?project=${projectId}`}>🏝️ Visita tu isla y juega con tus mascotas →</Link>
+    {chatOpen && (
+      <AgentChat 
+        area={activeArea} 
+        userName="Nicole" 
+        isOpen={chatOpen} 
+        onClose={() => setChatOpen(false)} 
+      />
+    )}
+  </>;
 }
