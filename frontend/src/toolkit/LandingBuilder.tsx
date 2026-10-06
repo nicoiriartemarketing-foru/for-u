@@ -276,17 +276,22 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   if (wizard) return <LandingWizard draft={draft} update={update} busy={busy} dirty={dirty} demo={demo} notice={notice} publishedUrl={publishedUrl} onSave={saveDraft} onPublish={publish} onUpload={uploadCover} onSuggest={suggestStory} />;
   return (
     <div className={`foru-professional-editor pe-wide-editor tk-visual-editor ${sectionsOpen ? 'pe-sections-open' : ''}`} inert={busy} aria-busy={busy}>
-      <header className="pe-topbar"><div><small>EDITOR VISUAL · {industry.name}</small><h2>Tu página, a tu manera</h2><p>Selecciona un texto para escribir. Arrastra secciones para cambiar su orden.</p></div><span role="status">{autosaveStatus || (dirty ? 'Cambios pendientes' : 'Borrador cargado')}</span></header>
-      <div className="pe-commandbar">
-        <DSButtonSecondary type="button" aria-expanded={sectionsOpen} aria-controls="page-sections" onClick={() => setSectionsOpen(value => !value)}>☰ Secciones</DSButtonSecondary>
-        <div className="pe-preview-toolbar"><div><DSButtonSecondary type="button" aria-pressed={viewport === 'desktop'} tooltip="Revisa la página con un ancho de escritorio." onClick={() => setViewport('desktop')}>Escritorio</DSButtonSecondary><DSButtonSecondary type="button" aria-pressed={viewport === 'mobile'} tooltip="Revisa la página a 360 píxeles de ancho." onClick={() => setViewport('mobile')}>Móvil</DSButtonSecondary></div></div>        <div className="tk-toolbar" aria-label="Historial de edición">
-          <DSButtonSecondary type="button" tooltip="Deshace el último cambio del borrador. No retira una publicación existente." disabled={busy || !history.past.length} onClick={() => { dispatchHistory({ type: 'undo' }); setDirty(true); }}>↶ Deshacer</DSButtonSecondary>
-          <DSButtonSecondary type="button" tooltip="Recupera el cambio que acabas de deshacer." disabled={busy || !history.future.length} onClick={() => { dispatchHistory({ type: 'redo' }); setDirty(true); }}>↷ Rehacer</DSButtonSecondary>
+      <header className="pe-topbar magic-card" style={{ padding: '1.5rem', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-suave)', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div><small>EDITOR VISUAL · {industry.name}</small>
+        <h2>Tu página, a tu manera</h2>
+        <p style={{ color: 'var(--color-texto-suave)' }}>Selecciona un texto para escribir. Arrastra secciones para cambiar su orden.</p></div>
+        <span role="status" className="magic-badge">{autosaveStatus || (dirty ? 'Cambios pendientes' : 'Borrador cargado')}</span>
+      </header>
+      <div className="pe-commandbar magic-card" style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem', flexWrap: 'wrap', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-suave)', marginBottom: '1rem' }}>
+        <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-expanded={sectionsOpen} aria-controls="page-sections" onClick={() => setSectionsOpen(value => !value)}>☰ Secciones</DSButtonSecondary>
+        <div className="pe-preview-toolbar"><div><DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-pressed={viewport === 'desktop'} tooltip="Revisa la página con un ancho de escritorio." onClick={() => setViewport('desktop')}>Escritorio</DSButtonSecondary><DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-pressed={viewport === 'mobile'} tooltip="Revisa la página a 360 píxeles de ancho." onClick={() => setViewport('mobile')}>Móvil</DSButtonSecondary></div></div>        <div className="tk-toolbar" aria-label="Historial de edición">
+          <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" tooltip="Deshace el último cambio del borrador. No retira una publicación existente." disabled={busy || !history.past.length} onClick={() => { dispatchHistory({ type: 'undo' }); setDirty(true); }}>↶ Deshacer</DSButtonSecondary>
+          <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" tooltip="Recupera el cambio que acabas de deshacer." disabled={busy || !history.future.length} onClick={() => { dispatchHistory({ type: 'redo' }); setDirty(true); }}>↷ Rehacer</DSButtonSecondary>
         </div>
-<DSButtonSecondary type="button" aria-expanded={propertiesOpen} aria-controls="page-selection" onClick={() => setPropertiesOpen(value => !value)}>Editar selección</DSButtonSecondary>
-        <DSButtonSecondary type="button" aria-expanded={settingsOpen} aria-controls="page-settings" onClick={() => setSettingsOpen(value => !value)}>Configurar página</DSButtonSecondary>
-        <DSButtonSecondary type="button" onClick={saveDraft} tooltip="Guarda el borrador sin cambiar la página pública.">Guardar</DSButtonSecondary>
-        <DSButtonPrimary type="button" disabled={busy || demo} onClick={publish} tooltip="Publica los cambios para que los vean tus visitantes.">Publicar</DSButtonPrimary>
+<DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-expanded={propertiesOpen} aria-controls="page-selection" onClick={() => setPropertiesOpen(value => !value)}>Editar selección</DSButtonSecondary>
+        <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-expanded={settingsOpen} aria-controls="page-settings" onClick={() => setSettingsOpen(value => !value)}>Configurar página</DSButtonSecondary>
+        <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" onClick={saveDraft} tooltip="Guarda el borrador sin cambiar la página pública.">Guardar</DSButtonSecondary>
+        <DSButtonPrimary className="magic-button magic-button-primary" type="button" disabled={busy || demo} onClick={publish} tooltip="Publica los cambios para que los vean tus visitantes.">Publicar</DSButtonPrimary>
       </div>
       {propertiesOpen && <DSCard id="page-selection" className="pe-selection-panel">        {selectedBlock ? <div className="pe-properties"><h3>Sección seleccionada</h3><DSInput label="Título de sección" info="Este título se muestra en tu página pública al publicar los cambios." value={selectedBlock.title} maxLength={150} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, title: event.target.value } : block) })} /><Textarea label="Texto de sección" info="Describe esta parte de tu oferta con información real de tu negocio." value={selectedBlock.body} maxLength={2000} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, body: event.target.value } : block) })} /></div> : <div className="pe-properties"><h3>Portada</h3><DSInput label="Título principal" info="La primera frase que verán tus visitantes." value={draft.headline} maxLength={180} onChange={event => update({ headline: event.target.value })} /><Textarea label="Historia de tu negocio" info="Explica qué ofreces y qué hace especial a tu negocio." value={draft.description} maxLength={1000} onChange={event => update({ description: event.target.value })} /><DSInput label="Texto del botón" info="Describe la acción que quieres que realice tu visitante." value={draft.cta} maxLength={50} onChange={event => update({ cta: event.target.value })} /></div>}
 </DSCard>}
@@ -363,13 +368,13 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
           Agregar sección
         </DSButtonSecondary>
       </DSCard>
-      <section className="tk-editor-preview tk-stack">
-
-        <p>Haz clic sobre cualquier título o párrafo para editarlo.</p>
+      <section className="tk-editor-preview tk-stack magic-card" style={{ padding: '1rem', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-magica)' }}>
+        <p style={{ color: 'var(--color-texto-suave)', fontSize: '0.9rem', textAlign: 'center' }}>Haz clic sobre cualquier título o párrafo para editarlo.</p>
         <div className={`pe-canvas pe-canvas-${viewport}`}><iframe
           ref={frame}
           title="Vista previa editable de tu página"
           src={"/site-preview?channel=" + channel}
+          style={{ border: 'none', borderRadius: '8px' }}
         /></div>
         <p role="status">
           {autosaveStatus ||
