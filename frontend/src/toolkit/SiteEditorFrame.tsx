@@ -62,6 +62,7 @@ function Editable({
 }
 export default function SiteEditorFrame() {
   const drag = useRef<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [selected, setSelected] = useState("hero");
   const [draft, setDraft] = useState<LandingDraft | null>(null);
   const channel = new URLSearchParams(window.location.search).get("channel");
@@ -128,9 +129,9 @@ export default function SiteEditorFrame() {
         <Editable value={draft.cta} field="cta" onEdit={edit} />
       </Card>
       {draft.blocks.map((block, index) => (
-        <Card as="section" key={block.id} data-block-id={block.id} className={`tk-site-block pe-editable-section ${selected === block.id ? 'pe-selected' : ''}`} onClick={() => { setSelected(block.id); send('foru:select', { id: block.id }); }} onFocus={() => { setSelected(block.id); send('foru:select', { id: block.id }); }} onDragOver={event => event.preventDefault()} onDrop={event => { if (!drag.current) return; event.preventDefault(); event.stopPropagation(); send('foru:move', { from: drag.current, to: block.id }); drag.current = null; }}>
+        <Card as="section" key={block.id} data-block-id={block.id} className={`tk-site-block pe-editable-section ${selected === block.id ? 'pe-selected' : ''} ${dropTarget === block.id ? 'pe-drop-target' : ''}`} onClick={() => { setSelected(block.id); send('foru:select', { id: block.id }); }} onFocus={() => { setSelected(block.id); send('foru:select', { id: block.id }); }} onDragOver={event => { event.preventDefault(); setDropTarget(block.id); }} onDragLeave={() => setDropTarget(null)} onDrop={event => { setDropTarget(null); if (!drag.current) return; event.preventDefault(); event.stopPropagation(); send('foru:move', { from: drag.current, to: block.id }); drag.current = null; }}>
           <div className="pe-block-controls" contentEditable={false}>
-            <ButtonGhost type="button" draggable aria-label={`Arrastrar ${block.title}`} tooltip="Arrastra para mover esta sección. También puedes usar los botones Subir y Bajar." onDragStart={event => { drag.current = block.id; event.dataTransfer.setData('text/plain', block.id); event.dataTransfer.effectAllowed = 'move'; }} onDragEnd={() => { drag.current = null; }}>⠿</ButtonGhost>
+            <ButtonGhost type="button" draggable aria-label={`Arrastrar ${block.title}`} tooltip="Arrastra para mover esta sección. También puedes usar los botones Subir y Bajar." onDragStart={event => { drag.current = block.id; event.dataTransfer.setData('text/plain', block.id); event.dataTransfer.effectAllowed = 'move'; }} onDragEnd={() => { drag.current = null; setDropTarget(null); }}>⠿</ButtonGhost>
             <ButtonGhost type="button" aria-label={`Subir ${block.title}`} disabled={index === 0} onClick={() => send('foru:move', { from: block.id, to: draft.blocks[index - 1].id })}>↑</ButtonGhost>
             <ButtonGhost type="button" aria-label={`Bajar ${block.title}`} disabled={index === draft.blocks.length - 1} onClick={() => send('foru:move', { from: block.id, to: draft.blocks[index + 1].id })}>↓</ButtonGhost>
           </div>
