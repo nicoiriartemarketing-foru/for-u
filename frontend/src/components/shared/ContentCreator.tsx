@@ -161,7 +161,7 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
     </p>
     <div style={{ display: 'grid', gap: '0.75rem' }}>
       {sugerenciasContenido.map((idea, i) => (
-        <div key={i} className="magic-card" style={{ padding: '1rem', cursor: 'pointer', animation: \`animate-fade-in 0.3s ease-out \${i * 0.1}s both\`, border: '1px solid rgba(212, 212, 212, 0.4)', borderRadius: '12px', background: 'rgba(250, 250, 250, 0.86)' }} onClick={() => usarIdea(idea)}>
+        <div key={i} className="magic-card" style={{ padding: '1rem', cursor: 'pointer', animation: `animate-fade-in 0.3s ease-out ${i * 0.1}s both`, border: '1px solid rgba(212, 212, 212, 0.4)', borderRadius: '12px', background: 'rgba(250, 250, 250, 0.86)' }} onClick={() => usarIdea(idea)}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <span className="magic-badge">{idea.tipo}</span>
             <span style={{ fontSize: '0.75rem', color: 'var(--color-texto-suave)' }}>{idea.agente}</span>
