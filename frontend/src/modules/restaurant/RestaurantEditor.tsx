@@ -32,9 +32,35 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
     try { onChange(saveDish(data, dish)); setDish(null); setMessage('Plato actualizado en el menú.'); }
     catch (error) { setMessage(error instanceof Error ? error.message : 'No se pudo guardar el plato.'); }
   }
-  return <div className="restaurant-module">
+  return <div className="restaurant-module magic-card" style={{ animation: 'foru-focus-step-in 0.4s ease-out' }}>
+    <style>{`
+      .restaurant-module .component-card {
+        border: 1px solid rgba(212, 212, 212, 0.76);
+        border-radius: var(--border-radius-grande);
+        background: var(--color-superficie);
+        box-shadow: var(--sombra-suave);
+        backdrop-filter: blur(18px);
+        animation: foru-focus-step-in 0.4s ease-out;
+      }
+      .restaurant-module input, .restaurant-module textarea {
+        border: 1px solid rgba(212, 212, 212, 0.16);
+        border-radius: 16px;
+        padding: 0.95rem 1rem;
+        background: rgba(250, 250, 250, 0.86);
+        color: var(--color-texto);
+      }
+      .restaurant-module .step-indicator li.is-active div {
+        background: var(--gradient-iridiscente) !important;
+      }
+      .restaurant-module [role="progressbar"] [aria-current="step"] {
+        background: var(--gradient-iridiscente) !important;
+      }
+      .restaurant-module .magic-button-primary {
+        background: var(--gradient-boton); color: var(--color-texto); border-radius: 999px; padding: 0.75rem 1.1rem; font-weight: 900; box-shadow: var(--sombra-media);
+      }
+    `}</style>
     <StepIndicator currentStep={currentStep} totalSteps={3} labels={['Datos básicos', 'Menú', 'Publicar']} onStepChange={step => { setCurrentStep(step); document.getElementById(['restaurant-basics', 'restaurant-menu-edit', 'restaurant-publish'][step - 1])?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }} />
-    <DSCard as="section" className="component-card restaurant-quick-start"><h2>Tu menú en tres pasos</h2><p>1. Agrega tus productos o carga la demo. 2. Escribe tu WhatsApp y guarda. 3. Publica tu enlace al final de esta página.</p>{!data.dishes.length && <DSButtonSecondary type="button" disabled={!!dish} onClick={() => { try { onChange(loadAlfajoresDemo(data, window.location.origin)); setMessage('Demo cargada: revisa los precios, reemplaza las imágenes de ejemplo y agrega tu WhatsApp. Después guarda los cambios.'); } catch (error) { setMessage((error as Error).message); } }}>Cargar demo de alfajores</DSButtonSecondary>}<p>Los precios e imágenes de la demo son ejemplos editables.</p></DSCard>
+    <DSCard as="section" className="component-card restaurant-quick-start"><h2>Tu menú en tres pasos</h2><p>1. Agrega tus productos o carga la demo. 2. Escribe tu WhatsApp y guarda. 3. Publica tu enlace al final de esta página.</p>{!data.dishes.length && <DSButtonSecondary type="button" className="magic-button magic-button-primary" disabled={!!dish} onClick={() => { try { onChange(loadAlfajoresDemo(data, window.location.origin)); setMessage('Demo cargada: revisa los precios, reemplaza las imágenes de ejemplo y agrega tu WhatsApp. Después guarda los cambios.'); } catch (error) { setMessage((error as Error).message); } }}>Cargar demo de alfajores</DSButtonSecondary>}<p>Los precios e imágenes de la demo son ejemplos editables.</p></DSCard>
     <p role="status">{message}</p>
     <details className="component-card"><summary>Vista previa del menú para clientes</summary><p>Prueba la carta y el pedido antes de publicar. Esta vista todavía no es una dirección pública.</p><RestaurantMenu data={data} /></details>
     <DSCard as="section" id="restaurant-basics" className="component-card">
@@ -60,7 +86,7 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
         <DSTextarea label="Descripción" info="Describe ingredientes, tamaño y detalles que ayuden a elegir." value={dish.description} onChange={event => setDish({ ...dish, description: event.target.value })} />
         <ProjectImageField label="Imagen del plato" value={dish.image} onChange={value => setDish({ ...dish, image: value })} />
         <label className="restaurant-check"><DSInput type="checkbox" checked={dish.available} onChange={event => setDish({ ...dish, available: event.target.checked })} />Disponible para pedir</label>
-        <div className="restaurant-actions"><DSButtonPrimary className="btn-primary" type="submit">Aplicar producto</DSButtonPrimary><DSButtonSecondary type="button" onClick={() => setDish(null)}>Cancelar</DSButtonSecondary></div>
+        <div className="restaurant-actions"><DSButtonPrimary className="magic-button magic-button-primary" type="submit">Aplicar producto</DSButtonPrimary><DSButtonSecondary type="button" onClick={() => setDish(null)}>Cancelar</DSButtonSecondary></div>
       </form>}
       <div className="menu-grid">{data.dishes.map(item => <DSCard as="article" className="dish-card" key={item.id}>
         <ProjectImage value={item.image} alt={item.name} />

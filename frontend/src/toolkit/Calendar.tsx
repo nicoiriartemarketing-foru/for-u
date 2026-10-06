@@ -129,7 +129,31 @@ export default function Calendar() {
     );
   }
   return (
-    <div className="tk-stack">
+    <div className="tk-stack magic-card">
+      <style>{`
+        .tk-stack.magic-card {
+           border: 1px solid rgba(212, 212, 212, 0.76);
+           border-radius: var(--border-radius-grande);
+           background: var(--color-superficie);
+           box-shadow: var(--sombra-magica);
+           padding: 1rem;
+        }
+        .tk-calendar .tk-day, .tk-calendar .tk-event {
+           background: rgba(250, 250, 250, 0.86);
+           border-radius: 12px;
+           box-shadow: var(--sombra-suave);
+        }
+        .tk-calendar .tk-day.is-today {
+           background: var(--gradient-iridiscente);
+           font-weight: 900;
+        }
+        .tk-calendar .tk-event {
+           animation: fadeIn 0.4s ease-out forwards;
+        }
+        .tk-stack .magic-button-soft {
+           background: rgba(212, 212, 212, 0.16); color: var(--color-texto); border-radius: 999px; padding: 0.5rem 1rem; font-weight: 600; border: none;
+        }
+      `}</style>
       <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-toolbar">
           <div>
@@ -238,7 +262,7 @@ export default function Calendar() {
       </DSCard>
       <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-toolbar">
-          <DSButtonSecondary aria-label="Periodo anterior" onClick={() => shift(-1)}>
+          <DSButtonSecondary className="magic-button magic-button-soft" aria-label="Periodo anterior" onClick={() => shift(-1)}>
             ←
           </DSButtonSecondary>
           <h3>
@@ -247,10 +271,10 @@ export default function Calendar() {
               year: "numeric",
             })}
           </h3>
-          <DSButtonSecondary aria-label="Periodo siguiente" onClick={() => shift(1)}>
+          <DSButtonSecondary className="magic-button magic-button-soft" aria-label="Periodo siguiente" onClick={() => shift(1)}>
             →
           </DSButtonSecondary>
-          <DSButtonSecondary onClick={() => setAnchor(new Date())}>Hoy</DSButtonSecondary>
+          <DSButtonSecondary className="magic-button magic-button-soft" onClick={() => setAnchor(new Date())}>Hoy</DSButtonSecondary>
         </div>
         <div className="tk-calendar">
           {days.map((day) => {
@@ -282,7 +306,7 @@ export default function Calendar() {
                   .sort((a, b) => a.time.localeCompare(b.time))
                   .map((entry) => (
                     <div
-                      className={`tk-event ${entry.done ? "is-done" : ""}`}
+                      className={`tk-event animate-fade-in ${entry.done ? "is-done" : ""}`}
                       key={entry.id}
                       draggable={!busy}
                       onDragStart={(e) =>

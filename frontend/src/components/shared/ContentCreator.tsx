@@ -11,6 +11,7 @@ import MediaGallery from './MediaGallery';
 import { resolveMediaPath } from './mediaStorage';
 import { blankContent, contentFromTemplate, saveContentDraft, type ContentDocument, type ContentDraft } from './contentModel';
 import { exportContentImage } from './contentExport';
+import { useAgentInsights, type ContenidoSugerido } from '../../hooks/useAgentInsights';
 import './contentCreator.css';
 
 export type ContentCreatorProps = { currentProject?: ModuleProject; onProjectChange?: (projectId: string) => void };
@@ -46,6 +47,25 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
   const [gallery, setGallery] = useState(false);
   const [image, setImage] = useState({ path: '', url: '' });
   const saving = useRef(false);
+  const rubro = project.type || 'restaurante';
+  const sugerenciasContenido = useAgentInsights(project.id, rubro);
+
+  const usarIdea = (idea: ContenidoSugerido) => {
+    if (mayDiscard()) {
+      open({
+        id: crypto.randomUUID(),
+        projectId: project.id,
+        templateId: undefined,
+        format: idea.tipo === 'Historia' ? 'story' : 'post',
+        title: idea.titulo,
+        subtitle: idea.descripcion,
+        caption: `[Sugerido por ${idea.agente}]\n\nEscribe aquí tu contenido basado en: ${idea.titulo}`,
+        background: '#ffffff',
+        foreground: '#000000',
+        imagePath: ''
+      }, true);
+    }
+  };
   const imageUrl = draft && image.path === draft.imagePath ? image.url : '';
   useEffect(() => {
     let active = true;
@@ -86,9 +106,36 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
     catch (error) { setNotice((error as Error).message); } finally { setBusy(false); }
   }
   if (!document) return <main className="content-creator"><p role="status">{notice || 'Cargando el contenido del proyecto…'}</p>{notice && <DSButtonSecondary onClick={() => setAttempt(value => value + 1)}>Reintentar carga</DSButtonSecondary>}</main>;
-  return <main className="content-creator"><header><div><span>FOR U · {moduleLabels[project.type]}</span><h1>Creador de Contenido</h1></div><DSButtonSecondary disabled={busy} onClick={() => { if (mayDiscard()) navigate(`/modules/${project.type}?project=${encodeURIComponent(project.id)}`); }}>Volver a {project.name}</DSButtonSecondary></header>
-    <p role="status">{notice}</p><ProjectSelector projects={projects} value={project.id} disabled={busy} onChange={id => { if (mayDiscard()) onProjectChange(id); }} />
-    <fieldset className="creator-controls" disabled={busy}>
+  return <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: '1.5rem', alignItems: 'start' }} className="creator-studio-layout">
+    <style>{`
+      @media (max-width: 900px) {
+        .creator-studio-layout { grid-template-columns: 1fr !important; }
+      }
+      .content-creator.magic-card {
+         padding: 2rem;
+         animation: foru-focus-step-in 0.4s ease-out;
+         border: 1px solid rgba(212, 212, 212, 0.76);
+         border-radius: var(--border-radius-grande);
+         background: var(--color-superficie);
+         box-shadow: var(--sombra-magica);
+      }
+      .content-creator .magic-button-primary {
+         background: var(--gradient-boton); color: var(--color-texto); border-radius: 999px; padding: 0.75rem 1.1rem; font-weight: 900; box-shadow: var(--sombra-media);
+      }
+      .content-creator .magic-button-soft {
+         background: rgba(212, 212, 212, 0.16); color: var(--color-texto); border-radius: 999px; padding: 0.5rem 1rem; font-weight: 600; border: none;
+      }
+    `}</style>
+    <main className="content-creator magic-card">
+      <header style={{ background: 'var(--gradient-fondo)', borderBottom: '1px solid rgba(212, 212, 212, 0.1)', padding: '1.5rem 2rem', borderRadius: 'var(--border-radius-grande) var(--border-radius-grande) 0 0', margin: '-2rem -2rem 2rem -2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ fontFamily: 'var(--font-titulos)', fontSize: 'clamp(1.8rem, 3vw, 2.4rem)', fontWeight: 900, margin: 0, letterSpacing: '-0.02em' }}>Creator Studio</h1>
+          <p style={{ color: 'var(--color-texto-suave)', margin: '0.5rem 0 0', fontSize: '1rem' }}>Tu contenido, generado desde todo lo que ya sabes de tu negocio</p>
+        </div>
+        <DSButtonSecondary className="magic-button magic-button-soft" disabled={busy} onClick={() => { if (mayDiscard()) navigate(`/modules/${project.type}?project=${encodeURIComponent(project.id)}`); }}>← Volver</DSButtonSecondary>
+      </header>
+      <p role="status">{notice}</p><ProjectSelector projects={projects} value={project.id} disabled={busy} onChange={id => { if (mayDiscard()) onProjectChange(id); }} />
+      <fieldset className="creator-controls" disabled={busy}>
       {draft ? <>
         <div className="creator-section-heading"><h2>{draft.templateId ? 'Personaliza tu plantilla' : 'Tu diseño desde cero'}</h2><DSButtonSecondary onClick={() => { if (mayDiscard()) { setDraft(null); setDirty(false); } }}>Elegir otra plantilla</DSButtonSecondary></div>
         <div className="creator-editor"><section className="creator-fields">
@@ -103,5 +150,27 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
       </> : <TemplateLibrary key={project.type} type={project.type} onSelect={template => open(contentFromTemplate(project, template), true)} onCreateFromScratch={() => open(blankContent(project.id), true)} />}
       {document.drafts.length > 0 && <section><h2>Contenido guardado</h2><div className="creator-saved-grid">{document.drafts.map(item => <DSButtonSecondary key={item.id} onClick={() => open({ ...item }, false)}><strong>{item.title || item.caption.slice(0, 60)}</strong><span>{item.format === 'post' ? 'Publicación' : 'Historia'}</span></DSButtonSecondary>)}</div></section>}
     </fieldset>
-  </main>;
+  </main>
+  <aside className="magic-card" style={{ padding: '1.5rem', animation: 'foru-focus-step-in 0.4s ease-out 0.2s both', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-magica)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+      <span style={{ fontSize: '1.5rem' }}>💡</span>
+      <h3 style={{ fontFamily: 'var(--font-titulos)', fontSize: '1.1rem', fontWeight: 900, margin: 0 }}>Ideas basadas en tus conversaciones</h3>
+    </div>
+    <p style={{ color: 'var(--color-texto-suave)', fontSize: '0.85rem', margin: '0 0 1rem', lineHeight: 1.5 }}>
+      Munay, Shippo, Oliver y Emma ya saben mucho de tu negocio. Aquí hay ideas listas para crear:
+    </p>
+    <div style={{ display: 'grid', gap: '0.75rem' }}>
+      {sugerenciasContenido.map((idea, i) => (
+        <div key={i} className="magic-card" style={{ padding: '1rem', cursor: 'pointer', animation: \`animate-fade-in 0.3s ease-out \${i * 0.1}s both\`, border: '1px solid rgba(212, 212, 212, 0.4)', borderRadius: '12px', background: 'rgba(250, 250, 250, 0.86)' }} onClick={() => usarIdea(idea)}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span className="magic-badge">{idea.tipo}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-texto-suave)' }}>{idea.agente}</span>
+          </div>
+          <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-texto)' }}>{idea.titulo}</p>
+          <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--color-texto-suave)', lineHeight: 1.4 }}>{idea.descripcion}</p>
+        </div>
+      ))}
+    </div>
+  </aside>
+  </div>;
 }
