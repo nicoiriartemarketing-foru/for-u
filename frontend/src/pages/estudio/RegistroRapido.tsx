@@ -22,7 +22,7 @@ export default function RegistroRapido() {
     setTimeout(() => {
       setLoading(false);
       // Pasa el registro id ficticio
-      navigate('/estudio/preparacion', { state: { registroId: 'uuid-1234' } });
+      navigate('/preparacion', { state: { registroId: 'uuid-1234' } });
     }, 1000);
   };
 

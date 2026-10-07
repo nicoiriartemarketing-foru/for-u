@@ -106,10 +106,10 @@ function App() {
             
             {/* Rutas de captación de El Estudio de Nicole */}
             <Route path="/estudio" element={<LandingCaptacion />} />
-            <Route path="/estudio/registro" element={<RegistroRapido />} />
-            <Route path="/estudio/checklist" element={<PreparacionChecklist />} />
-            <Route path="/estudio/reserva" element={<ReservaHorario />} />
-            <Route path="/estudio/confirmacion" element={<Confirmacion />} />
+            <Route path="/registro" element={<RegistroRapido />} />
+            <Route path="/preparacion" element={<PreparacionChecklist />} />
+            <Route path="/reserva" element={<ReservaHorario />} />
+            <Route path="/exito" element={<Confirmacion />} />
 
             <Route path="/negocio/:slug" element={<PublicRestaurant />} />
             <Route path="/experiencias/:slug" element={<PublicTourism />} />

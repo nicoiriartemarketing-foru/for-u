@@ -25,7 +25,7 @@ export default function ReservaHorario() {
     // Simular guardado en Supabase -> estudio_reservas
     setTimeout(() => {
       setLoading(false);
-      navigate('/estudio/confirmacion', { state: { registroId, horarioId: selectedHorario } });
+      navigate('/exito', { state: { registroId, horarioId: selectedHorario } });
     }, 1500);
   };
 

@@ -26,7 +26,7 @@ export default function LandingCaptacion() {
         </p>
 
         <button 
-          onClick={() => navigate('/estudio/registro')}
+          onClick={() => navigate('/registro')}
           className="magic-button magic-button-primary w-full text-xl py-5 rounded-2xl shadow-2xl hover:scale-[1.02] transition-transform font-bold mb-10"
         >
           ✨ Crear mi ruta digital

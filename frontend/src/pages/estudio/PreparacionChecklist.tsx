@@ -16,7 +16,7 @@ export default function PreparacionChecklist() {
 
   const handleCompletar = () => {
     // Simular update en Supabase tabla estudio_checklist
-    navigate('/estudio/reserva', { state: { registroId } });
+    navigate('/reserva', { state: { registroId } });
   };
 
   return (
