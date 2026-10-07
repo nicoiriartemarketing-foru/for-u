@@ -40,6 +40,14 @@ const DashboardTool = lazy(() => import('./pages/dashboard/DashboardTool'));
 const PublicRestaurant = lazy(() => import('./modules/restaurant/PublicRestaurant'));
 const PublicTourism = lazy(() => import('./modules/tourism/PublicTourism'));
 
+// Nuevas rutas creadas recientemente
+const CreatorStudio = lazy(() => import('./pages/dashboard/CreatorStudio'));
+const LandingCaptacion = lazy(() => import('./pages/estudio/LandingCaptacion'));
+const RegistroRapido = lazy(() => import('./pages/estudio/RegistroRapido'));
+const PreparacionChecklist = lazy(() => import('./pages/estudio/PreparacionChecklist'));
+const ReservaHorario = lazy(() => import('./pages/estudio/ReservaHorario'));
+const Confirmacion = lazy(() => import('./pages/estudio/Confirmacion'));
+
 function hasStudioAccess() {
   return window.localStorage.getItem('foru-studio-access') === 'granted';
 }
@@ -94,6 +102,15 @@ function App() {
             <Route path="/modules/courses" element={<PrivateWorkspace><CoursesWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/courses/editor" element={<PrivateWorkspace><CoursesWorkspace /></PrivateWorkspace>} />
             <Route path="/content-creator" element={<PrivateWorkspace><ContentCreator /></PrivateWorkspace>} />
+            <Route path="/creator-studio" element={<PrivateWorkspace><CreatorStudio /></PrivateWorkspace>} />
+            
+            {/* Rutas de captación de El Estudio de Nicole */}
+            <Route path="/estudio" element={<LandingCaptacion />} />
+            <Route path="/estudio/registro" element={<RegistroRapido />} />
+            <Route path="/estudio/checklist" element={<PreparacionChecklist />} />
+            <Route path="/estudio/reserva" element={<ReservaHorario />} />
+            <Route path="/estudio/confirmacion" element={<Confirmacion />} />
+
             <Route path="/negocio/:slug" element={<PublicRestaurant />} />
             <Route path="/experiencias/:slug" element={<PublicTourism />} />
             <Route path="/herramientas/demo" element={<ToolkitDemo />} />

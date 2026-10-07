@@ -36,7 +36,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     { icon: '📤', title: 'Uploads', path: `/dashboard/tools/images${query}`, help: 'Sube y organiza las fotos de tu negocio.' },
     { icon: '📅', title: 'Calendario', path: `/dashboard/tools/calendar${query}`, help: 'Planifica tus actividades y publicaciones.' },
     pageAccess,
-    { icon: '🎨', title: 'Creator Studio', path: `/content-creator${query}`, help: 'Diseña piezas para redes sociales con plantillas, imágenes y texto.' },
+    { icon: '🎨', title: 'Creator Studio', path: `/creator-studio${query}`, help: 'Revisa el progreso de tu negocio y entra al creador.' },
     { icon: '📊', title: 'Estadísticas', path: `/dashboard/tools/analytics${query}`, help: 'Consulta las visitas y clics registrados. Los clics no equivalen a ventas.' },
     { icon: '⚙️', title: 'Configuración', path: `/dashboard/settings${query}`, help: 'Gestiona tu cuenta y las conexiones disponibles.' },
   ];
