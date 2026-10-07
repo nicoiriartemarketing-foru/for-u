@@ -1,11 +1,21 @@
 import ModuleWorkspace, { type ModuleConfiguration } from '../ModuleWorkspace';
-import RestaurantEditor from './RestaurantEditor';
-import RestaurantDashboard from './RestaurantDashboard';
 import RestaurantPublishing from './RestaurantPublishing';
 import { emptyRestaurant, type RestaurantData } from './model';
+import EditorCarta from '../../components/restaurant/EditorCarta';
+import GestorPedidos from '../../components/restaurant/GestorPedidos';
+import { RestaurantProvider } from '../../context/RestaurantContext';
+
+function GestorPedidosWrapper() {
+  return <RestaurantProvider><GestorPedidos /></RestaurantProvider>;
+}
+
+function EditorCartaWrapper() {
+  return <RestaurantProvider><EditorCarta /></RestaurantProvider>;
+}
+
 const config: ModuleConfiguration<RestaurantData> = {
-  type: 'restaurant', create: emptyRestaurant, Dashboard: RestaurantDashboard, Editor: RestaurantEditor, Publication: RestaurantPublishing,
-  dashboardLabel: 'Logística y recetas', editorLabel: 'Menú y secciones',
+  type: 'restaurant', create: emptyRestaurant, Dashboard: GestorPedidosWrapper, Editor: EditorCartaWrapper, Publication: RestaurantPublishing,
+  dashboardLabel: 'Gestor de pedidos', editorLabel: 'Editor de carta',
   parse(value) {
     const data = value as RestaurantData;
     if (!data || data.version !== 1 || !Array.isArray(data.dishes) || !Array.isArray(data.inventory) || !Array.isArray(data.recipes) || !Array.isArray(data.sections) || !Array.isArray(data.preparations) || !data.settings || !Array.isArray(data.settings.faq)) throw new Error('El documento tiene un formato incompatible. No se ha sobrescrito.');
