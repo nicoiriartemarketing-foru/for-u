@@ -32,8 +32,30 @@ export default function MenuDigital() {
       {/* Header Sticky */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm px-4 py-3 flex justify-between items-center border-b border-gray-100">
         <div>
-          <p className="text-xs font-bold" style={{ color: 'var(--color-texto-suave)' }}>Mesa 04 · Terraza</p>
-          <h1 className="text-lg font-bold" style={{ color: 'var(--color-texto)' }}>Fuego & Grana Bistró</h1>
+          <p className="text-xs font-bold" style={{ color: 'var(--color-texto-suave)' }}>
+            {(() => {
+              try {
+                const storedOliver = localStorage.getItem('pizarra_logistica_data');
+                if (storedOliver) {
+                  const data = JSON.parse(storedOliver);
+                  return data.mesaDefault || 'Mesa 04 · Terraza';
+                }
+              } catch(e) {}
+              return 'Mesa 04 · Terraza';
+            })()}
+          </p>
+          <h1 className="text-lg font-bold" style={{ color: 'var(--color-texto)' }}>
+            {(() => {
+              try {
+                const storedMunay = localStorage.getItem('pizarra_marketing_data');
+                if (storedMunay) {
+                  const data = JSON.parse(storedMunay);
+                  return data.nombreNegocio || 'Fuego & Grana Bistró';
+                }
+              } catch(e) {}
+              return 'Fuego & Grana Bistró';
+            })()}
+          </h1>
         </div>
         <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center shadow-inner relative">
           <span className="text-xl">🛎️</span>

@@ -56,7 +56,44 @@ export function useAgentInsights(projectId: string | null, rubro: string) {
     if (!rubro) return;
     
     // Obtener plantillas base del rubro
-    const plantillasBase = PLANTILLAS_POR_RUBRO[rubro.toLowerCase()] || PLANTILLAS_POR_RUBRO.restaurante;
+    let plantillasBase = [...(PLANTILLAS_POR_RUBRO[rubro.toLowerCase()] || PLANTILLAS_POR_RUBRO.restaurante)];
+    
+    // Conectar con los datos reales de la Pizarra
+    // Asumimos que los datos pueden venir del AuthContext (user.id) para aislar por usuario en un caso real,
+    // pero para la simulación leeremos las respuestas guardadas en localStorage o simuladas.
+    try {
+      const storedMunay = localStorage.getItem('pizarra_marketing_data');
+      if (storedMunay) {
+        const data = JSON.parse(storedMunay);
+        if (data.clienteIdeal) {
+           plantillasBase.unshift({
+             tipo: 'Post',
+             titulo: 'El regalo perfecto',
+             descripcion: `💛 Munay sugiere: Crea un post sobre 'El regalo perfecto' basado en tu cliente ideal: ${data.clienteIdeal}`,
+             agente: 'Munay',
+             rubro: rubro,
+             momentoVenta: 'Consideración'
+           });
+        }
+      }
+
+      const storedShippo = localStorage.getItem('pizarra_finanzas_data');
+      if (storedShippo) {
+         const data = JSON.parse(storedShippo);
+         if (data.precioCalculado) {
+            plantillasBase.unshift({
+             tipo: 'Historia',
+             titulo: 'Nuevo precio revelado',
+             descripcion: `🦊 Shippo sugiere: Anuncia tu oferta estrella con el precio real que calculamos de ${data.precioCalculado}€.`,
+             agente: 'Shippo',
+             rubro: rubro,
+             momentoVenta: 'Decisión'
+           });
+         }
+      }
+    } catch (e) {
+      console.warn("No se pudieron leer las pizarras locales para insights.", e);
+    }
     
     setSugerencias(plantillasBase);
   }, [projectId, rubro]);
