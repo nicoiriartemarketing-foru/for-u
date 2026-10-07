@@ -74,7 +74,7 @@ function PrivateWorkspace({ children }: { children: ReactNode }) {
     );
   }
 
-  const unified = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/modules/') || location.pathname === '/content-creator';
+  const unified = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/modules/') || location.pathname === '/content-creator' || location.pathname === '/creator-studio';
   return session ? <>{unified ? <WorkspaceShell>{children}</WorkspaceShell> : children}<FloatingPomodoro /></> : <Navigate to={`/login?next=${encodeURIComponent(nextPath)}`} replace />;
 }
 
