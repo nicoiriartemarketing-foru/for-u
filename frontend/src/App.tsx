@@ -48,6 +48,11 @@ const PreparacionChecklist = lazy(() => import('./pages/estudio/PreparacionCheck
 const ReservaHorario = lazy(() => import('./pages/estudio/ReservaHorario'));
 const Confirmacion = lazy(() => import('./pages/estudio/Confirmacion'));
 
+// Restaurant routes
+const EditorCategorias = lazy(() => import('./components/restaurant/EditorCategorias'));
+const EditorEstilos = lazy(() => import('./components/restaurant/EditorEstilos'));
+import { RestaurantProvider } from './context/RestaurantContext';
+
 function hasStudioAccess() {
   return window.localStorage.getItem('foru-studio-access') === 'granted';
 }
@@ -93,6 +98,8 @@ function App() {
             <Route path="/workspace" element={<PrivateWorkspace><ForUWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/restaurant" element={<PrivateWorkspace><RestaurantWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/restaurant/editor" element={<PrivateWorkspace><RestaurantWorkspace /></PrivateWorkspace>} />
+            <Route path="/modules/restaurant/categorias" element={<PrivateWorkspace><RestaurantProvider><EditorCategorias /></RestaurantProvider></PrivateWorkspace>} />
+            <Route path="/modules/restaurant/estilos" element={<PrivateWorkspace><RestaurantProvider><EditorEstilos /></RestaurantProvider></PrivateWorkspace>} />
             <Route path="/modules/hospitality" element={<PrivateWorkspace><HospitalityWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/hospitality/editor" element={<PrivateWorkspace><HospitalityWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/ecommerce" element={<PrivateWorkspace><EcommerceWorkspace /></PrivateWorkspace>} />
