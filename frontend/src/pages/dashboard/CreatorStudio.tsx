@@ -16,7 +16,7 @@ export default function CreatorStudio() {
       <div className="max-w-6xl mx-auto">
         <header className="mb-10 text-center animate-fade-in">
           <h1 className="text-4xl font-black mb-4" style={{ color: 'var(--color-texto)', fontFamily: 'var(--font-titulos)' }}>
-            Creator Studio
+            Tablero FOR U
           </h1>
           <p className="text-lg mb-8" style={{ color: 'var(--color-texto-suave)' }}>
             Vas genial, ya casi terminamos de conocerte. Tu negocio está {Math.round(progress.porcentajeTotal)}% listo para crear contenido.
@@ -131,6 +131,25 @@ export default function CreatorStudio() {
           </div>
         </div>
 
+        <div className="mt-12 text-center">
+          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-texto)', fontFamily: 'var(--font-titulos)' }}>Pasos a seguir</h2>
+          <div className="flex justify-center gap-4 flex-wrap">
+            <button 
+              onClick={() => navigate('/creator-studio')}
+              className="magic-button magic-button-primary px-8 py-4 text-lg rounded-full"
+            >
+              <span className="material-symbols-outlined text-[24px]">video_camera_front</span>
+              Entrar al Creator Studio
+            </button>
+            <button 
+              onClick={() => navigate('/dashboard/settings')}
+              className="magic-button magic-button-soft px-8 py-4 text-lg rounded-full"
+            >
+              <span className="material-symbols-outlined text-[24px]">settings</span>
+              Configuración general
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

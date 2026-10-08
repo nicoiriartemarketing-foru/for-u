@@ -79,8 +79,7 @@ function PrivateWorkspace({ children }: { children: ReactNode }) {
     );
   }
 
-  const unified = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/modules/') || location.pathname === '/content-creator' || location.pathname === '/creator-studio';
-  return session ? <>{unified ? <WorkspaceShell>{children}</WorkspaceShell> : children}<FloatingPomodoro /></> : <Navigate to={`/login?next=${encodeURIComponent(nextPath)}`} replace />;
+  return session ? <>{children}<FloatingPomodoro /></> : <Navigate to={`/login?next=${encodeURIComponent(nextPath)}`} replace />;
 }
 
 function App() {
@@ -109,7 +108,7 @@ function App() {
             <Route path="/modules/courses" element={<PrivateWorkspace><CoursesWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/courses/editor" element={<PrivateWorkspace><CoursesWorkspace /></PrivateWorkspace>} />
             <Route path="/content-creator" element={<PrivateWorkspace><ContentCreator /></PrivateWorkspace>} />
-            <Route path="/creator-studio" element={<PrivateWorkspace><CreatorStudio /></PrivateWorkspace>} />
+            <Route path="/creator-studio" element={<PrivateWorkspace><LegacyDashboard /></PrivateWorkspace>} />
             
             {/* Rutas de captación de El Estudio de Nicole */}
             <Route path="/estudio" element={<LandingCaptacion />} />
@@ -130,7 +129,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/register-wizard" element={<Navigate to="/register" replace />} />
-            <Route path="/dashboard" element={<PrivateWorkspace><Dashboard /></PrivateWorkspace>} />
+            <Route path="/dashboard" element={<PrivateWorkspace><CreatorStudio /></PrivateWorkspace>} />
             <Route path="/dashboard/world" element={<PrivateWorkspace><WorldPage /></PrivateWorkspace>} />
             <Route path="/dashboard/settings" element={<PrivateWorkspace><WorkspaceSettings /></PrivateWorkspace>} />
             <Route path="/dashboard/tools/:tool" element={<PrivateWorkspace><DashboardTool /></PrivateWorkspace>} />
