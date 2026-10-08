@@ -62,7 +62,8 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
         caption: `[Sugerido por ${idea.agente}]\n\nEscribe aquí tu contenido basado en: ${idea.titulo}`,
         background: '#ffffff',
         foreground: '#000000',
-        imagePath: ''
+        imagePath: '',
+        updatedAt: new Date().toISOString(),
       }, true);
     }
   };

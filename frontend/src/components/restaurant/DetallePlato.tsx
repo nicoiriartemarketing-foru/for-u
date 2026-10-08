@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRestaurant } from '../../context/RestaurantContext';
-import { Plato } from '../../types/restaurant';
+import type { Plato } from '../../types/restaurant';
 
 export default function DetallePlato() {
   const { platos, estilo, agregarAlPedido } = useRestaurant();

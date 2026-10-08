@@ -1,3 +1,4 @@
+import { Link, useSearchParams } from 'react-router-dom';
 import { Select as DSSelect } from '../components/ui/DesignSystem';
 import { useUnsavedNavigation } from "../lib/useUnsavedNavigation";
 import { Textarea, InfoIcon } from "../components/ui/DesignSystem";
@@ -17,6 +18,8 @@ import { defaultLanding, type LandingDraft } from "./types";
 export { LandingPreview } from "./LandingPreview";
 export default function LandingBuilder({ wizard = false }: { wizard?: boolean }) {
   const { business, docs, save, userId, projectId, demo, track } = useToolkit();
+  const [routeParams] = useSearchParams();
+  const requestedStep = routeParams.get("step");
   const [history, dispatchHistory] = useReducer(editorHistory<LandingDraft>, { past: [], present: (docs.landing as LandingDraft) ?? defaultLanding(business), future: [] } as EditorHistory<LandingDraft>);
   const draft = history.present;
   const setDraft = useCallback((value: LandingDraft | ((current: LandingDraft) => LandingDraft)) => dispatchHistory({ type: 'edit', value }), []);
@@ -26,10 +29,10 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   const [dirty, setDirty] = useState(false);
   useUnsavedNavigation(!wizard && (dirty || busy));
   const drag = useRef(-1);
-  const [selectedId, setSelectedId] = useState('hero');
-  const [sectionsOpen, setSectionsOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [propertiesOpen, setPropertiesOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(requestedStep === 'offer' ? ((docs.landing as LandingDraft)?.blocks?.[0]?.id ?? 'hero') : 'hero');
+  const [sectionsOpen, setSectionsOpen] = useState(requestedStep === "offer");
+  const [settingsOpen, setSettingsOpen] = useState(requestedStep === "identity" || requestedStep === "publish");
+  const [propertiesOpen, setPropertiesOpen] = useState(requestedStep === "identity" || requestedStep === "offer");
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
   const industry = editorIndustry(business.moduleType || business.industry);
   const selectedBlock = draft.blocks.find(block => block.id === selectedId);
@@ -282,6 +285,8 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         <p style={{ color: 'var(--color-texto-suave)' }}>Selecciona un texto para escribir. Arrastra secciones para cambiar su orden.</p></div>
         <span role="status" className="magic-badge">{autosaveStatus || (dirty ? 'Cambios pendientes' : 'Borrador cargado')}</span>
       </header>
+      <nav className="pe-context-links" aria-label="Herramientas para esta sección"><Link to={`/creator-studio?project=${encodeURIComponent(projectId)}`}>← Mi ruta creativa</Link><Link to={`/dashboard/tools/content?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Proponer contenido</Link><Link to={`/dashboard/tools/teleprompter?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Grabar con teleprompter</Link></nav>
+      {notice && <p className="pe-feedback" role="status">{notice}</p>}
       <div className="pe-commandbar magic-card" style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem', flexWrap: 'wrap', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-suave)', marginBottom: '1rem' }}>
         <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-expanded={sectionsOpen} aria-controls="page-sections" onClick={() => setSectionsOpen(value => !value)}>☰ Secciones</DSButtonSecondary>
         <div className="pe-preview-toolbar"><div><DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-pressed={viewport === 'desktop'} tooltip="Revisa la página con un ancho de escritorio." onClick={() => setViewport('desktop')}>Escritorio</DSButtonSecondary><DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-pressed={viewport === 'mobile'} tooltip="Revisa la página a 360 píxeles de ancho." onClick={() => setViewport('mobile')}>Móvil</DSButtonSecondary></div></div>        <div className="tk-toolbar" aria-label="Historial de edición">

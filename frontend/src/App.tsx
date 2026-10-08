@@ -79,7 +79,8 @@ function PrivateWorkspace({ children }: { children: ReactNode }) {
     );
   }
 
-  return session ? <>{children}<FloatingPomodoro /></> : <Navigate to={`/login?next=${encodeURIComponent(nextPath)}`} replace />;
+  const commonShell = location.pathname.startsWith('/dashboard') || location.pathname === '/creator-studio' || location.pathname.startsWith('/modules/');
+  return session ? <>{commonShell ? <WorkspaceShell>{children}</WorkspaceShell> : children}<FloatingPomodoro /></> : <Navigate to={`/login?next=${encodeURIComponent(nextPath)}`} replace />;
 }
 
 function App() {
@@ -108,7 +109,7 @@ function App() {
             <Route path="/modules/courses" element={<PrivateWorkspace><CoursesWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/courses/editor" element={<PrivateWorkspace><CoursesWorkspace /></PrivateWorkspace>} />
             <Route path="/content-creator" element={<PrivateWorkspace><ContentCreator /></PrivateWorkspace>} />
-            <Route path="/creator-studio" element={<PrivateWorkspace><LegacyDashboard /></PrivateWorkspace>} />
+            <Route path="/creator-studio" element={<PrivateWorkspace><CreatorStudio /></PrivateWorkspace>} />
             
             {/* Rutas de captación de El Estudio de Nicole */}
             <Route path="/estudio" element={<LandingCaptacion />} />

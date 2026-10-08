@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { AGENTS } from '../lib/agentPersonalities';
-import { MARKETING_FLOW, ConversationStep } from '../lib/ConversationFlow';
+import { MARKETING_FLOW, type ConversationStep } from '../lib/ConversationFlow';
 import { sendForUChatMessage } from '../lib/gemini';
 
 interface PizarraItem {

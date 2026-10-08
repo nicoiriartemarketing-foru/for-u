@@ -33,3 +33,6 @@
 .world-intro h1,.area-open h2,.area-panel h2{font-weight:400}
 .pet-friend{color:#1f2937}
 .workspace-shell :focus-visible{outline-color:#374151}
+
+/* Allow compact navigation to scroll without widening the tablet grid. */
+.workspace-sidebar,.workspace-main{min-width:0}.workspace-sidebar nav{min-width:0;max-width:100%}

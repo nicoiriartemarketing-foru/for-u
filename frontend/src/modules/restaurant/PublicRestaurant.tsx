@@ -7,8 +7,6 @@ import { parsePublishedRestaurant, type PublishedRestaurant } from './publicMenu
 import './restaurant.css';
 import { usePublicModuleAnalytics } from '../usePublicModuleAnalytics';
 
-import MenuDigital from '../../components/restaurant/MenuDigital';
-import { RestaurantProvider } from '../../context/RestaurantContext';
 
 export default function PublicRestaurant() {
   const { slug } = useParams();
@@ -42,6 +40,6 @@ function PublicRestaurantSession({ slug }: { slug: string }) {
     return () => { document.title = previous; };
   }, [site]);
   return <main className="restaurant-module restaurant-public" onClickCapture={trackContact}>
-    {loading ? <p role="status">Cargando la carta…</p> : site ? <RestaurantProvider><MenuDigital /></RestaurantProvider> : <><h1>Carta no disponible</h1><p role="status">{notice}</p><DSButtonSecondary type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar</DSButtonSecondary></>}
+    {loading ? <p role="status">Cargando la carta…</p> : site ? <RestaurantMenu data={site.menu} /> : <><h1>Carta no disponible</h1><p role="status">{notice}</p><DSButtonSecondary type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar</DSButtonSecondary></>}
   </main>;
 }

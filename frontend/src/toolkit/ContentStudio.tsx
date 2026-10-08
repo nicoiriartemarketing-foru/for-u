@@ -1,3 +1,5 @@
+import { useSearchParams } from 'react-router-dom';
+import { sectionContext } from './sectionContext';
 import { Card as DSCard, Select as DSSelect, StepIndicator } from '../components/ui/DesignSystem';
 import { Textarea as DSTextarea, ButtonPrimary as DSButtonPrimary, ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import { useState } from "react";
@@ -10,11 +12,14 @@ export default function ContentStudio({
   onScript: (text: string) => void;
 }) {
   const { business, docs, save, demo, track } = useToolkit();
-  const previous = docs.content as ContentDraft | undefined;
-  const [topic, setTopic] = useState(previous?.topic ?? "");
+  const [params] = useSearchParams();
+  const section = sectionContext(docs.landing, params.get('section'));
+  const contentKey = section ? `content-section-${section.id}` : 'content';
+  const previous = docs[contentKey] as ContentDraft | undefined;
+  const [topic, setTopic] = useState(previous?.topic ?? section?.title ?? "");
   const [tone, setTone] = useState(previous?.tone ?? "Cercano");
   const [format, setFormat] = useState(previous?.format ?? "caption");
-  const [text, setText] = useState(previous?.text ?? "");
+  const [text, setText] = useState(previous?.text ?? (section ? `${section.title}\n\n${section.body}` : ""));
   const [source, setSource] = useState(previous?.source ?? "template");
   const [step, setStep] = useState(previous?.text ? 2 : 1);
   const [busy, setBusy] = useState(false);
@@ -44,7 +49,7 @@ export default function ContentStudio({
     setBusy(true);
     setNotice("");
     try {
-      await save("content", { topic, tone, format, text, source });
+      await save(contentKey, { topic, tone, format, text, source });
       setNotice("Borrador guardado.");
       setStep(3);
     } catch (e) {

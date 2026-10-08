@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Categoria, Plato, EstiloRestaurante, PedidoItem } from '../types/restaurant';
+import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import type { Categoria, Plato, EstiloRestaurante, PedidoItem } from '../types/restaurant';
 
 interface RestaurantContextType {
   categorias: Categoria[];

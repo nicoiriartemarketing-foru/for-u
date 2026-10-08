@@ -1,3 +1,5 @@
+import { useSearchParams } from 'react-router-dom';
+import { sectionContext } from './sectionContext';
 import { Card as DSCard } from '../components/ui/DesignSystem';
 import { Textarea as DSTextarea, Input as DSInput, ButtonSecondary as DSButtonSecondary, ButtonPrimary as DSButtonPrimary } from '../components/ui/DesignSystem';
 import { useEffect, useRef, useState } from "react";
@@ -16,10 +18,14 @@ export default function Teleprompter({
   onEdit: (file: File, captions: Segment[]) => void;
 }) {
   const { docs, save, track } = useToolkit();
+  const [params] = useSearchParams();
+  const section = sectionContext(docs.landing, params.get('section'));
+  const scriptKey = section ? `script-section-${section.id}` : 'script';
   const [script, setScript] = useState(
     initialScript ||
       String(
-        docs.script ??
+        docs[scriptKey] ??
+          (section ? `${section.title}\n\n${section.body}` : undefined) ??
           "Mira a la cámara.\n\nCuenta qué hace especial a tu negocio.\n\nInvita a tu comunidad a dar el siguiente paso.",
       ),
   );
@@ -196,7 +202,7 @@ export default function Teleprompter({
   }
   async function saveSettings() {
     try {
-      await save("script", script);
+      await save(scriptKey, script);
       await save("readingSpeed", speed);
       setError("Guion y velocidad guardados.");
     } catch (e) {

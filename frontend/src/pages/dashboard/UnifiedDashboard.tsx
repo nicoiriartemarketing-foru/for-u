@@ -42,7 +42,7 @@ export default function UnifiedDashboard() {
       retryId.current = id;
       await persistModuleProject(user.id, next);
       store.switchProject(id); retryId.current = null; setName('');
-      navigate(`/modules/${type}/editor?project=${encodeURIComponent(id)}${projects.length === 0 ? '&welcome=1' : ''}`);
+      navigate(`/creator-studio?project=${encodeURIComponent(id)}${projects.length === 0 ? '&welcome=1' : ''}`);
     } catch (error) { setNotice((error as Error).message); }
     finally { lock.current = false; setCreating(false); }
   }
