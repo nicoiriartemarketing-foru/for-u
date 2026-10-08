@@ -17,8 +17,10 @@ type ViewMode = 'carta' | 'categorias' | 'estilos' | 'logistica' | 'ajustes';
 export default function RestaurantAdmin() {
   const { user } = useAuth();
   const userId = user?.id;
+  const store = useActiveProjectsStore();
   const [params] = useSearchParams();
-  const projectId = params.get('project');
+  const urlProjectId = params.get('project');
+  const projectId = urlProjectId || store.activeProjectId;
   const navigate = useNavigate();
   
   const [data, setData] = useState<RestaurantData | null>(null);
@@ -31,7 +33,11 @@ export default function RestaurantAdmin() {
   const [projectName, setProjectName] = useState('Restaurante');
 
   useEffect(() => {
-    if (!userId || !projectId) return;
+    if (!userId) return;
+    if (!projectId) {
+      navigate('/dashboard?create=1', { replace: true });
+      return;
+    }
     loadModuleDocument(userId, projectId, 'restaurant').then(document => {
       const payload = document ? document.payload as RestaurantData : emptyRestaurant('Mi Restaurante');
       setData(payload);
@@ -45,7 +51,7 @@ export default function RestaurantAdmin() {
       const p = projects.find(p => p.id === projectId);
       if (p) setProjectName(p.name);
     });
-  }, [userId, projectId]);
+  }, [userId, projectId, navigate]);
 
   async function save() {
     if (!data || busy.current || pendingDraft || !userId || !projectId) return;
