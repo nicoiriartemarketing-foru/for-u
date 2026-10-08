@@ -37,6 +37,9 @@ export default function RestaurantAdmin() {
       setData(payload);
       setRevision(document?.revision ?? null);
       setDirty(false);
+    }).catch(err => {
+      console.error(err);
+      setData(emptyRestaurant('Mi Restaurante'));
     });
     loadModuleProjects(userId).then(projects => {
       const p = projects.find(p => p.id === projectId);

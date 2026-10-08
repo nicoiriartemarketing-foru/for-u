@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import UnifiedDashboard from './UnifiedDashboard';
 import ForUWorkspace from '../ForUWorkspace';
+import CreatorStudio from './CreatorStudio';
 import {
   ArrowRight,
   BookOpen,
@@ -299,7 +300,7 @@ export default function Dashboard() {
   const [params] = useSearchParams();
   if (params.get('view') === 'studio') return <LegacyDashboard />;
   if (params.get('view') === 'today') return <ForUWorkspace />;
-  return <UnifiedDashboard />;
+  return <CreatorStudio />;
 }
 
 export function LegacyDashboard() {

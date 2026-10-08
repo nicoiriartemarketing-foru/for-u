@@ -1,13 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useOnboardingProgress } from '../../hooks/useOnboardingProgress';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { useActiveProjectsStore } from '../../stores/useActiveProjectsStore';
+import { projectModuleType, moduleLabels } from '../../modules/moduleProjects';
+import { isSavedProject } from './areaModel';
+import PizarraAgent from '../../components/PizarraAgent';
 
 export default function CreatorStudio() {
   const progress = useOnboardingProgress();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const store = useActiveProjectsStore();
+  
+  const [chatOpen, setChatOpen] = React.useState(false);
+
+  useEffect(() => {
+    if (user) void store.hydrateFromSupabase(user.id);
+  }, [user?.id]);
+
+  const owned = store.cloudUserId === user?.id ? Object.values(store.projectsById) : [];
+  const projects = owned.filter(p => isSavedProject(p.id) && !p.cloudPending && projectModuleType(p));
 
   const handleCardClick = (moduleName: string) => {
-    // Navigate to the specific editor, e.g., /modules/restaurant/editor
     navigate(`/modules/${moduleName}/editor`);
   };
 
@@ -22,7 +37,7 @@ export default function CreatorStudio() {
             Vas genial, ya casi terminamos de conocerte. Tu negocio está {Math.round(progress.porcentajeTotal)}% listo para crear contenido.
           </p>
           
-          <div className="w-full max-w-2xl mx-auto h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+          <div className="w-full max-w-2xl mx-auto h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner flex">
             <div 
               className="h-full transition-all duration-1000 ease-out" 
               style={{ 
@@ -43,11 +58,11 @@ export default function CreatorStudio() {
             <div className="absolute top-4 right-4">
               {progress.marketing ? (
                 <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200 shadow-sm">
-                  ✅ Datos de Munay listos
+                  ✅ Datos de Marketing
                 </span>
               ) : (
                 <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-                  ⏳ Completa a Munay
+                  ⏳ Completar Marketing
                 </span>
               )}
             </div>
@@ -67,11 +82,11 @@ export default function CreatorStudio() {
             <div className="absolute top-4 right-4">
               {progress.finanzas ? (
                 <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200 shadow-sm">
-                  ✅ Datos de Shippo listos
+                  ✅ Datos de Finanzas
                 </span>
               ) : (
                 <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-                  ⏳ Completa a Shippo
+                  ⏳ Completar Finanzas
                 </span>
               )}
             </div>
@@ -91,11 +106,11 @@ export default function CreatorStudio() {
             <div className="absolute top-4 right-4">
               {progress.operaciones ? (
                 <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200 shadow-sm">
-                  ✅ Datos de Emma listos
+                  ✅ Datos de Operaciones
                 </span>
               ) : (
                 <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-                  ⏳ Completa a Emma
+                  ⏳ Completar Operaciones
                 </span>
               )}
             </div>
@@ -115,11 +130,11 @@ export default function CreatorStudio() {
             <div className="absolute top-4 right-4">
               {progress.logistica ? (
                 <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200 shadow-sm">
-                  ✅ Datos de Oliver listos
+                  ✅ Datos de Logística
                 </span>
               ) : (
                 <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-                  ⏳ Completa a Oliver
+                  ⏳ Completar Logística
                 </span>
               )}
             </div>
@@ -131,7 +146,38 @@ export default function CreatorStudio() {
           </div>
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-16 bg-white rounded-2xl p-8 border border-gray-100 shadow-sm max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--color-texto)', fontFamily: 'var(--font-titulos)' }}>Mis Proyectos</h2>
+            <button 
+              onClick={() => navigate('/dashboard?create=1')}
+              className="px-4 py-2 text-sm font-bold rounded-full bg-gray-50 hover:bg-gray-100 transition border border-gray-200 text-gray-700"
+            >
+              + Nuevo Proyecto
+            </button>
+          </div>
+          
+          {projects.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {projects.map(p => (
+                <div key={p.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-gray-300 transition group cursor-pointer" onClick={() => {
+                  store.switchProject(p.id);
+                  navigate(`/modules/${projectModuleType(p)}/editor?project=${encodeURIComponent(p.id)}`);
+                }}>
+                  <div>
+                    <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition">{p.name}</h4>
+                    <span className="text-xs text-gray-500 uppercase font-black tracking-wide">{moduleLabels[projectModuleType(p)!]}</span>
+                  </div>
+                  <span className="material-symbols-outlined text-gray-400 group-hover:text-blue-600 transition">arrow_forward</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-6">No tienes proyectos activos aún. ¡Crea uno para empezar!</p>
+          )}
+        </div>
+
+        <div className="mt-16 text-center border-t border-gray-100 pt-12">
           <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-texto)', fontFamily: 'var(--font-titulos)' }}>Pasos a seguir</h2>
           <div className="flex justify-center gap-4 flex-wrap">
             <button 
@@ -142,15 +188,23 @@ export default function CreatorStudio() {
               Entrar al Creator Studio
             </button>
             <button 
-              onClick={() => navigate('/dashboard/settings')}
+              onClick={() => setChatOpen(true)}
               className="magic-button magic-button-soft px-8 py-4 text-lg rounded-full"
             >
-              <span className="material-symbols-outlined text-[24px]">settings</span>
-              Configuración general
+              <span className="material-symbols-outlined text-[24px]">chat_spark</span>
+              Chat de IA Unificado
             </button>
           </div>
         </div>
       </div>
+      {chatOpen && (
+        <PizarraAgent 
+          area="marketing" 
+          userName={user?.user_metadata?.display_name || "Emprendedora"} 
+          isOpen={chatOpen} 
+          onClose={() => setChatOpen(false)} 
+        />
+      )}
     </div>
   );
 }

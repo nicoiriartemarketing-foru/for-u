@@ -129,7 +129,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/register-wizard" element={<Navigate to="/register" replace />} />
-            <Route path="/dashboard" element={<PrivateWorkspace><CreatorStudio /></PrivateWorkspace>} />
+            <Route path="/dashboard" element={<PrivateWorkspace><Dashboard /></PrivateWorkspace>} />
             <Route path="/dashboard/world" element={<PrivateWorkspace><WorldPage /></PrivateWorkspace>} />
             <Route path="/dashboard/settings" element={<PrivateWorkspace><WorkspaceSettings /></PrivateWorkspace>} />
             <Route path="/dashboard/tools/:tool" element={<PrivateWorkspace><DashboardTool /></PrivateWorkspace>} />
