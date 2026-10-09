@@ -1,3 +1,5 @@
+import { catalogSnapshot } from './catalogSnapshot';
+import { moduleLabels, type ModuleType } from '../modules/moduleProjects';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Select as DSSelect } from '../components/ui/DesignSystem';
 import { useUnsavedNavigation } from "../lib/useUnsavedNavigation";
@@ -34,6 +36,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   const [settingsOpen, setSettingsOpen] = useState(requestedStep === "identity" || requestedStep === "publish");
   const [propertiesOpen, setPropertiesOpen] = useState(requestedStep === "identity" || requestedStep === "offer");
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
+  const moduleType = business.moduleType && business.moduleType in moduleLabels ? business.moduleType as ModuleType : null;
   const industry = editorIndustry(business.moduleType || business.industry);
   const selectedBlock = draft.blocks.find(block => block.id === selectedId);
   const frame = useRef<HTMLIFrameElement>(null);
@@ -192,7 +195,14 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
       if (draft.calendly && !safeHttps(draft.calendly, "calendly.com"))
         throw new Error("Usa un enlace HTTPS de calendly.com.");
       if (draft.menuItems?.some(item => !item.name.trim() || !Number.isFinite(item.price) || item.price < 0 || item.price > 1000000)) throw new Error("Revisa los nombres y precios de tus productos.");
-      const snapshot = { ...draft, published: true };
+      let offers = draft.menuItems;
+      if (draft.catalogSource === 'module') {
+        if (!moduleType) throw new Error('No se pudo identificar el rubro de este proyecto.');
+        const result = await supabase.from('toolkit_documents').select('payload').eq('user_id', userId).eq('project_id', projectId).eq('kind', `module-${moduleType}`).maybeSingle();
+        if (result.error) throw new Error('No pudimos comprobar el catálogo guardado. Reintenta; tu página pública no cambió.');
+        offers = catalogSnapshot(moduleType, result.data?.payload);
+      }
+      const snapshot = { ...draft, menuItems: offers, published: true };
       await save("landing", draft);
       const { error } = await supabase.from("toolkit_sites").upsert(
         {
@@ -373,6 +383,14 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
           Agregar sección
         </DSButtonSecondary>
       </DSCard>
+      {moduleType && <details className="pe-catalog-panel"><summary>Oferta de tu negocio {draft.catalogSource === 'module' ? '· vinculada' : ''}</summary><p>{draft.catalogSource === 'module' ? 'Al publicar consultaremos los precios y la disponibilidad guardados. La página pública solo cambia cuando publicas.' : 'Puedes usar el catálogo de tu negocio en esta página. Primero revisa los cambios en la vista previa.'}</p><Link to={`/modules/${moduleType}/editor?project=${encodeURIComponent(projectId)}`}>Editar mi oferta</Link><DSButtonSecondary type="button" onClick={() => {
+        try {
+          const items = catalogSnapshot(moduleType, docs[`module-${moduleType}`]);
+          if (draft.menuItems?.length && draft.catalogSource !== 'module' && !window.confirm('¿Reemplazar los productos de esta landing por el catálogo guardado? Puedes deshacer antes de publicar.')) return;
+          update({ catalogSource: 'module', menuItems: items });
+          setNotice(`${items.length} ofertas del catálogo en la vista previa. Guarda o publica cuando estén listas.`);
+        } catch (error) { setNotice((error as Error).message); }
+      }}>{draft.catalogSource === 'module' ? 'Actualizar vista previa del catálogo' : 'Usar mi catálogo guardado'}</DSButtonSecondary></details>}
       <section className="tk-editor-preview tk-stack magic-card" style={{ padding: '1rem', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-magica)' }}>
         <p style={{ color: 'var(--color-texto-suave)', fontSize: '0.9rem', textAlign: 'center' }}>Haz clic sobre cualquier título o párrafo para editarlo.</p>
         <div className={`pe-canvas pe-canvas-${viewport}`}><iframe

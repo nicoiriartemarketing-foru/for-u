@@ -42,6 +42,7 @@ export type CalendarEntry = {
 };
 export type LandingBlock = { id: string; title: string; body: string };
 export type LandingDraft = {
+  catalogSource?: "module";
   menuItems?: { id: string; name: string; price: number }[];
   gallery?: { role: string; url: string; alt: string }[];
   heroImage?: string;

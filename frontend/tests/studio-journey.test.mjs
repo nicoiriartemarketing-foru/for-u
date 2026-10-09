@@ -15,3 +15,16 @@ test('publication comes from public-site state, not a stale draft flag', () => {
   assert.equal(studioJourney('restaurant', draft, false)[3].ready, false);
   assert.equal(studioJourney('restaurant', draft, true)[3].ready, true);
 });
+
+test('placeholder sections do not claim that the offer is ready', () => {
+ const draft = {headline:'Tu negocio',slug:'negocio',blocks:[{id:'about',title:'Historia',body:'Cuenta tu historia'}]};
+ assert.equal(studioJourney('restaurant',draft,false)[1].ready,false);
+ assert.equal(studioJourney('restaurant',draft,false,{dishes:[{id:'a',name:'Alfajor',price:5,available:true}]} )[1].ready,true);
+});
+test('catalog mapping preserves each industry and excludes unavailable or invalid offers', async () => {
+ const {studioCatalog} = await import('../src/pages/dashboard/studioJourney.ts');
+ for (const [type,key] of Object.entries({restaurant:'dishes',ecommerce:'products',hospitality:'rooms',tourism:'tours',courses:'courses'})) {
+  const item={id:'real',name:'Oferta',price:0};
+  assert.deepEqual(studioCatalog(type,{[key]:[item,{...item,id:'bad',price:-1},{...item,id:'hidden',available:false}]}),[item]);
+ }
+});

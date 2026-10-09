@@ -54,3 +54,29 @@ Actualizado: 2026-10-07. Ningún requisito se considera verificado por abrir una
 - Studio cargado con cuatro pasos: scrollWidth == innerWidth en 360, 767, 769 y 1440 px; corregido el desbordamiento de tablet.
 - La sesión y los datos reales se recuperan automáticamente al cargar la compilación configurada. No hizo falta cambiar credenciales.
 - Continúan pendientes la validación completa de cada rubro, edición persistente de esta entrega, pedidos/pagos y los demás requisitos del registro.
+
+## 2026-10-09: conexión del editor Restaurante
+- Detectado: RestaurantAdmin carga `module-restaurant` pero EditorCarta usa el contexto de ejemplo independiente; los cambios de platos no llegan al documento guardado.
+- RestaurantWorkspace vuelve a utilizar ModuleWorkspace con RestaurantEditor, RestaurantDashboard y RestaurantPublishing, compartiendo un único documento, revisión y protección de formularios. Los componentes visuales anteriores se conservan.
+- Añadida validación del documento: datos incompatibles muestran error sin sustituirlos por un restaurante vacío.
+- Validación funcional de guardado/recarga: pendiente.
+
+### Evidencia del recorrido Restaurante — 2026-10-09
+- TypeScript y build pasan; 89/89 pruebas, incluidas validación de documento y progreso desde catálogo por rubro.
+- En QA Restaurante MVP se cargó la demo (el catálogo estaba vacío), se guardó en Supabase y se recargó: permanecen clásico S/5, chocolate S/7 y coco S/6.
+- Se editó chocolate a S/7.50, se aplicó el formulario, se guardó y se recargó: permanece S/7.50, sin duplicar el producto. Estos son datos QA; no se publicó el menú ni se cambiaron proyectos comerciales.
+- El paso Presenta tu menú abre el editor correcto conservando el UUID. Ya no cuenta los textos de plantilla como oferta completa.
+- Pendiente: unir explícitamente el catálogo del módulo con la landing visual; el catálogo guardado y `landing.menuItems` siguen siendo documentos distintos y no se declara resuelto.
+
+### Catálogo vinculado a la landing
+- Añadido un vínculo explícito en el editor visual: usar el catálogo guardado del proyecto, conservando el contenido anterior hasta que la usuaria elija reemplazarlo.
+- El borrador conserva `catalogSource: module`. Publicar vuelve a consultar el catálogo guardado de la cuenta/proyecto y usa solo ID, nombre y precio; excluye datos de clientes, stock y costos.
+- Si falla la consulta o el catálogo es inválido, la publicación no cambia. Límite actual explícito: 30 ofertas en landing, sin truncado silencioso.
+- Pendiente de comprobar en navegador: importar, guardar, recargar y publicar la landing con el catálogo vinculado.
+
+### Prueba integrada de catálogo y landing
+- 91/91 pruebas, TypeScript y build (7.35 s) pasan tras conectar el catálogo.
+- QA Restaurante MVP: se vinculó el catálogo (3 ofertas), se guardó, se recargó y se comprobó que la vinculación y los alfajores siguen en el iframe.
+- Se publicó exclusivamente la landing QA `/s/qa-restaurante-mvp`; la página pública muestra clásico S/5.00, chocolate S/7.50 y coco S/6.00. No se alteraron textos previos ni datos de contacto.
+- Pendiente detectado al revisar esa página: el componente público de reservas devuelve «No se pudo cargar la disponibilidad». No se considera resuelto por la publicación del catálogo; requiere revisar RPC/configuración de reservas y cuándo debe mostrarse.
+- La conexión de catálogo está verificada para Restaurante; los demás rubros cuentan con pruebas del adaptador, pero todavía requieren recorrido real de publicación.

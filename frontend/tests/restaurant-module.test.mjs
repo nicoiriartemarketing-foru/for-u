@@ -51,3 +51,11 @@ test('WhatsApp orders use encoded text and reject unavailable dishes', () => {
   assert.throws(() => whatsappOrderUrl('',[{dish,quantity:1}]));
   assert.throws(() => whatsappOrderUrl('51999888777',[{dish:{...dish,available:false},quantity:1}]));
 });
+
+test('restaurant document keeps the saved catalog and rejects malformed cloud data', async () => {
+  const { parseRestaurantDocument } = await import('../src/modules/restaurant/restaurantDocument.ts');
+  const saved = saveDish(emptyRestaurant('Alfajores'), {id:'alfajor',name:'Cacao',price:6,description:'',image:'',category:'Alfajores',available:true});
+  assert.equal(parseRestaurantDocument(saved), saved);
+  assert.equal(parseRestaurantDocument(saved).dishes[0].price, 6);
+  for (const invalid of [{}, {...saved,dishes:[null]}, {...saved,inventory:[{id:'a',stock:-1}]}, {...saved,recipes:[null]}]) assert.throws(()=>parseRestaurantDocument(invalid), /no se han sobrescrito/);
+});

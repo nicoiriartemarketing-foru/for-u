@@ -116,7 +116,7 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
       </MediaScope.Provider>
       </ModuleDraftContext.Provider>
     </fieldset>
-    {config.type === 'restaurant' && <div className="restaurant-save-step"><DSButtonPrimary disabled={!dirty || saving || pendingDraft} onClick={save}>{saving ? 'Guardando…' : '2. Guardar mi menú'}</DSButtonPrimary><p>{dirty ? 'Guarda antes de publicar para conservar tus productos.' : 'Tus cambios están guardados. Puedes publicar el menú.'}</p></div>}
+    {config.type === 'restaurant' && <div className="restaurant-save-step"><DSButtonPrimary disabled={!dirty || saving || pendingDraft} onClick={save}>{saving ? 'Guardando…' : '2. Guardar mi menú'}</DSButtonPrimary><p>{pendingDraft ? 'Aplica o cancela el formulario abierto antes de guardar y publicar.' : dirty ? 'Guarda antes de publicar para conservar tus productos.' : 'Tus cambios están guardados. Puedes publicar el menú.'}</p></div>}
     {Publication && <Publication data={data} userId={userId} project={project} disabled={dirty || pendingDraft || saving} />}
   </main>;
 }
