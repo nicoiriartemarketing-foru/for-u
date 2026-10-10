@@ -80,3 +80,10 @@ Actualizado: 2026-10-07. Ningún requisito se considera verificado por abrir una
 - Se publicó exclusivamente la landing QA `/s/qa-restaurante-mvp`; la página pública muestra clásico S/5.00, chocolate S/7.50 y coco S/6.00. No se alteraron textos previos ni datos de contacto.
 - Pendiente detectado al revisar esa página: el componente público de reservas devuelve «No se pudo cargar la disponibilidad». No se considera resuelto por la publicación del catálogo; requiere revisar RPC/configuración de reservas y cuándo debe mostrarse.
 - La conexión de catálogo está verificada para Restaurante; los demás rubros cuentan con pruebas del adaptador, pero todavía requieren recorrido real de publicación.
+
+## 10 de octubre — contenedor visual claro
+- Implementado: sidebar blanca, navegación activa con borde iridiscente, cabecera sticky translúcida con ubicación y selector, fondo gris suave y botones de marca con texto oscuro para contraste. Tokens encapsulados en el workspace para respetar el diseño de páginas públicas.
+- Creator Studio reutiliza magic-card y magic-button-primary; cuatro iconos de pasos y un icono de orientación activo. Se eliminaron adornos repetidos, sin cambiar estados ni datos del proyecto.
+- Verificación local: TypeScript, 91/91 pruebas y build pasan. En navegador, sidebar computada blanca y gradiente de acción correcto; Studio sin desbordamiento a 360/1440 px y ambos lados del breakpoint (767/769). El zoom actual del navegador impide medir 768 exactos con el control entero de viewport; no se afirma esa comprobación exacta.
+- Acción comprobada: menú móvil → Calendario conserva UUID, cierra menú y actualiza ubicación; regreso a Mi proyecto conserva contexto.
+- Alcance pendiente: revisión completa del resto de herramientas, tipografía y estados visuales; reservas públicas, pedidos, perfiles, pagos y demás verificaciones del plan siguen pendientes. Sin despliegue Hostinger en esta entrega.

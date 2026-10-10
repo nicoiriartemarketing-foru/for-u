@@ -91,3 +91,6 @@ Verificaremos:
 - Conexiones: distinguir consulta fallida, desconectada, verificada y vencida; reintentos y permisos reales.
 - Métricas: visita/clic público hasta resumen privado; cero válido distinto de error; clic no equivale a venta.
 - Comprobar contraste, teclado, movimiento reducido, recuperación de borradores y conflictos entre pestañas.
+
+## Actualización visual vigente — 10 de octubre
+Sidebar blanca, cabecera translúcida con breadcrumbs y selector de proyecto, contenido gris #F4F4F5. Unificar con tokens FOR U: dorado #fbbf24, rosa #f472b6, violeta #a78bfa y cyan #22d3ee; texto #0A0A0A y secundario #6B6B6B. Reutilizar magic-card y botones pill. Reducir iconografía decorativa y acciones principales; conservar navegación, proyecto, guardado y datos. Esta actualización sustituye la sidebar oscura anterior, no cancela reservas, pedidos, pagos ni verificaciones pendientes.
