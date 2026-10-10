@@ -42,6 +42,8 @@ export function ReservationForm({ slug }: { slug: string }) {
   const request = useRef(crypto.randomUUID());
   useEffect(() => {
     let active = true;
+    setSlots([]); setSelected(""); setReceipt(""); setNotice(""); setLoadError(""); setLoading(true);
+    request.current = crypto.randomUUID();
     const refresh = async () => {
       if (!supabase) {
         if (active) {
@@ -56,6 +58,7 @@ export function ReservationForm({ slug }: { slug: string }) {
       if (!active) return;
       setLoading(false);
       if (error) {
+        setSlots([]);
         setLoadError("No se pudo cargar la disponibilidad. Puedes reintentar o contactar al negocio.");
         setSelected("");
       } else {
@@ -248,50 +251,65 @@ export function AvailabilityManager() {
   const [capacity, setCapacity] = useState(1);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [loading, setLoading] = useState(!demo);
+  const [loaded, setLoaded] = useState(demo);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    if (!supabase || demo) return;
+    setSiteId(""); setSlots([]); setReservations([]); setNotice(""); setLoadError(""); setLoaded(demo);
+    if (demo) { setLoading(false); return; }
+    if (!supabase) { setLoading(false); setLoadError("Supabase no está configurado. No se pudo consultar la agenda."); return; }
+    setLoading(true);
     let active = true;
     const client = supabase;
     const refresh = async () => {
-      const site = await client
-        .from("toolkit_sites")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("project_id", projectId)
-        .maybeSingle();
-      if (!active) return;
-      if (site.error) {
-        setNotice("No se pudo consultar la agenda.");
-        return;
-      }
-      if (!site.data) {
-        setNotice("Publica tu página para abrir horarios de reserva.");
-        return;
-      }
-      setSiteId(site.data.id);
-      const [available, booked] = await Promise.all([
-        client
-          .from("reservation_slots")
-          .select("*")
+      try {
+        const site = await client
+          .from("toolkit_sites")
+          .select("id")
           .eq("user_id", userId)
-          .eq("site_id", site.data.id)
-          .gt("starts_at", new Date().toISOString())
-          .order("starts_at")
-          .limit(200),
-        client
-          .from("reservations")
-          .select("*,reservation_notifications(status)")
-          .eq("user_id", userId)
-          .eq("site_id", site.data.id)
-          .order("created_at", { ascending: false })
-          .limit(100),
-      ]);
-      if (!active) return;
-      if (available.error || booked.error)
-        setNotice("No se pudo actualizar la agenda.");
-      else {
-        setSlots(available.data ?? []);
-        setReservations(booked.data ?? []);
+          .eq("project_id", projectId)
+          .maybeSingle();
+        if (!active) return;
+        if (site.error) {
+          setLoadError("No se pudo consultar la agenda. Reintenta antes de hacer cambios.");
+          return;
+        }
+        if (!site.data) {
+          setSiteId(""); setSlots([]); setReservations([]); setLoaded(true); setLoadError("");
+          setNotice("Guarda tu página para preparar horarios; estarán disponibles al publicarla.");
+          return;
+        }
+        setSiteId(site.data.id);
+        const [available, booked] = await Promise.all([
+          client
+            .from("reservation_slots")
+            .select("*")
+            .eq("user_id", userId)
+            .eq("site_id", site.data.id)
+            .gt("starts_at", new Date().toISOString())
+            .order("starts_at")
+            .limit(200),
+          client
+            .from("reservations")
+            .select("*,reservation_notifications(status)")
+            .eq("user_id", userId)
+            .eq("site_id", site.data.id)
+            .order("created_at", { ascending: false })
+            .limit(100),
+        ]);
+        if (!active) return;
+        if (available.error || booked.error)
+          setLoadError("No se pudo actualizar la agenda. Los datos anteriores pueden estar desactualizados.");
+        else {
+          setSlots(available.data ?? []);
+          setReservations(booked.data ?? []);
+          setLoadError(""); setLoaded(true);
+        }
+      } catch {
+        if (active) setLoadError("No se pudo conectar con la agenda. Revisa tu conexión y reintenta.");
+      } finally {
+        if (active) setLoading(false);
       }
     };
     void refresh();
@@ -302,20 +320,25 @@ export function AvailabilityManager() {
       active = false;
       clearInterval(timer);
     };
-  }, [demo, projectId, userId]);
+  }, [demo, projectId, userId, attempt]);
   return (
     <DSCard as="section" className="tk-card tk-stack">
       <h2>Tu disponibilidad real</h2>
       <p>Crea los horarios que quieres ofrecer. Zona horaria: {zone()}.</p>
+      {loading && <p role="status">Consultando tu agenda…</p>}
+      {loadError && <div role="alert"><p>{loadError}</p><DSButtonSecondary type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar agenda</DSButtonSecondary></div>}
       <form
         className="tk-toolbar"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (busy || !start) return;
+          if (busy || loading || loadError || (!demo && !siteId) || !start) return;
           const from = new Date(start);
-          if (from.getTime() <= Date.now()) {
+          if (!Number.isFinite(from.getTime()) || from.getTime() <= Date.now()) {
             setNotice("Elige un horario futuro.");
             return;
+          }
+          if (!Number.isInteger(minutes) || minutes < 15 || minutes > 480 || minutes % 15 !== 0 || !Number.isInteger(capacity) || capacity < 1 || capacity > 100) {
+            setNotice("Revisa la duración (15–480 minutos) y los cupos (1–100)."); return;
           }
           setBusy(true);
           try {
@@ -389,7 +412,7 @@ export function AvailabilityManager() {
             onChange={(e) => setCapacity(Number(e.target.value))}
           />
         </label>
-        <DSButtonSecondary disabled={busy}>Abrir horario</DSButtonSecondary>
+        <DSButtonSecondary disabled={busy || loading || Boolean(loadError) || (!demo && !siteId)}>Abrir horario</DSButtonSecondary>
       </form>
       <div className="tk-stack">
         {slots.map((slot) => (
@@ -403,7 +426,7 @@ export function AvailabilityManager() {
               </p>
             </div>
             <DSButtonSecondary
-              disabled={busy}
+              disabled={busy || loading || Boolean(loadError)}
               onClick={async () => {
                 setBusy(true);
                 const enabled = !slot.enabled;
@@ -431,7 +454,7 @@ export function AvailabilityManager() {
         ))}
       </div>
       <h3>Reservas confirmadas</h3>
-      {!reservations.length && <p>No hay reservas confirmadas todavía.</p>}
+      {loaded && !loading && !loadError && !reservations.length && <p>No hay reservas confirmadas todavía.</p>}
       {reservations.map((reservation) => {
         const mail = Array.isArray(reservation.reservation_notifications)
           ? reservation.reservation_notifications[0]
@@ -452,7 +475,7 @@ export function AvailabilityManager() {
                 Estado
                 <select
                   value={reservation.status}
-                  disabled={busy}
+                  disabled={busy || loading || Boolean(loadError)}
                   onChange={async (e) => {
                     if (!supabase) return;
                     const status = e.target.value;
@@ -477,7 +500,7 @@ export function AvailabilityManager() {
               </label>
               {mail?.status !== "sent" && (
                 <DSButtonSecondary
-                  disabled={busy}
+                  disabled={busy || loading || Boolean(loadError)}
                   onClick={async () => {
                     if (!supabase) return;
                     setBusy(true);

@@ -87,3 +87,11 @@ Actualizado: 2026-10-07. Ningún requisito se considera verificado por abrir una
 - Verificación local: TypeScript, 91/91 pruebas y build pasan. En navegador, sidebar computada blanca y gradiente de acción correcto; Studio sin desbordamiento a 360/1440 px y ambos lados del breakpoint (767/769). El zoom actual del navegador impide medir 768 exactos con el control entero de viewport; no se afirma esa comprobación exacta.
 - Acción comprobada: menú móvil → Calendario conserva UUID, cierra menú y actualiza ubicación; regreso a Mi proyecto conserva contexto.
 - Alcance pendiente: revisión completa del resto de herramientas, tipografía y estados visuales; reservas públicas, pedidos, perfiles, pagos y demás verificaciones del plan siguen pendientes. Sin despliegue Hostinger en esta entrega.
+
+## 10 de octubre — diagnóstico de reservas
+- Evidencia remota de solo lectura: `public_reservation_slots(site_slug)` responde HTTP 404 / PGRST202: la función no está en el schema cache. No se afirma que exista ni que sea solo un problema de permisos.
+- Agenda del negocio: se separaron carga, error y vacío válido, con reintento; no muestra cero reservas ante error, bloquea mutaciones con consulta fallida y limpia errores de carga tras éxito. Cambiar proyecto reinicia los datos visibles. Validación de fecha/cupos/duración antes de insertar.
+- Disponibilidad pública: limpia horarios y selección al cambiar slug o fallar; sigue mostrando el error real, sin fabricar horarios.
+- Comprobado con la cuenta QA: error real visible, reintento operativo, cero mensajes falsos de agenda vacía y botón Abrir horario deshabilitado. TypeScript/build pasan antes del ajuste final de breadcrumbs; se repiten tras ese ajuste.
+- Próxima acción para servidor: ejecutar `supabase/diagnostics/reservations_schema.sql` (solo lectura) y comparar columnas, restricciones, RPC y políticas reales antes de preparar reparación. No se ejecutó la migración antigua 13 ni se cambió ningún permiso remoto. La confirmación de reservas y el correo permanecen sin verificar.
+- Validación final de esta entrega: TypeScript y build vuelven a pasar con breadcrumbs corregidos para reservas y herramientas. Las 91 pruebas anteriores corresponden a la entrega visual; no se usan como prueba del backend remoto de reservas.
