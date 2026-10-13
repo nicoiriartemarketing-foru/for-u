@@ -220,6 +220,7 @@ type ActiveProjectsState = {
   whatsappEnabled: boolean;
   cloudUserId: string | null;
   isCloudSyncing: boolean;
+  projectLoadError: string;
   hydrateFromSupabase: (userId: string) => Promise<void>;
   clearCloudUser: () => void;
   updateWhatsappSettings: (input: { whatsappNumber: string; whatsappEnabled: boolean }) => Promise<boolean>;
@@ -1149,6 +1150,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
       whatsappEnabled: false,
       cloudUserId: null,
       isCloudSyncing: false,
+      projectLoadError: '',
 
       hydrateFromSupabase: async (userId) => {
         // Never import a previous account's persisted workspace into another tenant.
@@ -1156,11 +1158,11 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           get().resetWorkspace();
         }
         if (!supabase) {
-          set({ cloudUserId: userId, isCloudSyncing: false });
+          set({ cloudUserId: userId, isCloudSyncing: false, projectLoadError: 'Supabase no está configurado. No se pudieron consultar tus proyectos.' });
           return;
         }
 
-        set({ cloudUserId: userId, isCloudSyncing: true });
+        set({ cloudUserId: userId, isCloudSyncing: true, projectLoadError: '' });
 
         const [{ data: profileRow }, { data: projectRows, error: projectsError }] = await Promise.all([
           supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
@@ -1175,7 +1177,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
 
         if (projectsError) {
           console.warn('No se pudieron cargar los proyectos:', projectsError.message);
-          set({ isCloudSyncing: false });
+          set({ isCloudSyncing: false, projectLoadError: `No se pudieron cargar tus proyectos: ${projectsError.message}` });
           return;
         }
 
@@ -1192,6 +1194,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           set({
             cloudUserId: userId,
             isCloudSyncing: false,
+          projectLoadError: '',
             userPlan: profilePlan,
             maxProjects: profilePlanConfig.maxProjects,
             maxActionsPerMonth: profilePlanConfig.maxActionsPerMonth,
@@ -1312,6 +1315,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           focusedBranch: null,
           cloudUserId: userId,
           isCloudSyncing: false,
+          projectLoadError: '',
           userPlan: profilePlan,
           maxProjects: profilePlanConfig.maxProjects,
           maxActionsPerMonth: profilePlanConfig.maxActionsPerMonth,
@@ -2733,6 +2737,7 @@ const createActiveProjectsState = (set: any, get: any): ActiveProjectsState => (
           whatsappEnabled: false,
           cloudUserId: null,
           isCloudSyncing: false,
+          projectLoadError: '',
         });
       },
 });
@@ -2793,6 +2798,7 @@ export const useActiveProjectsStore = create<ActiveProjectsState>()(
           whatsappEnabled: state.whatsappEnabled ?? false,
           cloudUserId: state.cloudUserId ?? null,
           isCloudSyncing: false,
+          projectLoadError: '',
         };
       },
     },

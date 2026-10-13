@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import UnifiedDashboard from './UnifiedDashboard';
 import ForUWorkspace from '../ForUWorkspace';
-import CreatorStudio from './CreatorStudio';
 import {
   ArrowRight,
   BookOpen,
@@ -299,8 +298,8 @@ function loadCustomCampaignTasks(): CampaignTask[] {
 export default function Dashboard() {
   const [params] = useSearchParams();
   if (params.get('view') === 'studio') return <LegacyDashboard />;
-  if (params.get('view') === 'today') return <ForUWorkspace />;
-  return <CreatorStudio />;
+  if (params.get('view') === 'legacy-today') return <ForUWorkspace />;
+  return <UnifiedDashboard />;
 }
 
 export function LegacyDashboard() {

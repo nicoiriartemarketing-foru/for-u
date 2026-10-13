@@ -1,3 +1,41 @@
+# FOR U: proyectos con propósito, rutas por rubro y páginas conectadas
+
+## Plan vigente — aprobado el 13 de octubre de 2026
+
+Este plan sustituye las decisiones contradictorias del historial conservado abajo. Se ejecuta **una entrega por instrucción**; esta instrucción autoriza la entrega 1. No se declara terminado el objetivo completo mientras queden entregas pendientes.
+
+FOR U organiza proyectos con identidad propia. El rubro principal determina preguntas, herramientas y pasos; las páginas podrán mostrar ofertas publicadas de otros proyectos mediante widgets autorizados.
+
+- Studio4U: café, alfajores y captación presencial con asesoría gratuita de 15 minutos en el Valle Sagrado.
+- Marketing4U: servicios de marketing a distancia, con su propia propuesta y página.
+- Ironic: entrenamiento y asesorías; posteriormente productos educativos.
+- Finca Intiquilla: presentación del lugar y sus espacios, incluyendo Studio4U.
+- Puy: proyectos especializados de escalada, hospedaje o experiencias que pueden presentarse juntos.
+
+Decisiones sustituidas: el inicio general muestra proyectos y prioridades, sin exigir landing; Creator Studio es el espacio creativo dentro del proyecto; las áreas abren tareas y herramientas, no el agente; el rubro no impide mostrar widgets de otras ofertas. Los widgets mostrarán la última **publicación** fuente, nunca su borrador.
+
+## Entregas y aceptación
+
+1. **Mi espacio de trabajo y enfoque:** proyectos con estado y continuar; Hoy con hasta tres referencias a tareas existentes de cualquier proyecto; cuatro áreas en modal; gestión antes de crear página; protección de borradores y errores. Aceptación: crear tarea, elegirla para Hoy, abrir herramienta, cambiar proyecto y recargar sin perder datos ni afirmar guardados fallidos.
+2. **Mi propuesta y ruta específica:** cliente, necesidad, valor, ofertas, condiciones y CTA en pasos breves; preguntas por rubro, incluida una nueva ruta de servicios; ofertas vinculadas al catálogo existente. Aceptación: propuestas diferenciadas de Studio4U, Marketing4U y hospedaje persistentes.
+3. **Propuesta a página pública:** plantilla editable y catálogo completo (fotos, descripciones, precios, presentaciones y extras), historial, móvil y publicación; cambios de propuesta señalan revisión sin sobrescribir ediciones. Aceptación: recorrido completo hasta URL pública. **Primer hito utilizable: entregas 1–3 desplegadas y verificadas en Hostinger.**
+4. **Mi perfil y piezas:** foto, nombre, bio, enlace, destacados y tres publicaciones principales antes de contenido orgánico; piezas con objetivo, texto, diseño, guion, tomas, archivos, fecha y estado; creador, biblioteca, calendario y teleprompter conectados. No afirmar cambios en Instagram sin integración.
+5. **Widgets entre proyectos:** seleccionar fuente y secciones propias o compartidas autorizadas, ordenar y publicar; actualización desde última publicación; revocación con estado discreto y aviso; sin ciclos ni widgets anidados; autorización y campos públicos validados en servidor.
+
+Después, en orden: gestión fiable (Calendario, reservas, conexiones y métricas); pedidos/clientes con cálculo servidor, mesa/recojo/delivery, invitado y perfil opcional; Mercado Pago por negocio, cuotas reales de nube y Meta autorizado (una integración por entrega); mundo, barco, mascotas, juego, onboarding, Pomodoro y Pro. Los agentes acompañan, sin reemplazar resultados guardados.
+
+## Datos y protecciones
+
+Conservar UUID, URLs, publicaciones, catálogos, tareas, nodos antiguos y borradores. Formatos nuevos versionados, sin conversión automática ni plantillas que sobrescriban documentos antiguos. Separar borrador/publicación y cuenta/proyecto; mantener revisiones y conflictos entre pestañas. Comparar SQL con esquema remoto antes de aplicar cambios; no ejecutar migraciones antiguas basadas en IDs de texto.
+
+Datos previstos: propuesta vinculada a identificadores del catálogo; preferencias de enfoque por usuario (referencias a tareas y último trabajo); perfil social y piezas con referencias a archivos/guiones; rubro servicios compatible; bloque de referencia a secciones y lectura pública validada en servidor. Reutilizar toolkit_documents privado donde permisos/esquema lo permitan.
+
+Mantener Vite 4, Tailwind 3 y Node 18/20. Por entrega: persistencia, cuentas/proyectos, red/reintento/conflicto, conservación de datos, 360/768/1440 px, TypeScript, build, pruebas relevantes, commit revisable y registro. Distinguir implementación, verificación local y despliegue. Sol Medio para interfaz; Sol Alto para persistencia/permisos/publicación; revisión Astra solo ante problema concreto.
+
+---
+
+## Historial anterior (decisiones contradictorias sustituidas por el plan vigente)
+
 # FOR U: Creator Studio creativo y contextual
 
 ## Experiencia principal

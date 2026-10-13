@@ -1,6 +1,24 @@
 # FOR U: registro de entrega
 
-Actualizado: 2026-10-07. Ningún requisito se considera verificado por abrir una pantalla o compilar.
+Registro consolidado: 2026-10-13. La tabla histórica de octubre 7 se conserva abajo; prevalece este resumen vigente. Ningún requisito se considera verificado por abrir una pantalla o compilar.
+
+## Estado vigente — 13 de octubre
+
+| Entrega | Estado | Evidencia y siguiente acción |
+|---|---|---|
+| 1. Espacio de trabajo y Hoy | en curso | Implementado dashboard general, Hoy por referencias, áreas en modal y gestión sin landing. Recorrido QA real y conflicto entre pestañas comprobados; faltan 768 exactos, red controlada y segunda cuenta. Ver evidencia del 13 de octubre. |
+| 2. Propuesta y servicios | pendiente | No existe flujo completo; catálogo por rubro reutilizable. Añadir después de cerrar entrega 1. |
+| 3. Propuesta a página | pendiente | Editor amplio y catálogo Restaurante vinculados, publicación QA comprobada (octubre 9); vínculo limita ID/nombre/precio. Falta propuesta y catálogo completo. |
+| 4. Perfil y piezas | pendiente | Contenido y guion por sección existentes; falta recorrido de perfil/pieza. |
+| 5. Widgets publicados | pendiente | Falta autorización y lectura pública de secciones en servidor. |
+| Gestión fiable | pendiente | Calendario/conexiones/métricas requieren recorrido real; reservas RPC ausente (PGRST202), diagnóstico remoto pendiente. |
+| Pedidos, clientes, pagos y Meta | pendiente | Variantes/extras/carrito local verificados en QA (96 pruebas); no equivalen a pedidos/cobros internos. Cambios anteriores preparados en Git. |
+| Mundo y experiencia emocional | pendiente | Componentes existentes, validación integral pendiente. |
+| Hostinger | pendiente | No se ha verificado allí esta nueva entrega. |
+
+La condición «tablero tras borrador» queda sustituida por gestión desde el inicio. Las comprobaciones de octubre 8–10 abajo actualizan la antigua tabla, sin convertir verificaciones parciales en entregas completas. Se conserva el historial y todo trabajo anterior.
+
+## Tabla histórica — octubre 7
 
 | Requisito | Estado | Evidencia actual | Siguiente acción |
 |---|---|---|---|
@@ -104,3 +122,20 @@ Actualizado: 2026-10-07. Ningún requisito se considera verificado por abrir una
 - Navegador QA Restaurante MVP: añadido al Alfajor clásico «Caja de seis (demo)» S/28.10 y «Empaque (demo)» S/1.20; aplicar → guardar en cuenta → recargar → ambas opciones persisten. Carrito 3 unidades + extra + nota muestra S/87.90. Quitar elimina la línea. Sin desbordamiento a 360 px. No se publicó ni se envió mensaje/pedido.
 - Pendiente: integrar catálogo completo con la landing /s (actualmente su vínculo usa ID/nombre/precio), backend de pedidos y cálculo autoritativo, modalidades mesa/recojo/delivery, seguimiento, perfiles y pagos. La cotización frontend no sustituye validación de servidor.
 - El commit pendiente de reservas terminó: 099702b. Diagnóstico remoto de reservas sigue esperando resultados del SQL de solo lectura solicitado a la usuaria.
+
+## 13 de octubre — entrega 1: proyectos y enfoque
+
+- Implementación local: dashboard general con tarjetas de proyectos, progreso y continuar; Hoy guarda hasta tres referencias a tareas existentes, sin copiar títulos/estados. Las áreas abren el modal existente; el agente queda como ayuda secundaria. Creator Studio mantiene su ruta y ya no exige una landing para entrar en gestión.
+- Tareas personalizadas: herramienta opcional, edición, selección para Hoy después de guardar. El resumen y los enlaces conservan proyecto, área y tarea. Navegar no completa pasos; el avance sigue calculándose desde las tareas compartidas.
+- Preferencias privadas: formato versionado `module-workspace-focus` en toolkit_documents, filtrado por cuenta y con revisión. Se anclan a un proyecto propio guardado; futuros flujos de eliminación deberán preservar/migrar ese documento antes de eliminar su proyecto ancla. Formatos desconocidos o documentos duplicados muestran recuperación, sin reemplazarlos por valores vacíos. Errores conservan cambios y ofrecen guardar/reintentar o recargar explícitamente.
+- Último trabajo: destinos internos validados; recordar área, tarea, Studio o herramientas de sidebar. Un segundo destino durante una escritura se conserva y guarda tras recibir la revisión; errores no producen reintentos automáticos infinitos.
+- Consulta de proyectos: error explícito y reintento; proyecto solicitado ajeno/inexistente no se sustituye silenciosamente por otro. Borradores antiguos/pending permanecen en recuperación descargable. No se cambiaron UUID, publicaciones, catálogos ni esquema remoto.
+- QA real: Tienda MVP añadió `Validar mi enfoque (QA entrega 1)` con Calendario; guardar → elegir para Hoy → abrir Calendario → cambiar a Hospedaje → inicio → recargar mantuvo selección. Completar reflejó el mismo paso en Hoy, sin duplicarlo. Edición posterior `Validar enfoque y recarga (QA entrega 1)` persistió tras recargar.
+- Conflicto real: dos pestañas cargaron la tarea; una guardó la edición, otra intentó guardar una revisión anterior. La segunda mostró el conflicto y retuvo `Edición de pestaña anterior (QA)` en pantalla; recuperar trajo la versión válida. No se sobrescribió la nube.
+- Creación real: `QA Enfoque sin página`, Hospedaje, UUID `eaabb4e2-e8e5-4253-a18e-a7264b73c9bd`; crear → tablero correcto → recargar → abrir Finanzas, sin landing. Escape cerró el modal y devolvió foco. URL con UUID no disponible mostró error y regreso a proyectos.
+- TypeScript, 100/100 pruebas y build Vite 4.5.3 (9.96 s) pasan en Node 20.19.5. Validación en `/tmp/foru-delivery1/frontend`; versiones de dependencias existentes iguales al lock original, sin modificar dependencias del repositorio. El runtime del equipo es Node 24; no se usa como evidencia de compatibilidad Node 20.
+- Responsive del inicio: scrollWidth == innerWidth en 360, 767, 769 y 1440 px. Limitación conocida: zoom del navegador 80% y viewport físico entero impiden 768 exactos. Se restauró el tamaño al terminar. Evidencia: `/tmp/foru-delivery1/dashboard-delivery1.jpg`.
+- Pendientes de cierre de validación: 768 exactos, fallo de red controlado y aislamiento remoto entre dos cuentas (solo hay una sesión autorizada en esta prueba). La comprobación del UUID ajeno/inexistente no sustituye probar RLS con otra cuenta. El control de revisión sí fue comprobado contra Supabase real.
+- Estado de entrega 1: implementación y recorrido principal verificados localmente; continúa en curso por las comprobaciones anteriores. Hostinger no desplegado/verificado. Entregas 2–5 y posteriores conservadas, sin implementarlas en esta instrucción.
+- Commit anterior de opciones/carrito cerrado por separado: `f322d98`. No se publicaron páginas ni se enviaron pedidos/mensajes en estas pruebas.
+- Comprobación final del último trabajo: sidebar móvil → Calendario del nuevo Hospedaje → inicio; Continuar recupera `/dashboard/tools/calendar?project=eaabb4e2-e8e5-4253-a18e-a7264b73c9bd`. Validado sobre la compilación final, después de recargar.

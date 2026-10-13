@@ -4,6 +4,7 @@ import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react
 import { BrowserRouter as Router, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import WorkspaceShell from './pages/dashboard/WorkspaceShell';
 import { AreaDocumentsProvider } from './pages/dashboard/AreaDocuments';
+import { WorkspaceFocusProvider } from './pages/dashboard/WorkspaceFocus';
 const WorldPage = lazy(() => import('./pages/dashboard/WorldPage'));
 const WorkspaceSettings = lazy(() => import('./pages/dashboard/WorkspaceSettings'));
 import { useAuth } from './contexts/AuthContext';
@@ -88,7 +89,7 @@ function App() {
     <AppErrorBoundary>
       <Router>
         <Toaster position="top-right" toastOptions={{ duration: 3500, success: { style: { background: '#f0fdf4', color: '#14532d', border: '1px solid #86efac' } } }} />
-        <AreaDocumentsProvider><PomodoroProvider><Suspense fallback={<RouteLoader />}>
+        <AreaDocumentsProvider><WorkspaceFocusProvider><PomodoroProvider><Suspense fallback={<RouteLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/ia" element={<AiForU />} />
@@ -140,7 +141,7 @@ function App() {
             <Route path="/p/:slug" element={<PublicLanding />} />
             <Route path="/:slug" element={<PublicRestaurant />} />
           </Routes>
-        </Suspense></PomodoroProvider></AreaDocumentsProvider>
+        </Suspense></PomodoroProvider></WorkspaceFocusProvider></AreaDocumentsProvider>
       </Router>
     </AppErrorBoundary>
   );
