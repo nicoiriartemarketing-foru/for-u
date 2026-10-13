@@ -8,6 +8,7 @@ import { useState, type FormEvent } from 'react';
 import { moveSection, saveDish, type Dish, type RestaurantData } from './model';
 import './restaurant.css';
 import RestaurantMenu from './RestaurantMenu';
+import DishOptionsEditor from './DishOptionsEditor';
 import { loadAlfajoresDemo } from './demo';
 
 export type RestaurantEditorProps = {
@@ -84,6 +85,8 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
         <DSInput label="Precio (S/)" info="Precio por unidad en soles. Puedes usar dos decimales." type="number" required min="0" step="0.01" value={Number.isFinite(dish.price) ? dish.price : ''} onChange={event => setDish({ ...dish, price: event.target.valueAsNumber })} />
         <DSInput label="Categoría" info="Agrupa productos similares, por ejemplo Alfajores o Bebidas." required value={dish.category} onChange={event => setDish({ ...dish, category: event.target.value })} />
         <DSTextarea label="Descripción" info="Describe ingredientes, tamaño y detalles que ayuden a elegir." value={dish.description} onChange={event => setDish({ ...dish, description: event.target.value })} />
+        <DishOptionsEditor title="Presentaciones" help="El cliente elige una. Su precio reemplaza el precio base: por ejemplo, unidad o caja de seis." options={dish.variants} onChange={variants => setDish({ ...dish, variants })} />
+        <DishOptionsEditor title="Extras" help="Opcionales. Cada extra se suma al precio de cada unidad del producto." options={dish.extras} onChange={extras => setDish({ ...dish, extras })} />
         <ProjectImageField label="Imagen del plato" value={dish.image} onChange={value => setDish({ ...dish, image: value })} />
         <label className="restaurant-check"><DSInput type="checkbox" checked={dish.available} onChange={event => setDish({ ...dish, available: event.target.checked })} />Disponible para pedir</label>
         <div className="restaurant-actions"><DSButtonPrimary className="magic-button magic-button-primary" type="submit">Aplicar producto</DSButtonPrimary><DSButtonSecondary type="button" onClick={() => setDish(null)}>Cancelar</DSButtonSecondary></div>

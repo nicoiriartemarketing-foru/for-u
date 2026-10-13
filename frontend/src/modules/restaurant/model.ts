@@ -1,6 +1,8 @@
+import { validateOptions, publicOptions, type DishOption } from './orderOptions';
 export type Dish = {
   id: string; name: string; description: string; category: string;
   price: number; image: string; available: boolean;
+  variants?: DishOption[]; extras?: DishOption[];
 };
 export type Ingredient = {
   id: string; name: string; unit: 'kg' | 'g' | 'l' | 'ml' | 'unidades';
@@ -46,12 +48,13 @@ function positive(value: number) { return Number.isFinite(value) && value > 0; }
 
 export function validateDish(dish: Dish) {
   if (!dish.name.trim()) throw new Error('Escribe el nombre del plato.');
-  if (!nonnegative(dish.price)) throw new Error('El precio debe ser cero o mayor.');
+  validateOptions(dish.variants); validateOptions(dish.extras);
+  if (!nonnegative(dish.price) || dish.price > 1_000_000) throw new Error('El precio debe ser cero o mayor.');
 }
 
 export function saveDish(data: RestaurantData, dish: Dish): RestaurantData {
   validateDish(dish);
-  const clean = { ...dish, name: dish.name.trim(), price: Math.round(dish.price * 100) / 100 };
+  const clean = { ...dish, name: dish.name.trim(), price: Math.round(dish.price * 100) / 100, ...(dish.variants ? { variants: publicOptions(dish.variants) } : {}), ...(dish.extras ? { extras: publicOptions(dish.extras) } : {}) };
   return { ...data, dishes: data.dishes.some(item => item.id === dish.id)
     ? data.dishes.map(item => item.id === dish.id ? clean : item) : [...data.dishes, clean] };
 }
