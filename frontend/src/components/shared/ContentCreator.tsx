@@ -1,3 +1,4 @@
+import { getPiece, pieceQuery, type Piece } from '../../social/model';
 import { ButtonPrimary as DSButtonPrimary, ButtonSecondary as DSButtonSecondary, Input as DSInput, Textarea as DSTextarea } from '../ui/DesignSystem';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -32,13 +33,16 @@ export default function ContentCreator({ currentProject, onProjectChange }: Cont
   const requested = currentProject?.id ?? params.get('project');
   const project = requested ? projects.find(item => item.id === requested) : projects[0];
   if (!project) return <main className="content-creator"><h1>Elige un proyecto para crear contenido</h1><p>{projects.length ? 'Este proyecto no está disponible en tu cuenta.' : 'Crea primero tu proyecto y selecciona su rubro.'}</p><Link to="/dashboard?view=projects">Ir a mis proyectos</Link></main>;
-  function change(id: string) { if (onProjectChange) onProjectChange(id); if (!currentProject) { const next = new URLSearchParams(params); next.set('project', id); setParams(next); } }
-  return <ContentSession key={`${userId}:${project.id}`} userId={userId} project={project} projects={projects} onProjectChange={change} />;
+  function change(id: string) { if (onProjectChange) onProjectChange(id); if (!currentProject) { const next = new URLSearchParams(params); next.set('project', id); next.delete('piece'); next.delete('templates'); setParams(next); } }
+  return <ContentSession key={`${userId}:${project.id}:${params.get('piece') ?? ''}:${params.get('templates') ?? ''}`} userId={userId} project={project} projects={projects} onProjectChange={change} />;
 }
 
 const contentStorage = { load: loadModuleDocument, save: saveModuleDocument };
 export function ContentSession({ userId, project, projects, onProjectChange, storage = contentStorage }: { userId: string; project: ModuleProject; projects: ModuleProject[]; onProjectChange: (id: string) => void; storage?: typeof contentStorage }) {
   const navigate = useNavigate();
+  const [pieceParams] = useSearchParams();
+  const pieceId = pieceParams.get('piece');
+  const [linkedPiece,setLinkedPiece] = useState<Piece|null>(null);
   const [document, setDocument] = useState<ContentDocument | null>(null);
   const [revision, setRevision] = useState<string | null>(null);
   const [draft, setDraft] = useState<ContentDraft | null>(null);
@@ -70,13 +74,17 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
   const imageUrl = draft && image.path === draft.imagePath ? image.url : '';
   useEffect(() => {
     let active = true;
-    storage.load(userId, project.id, 'content-creator').then(result => {
+    Promise.all([storage.load(userId, project.id, 'content-creator'), pieceId ? loadModuleDocument(userId,project.id,'social-profile') : Promise.resolve(null)]).then(([result, social]) => {
       const data = result?.payload as ContentDocument | undefined;
       if (data && (data.version !== 1 || !Array.isArray(data.drafts) || data.drafts.some(item => item.projectId !== project.id))) throw new Error('El contenido guardado tiene un formato incompatible. No se ha sobrescrito.');
-      if (active) { setDocument(data ?? { version: 1, drafts: [] }); setRevision(result?.revision ?? null); setNotice(''); }
+      const piece = pieceId ? getPiece(social?.payload,project.id,pieceId,userId).piece : null;
+      if (active) {
+        setDocument(data ?? { version: 1, drafts: [] }); setRevision(result?.revision ?? null); setNotice(''); setLinkedPiece(piece);
+        if(piece){const existing=data?.drafts.find(d=>d.id===piece.id); if(existing && pieceParams.get('templates')!=='1'){setDraft(existing);setDirty(false);}else if(pieceParams.get('templates')!=='1'){setDraft({...blankContent(project.id),id:piece.id,title:piece.title,caption:piece.text});setDirty(true);}}
+      }
     }).catch(error => { if (active) setNotice(error.message); });
     return () => { active = false; };
-  }, [userId, project.id, attempt, storage]);
+  }, [userId, project.id, pieceId, attempt, storage]);
   useEffect(() => {
     if (!draft?.imagePath) return;
     const path = draft.imagePath; let active = true;
@@ -89,7 +97,7 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
     window.addEventListener('beforeunload', guard); return () => window.removeEventListener('beforeunload', guard);
   }, [dirty]);
   function mayDiscard() { return !dirty || window.confirm('Tienes contenido sin guardar. ¿Descartarlo y continuar?'); }
-  function open(value: ContentDraft, changed: boolean) { if (!mayDiscard()) return; setDraft(value); setDirty(changed); setGallery(false); setNotice(''); }
+  function open(value: ContentDraft, changed: boolean) { if (!mayDiscard()) return; setDraft(linkedPiece ? { ...value,id:linkedPiece.id,caption:linkedPiece.text } : value); setDirty(changed); setGallery(false); setNotice(''); }
   function update(patch: Partial<ContentDraft>) { if (draft) { setDraft({ ...draft, ...patch }); setDirty(true); } }
   async function save() {
     if (!document || !draft || saving.current) return;
@@ -107,7 +115,7 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
     catch (error) { setNotice((error as Error).message); } finally { setBusy(false); }
   }
   if (!document) return <main className="content-creator"><p role="status">{notice || 'Cargando el contenido del proyecto…'}</p>{notice && <DSButtonSecondary onClick={() => setAttempt(value => value + 1)}>Reintentar carga</DSButtonSecondary>}</main>;
-  return <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: '1.5rem', alignItems: 'start' }} className="creator-studio-layout">
+  return <div style={{ display: 'grid', gridTemplateColumns: linkedPiece ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) 340px', gap: '1.5rem', alignItems: 'start' }} className="creator-studio-layout">
     <style>{`
       @media (max-width: 900px) {
         .creator-studio-layout { grid-template-columns: 1fr !important; }
@@ -133,15 +141,15 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
           <h1 style={{ fontFamily: 'var(--font-titulos)', fontSize: 'clamp(1.8rem, 3vw, 2.4rem)', fontWeight: 900, margin: 0, letterSpacing: '-0.02em' }}>Creator Studio</h1>
           <p style={{ color: 'var(--color-texto-suave)', margin: '0.5rem 0 0', fontSize: '1rem' }}>Tu contenido, generado desde todo lo que ya sabes de tu negocio</p>
         </div>
-        <DSButtonSecondary className="magic-button magic-button-soft" disabled={busy} onClick={() => { if (mayDiscard()) navigate(`/modules/${project.type}?project=${encodeURIComponent(project.id)}`); }}>← Volver</DSButtonSecondary>
+        <DSButtonSecondary className="magic-button magic-button-soft" disabled={busy} onClick={() => { if (mayDiscard()) navigate(linkedPiece ? '/dashboard/tools/profile'+pieceQuery(project.id,linkedPiece.id) : `/modules/${project.type}?project=${encodeURIComponent(project.id)}`); }}>← Volver</DSButtonSecondary>
       </header>
-      <p role="status">{notice}</p><ProjectSelector projects={projects} value={project.id} disabled={busy} onChange={id => { if (mayDiscard()) onProjectChange(id); }} />
+      {linkedPiece&&<p>Diseño de {linkedPiece.title||'esta pieza'} · guarda antes de volver al perfil.</p>}<p role="status">{notice}</p><ProjectSelector projects={projects} value={project.id} disabled={busy} onChange={id => { if (mayDiscard()) onProjectChange(id); }} />
       <fieldset className="creator-controls" disabled={busy}>
       {draft ? <>
         <div className="creator-section-heading"><h2>{draft.templateId ? 'Personaliza tu plantilla' : 'Tu diseño desde cero'}</h2><DSButtonSecondary onClick={() => { if (mayDiscard()) { setDraft(null); setDirty(false); } }}>Elegir otra plantilla</DSButtonSecondary></div>
         <div className="creator-editor"><section className="creator-fields">
           <label>Título<DSInput maxLength={160} value={draft.title} onChange={event => update({ title: event.target.value })} /></label><label>Subtítulo<DSInput maxLength={240} value={draft.subtitle} onChange={event => update({ subtitle: event.target.value })} /></label>
-          <label>Texto de la publicación<DSTextarea value={draft.caption} onChange={event => update({ caption: event.target.value })} /></label>
+          <label>Texto de la publicación<DSTextarea readOnly={!!linkedPiece} value={linkedPiece?.text ?? draft.caption} onChange={event => update({ caption: event.target.value })} /></label>
           <label>Formato<select value={draft.format} onChange={event => update({ format: event.target.value as ContentDraft['format'] })}><option value="post">Publicación cuadrada · 1080 × 1080</option><option value="story">Historia · 1080 × 1920</option></select></label>
           <div className="creator-colors"><label>Fondo<DSInput type="color" value={draft.background} onChange={event => update({ background: event.target.value })} /></label><label>Texto<DSInput type="color" value={draft.foreground} onChange={event => update({ foreground: event.target.value })} /></label></div>
           <div className="creator-actions"><DSButtonSecondary onClick={() => setGallery(value => !value)}>{gallery ? 'Cerrar biblioteca' : 'Elegir imagen'}</DSButtonSecondary>{draft.imagePath && <DSButtonSecondary onClick={() => update({ imagePath: '' })}>Quitar imagen</DSButtonSecondary>}</div>
@@ -149,10 +157,10 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
         </section><section className={`creator-preview creator-preview-${draft.format}`} aria-label="Vista previa del contenido" style={{ background: draft.background, color: draft.foreground }}>{imageUrl && <img src={imageUrl} alt="Imagen seleccionada para el contenido" />}<div><h2>{draft.title || 'Tu título'}</h2><p>{draft.subtitle}</p></div></section></div>
         {gallery && <MediaGallery userId={userId} projectId={project.id} onSelect={media => { setImage({ path: media.path, url: media.url }); update({ imagePath: media.path }); setGallery(false); }} />}
       </> : <TemplateLibrary key={project.type} type={project.type} onSelect={template => open(contentFromTemplate(project, template), true)} onCreateFromScratch={() => open(blankContent(project.id), true)} />}
-      {document.drafts.length > 0 && <section><h2>Contenido guardado</h2><div className="creator-saved-grid">{document.drafts.map(item => <DSButtonSecondary key={item.id} onClick={() => open({ ...item }, false)}><strong>{item.title || item.caption.slice(0, 60)}</strong><span>{item.format === 'post' ? 'Publicación' : 'Historia'}</span></DSButtonSecondary>)}</div></section>}
+      {!linkedPiece && document.drafts.length > 0 && <section><h2>Contenido guardado</h2><div className="creator-saved-grid">{document.drafts.map(item => <DSButtonSecondary key={item.id} onClick={() => open({ ...item }, false)}><strong>{item.title || item.caption.slice(0, 60)}</strong><span>{item.format === 'post' ? 'Publicación' : 'Historia'}</span></DSButtonSecondary>)}</div></section>}
     </fieldset>
   </main>
-  <aside className="magic-card" style={{ padding: '1.5rem', animation: 'foru-focus-step-in 0.4s ease-out 0.2s both', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-magica)' }}>
+  {!linkedPiece && <aside className="magic-card" style={{ padding: '1.5rem', animation: 'foru-focus-step-in 0.4s ease-out 0.2s both', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-magica)' }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
       <span style={{ fontSize: '1.5rem' }}>💡</span>
       <h3 style={{ fontFamily: 'var(--font-titulos)', fontSize: '1.1rem', fontWeight: 900, margin: 0 }}>Ideas basadas en tus conversaciones</h3>
@@ -172,6 +180,6 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
         </div>
       ))}
     </div>
-  </aside>
+  </aside>}
   </div>;
 }

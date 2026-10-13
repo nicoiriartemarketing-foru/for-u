@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Card as DSCard } from '../components/ui/DesignSystem';
 import { Input as DSInput, ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import { useEffect, useRef, useState } from "react";
@@ -171,7 +172,7 @@ export default function ImageLibrary() {
       <div className="tk-toolbar">
         <div>
           <div className="tk-eyebrow">LA ESENCIA DE TU MARCA</div>
-          <h2>Tu biblioteca de imágenes</h2>
+          <h2>Tu biblioteca de imágenes</h2><Link to={'/dashboard/tools/profile?project='+projectId}>Archivos organizados por publicación →</Link>
         </div>
         <label className="tk-file-button">
           Subir imágenes

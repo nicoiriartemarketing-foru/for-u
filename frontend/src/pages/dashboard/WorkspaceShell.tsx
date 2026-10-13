@@ -38,6 +38,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     courses: { icon: '🎓', title: 'Mis cursos', path: `/dashboard/tools/landing${query}`, help: 'Abre el editor de la página donde presentas tus cursos.' },
   }[type];
   const links = [
+    { icon: '📱', title: 'Mi perfil', path: `/dashboard/tools/profile${query}`, help: 'Organiza bio, destacados y publicaciones. No modifica Instagram.' },
     { icon: '✨', title: 'Mi propuesta', path: `/dashboard/tools/proposal${query}`, help: 'Define tus ofertas y prepara tu página sin cambiar de rubro.' },
     { icon: '📤', title: 'Uploads', path: `/dashboard/tools/images${query}`, help: 'Sube y organiza las fotos de tu negocio.' },
     { icon: '📅', title: 'Calendario', path: `/dashboard/tools/calendar${query}`, help: 'Planifica tus actividades y publicaciones.' },

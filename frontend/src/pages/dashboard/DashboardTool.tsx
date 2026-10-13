@@ -5,7 +5,7 @@ import { useActiveProjectsStore } from '../../stores/useActiveProjectsStore';
 import Toolkit from '../../toolkit/Toolkit';
 import type { ToolId } from '../../toolkit/types';
 
-const tools = new Set<ToolId>(['proposal', 'content', 'teleprompter', 'video', 'images', 'calendar', 'analytics', 'assistant', 'landing', 'bookings', 'automation']);
+const tools = new Set<ToolId>(['profile', 'proposal', 'content', 'teleprompter', 'video', 'images', 'calendar', 'analytics', 'assistant', 'landing', 'bookings', 'automation']);
 
 export default function DashboardTool() {
   const { user } = useAuth();
@@ -19,5 +19,5 @@ export default function DashboardTool() {
   if (!user || cloudUserId !== user.id) return <main className="dashboard-tool-loader"><p>Cargando tus herramientas…</p></main>;
   if (!project || !tools.has(tool as ToolId)) return <main className="dashboard-tool-loader"><h1>Esta herramienta no está disponible</h1><Link to="/dashboard">Volver al tablero</Link></main>;
   const templates = params.get('page') === 'templates';
-  return <Toolkit embedded key={`${project.id}:${tool}:${templates}:${params.get("section") ?? ""}:${params.get("step") ?? ""}`} project={project} initialTool={templates ? undefined : tool as ToolId} initialPage={templates ? 'templates' : undefined} onBack={() => window.history.back()} />;
+  return <Toolkit embedded key={`${project.id}:${tool}:${templates}:${params.get("section") ?? ""}:${params.get("step") ?? ""}:${tool === "profile" ? "" : params.get("piece") ?? ""}`} project={project} initialTool={templates ? undefined : tool as ToolId} initialPage={templates ? 'templates' : undefined} onBack={() => window.history.back()} />;
 }

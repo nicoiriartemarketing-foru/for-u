@@ -29,6 +29,7 @@ import { todayRoute, type TodayProgress } from "./todayModel";
 import "./toolkit.css";
 import { useAreaDocuments } from '../pages/dashboard/AreaDocuments';
 import { projectModuleType } from '../modules/moduleProjects';
+const SocialProfile = lazy(() => import("../social/SocialProfile"));
 const ProposalEditor = lazy(() => import("../proposal/ProposalEditor"));
 const TemplateLibrary = lazy(() => import("./TemplateLibrary"));
 const ConnectionStatus = lazy(() => import("./ConnectionStatus"));
@@ -50,6 +51,7 @@ const Automation = lazy(() =>
 );
 
 const tools = [
+  { id: "profile", name: "Mi perfil y publicaciones", description: "Bio, destacados y piezas de contenido de este proyecto.", Icon: Sparkles, color: "lilac", label: "ORGANIZA", minutes: 5 },
   { id: "proposal", name: "Mi propuesta", description: "Tu idea, tus ofertas y el mensaje de tu página.", Icon: Sparkles, color: "lilac", label: "DEFINE", minutes: 5 },
   {
     id: "content",
@@ -329,6 +331,7 @@ function ToolkitShell({
               {tool === "video" && (
                 <VideoEditor initialFile={video} initialSubtitles={captions} />
               )}
+              {tool === "profile" && <SocialProfile />}
               {tool === "proposal" && <ProposalEditor />}
               {tool === "images" && <ImageLibrary />}
               {tool === "calendar" && (

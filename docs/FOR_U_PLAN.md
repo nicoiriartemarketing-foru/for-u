@@ -2,7 +2,7 @@
 
 ## Plan vigente — aprobado el 13 de octubre de 2026
 
-Este plan sustituye las decisiones contradictorias del historial conservado abajo. Se ejecuta **una entrega por instrucción**; la instrucción vigente autoriza la entrega 2, incluido su recorrido de publicación. No se declara terminado el objetivo completo mientras queden entregas pendientes.
+Este plan sustituye las decisiones contradictorias del historial conservado abajo. Se ejecuta **una entrega por instrucción**; la instrucción vigente autoriza la entrega 3 (Mi perfil y piezas); la entrega 2 incorporó el recorrido de publicación. No se declara terminado el objetivo completo mientras queden entregas pendientes.
 
 FOR U organiza proyectos con identidad propia. El rubro principal orienta preguntas, herramientas y pasos, sin limitar tipos de oferta; las páginas podrán mostrar ofertas publicadas de otros proyectos mediante widgets autorizados.
 
@@ -18,9 +18,9 @@ Decisiones sustituidas: el inicio general muestra proyectos y prioridades, sin e
 
 1. **Mi espacio de trabajo y enfoque:** proyectos con estado y continuar; Hoy con hasta tres referencias a tareas existentes de cualquier proyecto; cuatro áreas en modal; gestión antes de crear página; protección de borradores y errores. Aceptación: crear tarea, elegirla para Hoy, abrir herramienta, cambiar proyecto y recargar sin perder datos ni afirmar guardados fallidos.
 2. **Mi propuesta y una página lista para publicar:** tres pasos (qué ofrezco y para quién, mis ofertas, mensaje y contacto); productos, servicios y paquetes combinables sin repetir ni cambiar el rubro. Catálogos originales con referencias y ofertas complementarias privadas, precio fijo confirmado, cotización o gratis explícito. Preparación selectiva del borrador, revisión de ofertas guardadas y publicación explícita protegida por comparación del estado leído. Aceptación: QA Studio4U y QA Marketing4U desde propuesta hasta URL pública, sin modificar negocios reales.
-3. **Propuesta a página pública (recorrido incorporado a entrega 2):** plantilla editable y catálogo completo (fotos, descripciones, precios, presentaciones y extras), historial, móvil y publicación; cambios de propuesta señalan revisión sin sobrescribir ediciones. Aceptación: recorrido completo hasta URL pública. **Primer hito utilizable: entregas 1–3 desplegadas y verificadas en Hostinger.**
-4. **Mi perfil y piezas:** foto, nombre, bio, enlace, destacados y tres publicaciones principales antes de contenido orgánico; piezas con objetivo, texto, diseño, guion, tomas, archivos, fecha y estado; creador, biblioteca, calendario y teleprompter conectados. No afirmar cambios en Instagram sin integración.
-5. **Widgets entre proyectos:** seleccionar fuente y secciones propias o compartidas autorizadas, ordenar y publicar; actualización desde última publicación; revocación con estado discreto y aviso; sin ciclos ni widgets anidados; autorización y campos públicos validados en servidor.
+**Publicación incluida en la entrega 2:** plantilla editable y catálogo completo (fotos, descripciones, precios, presentaciones y extras), historial, móvil y publicación; cambios de propuesta señalan revisión sin sobrescribir ediciones. Aceptación: recorrido completo hasta URL pública. **Primer hito utilizable: entregas 1–3 desplegadas y verificadas en Hostinger.**
+3. **Mi perfil y piezas (antes entrega 4; publicación ya incorporada en entrega 2):** foto, nombre, bio, enlace, destacados y tres publicaciones principales antes de contenido orgánico; piezas con objetivo, texto, diseño, guion, tomas, archivos, fecha y estado; creador, biblioteca, calendario y teleprompter conectados. No afirmar cambios en Instagram sin integración.
+4. **Widgets entre proyectos:** seleccionar fuente y secciones propias o compartidas autorizadas, ordenar y publicar; actualización desde última publicación; revocación con estado discreto y aviso; sin ciclos ni widgets anidados; autorización y campos públicos validados en servidor.
 
 Después, en orden: gestión fiable (Calendario, reservas, conexiones y métricas); pedidos/clientes con cálculo servidor, mesa/recojo/delivery, invitado y perfil opcional; Mercado Pago por negocio, cuotas reales de nube y Meta autorizado (una integración por entrega); mundo, barco, mascotas, juego, onboarding, Pomodoro y Pro. Los agentes acompañan, sin reemplazar resultados guardados.
 

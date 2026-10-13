@@ -1,4 +1,6 @@
-import { useSearchParams } from 'react-router-dom';
+import { getPiece, changePiece, pieceQuery } from '../social/model';
+import { useUnsavedNavigation } from '../lib/useUnsavedNavigation';
+import { Link, useSearchParams } from 'react-router-dom';
 import { sectionContext } from './sectionContext';
 import { Card as DSCard } from '../components/ui/DesignSystem';
 import { Textarea as DSTextarea, Input as DSInput, ButtonSecondary as DSButtonSecondary, ButtonPrimary as DSButtonPrimary } from '../components/ui/DesignSystem';
@@ -17,18 +19,23 @@ export default function Teleprompter({
   initialScript: string;
   onEdit: (file: File, captions: Segment[]) => void;
 }) {
-  const { docs, save, track } = useToolkit();
+  const { docs, save, track, projectId, userId } = useToolkit();
   const [params] = useSearchParams();
   const section = sectionContext(docs.landing, params.get('section'));
+  const pieceId = params.get('piece');
+  let pieceContext: ReturnType<typeof getPiece> | undefined, pieceError = '';
+  try { if (pieceId) pieceContext = getPiece(docs['module-social-profile'],projectId,pieceId,userId); } catch(e) {pieceError=(e as Error).message;}
   const scriptKey = section ? `script-section-${section.id}` : 'script';
   const [script, setScript] = useState(
-    initialScript ||
+    pieceContext ? pieceContext.piece.script : initialScript ||
       String(
         docs[scriptKey] ??
           (section ? `${section.title}\n\n${section.body}` : undefined) ??
           "Mira a la cámara.\n\nCuenta qué hace especial a tu negocio.\n\nInvita a tu comunidad a dar el siguiente paso.",
       ),
   );
+  const [scriptDirty,setScriptDirty]=useState(false);
+  useUnsavedNavigation(scriptDirty);
   const [speed, setSpeed] = useState(Number(docs.readingSpeed ?? 28));
   const [fontSize, setFontSize] = useState(32);
   const [activeLine, setActiveLine] = useState(0);
@@ -201,16 +208,21 @@ export default function Teleprompter({
     }
   }
   async function saveSettings() {
+    if(busy)return;
+    setBusy(true);
     try {
-      await save(scriptKey, script);
+      if(pieceId) {if(!pieceContext)throw new Error(pieceError);await save('module-social-profile',changePiece(pieceContext.document,pieceId,{script}));}else await save(scriptKey, script);
+      setScriptDirty(false);
       await save("readingSpeed", speed);
       setError("Guion y velocidad guardados.");
     } catch (e) {
       setError((e as Error).message);
-    }
+    } finally {setBusy(false);}
   }
+  if(pieceError)return <section role="alert">{pieceError}<Link to={'/dashboard/tools/profile?project='+projectId}>Volver al perfil</Link></section>;
   return (
     <div className="tk-two-columns">
+      {pieceId&&<Link to={'/dashboard/tools/profile'+pieceQuery(projectId,pieceId)}>← Volver a esta pieza</Link>}
       <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-eyebrow">TU VOZ, TU NEGOCIO</div>
         <h2>Habla con confianza</h2>
@@ -219,8 +231,8 @@ export default function Teleprompter({
           <DSTextarea
             rows={10}
             value={script}
-            onChange={(e) => setScript(e.target.value)}
-            disabled={recording}
+            onChange={(e) => {setScript(e.target.value);setScriptDirty(true);}}
+            disabled={recording || busy}
           />
         </label>
         <label>
@@ -274,7 +286,7 @@ export default function Teleprompter({
             ? "Opcional: el servicio de voz de tu navegador procesa el audio. Los tiempos son aproximados y puedes editarlos después."
             : "Este navegador no admite reconocimiento de voz en vivo. Puedes transcribir el archivo desde el editor."}
         </small>
-        <DSButtonSecondary onClick={saveSettings}>Guardar guion y ritmo</DSButtonSecondary>
+        <DSButtonSecondary disabled={busy} onClick={saveSettings}>Guardar guion y ritmo</DSButtonSecondary>
       </DSCard>
       <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-camera">

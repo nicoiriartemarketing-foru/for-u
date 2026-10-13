@@ -2,7 +2,7 @@ import { areaDefinitions, areaToolPath, isSavedProject, type AreaId } from './ar
 import type { ModuleType } from '../../modules/moduleProjects';
 
 export const taskTools = [
-  ['proposal', 'Mi propuesta'], ['landing', 'Mi página'], ['editor', 'Editar oferta'], ['summary', 'Resumen del negocio'],
+  ['profile', 'Mi perfil y publicaciones'], ['proposal', 'Mi propuesta'], ['landing', 'Mi página'], ['editor', 'Editar oferta'], ['summary', 'Resumen del negocio'],
   ['creator', 'Creador visual'], ['content', 'Contenido con IA'], ['teleprompter', 'Teleprompter'],
   ['calendar', 'Calendario'], ['bookings', 'Reservas y pedidos'], ['automation', 'Contacto y respuestas'],
   ['images', 'Uploads'], ['analytics', 'Estadísticas'],

@@ -1,6 +1,7 @@
 import type { Offer, ProposalSource } from '../proposal/model';
 import type { ForUActiveProject } from "../stores/useActiveProjectsStore";
 export type ToolId =
+  | "profile"
   | "proposal"
   | "content"
   | "teleprompter"
