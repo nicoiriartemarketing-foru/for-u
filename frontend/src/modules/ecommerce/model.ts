@@ -1,4 +1,4 @@
-export type Product = { id: string; name: string; description: string; category: string; price: number; stock: number; image: string; active: boolean };
+export type Product = { conditions?: string; id: string; name: string; description: string; category: string; price: number; stock: number; image: string; active: boolean };
 export type CartLine = { productId: string; quantity: number };
 export type Order = {
   id: string; customer: string; contact: string; address: string; createdAt: string;

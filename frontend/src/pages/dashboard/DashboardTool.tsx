@@ -5,7 +5,7 @@ import { useActiveProjectsStore } from '../../stores/useActiveProjectsStore';
 import Toolkit from '../../toolkit/Toolkit';
 import type { ToolId } from '../../toolkit/types';
 
-const tools = new Set<ToolId>(['content', 'teleprompter', 'video', 'images', 'calendar', 'analytics', 'assistant', 'landing', 'bookings', 'automation']);
+const tools = new Set<ToolId>(['proposal', 'content', 'teleprompter', 'video', 'images', 'calendar', 'analytics', 'assistant', 'landing', 'bookings', 'automation']);
 
 export default function DashboardTool() {
   const { user } = useAuth();

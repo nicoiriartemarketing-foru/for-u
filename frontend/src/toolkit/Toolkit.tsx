@@ -29,6 +29,7 @@ import { todayRoute, type TodayProgress } from "./todayModel";
 import "./toolkit.css";
 import { useAreaDocuments } from '../pages/dashboard/AreaDocuments';
 import { projectModuleType } from '../modules/moduleProjects';
+const ProposalEditor = lazy(() => import("../proposal/ProposalEditor"));
 const TemplateLibrary = lazy(() => import("./TemplateLibrary"));
 const ConnectionStatus = lazy(() => import("./ConnectionStatus"));
 const ContentStudio = lazy(() => import("./ContentStudio"));
@@ -49,6 +50,7 @@ const Automation = lazy(() =>
 );
 
 const tools = [
+  { id: "proposal", name: "Mi propuesta", description: "Tu idea, tus ofertas y el mensaje de tu página.", Icon: Sparkles, color: "lilac", label: "DEFINE", minutes: 5 },
   {
     id: "content",
     name: "Contenido con IA",
@@ -327,6 +329,7 @@ function ToolkitShell({
               {tool === "video" && (
                 <VideoEditor initialFile={video} initialSubtitles={captions} />
               )}
+              {tool === "proposal" && <ProposalEditor />}
               {tool === "images" && <ImageLibrary />}
               {tool === "calendar" && (
                 <>

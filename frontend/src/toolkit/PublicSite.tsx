@@ -76,7 +76,7 @@ function PublicSiteView({ slug }: { slug?: string }) {
         }}
       >
         <section ref={form} className="tk-site-block">
-          {slug && <ReservationForm slug={slug} />}
+          {slug && (draft.bookingEnabled === true || (draft.bookingEnabled === undefined && draft.offers === undefined)) && <ReservationForm slug={slug} />}
           <hr />
           <h2>Cuéntanos qué necesitas</h2>
           {sent ? (

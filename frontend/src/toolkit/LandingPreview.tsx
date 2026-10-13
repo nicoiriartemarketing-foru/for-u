@@ -1,5 +1,6 @@
 import { ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import type { LandingDraft } from "./types";
+import { offerPrice } from '../proposal/model';
 export function LandingPreview({
   draft,
   onCTA,
@@ -54,6 +55,7 @@ export function LandingPreview({
 
 export function LandingExtras({ draft }: { draft: LandingDraft }) { return <>
       {!!draft.gallery?.length && <section className="tk-site-gallery">{draft.gallery.map(photo => <figure key={photo.role}><img src={photo.url} alt={photo.alt} loading="lazy" /><figcaption>{photo.role}</figcaption></figure>)}</section>}
-      {!!draft.menuItems?.length && <section className="tk-site-block"><h2>Nuestros productos</h2><ul className="tk-site-products">{draft.menuItems.map(item => <li key={item.id}><strong>{item.name}</strong><span>{new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(item.price)}</span></li>)}</ul></section>}
+      {!!draft.offers?.length && <section className="tk-site-block"><h2>Nuestras ofertas</h2><div className="tk-public-offers">{draft.offers.map(offer => <article key={offer.id}>{offer.image && <img src={offer.image} alt={offer.name} loading="lazy" />}<h3>{offer.name}</h3><p>{offer.description}</p><strong>{offerPrice(offer)}</strong>{offer.conditions && <p>{offer.conditions}</p>}{!!offer.variants?.length && <div><h4>Presentaciones</h4><ul>{offer.variants.map(option => <li key={option.id}>{option.name} · {new Intl.NumberFormat('es-PE', { style:'currency', currency:'PEN' }).format(option.price)}</li>)}</ul></div>}{!!offer.extras?.length && <div><h4>Extras por unidad</h4><ul>{offer.extras.map(option => <li key={option.id}>{option.name} · +{new Intl.NumberFormat('es-PE', { style:'currency', currency:'PEN' }).format(option.price)}</li>)}</ul></div>}</article>)}</div></section>}
+      {draft.offers === undefined && !!draft.menuItems?.length && <section className="tk-site-block"><h2>Nuestros productos</h2><ul className="tk-site-products">{draft.menuItems.map(item => <li key={item.id}><strong>{item.name}</strong><span>{new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(item.price)}</span></li>)}</ul></section>}
 
 </>; }

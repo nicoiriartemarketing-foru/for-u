@@ -1,5 +1,7 @@
 import type { LandingDraft } from "./types";
 import { safeHttps } from "./engine";
+import { publicOffer, type Offer } from '../proposal/model';
+import { externalImageUrl } from '../components/shared/mediaReference';
 
 export function parseSiteData(value: unknown): LandingDraft | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -14,7 +16,20 @@ export function parseSiteData(value: unknown): LandingDraft | null {
     typeof data[key] === "string"
       ? (data[key] as string).slice(0, limit)
       : fallback;
+  let offers: Offer[] | undefined;
+  if (data.offers !== undefined) {
+    try {
+      if (!Array.isArray(data.offers) || data.offers.length > 30) return null;
+      offers = data.offers.map(value => {
+        const offer = publicOffer(value as Offer);
+        return { ...offer, image: externalImageUrl(offer.image) ?? '' };
+      });
+      if (new Set(offers.map(offer => offer.id)).size !== offers.length) return null;
+    } catch { return null; }
+  }
   return {
+    bookingEnabled: typeof data.bookingEnabled === 'boolean' ? data.bookingEnabled : undefined,
+    offers,
     menuItems: Array.isArray(data.menuItems) ? data.menuItems.slice(0, 30).filter((item): item is { id: string; name: string; price: number } => Boolean(item && typeof item === 'object' && typeof item.id === 'string' && typeof item.name === 'string' && typeof item.price === 'number' && Number.isFinite(item.price) && item.price >= 0 && item.price <= 1000000)).map(item => ({ id: item.id.slice(0, 80), name: item.name.slice(0, 120), price: item.price })) : [],
     gallery: Array.isArray(data.gallery) ? data.gallery.slice(0, 3).filter((item): item is { role: string; url: string; alt: string } => Boolean(item && typeof item === 'object' && typeof item.role === 'string' && typeof item.url === 'string' && typeof item.alt === 'string')).map(item => ({ role: item.role.slice(0, 30), url: safeHttps(item.url) || '', alt: item.alt.slice(0, 160) })).filter(item => item.url) : [],
     heroImage: safeHttps(text("heroImage", 2000)),

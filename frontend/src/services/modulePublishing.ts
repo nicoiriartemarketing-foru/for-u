@@ -16,7 +16,7 @@ async function loadPublication(userId: string, projectId: string, type: Publishe
   if (error) throw new Error('No se pudo comprobar la publicación. Reintenta o revisa la configuración de publicación de tu cuenta.');
   return data;
 }
-function imagePublisher(userId: string, projectId: string) {
+export function imagePublisher(userId: string, projectId: string) {
   const db = client();
   const images = new Map<string, Promise<string>>();
   function publicImage(value: string): Promise<string> {

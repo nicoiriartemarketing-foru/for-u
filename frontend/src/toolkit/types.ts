@@ -1,5 +1,7 @@
+import type { Offer, ProposalSource } from '../proposal/model';
 import type { ForUActiveProject } from "../stores/useActiveProjectsStore";
 export type ToolId =
+  | "proposal"
   | "content"
   | "teleprompter"
   | "video"
@@ -42,7 +44,10 @@ export type CalendarEntry = {
 };
 export type LandingBlock = { id: string; title: string; body: string };
 export type LandingDraft = {
-  catalogSource?: "module";
+  bookingEnabled?: boolean;
+  catalogSource?: "module" | "proposal";
+  offers?: Offer[];
+  proposalSource?: ProposalSource;
   menuItems?: { id: string; name: string; price: number }[];
   gallery?: { role: string; url: string; alt: string }[];
   heroImage?: string;

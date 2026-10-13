@@ -1,4 +1,8 @@
-import { catalogSnapshot } from './catalogSnapshot';
+import { nativeOffers, offerPrice, sameOffers, type Offer, type ProposalSource } from '../proposal/model';
+import { readProposalSource } from '../proposal/sourceRepository';
+import { readLandingPublication, writeLandingPublication, landingPublicSnapshot, type LandingPublication } from '../services/landingPublication';
+import { privateMediaPath, isPrivateMedia } from '../components/shared/mediaReference';
+import { resolveMediaPath } from '../components/shared/mediaStorage';
 import { moduleLabels, type ModuleType } from '../modules/moduleProjects';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Select as DSSelect } from '../components/ui/DesignSystem';
@@ -19,7 +23,7 @@ import { moveItem, safeHttps } from "./engine";
 import { defaultLanding, type LandingDraft } from "./types";
 export { LandingPreview } from "./LandingPreview";
 export default function LandingBuilder({ wizard = false }: { wizard?: boolean }) {
-  const { business, docs, save, userId, projectId, demo, track } = useToolkit();
+  const { business, docs, save, userId, projectId, demo, track, documentRevision } = useToolkit();
   const [routeParams] = useSearchParams();
   const requestedStep = routeParams.get("step");
   const [history, dispatchHistory] = useReducer(editorHistory<LandingDraft>, { past: [], present: (docs.landing as LandingDraft) ?? defaultLanding(business), future: [] } as EditorHistory<LandingDraft>);
@@ -28,6 +32,22 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [publishedUrl, setPublishedUrl] = useState("");
+  const [publication, setPublication] = useState<LandingPublication | null>(null);
+  const [publicationReady, setPublicationReady] = useState(false);
+  const [publicationError, setPublicationError] = useState('');
+  const [publicationAttempt, setPublicationAttempt] = useState(0);
+  const [offerReview, setOfferReview] = useState<{ offers: Offer[]; source?: ProposalSource } | null>(null);
+  const [previewImageError, setPreviewImageError] = useState('');
+  const previewDraft = useRef(draft);
+  useEffect(() => {
+    let active = true;
+    if (!supabase || demo) return;
+    setPublicationReady(false); setPublicationError('');
+    void readLandingPublication(supabase, userId, projectId).then(value => {
+      if (active) { setPublication(value); setPublicationReady(true); setPublishedUrl(value?.published ? window.location.origin + '/s/' + value.slug : ''); }
+    }).catch(error => { if (active) setPublicationError(error.message); });
+    return () => { active = false; };
+  }, [userId, projectId, demo, publicationAttempt]);
   const [dirty, setDirty] = useState(false);
   useUnsavedNavigation(!wizard && (dirty || busy));
   const drag = useRef(-1);
@@ -48,11 +68,23 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   const pending = useRef<LandingDraft | null>(null);
   useEffect(() => {
     draftRef.current = draft;
-    frame.current?.contentWindow?.postMessage(
-      { type: "foru:render", channel, draft, selectedId },
-      window.location.origin,
-    );
-  }, [draft, channel, selectedId]);
+    let active = true;
+    const previewImage = async (value: string) => {
+      if (!isPrivateMedia(value)) return value;
+      const path = privateMediaPath(value, userId, projectId);
+      if (!path) throw new Error('Una foto no pertenece al proyecto abierto.');
+      return resolveMediaPath(path);
+    };
+    void (async () => {
+      try {
+        const resolved = { ...draft, offers: draft.offers ? await Promise.all(draft.offers.map(async offer => ({ ...offer, image: await previewImage(offer.image) }))) : undefined };
+        if (!active) return;
+        previewDraft.current = resolved; setPreviewImageError('');
+        frame.current?.contentWindow?.postMessage({ type: 'foru:render', channel, draft: resolved, selectedId: selectedRef.current }, window.location.origin);
+      } catch (error) { if (active) setPreviewImageError((error as Error).message); }
+    })();
+    return () => { active = false; };
+  }, [draft, channel, selectedId, userId, projectId]);
   useEffect(() => {
     if (selectedId !== 'hero' && !draft.blocks.some(block => block.id === selectedId)) {
       setSelectedId('hero');
@@ -68,7 +100,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         return;
       if (event.data.type === "foru:ready") {
         frame.current?.contentWindow?.postMessage(
-          { type: "foru:render", channel, draft: draftRef.current, selectedId: selectedRef.current },
+          { type: "foru:render", channel, draft: previewDraft.current, selectedId: selectedRef.current },
           window.location.origin,
         );
         return;
@@ -195,41 +227,43 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
       if (draft.calendly && !safeHttps(draft.calendly, "calendly.com"))
         throw new Error("Usa un enlace HTTPS de calendly.com.");
       if (draft.menuItems?.some(item => !item.name.trim() || !Number.isFinite(item.price) || item.price < 0 || item.price > 1000000)) throw new Error("Revisa los nombres y precios de tus productos.");
-      let offers = draft.menuItems;
-      if (draft.catalogSource === 'module') {
-        if (!moduleType) throw new Error('No se pudo identificar el rubro de este proyecto.');
-        const result = await supabase.from('toolkit_documents').select('payload').eq('user_id', userId).eq('project_id', projectId).eq('kind', `module-${moduleType}`).maybeSingle();
-        if (result.error) throw new Error('No pudimos comprobar el catálogo guardado. Reintenta; tu página pública no cambió.');
-        offers = catalogSnapshot(moduleType, result.data?.payload);
+      if (!publicationReady) throw new Error('Comprueba el estado de publicación antes de publicar.');
+      let verified = draft;
+      if (draft.catalogSource === 'proposal' || draft.catalogSource === 'module') {
+        if (!moduleType) throw new Error('No pudimos identificar el catálogo de este proyecto.');
+        let offers: Offer[], source: ProposalSource | undefined;
+        if (draft.catalogSource === 'proposal') {
+          const saved = await readProposalSource(supabase, userId, projectId, moduleType);
+          offers = saved.offers; source = saved.source;
+        } else {
+          const result = await supabase.from('toolkit_documents').select('payload').eq('user_id', userId).eq('project_id', projectId).eq('kind', 'module-' + moduleType).maybeSingle();
+          if (result.error) throw new Error('No pudimos comprobar el catálogo. Tu publicación anterior no cambió.');
+          if (!result.data) throw new Error('No encontramos el catálogo guardado. Tu publicación anterior no cambió.');
+          offers = nativeOffers(moduleType, result.data.payload);
+        }
+        if (!sameOffers(offers, draft.offers) || (source && (source.proposalRevision !== draft.proposalSource?.proposalRevision || source.catalogRevision !== draft.proposalSource?.catalogRevision))) {
+          setOfferReview({ offers, source });
+          setNotice('Revisa las ofertas guardadas antes de publicar. Tus textos manuales se conservarán.');
+          return;
+        }
+        verified = { ...draft, offers, menuItems: undefined };
       }
-      const snapshot = { ...draft, menuItems: offers, published: true };
-      await save("landing", draft);
-      const { error } = await supabase.from("toolkit_sites").upsert(
-        {
-          user_id: userId,
-          project_id: projectId,
-          slug: draft.slug,
-          content: snapshot,
-          published: true,
-        },
-        { onConflict: "user_id,project_id" },
-      );
-      if (error)
-        throw new Error(
-          error.code === "23505"
-            ? "Esa dirección ya está ocupada. Elige otra."
-            : "No se pudo publicar. Tu borrador está guardado.",
-        );
-      setDraft(snapshot);
+      const snapshot = await landingPublicSnapshot(userId, projectId, verified);
+      await save('landing', verified);
+      const published = await writeLandingPublication(supabase, userId, projectId, snapshot, publication);
+      setPublication(published);
+      const publishedDraft = { ...verified, published: true };
+      setDraft(publishedDraft);
       pending.current = null;
       setDirty(false);
       setPublishedUrl(`${window.location.origin}/s/${draft.slug}`);
       track("landing", true);
       setNotice("Tu página está publicada. Puedes compartir el enlace.");
-      try { await save("landing", snapshot); }
+      try { await save("landing", publishedDraft); }
       catch { setNotice("La página está publicada, pero no pudimos actualizar el estado del borrador. Guarda el borrador para reintentar."); setDirty(true); }
     } catch (e) {
       setNotice((e as Error).message);
+      setPublicationReady(false); setPublicationError("Revisa el estado de publicación antes de reintentar.");
     } finally {
       setBusy(false);
     }
@@ -238,12 +272,9 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
     if (!supabase || demo) return;
     setBusy(true);
     try {
-      const { error } = await supabase
-        .from("toolkit_sites")
-        .update({ published: false })
-        .eq("user_id", userId)
-        .eq("project_id", projectId);
-      if (error) throw error;
+      if (!publicationReady || !publication) throw new Error('Revisa el estado de publicación antes de retirar la página.');
+      const published = await writeLandingPublication(supabase, userId, projectId, publication.content as LandingDraft, publication, false);
+      setPublication(published);
       const next = { ...draft, published: false };
       setDraft(next);
       setPublishedUrl("");
@@ -255,6 +286,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
       setNotice(
         "No pudimos completar la actualización. Revisa el estado antes de compartir.",
       );
+      setPublicationReady(false); setPublicationError("Revisa el estado de publicación antes de reintentar.");
     } finally {
       setBusy(false);
     }
@@ -286,7 +318,14 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
     } catch (error) { setNotice((error as Error).message); }
     finally { setBusy(false); }
   }
-  if (wizard) return <LandingWizard draft={draft} update={update} busy={busy} dirty={dirty} demo={demo} notice={notice} publishedUrl={publishedUrl} onSave={saveDraft} onPublish={publish} onUpload={uploadCover} onSuggest={suggestStory} />;
+  const proposalChanged = draft.proposalSource &&
+    (documentRevision('module-proposal') !== draft.proposalSource.proposalRevision || (draft.catalogSource === 'proposal' && documentRevision('module-' + moduleType) !== draft.proposalSource.catalogRevision));
+  const sourcePanel = <>
+    {publicationError && <section role="alert" className="pe-proposal-notice"><p>{publicationError}</p><DSButtonSecondary disabled={busy} onClick={() => setPublicationAttempt(value => value + 1)}>Revisar estado de publicación</DSButtonSecondary></section>}
+    {draft.proposalSource && <section className="pe-proposal-notice"><strong>{proposalChanged ? 'Tu página necesita revisión' : 'Ofertas vinculadas a Mi propuesta'}</strong><p>Los precios se editan en su fuente. Guardar la propuesta no actualiza la publicación.</p><Link to={'/dashboard/tools/proposal?project=' + projectId}>Revisar mi propuesta →</Link></section>}
+    {offerReview && <section className="pe-proposal-notice" aria-label="Revisar ofertas para publicar"><h2>Ofertas guardadas que se publicarán</h2><p>Compara con la página en vivo. Actualizaremos solo las ofertas; conservaremos tus textos, imágenes de portada y dirección.</p><ul>{offerReview.offers.map(offer => <li key={offer.id}><strong>{offer.name}</strong> · {offerPrice(offer)}<p>{offer.description}</p>{offer.conditions && <p>{offer.conditions}</p>}</li>)}</ul><DSButtonPrimary disabled={busy} onClick={() => { update({ offers:offerReview.offers, menuItems:undefined, proposalSource:offerReview.source }); setOfferReview(null); setNotice('Ofertas revisadas en el borrador. Pulsa Publicar para actualizar la página pública.'); }}>Actualizar ofertas y conservar mis textos</DSButtonPrimary><DSButtonSecondary onClick={() => setOfferReview(null)}>Volver sin actualizar</DSButtonSecondary></section>}
+  </>;
+  if (wizard) return <>{sourcePanel}<LandingWizard draft={draft} update={update} busy={busy} dirty={dirty} demo={demo} notice={notice} publishedUrl={publishedUrl} onSave={saveDraft} onPublish={publish} onUpload={uploadCover} onSuggest={suggestStory} /></>;
   return (
     <div className={`foru-professional-editor pe-wide-editor tk-visual-editor ${sectionsOpen ? 'pe-sections-open' : ''}`} inert={busy} aria-busy={busy}>
       <header className="pe-topbar magic-card" style={{ padding: '1.5rem', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-suave)', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -296,6 +335,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         <span role="status" className="magic-badge">{autosaveStatus || (dirty ? 'Cambios pendientes' : 'Borrador cargado')}</span>
       </header>
       <nav className="pe-context-links" aria-label="Herramientas para esta sección"><Link to={`/creator-studio?project=${encodeURIComponent(projectId)}`}>← Mi ruta creativa</Link><Link to={`/dashboard/tools/content?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Proponer contenido</Link><Link to={`/dashboard/tools/teleprompter?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Grabar con teleprompter</Link></nav>
+      {sourcePanel}
       {notice && <p className="pe-feedback" role="status">{notice}</p>}
       <div className="pe-commandbar magic-card" style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem', flexWrap: 'wrap', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-suave)', marginBottom: '1rem' }}>
         <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-expanded={sectionsOpen} aria-controls="page-sections" onClick={() => setSectionsOpen(value => !value)}>☰ Secciones</DSButtonSecondary>
@@ -383,16 +423,17 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
           Agregar sección
         </DSButtonSecondary>
       </DSCard>
-      {moduleType && <details className="pe-catalog-panel"><summary>Oferta de tu negocio {draft.catalogSource === 'module' ? '· vinculada' : ''}</summary><p>{draft.catalogSource === 'module' ? 'Al publicar consultaremos los precios y la disponibilidad guardados. La página pública solo cambia cuando publicas.' : 'Puedes usar el catálogo de tu negocio en esta página. Primero revisa los cambios en la vista previa.'}</p><Link to={`/modules/${moduleType}/editor?project=${encodeURIComponent(projectId)}`}>Editar mi oferta</Link><DSButtonSecondary type="button" onClick={() => {
+      {moduleType && draft.catalogSource !== 'proposal' && <details className="pe-catalog-panel"><summary>Oferta de tu negocio {draft.catalogSource === 'module' ? '· vinculada' : ''}</summary><p>{draft.catalogSource === 'module' ? 'Al publicar consultaremos los precios y la disponibilidad guardados. La página pública solo cambia cuando publicas.' : 'Puedes usar el catálogo de tu negocio en esta página. Primero revisa los cambios en la vista previa.'}</p><Link to={`/modules/${moduleType}/editor?project=${encodeURIComponent(projectId)}`}>Editar mi oferta</Link><DSButtonSecondary type="button" onClick={() => {
         try {
-          const items = catalogSnapshot(moduleType, docs[`module-${moduleType}`]);
-          if (draft.menuItems?.length && draft.catalogSource !== 'module' && !window.confirm('¿Reemplazar los productos de esta landing por el catálogo guardado? Puedes deshacer antes de publicar.')) return;
-          update({ catalogSource: 'module', menuItems: items });
+          const items = nativeOffers(moduleType, docs[`module-${moduleType}`]);
+          if ((draft.menuItems?.length || draft.offers?.length) && draft.catalogSource !== 'module' && !window.confirm('¿Reemplazar los productos de esta landing por el catálogo guardado? Puedes deshacer antes de publicar.')) return;
+          update({ catalogSource: 'module', offers: items, menuItems: undefined, proposalSource: undefined });
           setNotice(`${items.length} ofertas del catálogo en la vista previa. Guarda o publica cuando estén listas.`);
         } catch (error) { setNotice((error as Error).message); }
       }}>{draft.catalogSource === 'module' ? 'Actualizar vista previa del catálogo' : 'Usar mi catálogo guardado'}</DSButtonSecondary></details>}
       <section className="tk-editor-preview tk-stack magic-card" style={{ padding: '1rem', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-magica)' }}>
         <p style={{ color: 'var(--color-texto-suave)', fontSize: '0.9rem', textAlign: 'center' }}>Haz clic sobre cualquier título o párrafo para editarlo.</p>
+        {previewImageError && <p role="alert">{previewImageError}</p>}
         <div className={`pe-canvas pe-canvas-${viewport}`}><iframe
           ref={frame}
           title="Vista previa editable de tu página"
@@ -407,6 +448,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
       <DSCard id="page-settings" as="section" hidden={!settingsOpen} className="tk-card tk-stack tk-editor-tools">
         <h2>Configuración de la página</h2>
         <h3>Datos de la página</h3>
+        <label><input type="checkbox" checked={draft.bookingEnabled === true || (draft.bookingEnabled === undefined && draft.offers === undefined)} disabled={busy} onChange={e => update({ bookingEnabled:e.target.checked })} /> Mostrar agenda de reservas (requiere disponibilidad configurada)</label>
         <DSSelect label="Plantilla" info="Cambia el estilo de la página sin reemplazar tus textos ni cambiar el rubro del proyecto."
             disabled={busy}
             value={draft.template}

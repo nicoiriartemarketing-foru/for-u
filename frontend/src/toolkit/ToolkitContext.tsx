@@ -15,6 +15,7 @@ import {
   type BehaviorMetrics,
   type FocusState,
 } from "./engine";
+import { MediaScope } from '../components/shared/mediaScope';
 import type { Business } from "./types";
 
 type ToolkitContextValue = {
@@ -34,6 +35,7 @@ type ToolkitContextValue = {
   setHint: (hint: string) => void;
   save: (kind: string, value: unknown) => Promise<void>;
   reload: () => Promise<void>;
+  documentRevision: (kind: string) => string | null;
   track: (
     type: string,
     completed?: boolean,
@@ -372,6 +374,7 @@ export function ToolkitProvider({
         setHint,
         save,
         reload,
+        documentRevision: kind => revisions.current.get(kind) ?? null,
         track,
         setAdaptive,
         chooseState: (next) => {
@@ -380,7 +383,7 @@ export function ToolkitProvider({
         },
       }}
     >
-      {children}
+      <MediaScope.Provider value={{ userId, projectId }}>{children}</MediaScope.Provider>
     </Context.Provider>
   );
 }

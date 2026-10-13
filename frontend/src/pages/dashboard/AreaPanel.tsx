@@ -31,7 +31,7 @@ export default function AreaPanel({ projectId, type, area, play = false, initial
   const state = entry.world.areas[area] ?? { decoration: 0, searchReward: false, taskReward: false };
   const suggestion = mascotMessage(area, type, entry.tasks.tasks);
   const progress = areaProgress(entry.tasks.tasks, area);
-  const tools: Record<AreaId, [string, string][]> = { marketing: [['Diseñar para redes', 'creator'], ['Plantillas', 'landing&page=templates'], ['IA para contenido', 'content'], ['Teleprompter', 'teleprompter']], finance: [['Editar oferta', 'editor'], ['Ver resumen', 'summary']], logistics: [['Calendario', 'calendar'], ['Disponibilidad', 'summary']], operations: [['Pedidos y reservas', 'bookings'], ['WhatsApp y respuestas', 'automation']] };
+  const tools: Record<AreaId, [string, string][]> = { marketing: [['Mi propuesta', 'proposal'], ['Diseñar para redes', 'creator'], ['Plantillas', 'landing&page=templates'], ['IA para contenido', 'content'], ['Teleprompter', 'teleprompter']], finance: [['Editar oferta', 'editor'], ['Ver resumen', 'summary']], logistics: [['Calendario', 'calendar'], ['Disponibilidad', 'summary']], operations: [['Pedidos y reservas', 'bookings'], ['WhatsApp y respuestas', 'automation']] };
   const toolHelp: Record<string, string> = {
     creator: 'Crea piezas gráficas para redes sociales y expórtalas como imagen.',
     'landing&page=templates': 'Explora estilos para la página de tu negocio.',

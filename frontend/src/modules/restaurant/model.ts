@@ -2,7 +2,7 @@ import { validateOptions, publicOptions, type DishOption } from './orderOptions'
 export type Dish = {
   id: string; name: string; description: string; category: string;
   price: number; image: string; available: boolean;
-  variants?: DishOption[]; extras?: DishOption[];
+  variants?: DishOption[]; extras?: DishOption[]; conditions?: string;
 };
 export type Ingredient = {
   id: string; name: string; unit: 'kg' | 'g' | 'l' | 'ml' | 'unidades';
