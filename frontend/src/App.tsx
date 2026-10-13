@@ -1,8 +1,11 @@
 import { Card as DSCard } from './components/ui/DesignSystem';
 import { Toaster } from 'react-hot-toast';
-import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react';
+import { Component, lazy, Suspense, useEffect, type ErrorInfo, type ReactNode } from 'react';
 import { BrowserRouter as Router, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import WorkspaceShell from './pages/dashboard/WorkspaceShell';
+import { useActiveProjectsStore } from './stores/useActiveProjectsStore';
+import { projectModuleType } from './modules/moduleProjects';
+import { isSavedProject } from './pages/dashboard/areaModel';
 import { AreaDocumentsProvider } from './pages/dashboard/AreaDocuments';
 import { WorkspaceFocusProvider } from './pages/dashboard/WorkspaceFocus';
 const WorldPage = lazy(() => import('./pages/dashboard/WorldPage'));
@@ -66,6 +69,16 @@ function PrivateStudio({ children }: { children: ReactNode }) {
 function PrivateWorkspace({ children }: { children: ReactNode }) {
   const location = useLocation();
   const { session, loading } = useAuth();
+  const store = useActiveProjectsStore();
+  const requested = new URLSearchParams(location.search).get('project');
+  const selected = requested ? store.projectsById[requested] : undefined;
+  useEffect(() => {
+    if (session && store.cloudUserId !== session.user.id) void store.hydrateFromSupabase(session.user.id);
+  }, [session?.user.id, store.cloudUserId]);
+  useEffect(() => {
+    if (session && store.cloudUserId === session.user.id && selected && isSavedProject(selected.id)
+      && !selected.cloudPending && projectModuleType(selected) && store.activeProjectId !== selected.id) store.switchProject(selected.id);
+  }, [session?.user.id, store.cloudUserId, selected?.id, selected?.cloudPending, store.activeProjectId]);
   const nextPath = `${window.location.pathname}${window.location.search}`;
 
   if (loading) {

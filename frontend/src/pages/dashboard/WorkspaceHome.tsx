@@ -5,7 +5,7 @@ import { moduleLabels, projectModuleType } from '../../modules/moduleProjects';
 import { areaDefinitions } from './areaModel';
 import { useAreaDocuments } from './AreaDocuments';
 import { useWorkspaceFocus } from './WorkspaceFocus';
-import { resumePath, sameTask, type TaskReference } from './workspaceFocusModel';
+import { projectDestination, taskDestination, resumePath, sameTask, type TaskReference } from './workspaceFocusModel';
 
 export function FocusStatus() {
   const { state, save, reload } = useWorkspaceFocus();
@@ -39,7 +39,7 @@ function ProjectCard({ project }: { project: ForUActiveProject }) {
   const type = projectModuleType(project)!;
   const { entry } = useAreaDocuments(project.id, type);
   const { state, remember } = useWorkspaceFocus();
-  const last = state.data.lastWork?.projectId === project.id ? state.data.lastWork : { projectId: project.id };
+  const last = projectDestination(state.data, project.id);
   const saved = entry?.loaded && entry.taskRevision !== null;
   return <article className="workspace-project-card magic-card"><small>{moduleLabels[type]}</small><h3>{project.name}</h3><p>{entry?.error ? 'No se pudo consultar el progreso.' : saved ? `${entry.tasks.tasks.filter(t => t.done).length} de ${entry.tasks.tasks.length} pasos completados${entry.dirty ? ' · cambios pendientes' : ''}` : entry?.loaded ? 'Tu guía inicial está lista para adaptar.' : 'Cargando progreso…'}</p><nav aria-label={`Acciones de ${project.name}`}><Link className="magic-button-primary" to={resumePath(last, type)} onClick={() => remember(last)}>Continuar →</Link><Link to={`/creator-studio?project=${project.id}`} onClick={() => remember({ projectId: project.id, tool: 'studio' })}>Creator Studio</Link></nav></article>;
 }
@@ -51,10 +51,10 @@ function TodayTask({ reference, project }: { reference: TaskReference; project: 
   const type = projectModuleType(project)!;
   const { entry, reload } = useAreaDocuments(project.id, type);
   const { state, toggle, remember } = useWorkspaceFocus();
-  if (!entry?.loaded || entry.error) return <li><span>{project.name} · {entry?.error ? 'No se pudo cargar este paso.' : 'Cargando paso…'}</span>{entry?.error && <Button onClick={() => void reload()}>Reintentar</Button>}</li>;
+  if (!entry?.loaded || entry.error) return <li><span>{project.name} · {entry?.error ? 'No se pudo cargar este paso.' : 'Cargando paso…'}</span>{entry?.error && <Button onClick={() => { if (!entry.dirty || window.confirm('Recargar descartará los cambios de tareas sin guardar. ¿Continuar?')) void reload(); }}>Reintentar</Button>}</li>;
   const task = entry.tasks.tasks.find(t => t.id === reference.taskId);
   if (!task) return <UnavailableTask reference={reference} title={`${project.name} · Este paso ya no está en la lista.`} />;
-  const work = { projectId: project.id, area: task.area, taskId: task.id };
+  const work = taskDestination(project.id, task);
   return <li><div><small>{project.name} · {areaDefinitions.find(a => a.id === task.area)?.title}</small><Link to={resumePath(work, type)} onClick={() => remember(work)}>{task.title}</Link><span>{task.done ? '✓ Completado' : 'Pendiente'}{entry.dirty ? ' · cambios sin guardar' : ''}</span></div><Button disabled={state.busy} onClick={() => toggle(reference)}>Quitar</Button></li>;
 }
 function ProjectTaskPicker({ project }: { project: ForUActiveProject }) {

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { emptyFocus, parseWorkspaceFocus, toggleToday, resumePath } from '../src/pages/dashboard/workspaceFocusModel.ts';
+import { emptyFocus, parseWorkspaceFocus, toggleToday, resumePath, rememberDestination, projectDestination, taskDestination } from '../src/pages/dashboard/workspaceFocusModel.ts';
 import { initialTasks } from '../src/pages/dashboard/areaModel.ts';
 
 test('Today stores up to three references across projects without copying or changing tasks', () => {
@@ -26,7 +26,7 @@ test('references with the same task id in different projects remain independent'
 });
 test('invalid or unknown focus documents are rejected rather than reset', () => {
   const ref = { projectId: crypto.randomUUID(), taskId: crypto.randomUUID() };
-  assert.throws(() => parseWorkspaceFocus({ version: 2, today: [] }));
+  assert.throws(() => parseWorkspaceFocus({ version: 3, today: [] }));
   assert.throws(() => parseWorkspaceFocus({ version: 1, today: [ref, ref] }));
   assert.throws(() => parseWorkspaceFocus({ version: 1, today: [{ ...ref, projectId: 'legacy-project' }] }));
   assert.throws(() => parseWorkspaceFocus({ version: 1, today: [], lastWork: { projectId: ref.projectId, tool: 'https://external.example' } }));
@@ -43,4 +43,33 @@ test('resume retains the project and opens the task or correct rubric tool', () 
   assert.equal(url.searchParams.get('area'), 'finance');
   assert.equal(resumePath({ projectId, tool: 'editor' }, 'hospitality'), `/modules/hospitality/editor?project=${projectId}`);
   assert.equal(resumePath({ projectId, tool: 'studio' }, 'restaurant'), `/creator-studio?project=${projectId}`);
+});
+
+test('legacy reads preserve the original document; explicit edits carry Today and its last destination', () => {
+  const a = crypto.randomUUID(), b = crypto.randomUUID();
+  const legacy = { version: 1, today: [{ projectId: a, taskId: 'task-a' }], lastWork: { projectId: a, tool: 'calendar' } };
+  const original = structuredClone(legacy);
+  assert.equal(parseWorkspaceFocus(legacy), legacy);
+  const next = rememberDestination(legacy, { projectId: b, tool: 'studio' });
+  assert.equal(next.version, 2);
+  assert.deepEqual(next.today, legacy.today);
+  assert.deepEqual(projectDestination(next, a), legacy.lastWork);
+  assert.equal(projectDestination(next, b).tool, 'studio');
+  assert.deepEqual(legacy, original);
+  const reloaded = parseWorkspaceFocus(JSON.parse(JSON.stringify(next)));
+  const edited = rememberDestination(reloaded, { projectId: a, tool: 'analytics' });
+  assert.equal(projectDestination(edited, b).tool, 'studio');
+  assert.equal(projectDestination(edited, a).tool, 'analytics');
+  assert.equal(toggleToday(legacy, legacy.today[0]).version, 2);
+  assert.throws(() => parseWorkspaceFocus({ version: 2, today: [], destinations: { [a]: { projectId: b } } }));
+  assert.throws(() => parseWorkspaceFocus({ version: 2, today: [], destinations: { [a]: null } }));
+});
+test('Today opens the linked tool directly without changing completion; unlinked tasks open their detail', () => {
+  const projectId = crypto.randomUUID();
+  const task = { id: crypto.randomUUID(), area: 'marketing', tool: 'calendar', done: false };
+  assert.equal(resumePath(taskDestination(projectId, task), 'tourism'), `/dashboard/tools/calendar?project=${projectId}`);
+  assert.equal(task.done, false);
+  const detail = new URL(resumePath(taskDestination(projectId, { ...task, tool: undefined }), 'tourism'), 'http://localhost');
+  assert.equal(detail.searchParams.get('task'), task.id);
+  assert.equal(detail.searchParams.get('project'), projectId);
 });

@@ -5,7 +5,7 @@ import { projectModuleType } from '../../modules/moduleProjects';
 import { loadWorkspaceFocus } from '../../services/workspaceFocus';
 import { saveModuleDocument } from '../../services/moduleDocuments';
 import { isSavedProject } from './areaModel';
-import { emptyFocus, parseWorkspaceFocus, toggleToday, type LastWork, type TaskReference, type WorkspaceFocus } from './workspaceFocusModel';
+import { emptyFocus, parseWorkspaceFocus, rememberDestination, toggleToday, type LastWork, type TaskReference, type WorkspaceFocus } from './workspaceFocusModel';
 
 type State = { data: WorkspaceFocus; anchor: string | null; revision: string | null; loaded: boolean; busy: boolean; dirty: boolean; error: string };
 const initial = (): State => ({ data: emptyFocus(), anchor: null, revision: null, loaded: false, busy: false, dirty: false, error: '' });
@@ -73,7 +73,7 @@ function AccountFocus({ userId, children }: { userId?: string; children: ReactNo
   }
   function remember(work: LastWork) {
     if (!current.current.loaded) return;
-    patch({ data: parseWorkspaceFocus({ ...current.current.data, lastWork: work }), dirty: true });
+    patch({ data: rememberDestination(current.current.data, work), dirty: true });
     void save();
   }
   return <Context.Provider value={{ state, reload, save, toggle, remember }}>{children}</Context.Provider>;

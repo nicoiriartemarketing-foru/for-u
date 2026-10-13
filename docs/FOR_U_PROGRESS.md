@@ -6,7 +6,7 @@ Registro consolidado: 2026-10-13. La tabla histórica de octubre 7 se conserva a
 
 | Entrega | Estado | Evidencia y siguiente acción |
 |---|---|---|
-| 1. Espacio de trabajo y Hoy | en curso | Implementado dashboard general, Hoy por referencias, áreas en modal y gestión sin landing. Recorrido QA real y conflicto entre pestañas comprobados; faltan 768 exactos, red controlada y segunda cuenta. Ver evidencia del 13 de octubre. |
+| 1. Espacio de trabajo y Hoy | implementada; validación remota entre cuentas pendiente | Base en c9111a6 y cierre separado: Continuar por proyecto, Hoy directo a herramienta, rechazo de proyecto inaccesible y revisiones conservadas. Pruebas controladas de transporte y conflicto real entre pestañas pasan. Segunda sesión autorizada no disponible; tablet comprobada a 767/769 por zoom, no 768 exactos. Ver cierre del 13 de octubre. |
 | 2. Propuesta y servicios | pendiente | No existe flujo completo; catálogo por rubro reutilizable. Añadir después de cerrar entrega 1. |
 | 3. Propuesta a página | pendiente | Editor amplio y catálogo Restaurante vinculados, publicación QA comprobada (octubre 9); vínculo limita ID/nombre/precio. Falta propuesta y catálogo completo. |
 | 4. Perfil y piezas | pendiente | Contenido y guion por sección existentes; falta recorrido de perfil/pieza. |
@@ -139,3 +139,18 @@ La condición «tablero tras borrador» queda sustituida por gestión desde el i
 - Estado de entrega 1: implementación y recorrido principal verificados localmente; continúa en curso por las comprobaciones anteriores. Hostinger no desplegado/verificado. Entregas 2–5 y posteriores conservadas, sin implementarlas en esta instrucción.
 - Commit anterior de opciones/carrito cerrado por separado: `f322d98`. No se publicaron páginas ni se enviaron pedidos/mensajes en estas pruebas.
 - Comprobación final del último trabajo: sidebar móvil → Calendario del nuevo Hospedaje → inicio; Continuar recupera `/dashboard/tools/calendar?project=eaabb4e2-e8e5-4253-a18e-a7264b73c9bd`. Validado sobre la compilación final, después de recargar.
+
+## Cierre de entrega 1 — 13 de octubre de 2026
+
+- Se reutiliza c9111a6 sin sustituir archivos ni reescribir commits. Git estaba limpio al empezar. No se modificaron dependencias, SQL, URLs, borradores ni publicaciones.
+- Preferencias v2: destinos por UUID de proyecto. La lectura v1 conserva el formato; solo un cambio explícito traslada su último destino y conserva las referencias de Hoy. Los formatos inválidos se rechazan sin reemplazarlos.
+- Hoy abre directamente una herramienta vinculada; los pasos sin herramienta abren el detalle para editar/asignar. No completa tareas al navegar. El proyecto activo se sincroniza en las rutas privadas, incluido el creador visual.
+- Una URL de proyecto no disponible impide montar una herramienta de otro proyecto. Error visible y regreso al inicio; reintento de consulta si falló la carga.
+- Guardado mantiene CAS por usuario/proyecto/tipo/revisión. Las pruebas usan la misma frontera de persistencia de producción con transporte controlado: fallo de lectura, fallo de escritura, reintento, revisión obsoleta y duplicado inicial; no equivalen a desconectar la red del navegador ni a verificar RLS entre cuentas.
+- Sesión real Supabase: Hoy abre Calendario de QA Tienda MVP; el selector cambia al proyecto correcto. Tras trabajar en QA Enfoque sin página y recargar, Continuar conserva Calendario para Tienda y Creator Studio para Hospedaje. Su página sigue sin crearse.
+- Se reabrió la tarea original «Validar enfoque y recarga (QA entrega 1)», se guardó y tras recarga Hoy muestra Pendiente con la misma referencia (1/3). Su creación, edición, vínculo y selección están documentados en la prueba previa de esta entrega.
+- Conflicto repetido en dos pestañas reales: la primera guardó Calendario; la segunda intentó Creator Studio con una revisión anterior, mostró error y conservó su enfoque pendiente. Al recargar la primera, Continuar seguía en Calendario. La segunda recuperó explícitamente el enfoque guardado y se cerró.
+- Inicio y modal de Marketing: sin desbordamiento horizontal a 360, 767, 769 y 1440 px. El zoom 80% y el requisito de dimensiones enteras del navegador impiden obtener 768 exactos; no se declara esa medición.
+- Entorno: Node 20.19.5, configuración pública Supabase comprobada por build protegido y sesión real. Snapshot temporal sincronizado desde el repositorio para evitar lecturas lentas de iCloud. Vista previa 127.0.0.1:4173 sirve su build nuevo.
+- Validación final: TypeScript, suite 104/104, build Vite 4.5.3 y diff --check. La compilación macOS no demuestra compatibilidad GLIBC del servidor Hostinger.
+- Límites: aislamiento remoto entre cuentas pendiente por falta de segunda sesión autorizada; despliegue Hostinger pendiente. No se avanzó a entregas posteriores. El documento de enfoque sigue anclado a un proyecto propio: cualquier futura eliminación de ese proyecto deberá proteger/trasladar las preferencias antes de borrar.
