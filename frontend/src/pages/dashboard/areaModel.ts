@@ -50,6 +50,7 @@ export function mascotMessage(area: AreaId, type: ModuleType, tasks: AreaTask[])
 }
 export function areaToolPath(tool: string, type: ModuleType, project: string) {
   const query = `?project=${encodeURIComponent(project)}`;
+  if (tool === 'orders') return type === 'restaurant' ? `/modules/restaurant/orders${query}` : `/dashboard${query}`;
   if (tool === 'editor') return `/modules/${type}/editor${query}`;
   if (tool === 'summary') return `/modules/${type}${query}`;
   if (tool === 'creator') return `/content-creator${query}`;

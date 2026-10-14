@@ -1,14 +1,18 @@
 import { Card as DSCard } from '../../components/ui/DesignSystem';
 import { Input as DSInput, ButtonSecondary as DSButtonSecondary } from '../../components/ui/DesignSystem';
 import ProjectImage from '../../components/shared/ProjectImage';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { readSavedCart } from './orderSession';
+import RestaurantCheckout from './RestaurantCheckout';
+import CustomerRestaurantProfile from './CustomerRestaurantProfile';
 import type { Dish } from './model';
 import { quoteRestaurantCart, cartWhatsappUrl, type CartSelection } from './cart';
 import type { RestaurantMenuData } from './publicMenu';
 
 /** Customer-facing menu; the editor supplies the current draft for preview. */
-export default function RestaurantMenu({ data }: { data: RestaurantMenuData }) {
-  const [selections, setSelections] = useState<CartSelection[]>([]);
+export default function RestaurantMenu({ data, slug }: { data: RestaurantMenuData; slug?: string }) {
+  const [selections, setSelections] = useState<CartSelection[]>(()=>{try{return slug?readSavedCart(localStorage.getItem(`foru-cart:${slug}`)):[];}catch{return [];}});
+  useEffect(()=>{if(slug){try{localStorage.setItem(`foru-cart:${slug}`,JSON.stringify(selections));}catch{/* Cart still works in memory. */}}},[slug,selections]);
   const [notice, setNotice] = useState('');
   const [category, setCategory] = useState('');
   const { settings } = data;
@@ -41,14 +45,15 @@ export default function RestaurantMenu({ data }: { data: RestaurantMenuData }) {
             {line?.variantName && <span> · {line.variantName}</span>}{line?.extraNames.length ? <p>Extras: {line.extraNames.join(', ')}</p> : null}
             {selection.note && <p>Nota: {selection.note}</p>}{line && <p>S/ {(line.totalCents / 100).toFixed(2)}</p>}
             <DSButtonSecondary type="button" aria-label={`Quitar ${line?.name ?? 'producto'} del pedido`} onClick={() => setSelections(current => current.filter(item => item.id !== selection.id))}>Quitar</DSButtonSecondary></li>;
-        })}</ul>{total !== null && <strong>Productos: S/ {total.toFixed(2)}</strong>}<p>Esta solicitud se envía por WhatsApp. El negocio confirma disponibilidad, entrega y pago; aún no es un pedido registrado en FOR U.</p>{orderError ? <p role="alert">{orderError}</p> : <a href={orderUrl} target="_blank" rel="noopener noreferrer">Revisar pedido en WhatsApp</a>}<DSButtonSecondary type="button" onClick={() => { setSelections([]); setNotice('Pedido vaciado.'); }}>Vaciar pedido</DSButtonSecondary></aside>}
-
+        })}</ul>{total !== null && <strong>Productos: S/ {total.toFixed(2)}</strong>}<details><summary>Consultar por WhatsApp (opcional)</summary><p>WhatsApp es una consulta aparte. Usa la confirmación de FOR U para registrar el pedido.</p>{orderError ? <p role="alert">{orderError}</p> : <a href={orderUrl} target="_blank" rel="noopener noreferrer">Revisar pedido en WhatsApp</a>}</details><DSButtonSecondary type="button" onClick={() => { setSelections([]); setNotice('Pedido vaciado.'); }}>Vaciar pedido</DSButtonSecondary></aside>}
+        {slug && <RestaurantCheckout slug={slug} selections={selections} onPlaced={()=>{setSelections([]);setNotice('Pedido registrado. Abre el seguimiento privado.');}}/>}
       </>}
       {section.id === 'about' && <><h2>Conócenos</h2><p>{settings.about}</p></>}
       {section.id === 'faq' && <><h2>Preguntas frecuentes</h2>{settings.faq.filter(item => item.question.trim()).map(item => <details key={item.id}><summary>{item.question}</summary><p>{item.answer}</p></details>)}</>}
       {section.id === 'location' && <><h2>Visítanos</h2><p>{settings.address}</p><p>{settings.hours}</p>{settings.address.trim() && <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`} target="_blank" rel="noopener noreferrer">Ver ubicación</a>}</>}
       {section.id === 'loyalty' && <><h2>Para nuestros clientes frecuentes</h2><p>{settings.loyalty}</p></>}
     </DSCard>)}
+    {slug && <CustomerRestaurantProfile slug={slug} dishes={data.dishes}/>}
     {selections.length > 0 && <a className="restaurant-order-summary" href="#pedido">Ver mi pedido{total !== null ? ` · S/ ${total.toFixed(2)}` : ' · revisar opciones'}</a>}
   </div>;
 }

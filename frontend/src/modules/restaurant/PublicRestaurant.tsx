@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
 import RestaurantMenu from './RestaurantMenu';
+import RestaurantCheckout from './RestaurantCheckout';
 import { parsePublishedRestaurant, type PublishedRestaurant } from './publicMenu';
 import './restaurant.css';
 import { usePublicModuleAnalytics } from '../usePublicModuleAnalytics';
@@ -40,6 +41,6 @@ function PublicRestaurantSession({ slug }: { slug: string }) {
     return () => { document.title = previous; };
   }, [site]);
   return <main className="restaurant-module restaurant-public" onClickCapture={trackContact}>
-    {loading ? <p role="status">Cargando la carta…</p> : site ? <RestaurantMenu data={site.menu} /> : <><h1>Carta no disponible</h1><p role="status">{notice}</p><DSButtonSecondary type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar</DSButtonSecondary></>}
+    {loading ? <p role="status">Cargando la carta…</p> : site ? <RestaurantMenu data={site.menu} slug={slug} /> : <><h1>Carta no disponible</h1><p role="status">{notice}</p><DSButtonSecondary type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar</DSButtonSecondary><RestaurantCheckout slug={slug} selections={[]} onPlaced={()=>{}} /></>}
   </main>;
 }

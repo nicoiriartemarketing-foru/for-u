@@ -16,7 +16,7 @@ const reservedSlugs = new Set([
   'content-creator', 'negocio', 'experiencias', 'herramientas', 'mapa',
   'site-preview', 's', 'whatsapp', 'pricing', 'studio', 'login', 'register',
   'register-wizard', 'dashboard', 'editor', 'reservas', 'p', 'api', 'assets',
-  'demo', 'terminos', 'privacidad',
+  'pedidos', 'demo', 'terminos', 'privacidad',
 ]);
 export function isRestaurantSlug(slug: string): boolean {
   return /^[a-z0-9][a-z0-9-]{2,59}$/.test(slug) && !reservedSlugs.has(slug);

@@ -2,7 +2,7 @@
 
 ## Plan vigente — aprobado el 13 de octubre de 2026
 
-Este plan sustituye las decisiones contradictorias del historial conservado abajo. Se ejecuta **una entrega por instrucción**; la instrucción vigente autoriza la entrega 4 (widgets entre proyectos); la entrega 2 incorporó el recorrido de publicación. No se declara terminado el objetivo completo mientras queden entregas pendientes.
+Este plan sustituye las decisiones contradictorias del historial conservado abajo. Se ejecuta **una entrega por instrucción**; la instrucción vigente autoriza pedidos internos de restaurante y perfil opcional de cliente; la entrega 2 incorporó el recorrido de publicación. No se declara terminado el objetivo completo mientras queden entregas pendientes.
 
 FOR U organiza proyectos con identidad propia. El rubro principal orienta preguntas, herramientas y pasos, sin limitar tipos de oferta; las páginas podrán mostrar ofertas publicadas de otros proyectos mediante widgets autorizados.
 
@@ -25,7 +25,7 @@ Decisiones sustituidas: el inicio general muestra proyectos y prioridades, sin e
 
 **Estado al 14 de octubre de 2026:** entrega 4 implementada (`004c912`) y recorrido QA remoto verificado tras activar SQL 22 y la corrección de permisos 23. QA Studio4U conserva su identidad y muestra oferta de QA Marketing4U mediante contenido con CTA y tarjeta. Guardado/recarga, publicación fuente, borrador independiente, retirada/restauración y eliminación de referencias comprobados. Lectura anónima pública válida y funciones privadas denegadas. Compartición entre dos cuentas probada en PostgreSQL aislado; falta segunda sesión para repetirla remotamente. Hostinger continúa pendiente, sin cambios a negocios reales. Evidencias en FOR_U_PROGRESS.md.
 
-Después de cerrar los pendientes de entrega 5, en orden: pedidos/clientes con cálculo servidor, mesa/recojo/delivery, invitado y perfil opcional; Mercado Pago por negocio, cuotas reales de nube y Meta autorizado (una integración por entrega); mundo, barco, mascotas, juego, onboarding, Pomodoro y Pro. Los agentes acompañan, sin reemplazar resultados guardados.
+Pedidos/clientes se implementan ahora por instrucción expresa, conservando los pendientes externos de entrega 5. Incluyen cálculo desde el catálogo publicado, mesa/recojo/delivery, invitado, seguimiento privado, favoritos e historial; Mercado Pago por negocio, cuotas reales de nube y Meta autorizado (una integración por entrega); mundo, barco, mascotas, juego, onboarding, Pomodoro y Pro. Los agentes acompañan, sin reemplazar resultados guardados.
 
 ## Datos y protecciones
 
