@@ -43,6 +43,8 @@ Deno.serve(async (req) => {
     )
       return reply({ error: "Solicitud inválida." }, 400);
     if (action === "disconnect") {
+      const removedCredential = await admin.from('integration_credentials').delete().eq('user_id',user.id).eq('provider',provider);
+      if (removedCredential.error) return reply({error:'No se pudo retirar la autorización. Reintenta.'},500);
       const { error } = await admin
         .from("integration_connections")
         .delete()
@@ -121,9 +123,10 @@ Deno.serve(async (req) => {
       checked_at: new Date().toISOString(),
       account_label:
         connected && typeof label === "string" ? label.slice(0, 150) : null,
-      verification_state: connected ? 'verified' : [401, 403].includes(result.status) ? 'expired' : 'error',
-      last_error: connected ? null : [401, 403].includes(result.status)
+      verification_state: connected ? 'verified' : result.status === 401 || provider === 'meta_ads' && data.error?.code === 190 ? 'expired' : 'error',
+      last_error: connected ? null : result.status === 401 || provider === 'meta_ads' && data.error?.code === 190
         ? 'Renueva la autorización y comprueba los permisos de acceso.'
+        : result.status === 403 ? 'La autorización no permite consultar este servicio. Revisa los permisos.'
         : 'El servicio no confirmó acceso. Vuelve a verificar en unos minutos.',
     };
     const { error } = await admin.from("integration_connections").upsert(row);
@@ -136,7 +139,7 @@ Deno.serve(async (req) => {
       if (saved.error) {
         await admin
           .from("integration_connections")
-          .update({ connected: false })
+          .update({ connected: false, verification_state: 'error', last_error: 'La verificación no pudo conservar su autorización. Vuelve a conectar.' })
           .eq("user_id", user.id)
           .eq("provider", provider);
         return reply({ error: "No se pudo guardar la autorización." }, 500);
