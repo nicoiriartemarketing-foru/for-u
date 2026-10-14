@@ -7,10 +7,13 @@ import { localDate } from "./engine";
 import { downloadBlob } from "./api";
 import type { CalendarEntry } from "./types";
 import { useUnsavedNavigation } from '../lib/useUnsavedNavigation';
+import { calendarDateTime, calendarICS, readCalendar } from './calendarModel';
 export default function Calendar() {
-  const { docs, save, track } = useToolkit();
+  const { docs, save, track, reload, projectId } = useToolkit();
+  let initial: CalendarEntry[] = [], formatError = '';
+  try { initial = readCalendar(docs.calendar); } catch(e) { formatError = (e as Error).message; }
   const [entries, setEntries] = useState<CalendarEntry[]>(
-    (docs.calendar as CalendarEntry[]) ?? [],
+    initial,
   );
   const [anchor, setAnchor] = useState(new Date());
   const [view, setView] = useState("week");
@@ -20,11 +23,16 @@ export default function Calendar() {
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
+  const [pending, setPending] = useState<CalendarEntry[] | null>(null);
+  const [saveError, setSaveError] = useState('');
+  const [recovery, setRecovery] = useState(false);
+  const conflict = saveError.includes('otra pestaña');
+  const blocked = busy || conflict || Boolean(formatError);
   const savingRef = useRef(false);
   const [notifications, setNotifications] = useState(false);
   const reminded = useRef(new Set<string>());
   const original = entries.find(entry => entry.id === editing);
-  useUnsavedNavigation(editing ? Boolean(original && (original.title !== title || original.date !== date || original.time !== time)) : Boolean(title.trim()));
+  useUnsavedNavigation(pending !== null || (editing ? Boolean(original && (original.title !== title || original.date !== date || original.time !== time)) : Boolean(title.trim())));
   const start = new Date(
     anchor.getFullYear(),
     anchor.getMonth(),
@@ -63,17 +71,23 @@ export default function Calendar() {
     return () => clearInterval(timer);
   }, [entries, notifications]);
   async function update(next: CalendarEntry[]) {
-    if (savingRef.current) return false;
+    if (savingRef.current || formatError || conflict) return false;
+    readCalendar(next);
+    setEntries(next);
+    setPending(next);
+    setSaveError('');
+    setNotice('');
     savingRef.current = true;
     setBusy(true);
     try {
       await save("calendar", next);
-      setEntries(next);
+      setPending(null);
       setNotice('Agenda guardada en tu cuenta.');
       toast.success('Agenda guardada', { id: `calendar-saved` });
       return true;
     } catch (e) {
-      setNotice((e as Error).message);
+      setSaveError((e as Error).message);
+      setNotice('Cambios pendientes de guardar.');
       return false;
     } finally {
       setBusy(false);
@@ -88,48 +102,23 @@ export default function Calendar() {
     } else next.setDate(next.getDate() + 7 * direction);
     setAnchor(next);
   }
+  function moveEntry(entry: CalendarEntry, value: string) {
+    if(blocked || !value) return;
+    try { calendarDateTime(value,entry.time); } catch { setNotice('Revisa la fecha.'); return; }
+    void update(entries.map(item=>item.id===entry.id?{...item,date:value}:item));
+  }
   function exportCalendar() {
-    const escape = (s: string) =>
-      s
-        .replace(/\\/g, "\\\\")
-        .replace(/\r?\n/g, "\\n")
-        .replace(/,/g, "\\,")
-        .replace(/;/g, "\\;");
-    const utc = (d: Date) =>
-      d
-        .toISOString()
-        .replace(/[-:]/g, "")
-        .replace(/\.\d{3}/, "");
-    const lines = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//FOR U//Agenda//ES",
-      ...entries.flatMap((e) => {
-        const start = new Date(`${e.date}T${e.time}`);
-        return [
-          "BEGIN:VEVENT",
-          `UID:${e.id}@foru`,
-          `DTSTAMP:${utc(new Date())}`,
-          `DTSTART:${utc(start)}`,
-          `DTEND:${utc(new Date(start.getTime() + 30 * 60_000))}`,
-          `SUMMARY:${escape(e.title)}`,
-          "BEGIN:VALARM",
-          "TRIGGER:-PT10M",
-          "ACTION:DISPLAY",
-          `DESCRIPTION:${escape(e.title)}`,
-          "END:VALARM",
-          "END:VEVENT",
-        ];
-      }),
-      "END:VCALENDAR",
-    ];
     downloadBlob(
-      new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" }),
+      new Blob([calendarICS(entries)], { type: "text/calendar;charset=utf-8" }),
       "agenda-for-u.ics",
     );
   }
   return (
     <div className="tk-stack magic-card">
+      {formatError && <p role="alert">{formatError}</p>}
+      {pending !== null && <p role="status">{busy ? 'Guardando agenda…' : 'Cambios pendientes de guardar en tu cuenta.'}</p>}
+      {saveError && <div role="alert"><p>{saveError}</p>{!conflict && <DSButtonSecondary disabled={busy} onClick={() => pending && void update(pending)}>Reintentar guardado</DSButtonSecondary>}<DSButtonSecondary disabled={busy} onClick={() => setRecovery(true)}>Recuperar agenda guardada</DSButtonSecondary><DSButtonSecondary onClick={() => downloadBlob(new Blob([JSON.stringify({projectId,entries},null,2)],{type:'application/json'}),'agenda-pendiente.json')}>Descargar mis cambios pendientes</DSButtonSecondary></div>}
+      {recovery && <section aria-label="Recuperar agenda"><p>Recuperar descartará los cambios pendientes de esta pantalla. Puedes descargarlos primero.</p><DSButtonSecondary onClick={() => setRecovery(false)}>Conservar mis cambios</DSButtonSecondary><DSButtonSecondary onClick={() => { setPending(null); setSaveError(''); void reload(); }}>Descartar pendientes y recuperar</DSButtonSecondary></section>}
       <style>{`
         .tk-stack.magic-card {
            border: 1px solid rgba(212, 212, 212, 0.76);
@@ -197,9 +186,9 @@ export default function Calendar() {
             const nextTitle = String(form.get('title') ?? '').trim();
             const nextDate = String(form.get('date') ?? '');
             const nextTime = String(form.get('time') ?? '');
-            if (!nextTitle || !/^\d{4}-\d{2}-\d{2}$/.test(nextDate) || !/^\d{2}:\d{2}$/.test(nextTime) || !Number.isFinite(new Date(`${nextDate}T${nextTime}`).getTime())) { setNotice('Revisa el título, la fecha y la hora.'); return; }
-            if (
-              await update(editing ? entries.map(entry => entry.id === editing ? { ...entry, title: nextTitle, date: nextDate, time: nextTime } : entry) : [
+            if (blocked || !nextTitle) return;
+            try { calendarDateTime(nextDate,nextTime); } catch { setNotice('Revisa el título, la fecha y la hora.'); return; }
+            const success = await update(editing ? entries.map(entry => entry.id === editing ? { ...entry, title: nextTitle, date: nextDate, time: nextTime } : entry) : [
                 ...entries,
                 {
                   id: crypto.randomUUID(),
@@ -209,12 +198,10 @@ export default function Calendar() {
                   format: "contenido",
                   done: false,
                 },
-              ])
-            ) {
+              ]);
               setTitle("");
               setEditing(null);
-              track("calendar", true);
-            }
+              if (success) track("calendar", true);
           }}
         >
           <label>
@@ -250,7 +237,7 @@ export default function Calendar() {
               onChange={(e) => setTime(e.target.value)}
             />
           </label>
-          <DSButtonPrimary className="tk-primary" disabled={busy}>
+          <DSButtonPrimary className="tk-primary" disabled={blocked}>
             {editing ? 'Guardar actividad' : 'Agregar'}
           </DSButtonPrimary>
           {editing && <DSButtonSecondary type="button" onClick={() => { setEditing(null); setTitle(''); }}>Cancelar edición</DSButtonSecondary>}
@@ -287,7 +274,7 @@ export default function Calendar() {
                 onDrop={(e) => {
                   e.preventDefault();
                   const id = e.dataTransfer.getData("text/foru-event");
-                  if (!busy && entries.some((item) => item.id === id))
+                  if (!blocked && entries.some((item) => item.id === id))
                     void update(
                       entries.map((item) =>
                         item.id === id ? { ...item, date: key } : item,
@@ -308,19 +295,19 @@ export default function Calendar() {
                     <div
                       className={`tk-event animate-fade-in ${entry.done ? "is-done" : ""}`}
                       key={entry.id}
-                      draggable={!busy}
+                      draggable={!blocked}
                       onDragStart={(e) =>
                         e.dataTransfer.setData("text/foru-event", entry.id)
                       }
                     >
                       <span>{entry.time}</span>
                       <strong>{entry.title}</strong>
-                      <DSButtonSecondary disabled={busy} onClick={() => { setEditing(entry.id); setTitle(entry.title); setDate(entry.date); setTime(entry.time); }}>Editar actividad</DSButtonSecondary>
+                      <DSButtonSecondary disabled={blocked} onClick={() => { setEditing(entry.id); setTitle(entry.title); setDate(entry.date); setTime(entry.time); }}>Editar actividad</DSButtonSecondary>
                       <label className="tk-check">
                         <DSInput
                           type="checkbox"
                           checked={entry.done}
-                          disabled={busy}
+                          disabled={blocked}
                           onChange={() => {
                             void update(
                               entries.map((item) =>
@@ -338,17 +325,9 @@ export default function Calendar() {
                         <DSInput
                           type="date"
                           value={entry.date}
-                          disabled={busy}
-                          onChange={(e) => {
-                            if (e.target.value)
-                              void update(
-                                entries.map((item) =>
-                                  item.id === entry.id
-                                    ? { ...item, date: e.target.value }
-                                    : item,
-                                ),
-                              );
-                          }}
+                          disabled={blocked}
+                          onInput={e=>moveEntry(entry,e.currentTarget.value)}
+                          onChange={e=>moveEntry(entry,e.target.value)}
                         />
                       </label>
                       <a
@@ -370,7 +349,7 @@ export default function Calendar() {
                         Agregar a Google Calendar ↗
                       </a>
                       <DSButtonSecondary
-                        disabled={busy}
+                        disabled={blocked}
                         onClick={() =>
                           update(entries.filter((item) => item.id !== entry.id))
                         }

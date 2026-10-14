@@ -9,6 +9,7 @@ import { defaultLanding } from "./types";
 import { downloadBlob } from "./api";
 import { learnPatterns } from "./engine";
 import type { Booking, LandingDraft } from "./types";
+import { readAnalyticsSummary, type AnalyticsSummary } from './analyticsModel';
 
 export function Bookings() {
   const { userId, projectId, business, docs, save, demo } = useToolkit();
@@ -20,8 +21,13 @@ export function Bookings() {
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [siteId, setSiteId] = useState("");
+  const [queryLoading,setQueryLoading] = useState(!demo);
+  const [queryError,setQueryError] = useState('');
   const load = useCallback(async () => {
-    if (!supabase || demo) return;
+    if (demo) return;
+    if (!supabase) { setQueryError('Supabase no está configurado.'); setQueryLoading(false); return; }
+    setQueryLoading(true);
+    try {
     const site = await supabase
       .from("toolkit_sites")
       .select("id")
@@ -29,11 +35,12 @@ export function Bookings() {
       .eq("project_id", projectId)
       .maybeSingle();
     if (site.error) {
-      setNotice("No se pudieron cargar las reservas. Reintenta.");
+      setQueryError("No se pudieron cargar las solicitudes. Reintenta.");
       return;
     }
     if (!site.data) {
-      setNotice("Publica tu página para empezar a recibir solicitudes.");
+      setSiteId('');setBookings([]);setQueryError('');
+      setNotice("Guarda y publica tu página para empezar a recibir solicitudes.");
       return;
     }
     setSiteId(site.data.id);
@@ -44,14 +51,17 @@ export function Bookings() {
       .eq("site_id", site.data.id)
       .order("created_at", { ascending: false })
       .limit(200);
-    if (result.error) setNotice("No se pudieron cargar las reservas.");
+    if (result.error) setQueryError("No se pudieron cargar las solicitudes. Los datos anteriores pueden estar desactualizados.");
     else {
+      setQueryError('');setNotice('');
       setBookings((previous) => {
         if (previous.length && (result.data?.length ?? 0) > previous.length)
           setNotice("Llegó una nueva solicitud.");
         return result.data ?? [];
       });
     }
+    } catch { setQueryError('No se pudo consultar solicitudes. Reintenta.'); }
+    finally { setQueryLoading(false); }
   }, [demo, projectId, userId]);
   // Loading subscribes this view to remote data and its refresh cycle.
   useEffect(() => {
@@ -138,7 +148,7 @@ export function Bookings() {
       <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-toolbar">
           <h3>Solicitudes recibidas</h3>
-          <DSButtonSecondary onClick={load} disabled={demo}>
+          <DSButtonSecondary onClick={load} disabled={demo || queryLoading}>
             Actualizar
           </DSButtonSecondary>
         </div>
@@ -146,7 +156,9 @@ export function Bookings() {
           Se revisan nuevas solicitudes cada 30 segundos mientras esta vista
           está abierta.
         </small>
-        {!bookings.length && (
+        {queryLoading && <p role="status">Consultando solicitudes…</p>}
+        {queryError && <p role="alert">{queryError}</p>}
+        {!queryLoading && !queryError && !bookings.length && (
           <div className="tk-empty">
             Aún no hay solicitudes. Cuando alguien complete tu formulario,
             aparecerá aquí.
@@ -173,7 +185,7 @@ export function Bookings() {
               Estado
               <select
                 value={booking.status}
-                disabled={busy}
+                disabled={busy || queryLoading || Boolean(queryError)}
                 onChange={async (e) => {
                   if (!supabase) return;
                   const status = e.target.value;
@@ -223,21 +235,15 @@ export function Analytics({
   proUnlocked?: boolean;
 }) {
   const { userId, projectId, demo, business, actions } = useToolkit();
-  const [counts, setCounts] = useState<{
-    unique_visitors: number;
-    page_views: number;
-    daily?: { day: string; views: number; clicks: number }[];
-    cta_clicks: number;
-    pages: { path: string; views: number }[];
-    sources: { source: string; views: number }[];
-    updated_at: string;
-  } | null>(null);
+  const [counts, setCounts] = useState<AnalyticsSummary | null>(null);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
   const [revision, setRevision] = useState(0);
   const patterns = learnPatterns(actions);
   useEffect(() => {
-    if (!supabase || demo) return;
+    setCounts(null);setNotice('');
+    if (demo) return;
+    if (!supabase) { setNotice('Supabase no está configurado. No se pudieron consultar métricas.'); return; }
     let active = true;
     const client = supabase;
     let running = false;
@@ -245,21 +251,19 @@ export function Analytics({
       if (running) return;
       running = true;
       setLoading(true);
+      try {
       const { data, error } = await client.rpc("site_analytics_summary", {
         project: projectId,
       });
-      running = false;
       if (!active) return;
-      setLoading(false);
       if (error) {
         setCounts(null);
         setNotice("No pudimos actualizar las métricas. Inténtalo de nuevo.");
         return;
       }
-      setCounts(data ?? { unique_visitors: 0, page_views: 0, cta_clicks: 0, pages: [], sources: [], updated_at: new Date().toISOString() });
-      setNotice(
-        data ? "" : "Publica tu página para empezar a medir visitas y clics.",
-      );
+      setCounts(readAnalyticsSummary(data));setNotice('');
+      } catch(e) { if(active){setCounts(null);setNotice((e as Error).message || 'No se pudo consultar métricas.');} }
+      finally {running=false;if(active)setLoading(false);}
     };
     void load();
     const channel = client
@@ -344,7 +348,7 @@ export function Analytics({
           en vivo con revisión adicional cada 15 segundos.
         </small>
         {(demo || notice) && (
-          <p role="status" className="tk-notice">
+          <p role={demo ? 'status' : 'alert'} className="tk-notice">
             {demo
               ? "La prueba no contiene métricas inventadas. Publica tu página para ver datos reales."
               : notice}

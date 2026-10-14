@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
 import { supabase } from "../lib/supabaseClient";
 import { useToolkit } from "./ToolkitContext";
+import { connectionState, connectionLabels, type Connection } from './connectionModel';
 const providers = [
   {
     id: "google_calendar",
     name: "Google Calendar",
     url: "https://calendar.google.com/",
-    help: "Autoriza acceso de lectura a tus calendarios. Renueva la autorización cuando venza.",
+    help: "Esta versión requiere un token OAuth con permiso de lectura de calendarios. Abrir Google Calendar no autoriza FOR U. El inicio de sesión con Google aún no está integrado.",
   },
   {
     id: "calendly",
@@ -30,14 +31,6 @@ const providers = [
     help: "Usa una autorización con ads_read y acceso a una cuenta publicitaria.",
   },
 ];
-type Connection = {
-  provider: string;
-  connected: boolean;
-  checked_at: string;
-  account_label?: string;
-  verification_state?: 'verified' | 'expired' | 'error';
-  last_error?: string;
-};
 export default function ConnectionStatus({ calendarOnly = false, readOnly = false }: { calendarOnly?: boolean; readOnly?: boolean }) {
   const { userId, projectId, demo } = useToolkit();
   const [connections, setConnections] = useState<Connection[]>([]);
@@ -46,17 +39,21 @@ export default function ConnectionStatus({ calendarOnly = false, readOnly = fals
   const [clock, setClock] = useState(() => Date.now());
   const [attempt, setAttempt] = useState(0);
   const [queryError, setQueryError] = useState(false);
+  const [loading, setLoading] = useState(!demo);
   const [actionErrors, setActionErrors] = useState<Record<string, string>>({});
   useEffect(() => {
-    if (!supabase || demo) return;
+    setConnections([]); setActionErrors({}); setQueryError(false); setNotice(''); setLoading(!demo);
+    if (demo) return;
+    if (!supabase) { setQueryError(true); setLoading(false); setNotice('Supabase no está configurado. No se pudo consultar conexiones.'); return; }
     let active = true;
     const client = supabase;
     const load = async () => {
-      const { data, error } = await client
+      try { const { data, error } = await client
         .from("integration_connections")
         .select("provider,connected,checked_at,account_label,verification_state,last_error")
         .eq("user_id", userId);
       if (!active) return;
+      setLoading(false);
       if (error) { setQueryError(true); setNotice("No se pudo consultar el estado de tus conexiones. El calendario interno sigue disponible."); }
       else {
         setQueryError(false);
@@ -64,9 +61,11 @@ export default function ConnectionStatus({ calendarOnly = false, readOnly = fals
         setConnections(data ?? []);
         setClock(Date.now());
       }
+      } catch { if(active){setLoading(false);setQueryError(true);setNotice('No se pudo consultar conexiones. Reintenta.');} }
     };
     void load();
     const timer = window.setInterval(() => {
+      setClock(Date.now());
       if (!document.hidden) void load();
     }, 30_000);
     return () => {
@@ -90,21 +89,26 @@ export default function ConnectionStatus({ calendarOnly = false, readOnly = fals
         throw new Error(
           "No se pudo verificar la conexión. Revisa tu sesión y vuelve a intentar.",
         );
+      if (!data || typeof data.connected !== 'boolean' || (action !== 'disconnect' && (!data.checked_at || !['verified','expired','error'].includes(data.verification_state)))) throw new Error('El servicio no confirmó un estado válido. Reintenta.');
+      setActionErrors(current => { const next = { ...current }; delete next[provider]; return next; });
+      if (action === 'disconnect') {
+        setConnections(current=>current.filter(c=>c.provider!==provider));
+      } else {
       // This function runs only from explicit form/click handlers.
       // eslint-disable-next-line react-hooks/purity
       setClock(Date.now());
-      setActionErrors(current => { const next = { ...current }; delete next[provider]; return next; });
       setConnections((current) => [
         ...current.filter((c) => c.provider !== provider),
         {
           provider,
           connected: Boolean(data?.connected),
-          checked_at: data?.checked_at ?? new Date().toISOString(),
+          checked_at: data.checked_at,
           account_label: data?.account_label,
           verification_state: data?.verification_state,
           last_error: data?.last_error,
         },
       ]);
+      }
       setNotice(
         data?.error ??
           (action === "disconnect"
@@ -128,15 +132,14 @@ export default function ConnectionStatus({ calendarOnly = false, readOnly = fals
       <div className="tk-connection-grid">
         {providers.filter(provider => !calendarOnly || ['google_calendar', 'calendly'].includes(provider.id)).map((provider) => {
           const row = connections.find((c) => c.provider === provider.id);
-          const fresh = Boolean(
-            !queryError && !actionErrors[provider.id] && row?.connected && clock - Date.parse(row.checked_at) < 900_000,
-          );
+          const state = connectionState(row,clock,loading,queryError,Boolean(actionErrors[provider.id]));
+          const fresh = state === 'verified';
           return (
             <article className="tk-stack" key={provider.id}>
               <strong>{provider.name}</strong>
               <span className="tk-connection-status">
                 <i className={fresh ? "is-connected" : ""} aria-hidden="true" />
-                {queryError ? "Estado no disponible" : actionErrors[provider.id] ? "No se pudo completar la operación · reintenta" : row?.verification_state === 'expired' ? "Autorización vencida o revocada" : row?.verification_state === 'error' ? "Error al comprobar el servicio" : fresh ? "Conectada y verificada" : row?.connected ? "Verificación vencida · vuelve a verificar" : "Sin conectar"}
+                {connectionLabels[state]}
               </span>
               {row?.last_error && <small>{row.last_error}</small>}
               {row?.account_label && <small>{row.account_label}</small>}
@@ -150,7 +153,7 @@ export default function ConnectionStatus({ calendarOnly = false, readOnly = fals
                 <summary>Gestionar conexión</summary>
                 <p>{provider.help}</p>
                 <a href={provider.url} target="_blank" rel="noreferrer">
-                  Abrir {provider.name} ↗
+                  Consultar {provider.name} ↗
                 </a>
                 <form
                   className="tk-stack"
@@ -163,14 +166,14 @@ export default function ConnectionStatus({ calendarOnly = false, readOnly = fals
                   }}
                 >
                   <label>
-                    Autorización del servicio
+                    Token de autorización del servicio
                     <DSInput
                       name="token"
                       type="password"
                       autoComplete="off"
                       required
                       maxLength={5000}
-                      disabled={demo || Boolean(busy)}
+                      disabled={demo || loading || queryError || Boolean(busy)}
                     />
                   </label>
                   <small>
@@ -178,20 +181,20 @@ export default function ConnectionStatus({ calendarOnly = false, readOnly = fals
                     navegador. Verifica acceso; no activa envíos ni
                     sincronización automática.
                   </small>
-                  <DSButtonSecondary disabled={demo || Boolean(busy)}>
+                  <DSButtonSecondary disabled={demo || loading || queryError || Boolean(busy)}>
                     Conectar y verificar
                   </DSButtonSecondary>
                 </form>
                 {row && (
                   <div className="tk-toolbar">
                     <DSButtonSecondary
-                      disabled={Boolean(busy)}
+                      disabled={loading || queryError || Boolean(busy)}
                       onClick={() => void update(provider.id, "verify")}
                     >
                       Verificar estado
                     </DSButtonSecondary>
                     <DSButtonSecondary
-                      disabled={Boolean(busy)}
+                      disabled={loading || queryError || Boolean(busy)}
                       onClick={() => void update(provider.id, "disconnect")}
                     >
                       Desconectar

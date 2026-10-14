@@ -1,0 +1,30 @@
+import type { CalendarEntry } from './types';
+
+export function calendarDateTime(date: string, time: string): Date {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) throw new Error('Revisa la fecha y hora.');
+  const [y,m,d] = date.split('-').map(Number), [h,min] = time.split(':').map(Number);
+  const value = new Date(y,m-1,d,h,min);
+  if (value.getFullYear() !== y || value.getMonth() !== m-1 || value.getDate() !== d || value.getHours() !== h || value.getMinutes() !== min) throw new Error('Revisa la fecha y hora.');
+  return value;
+}
+export function readCalendar(value: unknown): CalendarEntry[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) throw new Error('La agenda guardada tiene un formato desconocido. No se reemplazará.');
+  const ids = new Set<string>();
+  for (const entry of value) {
+    if (!entry || typeof entry.id !== 'string' || !entry.id || ids.has(entry.id) || typeof entry.title !== 'string' || !entry.title.trim() || typeof entry.format !== 'string' || typeof entry.done !== 'boolean') throw new Error('La agenda guardada necesita recuperación. No se reemplazará.');
+    calendarDateTime(entry.date,entry.time); ids.add(entry.id);
+  }
+  return value as CalendarEntry[];
+}
+export function calendarICS(entries: CalendarEntry[], now = new Date()): string {
+  readCalendar(entries);
+  const escape = (s: string) => s.replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
+  const utc = (d: Date) => d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  // RFC 5545: fold at 75 UTF-8 octets, without splitting a codepoint.
+  const fold = (line: string) => { let out='',part='',size=0; for(const char of line){const bytes=new TextEncoder().encode(char).length;if(size+bytes>75){out+=part+'\r\n';part=' ';size=1;}part+=char;size+=bytes;}return out+part; };
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//FOR U//Agenda//ES',...entries.flatMap(e=>{
+    const start=calendarDateTime(e.date,e.time);
+    return ['BEGIN:VEVENT',`UID:${escape(e.id)}@foru`,`DTSTAMP:${utc(now)}`,`DTSTART:${utc(start)}`,`DTEND:${utc(new Date(start.getTime()+30*60_000))}`,`SUMMARY:${escape(e.title)}`,'STATUS:CONFIRMED',`X-FORU-DONE:${e.done?'TRUE':'FALSE'}`,...(e.done?[]:['BEGIN:VALARM','TRIGGER:-PT10M','ACTION:DISPLAY',`DESCRIPTION:${escape(e.title)}`,'END:VALARM']),'END:VEVENT'];
+  }),'END:VCALENDAR'].map(fold).join('\r\n')+'\r\n';
+}

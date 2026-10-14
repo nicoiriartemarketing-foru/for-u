@@ -123,7 +123,8 @@ export function ReservationForm({ slug }: { slug: string }) {
                 data.emailStatus === "sent"
                   ? "Reserva confirmada. Enviamos los detalles a tu correo. Referencia: " +
                       data.id
-                  : "Reserva guardada. El envío del correo está pendiente. Conserva esta referencia: " +
+                  : data.emailStatus === 'failed' ? 'Reserva guardada. No se pudo enviar el correo. Conserva esta referencia: ' + data.id
+                  : "Reserva guardada. El envío del correo está pendiente de confirmar. Conserva esta referencia: " +
                       data.id,
               );
             } catch (error) {
@@ -140,6 +141,7 @@ export function ReservationForm({ slug }: { slug: string }) {
               required
               min={localDate(new Date())}
               value={date}
+              onInput={e=>{setDate(e.currentTarget.value);setSelected('');request.current=crypto.randomUUID();}}
               onChange={(e) => {
                 setDate(e.target.value);
                 setSelected("");
@@ -255,6 +257,7 @@ export function AvailabilityManager() {
   const [loading, setLoading] = useState(!demo);
   const [loaded, setLoaded] = useState(demo);
   const [attempt, setAttempt] = useState(0);
+  const operations = useRef(0);
   useEffect(() => {
     setSiteId(""); setSlots([]); setReservations([]); setNotice(""); setLoadError(""); setLoaded(demo);
     if (demo) { setLoading(false); return; }
@@ -263,6 +266,8 @@ export function AvailabilityManager() {
     let active = true;
     const client = supabase;
     const refresh = async () => {
+      const revision = operations.current;
+      if (revision % 2) return;
       try {
         const site = await client
           .from("toolkit_sites")
@@ -270,7 +275,7 @@ export function AvailabilityManager() {
           .eq("user_id", userId)
           .eq("project_id", projectId)
           .maybeSingle();
-        if (!active) return;
+        if (!active || revision !== operations.current) return;
         if (site.error) {
           setLoadError("No se pudo consultar la agenda. Reintenta antes de hacer cambios.");
           return;
@@ -298,7 +303,7 @@ export function AvailabilityManager() {
             .order("created_at", { ascending: false })
             .limit(100),
         ]);
-        if (!active) return;
+        if (!active || revision !== operations.current) return;
         if (available.error || booked.error)
           setLoadError("No se pudo actualizar la agenda. Los datos anteriores pueden estar desactualizados.");
         else {
@@ -307,7 +312,7 @@ export function AvailabilityManager() {
           setLoadError(""); setLoaded(true);
         }
       } catch {
-        if (active) setLoadError("No se pudo conectar con la agenda. Revisa tu conexión y reintenta.");
+        if (active && revision === operations.current) setLoadError("No se pudo conectar con la agenda. Revisa tu conexión y reintenta.");
       } finally {
         if (active) setLoading(false);
       }
@@ -325,6 +330,7 @@ export function AvailabilityManager() {
     <DSCard as="section" className="tk-card tk-stack">
       <h2>Tu disponibilidad real</h2>
       <p>Crea los horarios que quieres ofrecer. Zona horaria: {zone()}.</p>
+      <DSButtonSecondary disabled={busy || loading || demo} onClick={()=>setAttempt(value=>value+1)}>Actualizar agenda</DSButtonSecondary>
       {loading && <p role="status">Consultando tu agenda…</p>}
       {loadError && <div role="alert"><p>{loadError}</p><DSButtonSecondary type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar agenda</DSButtonSecondary></div>}
       <form
@@ -341,6 +347,7 @@ export function AvailabilityManager() {
             setNotice("Revisa la duración (15–480 minutos) y los cupos (1–100)."); return;
           }
           setBusy(true);
+          operations.current++;
           try {
             const slot = {
               id: crypto.randomUUID(),
@@ -373,11 +380,12 @@ export function AvailabilityManager() {
             setNotice(
               demo
                 ? "Horario de prueba añadido a esta sesión."
-                : "Horario abierto para reservas.",
+                : "Horario guardado. Será público cuando la página esté publicada y su agenda activada.",
             );
           } catch (error) {
             setNotice((error as Error).message);
           } finally {
+            operations.current++;
             setBusy(false);
           }
         }}
@@ -388,6 +396,7 @@ export function AvailabilityManager() {
             type="datetime-local"
             required
             value={start}
+            onInput={e=>setStart(e.currentTarget.value)}
             onChange={(e) => setStart(e.target.value)}
           />
         </label>
@@ -422,30 +431,33 @@ export function AvailabilityManager() {
                 {new Date(slot.starts_at).toLocaleString("es-PE")}
               </strong>
               <p>
-                {slot.capacity} cupos · {slot.enabled ? "Abierto" : "Cerrado"}
+                Capacidad: {slot.capacity} · {slot.enabled ? "Abierto" : "Cerrado"}
               </p>
             </div>
             <DSButtonSecondary
               disabled={busy || loading || Boolean(loadError)}
               onClick={async () => {
                 setBusy(true);
+                operations.current++;
                 const enabled = !slot.enabled;
+                try {
                 if (!demo && supabase) {
-                  const { error } = await supabase
+                  const { error, data } = await supabase
                     .from("reservation_slots")
                     .update({ enabled })
                     .eq("id", slot.id)
-                    .eq("user_id", userId);
-                  if (error) {
-                    setNotice("No se pudo cambiar el horario.");
-                    setBusy(false);
+                    .eq("user_id", userId)
+                    .eq("site_id", siteId).select('id').maybeSingle();
+                  if (error || !data) {
+                    setLoadError("No se pudo confirmar el cambio de horario. Actualiza la agenda antes de editar.");
                     return;
                   }
                 }
                 setSlots(
                   slots.map((s) => (s.id === slot.id ? { ...s, enabled } : s)),
                 );
-                setBusy(false);
+                } catch {setLoadError('No se pudo confirmar el cambio. Reintenta la agenda.');}
+                finally {operations.current++;setBusy(false);}
               }}
             >
               {slot.enabled ? "Cerrar nuevas reservas" : "Abrir reservas"}
@@ -453,8 +465,8 @@ export function AvailabilityManager() {
           </article>
         ))}
       </div>
-      <h3>Reservas confirmadas</h3>
-      {loaded && !loading && !loadError && !reservations.length && <p>No hay reservas confirmadas todavía.</p>}
+      <h3>Registro de reservas</h3>
+      {loaded && !loading && !loadError && !reservations.length && <p>No hay reservas todavía.</p>}
       {reservations.map((reservation) => {
         const mail = Array.isArray(reservation.reservation_notifications)
           ? reservation.reservation_notifications[0]
@@ -467,7 +479,7 @@ export function AvailabilityManager() {
                 {reservation.customer_email} · {reservation.customer_phone}
               </p>
               <small>
-                Correo: {mail?.status === "sent" ? "enviado" : "pendiente"}
+                Correo: {mail?.status === "sent" ? "enviado" : mail?.status === 'failed' ? 'envío fallido' : mail?.status === 'pending' ? 'pendiente' : 'estado no disponible'}
               </small>
             </div>
             <div className="tk-stack">
@@ -477,20 +489,25 @@ export function AvailabilityManager() {
                   value={reservation.status}
                   disabled={busy || loading || Boolean(loadError)}
                   onChange={async (e) => {
-                    if (!supabase) return;
+                    if (!supabase || busy) return;
                     const status = e.target.value;
-                    const { error } = await supabase
+                    setBusy(true);
+                    operations.current++;
+                    try {
+                    const { error, data } = await supabase
                       .from("reservations")
                       .update({ status })
                       .eq("id", reservation.id)
-                      .eq("user_id", userId);
-                    if (error) setNotice("No se pudo guardar el estado.");
+                      .eq("user_id", userId).eq('site_id',siteId).eq('status',reservation.status).select('id').maybeSingle();
+                    if (error || !data) setLoadError("No se pudo confirmar el cambio. La reserva puede haber cambiado; reintenta la carga antes de editar.");
                     else
                       setReservations((current) =>
                         current.map((r) =>
                           r.id === reservation.id ? { ...r, status } : r,
                         ),
                       );
+                    } catch { setLoadError('No se pudo confirmar el estado. Reintenta la agenda.'); }
+                    finally {operations.current++;setBusy(false);}
                   }}
                 >
                   <option value="confirmed">Confirmada</option>
@@ -498,12 +515,14 @@ export function AvailabilityManager() {
                   <option value="cancelled">Cancelada</option>
                 </select>
               </label>
-              {mail?.status !== "sent" && (
+              {mail?.status !== "sent" && reservation.status === 'confirmed' && (
                 <DSButtonSecondary
                   disabled={busy || loading || Boolean(loadError)}
                   onClick={async () => {
                     if (!supabase) return;
                     setBusy(true);
+                    operations.current++;
+                    try {
                     const { data, error } = await supabase.functions.invoke(
                       "reservations",
                       { body: { action: "retry-email", id: reservation.id } },
@@ -513,7 +532,9 @@ export function AvailabilityManager() {
                         ? "Confirmación enviada."
                         : "El envío sigue pendiente. Revisa la configuración de correo.",
                     );
-                    setBusy(false);
+                    if(!error && data?.emailStatus) setReservations(current=>current.map(r=>r.id===reservation.id?{...r,reservation_notifications:{status:data.emailStatus==='sent'?'sent':data.emailStatus==='failed'?'failed':'pending'}}:r));
+                    } catch { setNotice('El envío no se pudo confirmar. La reserva permanece guardada.'); }
+                    finally {operations.current++;setBusy(false);}
                   }}
                 >
                   Reintentar confirmación

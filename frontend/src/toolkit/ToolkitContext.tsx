@@ -109,6 +109,7 @@ export function ToolkitProvider({
       return;
     }
     setLoading(true);
+    try {
     const [documents, history, preferences] = await Promise.all([
       supabase
         .from("toolkit_documents")
@@ -155,7 +156,9 @@ export function ToolkitProvider({
       setActions(loaded);
     }
     if (preferences.data) setAdaptiveValue(preferences.data.adaptive_enabled);
-    setLoading(false);
+    } catch {
+      if(mounted.current){documentsReady.current=false;setLoadError(true);setStatus('No se pudo consultar la nube. Reintenta antes de editar.');}
+    } finally {if(mounted.current)setLoading(false);}
   }, [demo, projectId, userId]);
 
   // Subscribe to the authenticated remote documents for this provider instance.
