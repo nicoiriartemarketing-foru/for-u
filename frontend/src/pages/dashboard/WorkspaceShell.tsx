@@ -44,6 +44,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     { icon: '📅', title: 'Calendario', path: `/dashboard/tools/calendar${query}`, help: 'Planifica tus actividades y publicaciones.' },
     pageAccess,
     ...(type === 'restaurant' ? [{ icon: '🛒', title: 'Pedidos internos', path: `/modules/restaurant/orders${query}`, help: 'Gestiona pedidos, mesas, zonas y tarifas de delivery.' }] : []),
+    { icon: '🧾', title: 'Compras y cotizaciones', path: `/dashboard/tools/orders${query}`, help: 'Gestiona compras y propuestas aceptadas de tus ofertas publicadas.' },
     { icon: '🎨', title: 'Creator Studio', path: `/creator-studio${query}`, help: 'Continúa la ruta creativa de este proyecto.' },
     { icon: '📊', title: 'Estadísticas', path: `/dashboard/tools/analytics${query}`, help: 'Consulta las visitas y clics registrados. Los clics no equivalen a ventas.' },
     { icon: '⚙️', title: 'Configuración', path: `/dashboard/settings${query}`, help: 'Gestiona tu cuenta y las conexiones disponibles.' },

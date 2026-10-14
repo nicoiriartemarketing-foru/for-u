@@ -9,6 +9,7 @@ import { parseSiteData } from "./publicData";
 import { useSiteSeo } from "./useSiteSeo";
 import { recordSiteEvent } from "./analytics";
 import { ReservationForm } from "./Reservations";
+import CommerceCheckout from '../payments/CommerceCheckout';
 import "./toolkit.css";
 export default function PublicSite() {
   const { slug } = useParams();
@@ -76,6 +77,7 @@ function PublicSiteView({ slug }: { slug?: string }) {
           form.current?.scrollIntoView({ behavior: "smooth" });
         }}
       >
+        {slug&&<CommerceCheckout slug={slug} sourceKind="toolkit"/>}
         <section ref={form} className="tk-site-block">
           {slug && (draft.bookingEnabled === true || (draft.bookingEnabled === undefined && draft.offers === undefined)) && <ReservationForm slug={slug} />}
           <hr />

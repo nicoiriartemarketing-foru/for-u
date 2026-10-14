@@ -43,6 +43,9 @@ const ContentCreator = lazy(() => import('./components/shared/ContentCreator'));
 const DashboardTool = lazy(() => import('./pages/dashboard/DashboardTool'));
 const RestaurantOrders = lazy(() => import('./modules/restaurant/RestaurantOrders'));
 const OrderTracking = lazy(() => import('./modules/restaurant/OrderTracking'));
+const CommerceTracking = lazy(() => import('./payments/CommerceTracking'));
+const CommerceManagement = lazy(() => import('./payments/CommerceManagement'));
+const PaymentReturn = lazy(() => import('./payments/PaymentReturn'));
 const PublicRestaurant = lazy(() => import('./modules/restaurant/PublicRestaurant'));
 const PublicTourism = lazy(() => import('./modules/tourism/PublicTourism'));
 
@@ -115,6 +118,9 @@ function App() {
             <Route path="/modules/restaurant" element={<PrivateWorkspace><RestaurantWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/restaurant/orders" element={<PrivateWorkspace><RestaurantOrders /></PrivateWorkspace>} />
             <Route path="/pedidos/:id" element={<OrderTracking />} />
+            <Route path="/compras/:id" element={<CommerceTracking />} />
+            <Route path="/cobros/retorno" element={<PaymentReturn />} />
+            <Route path="/dashboard/tools/orders" element={<PrivateWorkspace><CommerceManagement /></PrivateWorkspace>} />
             <Route path="/modules/restaurant/editor" element={<PrivateWorkspace><RestaurantWorkspace /></PrivateWorkspace>} />
             <Route path="/modules/restaurant/categorias" element={<PrivateWorkspace><RestaurantProvider><EditorCategorias /></RestaurantProvider></PrivateWorkspace>} />
             <Route path="/modules/restaurant/estilos" element={<PrivateWorkspace><RestaurantProvider><EditorEstilos /></RestaurantProvider></PrivateWorkspace>} />
