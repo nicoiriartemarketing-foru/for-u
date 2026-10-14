@@ -107,6 +107,8 @@ drop trigger if exists toolkit_site_widget_check on public.toolkit_sites;
 create trigger toolkit_site_widget_check before insert or update of content,published on public.toolkit_sites for each row execute function public.toolkit_validate_widgets();
 revoke all on function public.toolkit_validate_widgets() from public,anon,authenticated;
 revoke all on function public.toolkit_widget_sources(uuid),public.toolkit_widget_preview(uuid,uuid,text,text,text),public.toolkit_public_widgets(text) from public;
+-- Supabase may grant EXECUTE to anon through schema default privileges.
+revoke execute on function public.toolkit_widget_sources(uuid),public.toolkit_widget_preview(uuid,uuid,text,text,text) from anon;
 grant execute on function public.toolkit_widget_sources(uuid),public.toolkit_widget_preview(uuid,uuid,text,text,text) to authenticated;
 grant execute on function public.toolkit_public_widgets(text) to anon,authenticated;
 notify pgrst,'reload schema';

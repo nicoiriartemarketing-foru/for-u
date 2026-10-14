@@ -7,7 +7,10 @@ await db.exec(`create role anon;create role authenticated;create schema auth;cre
 create table public.projects(id uuid primary key,user_id uuid not null);alter table projects enable row level security;create policy project_owner on projects to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());grant select on projects to authenticated;
 create table public.toolkit_sites(project_id uuid primary key references projects(id),user_id uuid not null,slug text unique,content jsonb,published boolean);alter table toolkit_sites enable row level security;create policy site_owner on toolkit_sites to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());grant select,insert,update on toolkit_sites to authenticated;
 create table public.toolkit_documents(project_id uuid,payload jsonb);`);
+// Match Supabase's explicit default EXECUTE grants, beyond PostgreSQL's PUBLIC default.
+await db.exec('alter default privileges in schema public grant execute on functions to anon,authenticated');
 await db.exec(await readFile(new URL('../migrations/22_project_widgets_uuid.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../migrations/23_project_widgets_private_rpc_grants.sql',import.meta.url),'utf8'));
 const alice='11111111-1111-4111-8111-111111111111',bob='22222222-2222-4222-8222-222222222222',host='33333333-3333-4333-8333-333333333333',source='44444444-4444-4444-8444-444444444444',other='55555555-5555-4555-8555-555555555555',bobSource='66666666-6666-4666-8666-666666666666';
 const offer={id:'offer-1',name:'QA service',kind:'service',pricing:'fixed',price:42,description:'Public text',image:'https://example.com/qa.jpg',conditions:'QA',cost:'PRIVATE_COST',inventory:'PRIVATE_STOCK',variants:[{id:'v1',name:'Public variant',price:12,available:true,cost:'PRIVATE_VARIANT'}],extras:[]};
 const content={name:'QA Source',headline:'Public headline',cta:'Contact source',whatsapp:'51999999999',offers:[offer],blocks:[{id:'section-1',title:'Public section',body:'Public body',customers:'PRIVATE_CUSTOMER'}],customers:'PRIVATE_CUSTOMER',privateDraft:'PRIVATE_DRAFT'};
@@ -20,6 +23,7 @@ const publicWidgets=async()=> (await as(null,'select toolkit_public_widgets($1) 
 test('source discovery and preview require host ownership; private helper and grants are protected',async()=>{
  const sources=(await as(alice,'select toolkit_widget_sources($1) as result',[host])).rows[0].result;assert.ok(!sources.some(s=>s.projectId===bobSource));assert.ok(sources.some(s=>s.projectId===source));
  await assert.rejects(as(null,'select toolkit_widget_sources($1)',[host]),/permission denied/);await assert.rejects(as(bob,'select toolkit_widget_sources($1)',[host]),/Proyecto no disponible/);await assert.rejects(as(null,'select toolkit_widget_data($1,$2,$3,$4,$5)',[host,source,'offer','offer-1','embed']),/permission denied/);
+ await assert.rejects(as(null,'select toolkit_widget_preview($1,$2,$3,$4,$5)',[host,source,'offer','offer-1','embed']),/permission denied/);
  assert.equal((await as(alice,'select toolkit_widget_preview($1,$2,$3,$4,$5) as result',[host,bobSource,'offer','offer-1','embed'])).rows[0].result,null);
  await assert.rejects(as(alice,'insert into project_widget_grants values($1,$2)',[bobSource,host]),/row-level security/);
 });
