@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Camera, FileText, Mic2, Sparkles, X } from '../lib/icons';
 import { processRawNotes, type AiNodeType } from '../services/aiProcessor';
 import { type ForUNodeKind, type ForURawNoteKind, type ForURouteStep, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import { useRewardBurst } from '../hooks/useRewardBurst';
 
 const noteModes: Array<{ kind: ForURawNoteKind; label: string; icon: typeof FileText }> = [
   { kind: 'text', label: 'Texto', icon: FileText },
@@ -36,6 +37,7 @@ export default function IdeaJarFab({ centered = false, hiddenLauncher = false, t
   const setView = useActiveProjectsStore((state) => state.setView);
   const selectNode = useActiveProjectsStore((state) => state.selectNode);
   const clearRawNotes = useActiveProjectsStore((state) => state.clearRawNotes);
+  const reward = useRewardBurst();
 
   const activeProject = activeProjectId ? projectsById[activeProjectId] : null;
 
@@ -46,6 +48,7 @@ export default function IdeaJarFab({ centered = false, hiddenLauncher = false, t
     });
     setContent('');
     setKind('text');
+    reward.trigger('ideaCaptured');
   }
 
   async function organizeWithAi() {

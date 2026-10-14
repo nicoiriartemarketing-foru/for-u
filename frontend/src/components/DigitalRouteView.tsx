@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import type { ForUActiveProject } from '../stores/useActiveProjectsStore';
 import { useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 import { getDigitalRouteTemplate } from '../templates/digitalRouteTemplates';
+import { useRewardBurst, type RewardKey } from '../hooks/useRewardBurst';
 import MagicBadge from './ui/MagicBadge';
 import MagicButton from './ui/MagicButton';
 import MagicCard from './ui/MagicCard';
@@ -28,6 +29,10 @@ export default function DigitalRouteView({
   const getCurrentDigitalRouteStep = useActiveProjectsStore((state) => state.getCurrentDigitalRouteStep);
   const createTasksForDigitalRouteStep = useActiveProjectsStore((state) => state.createTasksForDigitalRouteStep);
   const completeDigitalRouteStep = useActiveProjectsStore((state) => state.completeDigitalRouteStep);
+  const reward = useRewardBurst();
+
+  // Map step index to reward key
+  const stepRewardKeys: RewardKey[] = ['station1Complete', 'station2Complete', 'station3Complete', 'station4Complete', 'station5Complete'];
 
   const routeTemplate = useMemo(() => getDigitalRouteTemplate(project?.industryKey), [project?.industryKey]);
   const steps = project ? getDigitalRouteSteps(project.id) : [];
@@ -73,8 +78,13 @@ export default function DigitalRouteView({
 
   function handleCompleteStep(stepId: string) {
     if (!project) return;
+    const stepIndex = steps.findIndex((s) => s.id === stepId);
     const completed = completeDigitalRouteStep(project.id, stepId);
-    if (completed) toast.success('Estación lista. Avanzamos la ruta ✨');
+    if (completed) {
+      const rewardKey = stepRewardKeys[stepIndex] ?? 'station1Complete';
+      reward.trigger(rewardKey);
+      toast.success('Estación lista. Avanzamos la ruta ✨');
+    }
   }
 
   return (

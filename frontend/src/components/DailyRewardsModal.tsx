@@ -2,6 +2,7 @@ import { ButtonSecondary as DSButtonSecondary } from './ui/DesignSystem';
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { dailyRewards, useActiveProjectsStore } from '../stores/useActiveProjectsStore';
+import { useRewardBurst } from '../hooks/useRewardBurst';
 
 type DailyRewardsModalProps = {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export default function DailyRewardsModal({ isOpen, onClose }: DailyRewardsModal
   const checkDailyReward = useActiveProjectsStore((state) => state.checkDailyReward);
   const claimDailyReward = useActiveProjectsStore((state) => state.claimDailyReward);
   const rewardStatus = useMemo(() => checkDailyReward(), [checkDailyReward, dailyStreak, claimedDays, lastLoginDate]);
+  const reward = useRewardBurst();
 
   useEffect(() => {
     if (!isOpen) setIsClaiming(false);
@@ -33,6 +35,7 @@ export default function DailyRewardsModal({ isOpen, onClose }: DailyRewardsModal
 
     setIsClaiming(true);
     playDing();
+    reward.trigger('dailyLogin');
     window.setTimeout(onClose, 1500);
   }
 

@@ -4,7 +4,7 @@ import { useAreaDocuments } from './AreaDocuments';
 import type { ModuleType } from '../../modules/moduleProjects';
 import EmotionalCompass from './EmotionalCompass';
 import { confirmWorkspaceNavigation } from '../../lib/useUnsavedNavigation';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useActiveProjectsStore } from '../../stores/useActiveProjectsStore';
@@ -13,8 +13,13 @@ import { isSavedProject } from './areaModel';
 import { FocusStatus } from './WorkspaceHome';
 import { useWorkspaceFocus } from './WorkspaceFocus';
 import { knownTaskTool } from './workspaceFocusModel';
+import { useDopamineRoute, needsEnergyCheck, type EnergyLevel } from '../../hooks/useDopamineRoute';
+import { useRewardBurst } from '../../hooks/useRewardBurst';
+import RewardCelebration from '../../components/RewardCelebration';
 import './workspace.css';
 import './workspaceIdentity.css';
+
+const EnergyCheck = lazy(() => import('../../components/EnergyCheck'));
 export default function WorkspaceShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
   const { remember } = useWorkspaceFocus();
@@ -24,6 +29,10 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const dopamineRoute = useDopamineRoute();
+  const reward = useRewardBurst();
+  const [energyLevel, setEnergyLevel] = useState<EnergyLevel | null>(null);
+  const [showEnergyCheck, setShowEnergyCheck] = useState(() => needsEnergyCheck() && dopamineRoute.onboardingComplete);
   useEffect(() => setMenuOpen(false), [location.pathname, location.search]);
   const projects = store.cloudUserId === user?.id ? Object.values(store.projectsById).filter(p => projectModuleType(p) && isSavedProject(p.id) && !p.cloudPending) : [];
   const requested = params.get('project');
@@ -61,7 +70,59 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     : links.find(link => link.path.split('?')[0] === location.pathname)?.title
       ?? toolTitles[location.pathname.split('/').at(-1) ?? '']
       ?? (location.pathname.includes('/modules/') ? pageAccess.title : location.pathname.includes('/landing') ? 'Editor de página' : 'Creator Studio');
-  return <div className="workspace-shell"><aside className={`workspace-sidebar ${menuOpen ? 'menu-open' : ''}`}><Link className="workspace-brand" to="/dashboard">for u<span>Un paso a tu ritmo</span></Link><Tooltip text="Crea otro proyecto y conserva los que ya tienes en tu cuenta."><Link className="workspace-new magic-button-primary" to="/dashboard?create=1">＋ Crear nuevo proyecto</Link></Tooltip><DSButtonSecondary ref={menuButton} className="workspace-menu-toggle" aria-controls="workspace-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}>☰</DSButtonSecondary><Link className="workspace-home-link" to="/dashboard">Mis proyectos y Hoy</Link><nav id="workspace-navigation" aria-label="Navegación de tu negocio" onKeyDown={event => { if (event.key === 'Escape') { setMenuOpen(false); menuButton.current?.focus(); } }}>{links.map(({icon, title, path, help}) => <Tooltip key={title} text={help}><Link aria-current={location.pathname === path.split('?')[0] ? 'page' : undefined} to={project ? path : '/dashboard?create=1'} onClick={() => rememberNavigation(path)}><span className="workspace-nav-icon" aria-hidden="true">{icon}</span>{title}</Link></Tooltip>)}</nav>{project && <PendingTasks projectId={project.id} type={type} />}<p>Tu espacio para avanzar.<br />Y también para respirar.</p><DSButtonSecondary onClick={() => { if (confirmWorkspaceNavigation()) { void signOut(); navigate('/login'); } }}>Salir</DSButtonSecondary></aside><div className="workspace-main"><header className="workspace-top"><nav className="workspace-breadcrumbs" aria-label="Ubicación"><Link to="/dashboard">Mi espacio</Link><span aria-hidden="true">/</span><span aria-current="page">{currentTitle}</span></nav><nav className="workspace-view-switch" aria-label="Vistas del proyecto"><Link aria-current={location.pathname === '/dashboard' && Boolean(requested) ? 'page' : undefined} to={`/dashboard${query}${query ? '&' : '?'}view=management`}>Tablero</Link><Link aria-current={location.pathname === '/dashboard/world' ? 'page' : undefined} to={`/dashboard/world${query}`}>Mi mundo</Link></nav><label>Proyecto activo<select value={project?.id ?? ''} onChange={event => { if (!confirmWorkspaceNavigation()) return; store.switchProject(event.target.value); const next = projects.find(p => p.id === event.target.value); const path = location.pathname.startsWith('/modules/') && next ? `/modules/${projectModuleType(next)}${location.pathname.endsWith('/orders') && projectModuleType(next) === 'restaurant' ? '/orders' : location.pathname.endsWith('/editor') ? '/editor' : ''}` : location.pathname; navigate(`${path}?project=${encodeURIComponent(event.target.value)}`); }}><option value="" disabled>Elige un proyecto</option>{projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label></header><div className="workspace-body"><FocusStatus />{requested && !project ? <section className="magic-card" role={store.isCloudSyncing ? 'status' : 'alert'}><h1>{store.isCloudSyncing || store.cloudUserId !== user?.id ? 'Cargando proyecto…' : 'Este proyecto no está disponible'}</h1><p>{store.projectLoadError || 'No se abrirá otro proyecto en su lugar.'}</p>{store.projectLoadError && <DSButtonSecondary onClick={() => { if (user) void store.hydrateFromSupabase(user.id); }}>Reintentar</DSButtonSecondary>}<Link to="/dashboard">Volver a mis proyectos</Link></section> : children}</div></div>{project && params.get('welcome') === '1' && <EmotionalCompass key={project.id} projectId={project.id} onDone={() => { const next = new URLSearchParams(params); next.delete('welcome'); setParams(next, { replace: true }); }} />}</div>;
+  const isLinkUnlocked = (title: string) => dopamineRoute.unlockedSidebarLinks.includes(title);
+  return <div className="workspace-shell">
+    {/* Reward celebration overlay */}
+    <RewardCelebration burst={reward.activeBurst} />
+
+    {/* Energy check interceptor */}
+    {showEnergyCheck && <Suspense fallback={null}><EnergyCheck isOpen={showEnergyCheck} userName={user?.user_metadata?.display_name} onComplete={(level) => { setEnergyLevel(level); setShowEnergyCheck(false); }} /></Suspense>}
+
+    <aside className={`workspace-sidebar ${menuOpen ? 'menu-open' : ''}`}>
+      <Link className="workspace-brand" to="/dashboard">for u<span>Un paso a tu ritmo</span></Link>
+
+      {/* Route progress bar */}
+      {dopamineRoute.onboardingComplete && <div className="foru-route-progress-bar" role="progressbar" aria-valuenow={dopamineRoute.progress} aria-valuemin={0} aria-valuemax={100}>
+        <small>{dopamineRoute.currentStation?.emoji} {dopamineRoute.currentStation?.shortLabel ?? 'Completo'}</small>
+        <div className="foru-route-progress-track"><div className="foru-route-progress-fill" style={{ width: `${dopamineRoute.progress}%` }} /></div>
+        <strong>{dopamineRoute.progress}%</strong>
+      </div>}
+
+      <Tooltip text="Crea otro proyecto y conserva los que ya tienes en tu cuenta."><Link className="workspace-new magic-button-primary" to="/dashboard?create=1">＋ Crear nuevo proyecto</Link></Tooltip>
+      <DSButtonSecondary ref={menuButton} className="workspace-menu-toggle" aria-controls="workspace-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}>☰</DSButtonSecondary>
+      <Link className="workspace-home-link" to="/dashboard">Mis proyectos y Hoy</Link>
+      <nav id="workspace-navigation" aria-label="Navegación de tu negocio" onKeyDown={event => { if (event.key === 'Escape') { setMenuOpen(false); menuButton.current?.focus(); } }}>
+        {links.map(({icon, title, path, help}) => {
+          const unlocked = isLinkUnlocked(title);
+          return <Tooltip key={title} text={unlocked ? help : `Se desbloquea más adelante en tu ruta`}>
+            <Link className={unlocked ? '' : 'workspace-nav-locked'} aria-current={location.pathname === path.split('?')[0] ? 'page' : undefined} to={unlocked && project ? path : '/dashboard?create=1'} onClick={() => { if (unlocked) rememberNavigation(path); }} tabIndex={unlocked ? 0 : -1}>
+              <span className="workspace-nav-icon" aria-hidden="true">{icon}</span>{title}
+            </Link>
+          </Tooltip>;
+        })}
+      </nav>
+      {project && <PendingTasks projectId={project.id} type={type} />}
+      <p>Tu espacio para avanzar.<br />Y también para respirar.</p>
+      <DSButtonSecondary onClick={() => { if (confirmWorkspaceNavigation()) { void signOut(); navigate('/login'); } }}>Salir</DSButtonSecondary>
+    </aside>
+
+    <div className="workspace-main">
+      <header className="workspace-top">
+        <nav className="workspace-breadcrumbs" aria-label="Ubicación"><Link to="/dashboard">Mi espacio</Link><span aria-hidden="true">/</span><span aria-current="page">{currentTitle}</span></nav>
+        <nav className="workspace-view-switch" aria-label="Vistas del proyecto">
+          <Link aria-current={location.pathname === '/dashboard' && Boolean(requested) ? 'page' : undefined} to={`/dashboard${query}${query ? '&' : '?'}view=management`}>Tablero</Link>
+          <Link aria-current={location.pathname === '/dashboard/world' ? 'page' : undefined} to={`/dashboard/world${query}`}>Mi mundo</Link>
+        </nav>
+        <label>Proyecto activo<select value={project?.id ?? ''} onChange={event => { if (!confirmWorkspaceNavigation()) return; store.switchProject(event.target.value); const next = projects.find(p => p.id === event.target.value); const path = location.pathname.startsWith('/modules/') && next ? `/modules/${projectModuleType(next)}${location.pathname.endsWith('/orders') && projectModuleType(next) === 'restaurant' ? '/orders' : location.pathname.endsWith('/editor') ? '/editor' : ''}` : location.pathname; navigate(`${path}?project=${encodeURIComponent(event.target.value)}`); }}><option value="" disabled>Elige un proyecto</option>{projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+      </header>
+      <div className="workspace-body">
+        <FocusStatus />
+        {requested && !project ? <section className="magic-card" role={store.isCloudSyncing ? 'status' : 'alert'}><h1>{store.isCloudSyncing || store.cloudUserId !== user?.id ? 'Cargando proyecto…' : 'Este proyecto no está disponible'}</h1><p>{store.projectLoadError || 'No se abrirá otro proyecto en su lugar.'}</p>{store.projectLoadError && <DSButtonSecondary onClick={() => { if (user) void store.hydrateFromSupabase(user.id); }}>Reintentar</DSButtonSecondary>}<Link to="/dashboard">Volver a mis proyectos</Link></section> : children}
+      </div>
+    </div>
+
+    {project && params.get('welcome') === '1' && <EmotionalCompass key={project.id} projectId={project.id} onDone={() => { const next = new URLSearchParams(params); next.delete('welcome'); setParams(next, { replace: true }); }} />}
+  </div>;
 }
 
 function PendingTasks({ projectId, type }: { projectId: string; type: ModuleType }) {

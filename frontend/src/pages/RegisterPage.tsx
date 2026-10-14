@@ -24,7 +24,7 @@ export default function RegisterPage() {
     try {
       const result = await signUp(email, password, displayName);
       if (result.needsEmailConfirmation) { setConfirmation(true); setPassword(''); return; }
-      navigate('/dashboard', { replace: true });
+      navigate('/onboarding', { replace: true });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'No pudimos crear la cuenta. Intenta otra vez.');
     } finally { busy.current = false; setSubmitting(false); }

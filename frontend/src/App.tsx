@@ -57,6 +57,9 @@ const PreparacionChecklist = lazy(() => import('./pages/estudio/PreparacionCheck
 const ReservaHorario = lazy(() => import('./pages/estudio/ReservaHorario'));
 const Confirmacion = lazy(() => import('./pages/estudio/Confirmacion'));
 
+// Dopamine Route — gamified onboarding
+const DopamineOnboarding = lazy(() => import('./components/DopamineOnboarding'));
+
 // Restaurant routes
 const EditorCategorias = lazy(() => import('./components/restaurant/EditorCategorias'));
 const EditorEstilos = lazy(() => import('./components/restaurant/EditorEstilos'));
@@ -154,6 +157,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/register-wizard" element={<Navigate to="/register" replace />} />
+            <Route path="/onboarding" element={<PrivateWorkspace><DopamineOnboarding onComplete={() => {}} /></PrivateWorkspace>} />
             <Route path="/dashboard" element={<PrivateWorkspace><Dashboard /></PrivateWorkspace>} />
             <Route path="/dashboard/world" element={<PrivateWorkspace><WorldPage /></PrivateWorkspace>} />
             <Route path="/dashboard/settings" element={<PrivateWorkspace><WorkspaceSettings /></PrivateWorkspace>} />
