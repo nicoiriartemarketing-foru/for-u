@@ -1,3 +1,5 @@
+import { parseWidgets } from '../widgets/model';
+import { widgetPreview } from '../widgets/service';
 import type { LandingDraft } from '../toolkit/types';
 import { parseSiteData } from '../toolkit/publicData';
 import { validatePublicationSlug, imagePublisher } from './modulePublishing';
@@ -7,6 +9,7 @@ export type { LandingPublication } from './landingPublicationRepository';
 
 export async function landingPublicSnapshot(userId: string, projectId: string, draft: LandingDraft): Promise<LandingDraft> {
   validatePublicationSlug(draft.slug);
+  for(const widget of parseWidgets(draft.widgets,projectId)){if(!await widgetPreview(projectId,widget))throw new Error('Una fuente no está publicada o autorizada. Revisa o quita su conexión antes de publicar.');}
   const publicImage = imagePublisher(userId, projectId);
   const offers = draft.offers ? await Promise.all(draft.offers.map(async offer => ({ ...offer, image: await publicImage(offer.image) }))) : undefined;
   const snapshot = parseSiteData({ ...draft, offers,

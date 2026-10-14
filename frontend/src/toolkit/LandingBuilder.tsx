@@ -1,3 +1,4 @@
+import WidgetEditor from '../widgets/WidgetEditor';
 import { nativeOffers, offerPrice, sameOffers, type Offer, type ProposalSource } from '../proposal/model';
 import { readProposalSource } from '../proposal/sourceRepository';
 import { readLandingPublication, writeLandingPublication, landingPublicSnapshot, type LandingPublication } from '../services/landingPublication';
@@ -80,7 +81,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         const resolved = { ...draft, offers: draft.offers ? await Promise.all(draft.offers.map(async offer => ({ ...offer, image: await previewImage(offer.image) }))) : undefined };
         if (!active) return;
         previewDraft.current = resolved; setPreviewImageError('');
-        frame.current?.contentWindow?.postMessage({ type: 'foru:render', channel, draft: resolved, selectedId: selectedRef.current }, window.location.origin);
+        frame.current?.contentWindow?.postMessage({ type: 'foru:render', channel, projectId, draft: resolved, selectedId: selectedRef.current }, window.location.origin);
       } catch (error) { if (active) setPreviewImageError((error as Error).message); }
     })();
     return () => { active = false; };
@@ -100,7 +101,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         return;
       if (event.data.type === "foru:ready") {
         frame.current?.contentWindow?.postMessage(
-          { type: "foru:render", channel, draft: previewDraft.current, selectedId: selectedRef.current },
+          { type: "foru:render", channel, projectId, draft: previewDraft.current, selectedId: selectedRef.current },
           window.location.origin,
         );
         return;
@@ -336,6 +337,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
       </header>
       <nav className="pe-context-links" aria-label="Herramientas para esta sección"><Link to={`/creator-studio?project=${encodeURIComponent(projectId)}`}>← Mi ruta creativa</Link><Link to={`/dashboard/tools/content?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Proponer contenido</Link><Link to={`/dashboard/tools/teleprompter?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Grabar con teleprompter</Link></nav>
       {sourcePanel}
+      <WidgetEditor projectId={projectId} widgets={draft.widgets} onChange={widgets=>update({widgets})} disabled={busy||demo}/>
       {notice && <p className="pe-feedback" role="status">{notice}</p>}
       <div className="pe-commandbar magic-card" style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem', flexWrap: 'wrap', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-suave)', marginBottom: '1rem' }}>
         <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-expanded={sectionsOpen} aria-controls="page-sections" onClick={() => setSectionsOpen(value => !value)}>☰ Secciones</DSButtonSecondary>

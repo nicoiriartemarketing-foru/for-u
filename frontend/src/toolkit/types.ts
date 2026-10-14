@@ -1,3 +1,4 @@
+import type { ProjectWidget } from '../widgets/model';
 import type { Offer, ProposalSource } from '../proposal/model';
 import type { ForUActiveProject } from "../stores/useActiveProjectsStore";
 export type ToolId =
@@ -45,6 +46,7 @@ export type CalendarEntry = {
 };
 export type LandingBlock = { id: string; title: string; body: string };
 export type LandingDraft = {
+  widgets?: ProjectWidget[];
   bookingEnabled?: boolean;
   catalogSource?: "module" | "proposal";
   offers?: Offer[];

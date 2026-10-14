@@ -1,13 +1,16 @@
+import ProjectWidgets from '../widgets/ProjectWidgets';
 import { ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import type { LandingDraft } from "./types";
 import { offerPrice } from '../proposal/model';
 export function LandingPreview({
   draft,
   onCTA,
+  hostSlug,
   children,
 }: {
   draft: LandingDraft;
   onCTA?: () => void;
+  hostSlug?: string;
   children?: React.ReactNode;
 }) {
   return (
@@ -47,6 +50,7 @@ export function LandingPreview({
         </section>
       ))}
       <LandingExtras draft={draft} />
+      {hostSlug&&<ProjectWidgets widgets={draft.widgets??[]} hostSlug={hostSlug}/>}
       {children}
       <footer>{draft.name} · Creado con FOR U</footer>
     </article>

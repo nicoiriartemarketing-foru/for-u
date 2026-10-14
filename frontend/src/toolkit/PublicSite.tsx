@@ -70,6 +70,7 @@ function PublicSiteView({ slug }: { slug?: string }) {
     <main className="tk-public">
       <LandingPreview
         draft={draft}
+        hostSlug={slug}
         onCTA={() => {
           click();
           form.current?.scrollIntoView({ behavior: "smooth" });

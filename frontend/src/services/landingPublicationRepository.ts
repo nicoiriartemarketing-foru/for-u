@@ -16,6 +16,7 @@ export async function writeLandingPublication(db: SupabaseClient, userId: string
       .eq('slug', previous.slug).eq('published', previous.published).eq('content', JSON.stringify(previous.content)).select('slug,content,published').maybeSingle()
     : await db.from('toolkit_sites').insert({ ...values, user_id: userId, project_id: projectId }).select('slug,content,published').single();
   if (result.error?.code === '23505' || (!result.error && !result.data)) throw new Error('La publicación cambió en otra pestaña o ese enlace ya está ocupado. Revisa el estado antes de publicar; tu borrador se conserva.');
+  if(result.error?.code==='P0001')throw new Error(result.error.message);
   if (result.error) throw new Error('No pudimos confirmar la publicación. Revisa su estado antes de reintentar; tu borrador se conserva.');
   return result.data as LandingPublication;
 }

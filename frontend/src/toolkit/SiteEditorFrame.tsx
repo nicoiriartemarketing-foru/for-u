@@ -1,3 +1,4 @@
+import ProjectWidgets from '../widgets/ProjectWidgets';
 import { LandingExtras } from "./LandingPreview";
 import { ButtonGhost, Card } from "../components/ui/DesignSystem";
 import "./professionalEditor.css";
@@ -64,6 +65,7 @@ export default function SiteEditorFrame() {
   const drag = useRef<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [selected, setSelected] = useState("hero");
+  const [hostProject,setHostProject]=useState<string>();
   const [draft, setDraft] = useState<LandingDraft | null>(null);
   const channel = new URLSearchParams(window.location.search).get("channel");
   const send = (type: string, payload: object = {}) => {
@@ -85,6 +87,7 @@ export default function SiteEditorFrame() {
       const next = parseSiteData(event.data.draft);
       if (next) {
         setDraft(next);
+        setHostProject(typeof event.data.projectId==='string'&&/^[0-9a-f-]{36}$/i.test(event.data.projectId)?event.data.projectId:undefined);
         const id = event.data.selectedId;
         if (id === 'hero' || next.blocks.some(block => block.id === id)) setSelected(id);
       }
@@ -152,6 +155,7 @@ export default function SiteEditorFrame() {
         </Card>
       ))}
       <LandingExtras draft={draft} />
+      {hostProject&&<ProjectWidgets widgets={draft.widgets??[]} hostProject={hostProject}/>}
       <footer>{draft.name} · Creado con FOR U</footer>
     </article>
   );

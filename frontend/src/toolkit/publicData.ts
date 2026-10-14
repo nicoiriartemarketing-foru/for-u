@@ -1,3 +1,4 @@
+import { parseWidgets } from '../widgets/model';
 import type { LandingDraft } from "./types";
 import { safeHttps } from "./engine";
 import { publicOffer, type Offer } from '../proposal/model';
@@ -27,7 +28,9 @@ export function parseSiteData(value: unknown): LandingDraft | null {
       if (new Set(offers.map(offer => offer.id)).size !== offers.length) return null;
     } catch { return null; }
   }
+  let widgets; try {widgets=parseWidgets(data.widgets);}catch{return null;}
   return {
+    widgets: widgets.length ? widgets : undefined,
     bookingEnabled: typeof data.bookingEnabled === 'boolean' ? data.bookingEnabled : undefined,
     offers,
     menuItems: Array.isArray(data.menuItems) ? data.menuItems.slice(0, 30).filter((item): item is { id: string; name: string; price: number } => Boolean(item && typeof item === 'object' && typeof item.id === 'string' && typeof item.name === 'string' && typeof item.price === 'number' && Number.isFinite(item.price) && item.price >= 0 && item.price <= 1000000)).map(item => ({ id: item.id.slice(0, 80), name: item.name.slice(0, 120), price: item.price })) : [],

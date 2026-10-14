@@ -2,7 +2,7 @@
 
 ## Plan vigente — aprobado el 13 de octubre de 2026
 
-Este plan sustituye las decisiones contradictorias del historial conservado abajo. Se ejecuta **una entrega por instrucción**; la instrucción vigente autoriza la entrega 3 (Mi perfil y piezas); la entrega 2 incorporó el recorrido de publicación. No se declara terminado el objetivo completo mientras queden entregas pendientes.
+Este plan sustituye las decisiones contradictorias del historial conservado abajo. Se ejecuta **una entrega por instrucción**; la instrucción vigente autoriza la entrega 4 (widgets entre proyectos); la entrega 2 incorporó el recorrido de publicación. No se declara terminado el objetivo completo mientras queden entregas pendientes.
 
 FOR U organiza proyectos con identidad propia. El rubro principal orienta preguntas, herramientas y pasos, sin limitar tipos de oferta; las páginas podrán mostrar ofertas publicadas de otros proyectos mediante widgets autorizados.
 
