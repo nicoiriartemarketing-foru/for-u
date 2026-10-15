@@ -105,11 +105,17 @@ function PrivateWorkspace({ children }: { children: ReactNode }) {
   return session ? <>{commonShell ? <WorkspaceShell>{children}</WorkspaceShell> : children}<FloatingPomodoro /></> : <Navigate to={`/login?next=${encodeURIComponent(nextPath)}`} replace />;
 }
 
+function ExperienceSurface({children}:{children:ReactNode}) {
+  const {pathname}=useLocation();
+  // Customer pages opt in through their published snapshot, never through global CSS.
+  const customer=/^\/(s|negocio|experiencias|p)\//.test(pathname)||pathname==='/site-preview'||(!['/','/login','/register','/pricing','/ia','/metodologia','/mundo-digital','/aventura','/studio','/onboarding','/workspace','/whatsapp','/content-creator','/creator-studio','/estudio','/registro','/preparacion','/reserva','/exito','/herramientas/demo','/mapa/demo'].includes(pathname)&&!/^\/(dashboard|modules|pedidos|compras|cobros|editor)(\/|$)/.test(pathname));
+  return <div className={customer?'foru-customer-surface':'foru-experience'}>{children}</div>;
+}
 function App() {
   return (
     <AppErrorBoundary>
       <Router>
-        <Toaster position="top-right" toastOptions={{ duration: 3500, success: { style: { background: '#f0fdf4', color: '#14532d', border: '1px solid #86efac' } } }} />
+        <ExperienceSurface><Toaster position="top-right" toastOptions={{ duration: 3500, success: { style: { background: '#f0fdf4', color: '#14532d', border: '1px solid #86efac' } } }} />
         <AreaDocumentsProvider><WorkspaceFocusProvider><PersonalPomodoro><Suspense fallback={<RouteLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
@@ -169,7 +175,7 @@ function App() {
             <Route path="/:slug" element={<PublicRestaurant />} />
           </Routes>
         </Suspense></PersonalPomodoro></WorkspaceFocusProvider></AreaDocumentsProvider>
-      </Router>
+      </ExperienceSurface></Router>
     </AppErrorBoundary>
   );
 }

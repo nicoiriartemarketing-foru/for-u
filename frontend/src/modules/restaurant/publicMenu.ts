@@ -1,6 +1,7 @@
+import {presentationVersion} from '../../presentation/model';
 import { publicOptions, validateOptions } from './orderOptions';
 import type { RestaurantData } from './model';
-export type RestaurantMenuData = Pick<RestaurantData, 'dishes' | 'sections' | 'settings'>;
+export type RestaurantMenuData = Pick<RestaurantData, 'dishes' | 'sections' | 'settings' | 'presentationVersion'>;
 export type PublishedRestaurant = { version: 1; type: 'restaurant'; menu: RestaurantMenuData };
 
 export function restaurantSnapshot(data: RestaurantData): PublishedRestaurant {
@@ -16,6 +17,7 @@ export function restaurantSnapshot(data: RestaurantData): PublishedRestaurant {
   if (!dishes.length) throw new Error('Agrega al menos un plato disponible antes de publicar.');
   const s = data.settings;
   return { version: 1, type: 'restaurant', menu: {
+    ...(data.presentationVersion!==undefined?{presentationVersion:presentationVersion(data.presentationVersion)}:{}),
     dishes,
     sections: data.sections.filter(section => section.visible).map(section => ({ id: section.id, title: section.title, visible: true })),
     settings: { title: s.title.trim(), whatsapp: phone, tagline: visible.has('hero') ? s.tagline : '', coverImage: visible.has('hero') ? s.coverImage : '', about: visible.has('about') ? s.about : '', address: visible.has('location') ? s.address : '', hours: visible.has('location') ? s.hours : '', loyalty: visible.has('loyalty') ? s.loyalty : '', faq: visible.has('faq') ? s.faq.filter(item => item.question.trim()).map(item => ({ id: item.id, question: item.question, answer: item.answer })) : [] },
@@ -27,6 +29,7 @@ export function parsePublishedRestaurant(value: unknown): PublishedRestaurant | 
     if (!value || typeof value !== 'object') return null;
     const raw = value as PublishedRestaurant;
     if (raw.version !== 1 || raw.type !== 'restaurant' || !raw.menu) return null;
+    presentationVersion(raw.menu.presentationVersion);
     const { dishes, settings, sections } = raw.menu;
     const text = (v: unknown) => typeof v === 'string';
     if (!settings || !['title','whatsapp','tagline','coverImage','about','address','hours','loyalty'].every(key => text(settings[key as keyof typeof settings]))) return null;

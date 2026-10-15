@@ -61,13 +61,13 @@ export default function HospitalityEditor({ data, onChange }: HospitalityProps) 
         <DSButtonSecondary onClick={() => update({ promotions: [...settings.promotions, { id: crypto.randomUUID(), title: '', description: '', active: true }] })}>Agregar promoción</DSButtonSecondary>
       </>}
     </DSCard>
-    <h3>Vista previa del borrador</h3><div className="web-preview">{data.sections.filter(section => section.visible).map(section => <section className="web-section" key={section.id}>
+    <details className="module-identity"><summary>Vista previa del borrador</summary><div className="web-preview">{data.sections.filter(section => section.visible).map(section => <section className="web-section" key={section.id}>
       {section.id === 'hero' ? <><h2>{settings.name}</h2><p>{settings.tagline}</p><ProjectImage className="hospitality-hero-image" value={settings.heroImage} alt={settings.name} /></> : <h2>{section.title}</h2>}
       {section.id === 'about' && <p>{settings.about}</p>}
       {section.id === 'rooms' && <div className="rooms-grid">{data.rooms.map(room => <DSCard as="article" className="room-card room-info" key={room.id}><h3>{room.name}</h3><p>{room.capacity} personas · S/ {room.price.toFixed(2)} por noche</p><p>{room.amenities.join(' · ')}</p></DSCard>)}</div>}
       {section.id === 'promotions' && settings.promotions.filter(item => item.active).map(item => <article key={item.id}><h3>{item.title}</h3><p>{item.description}</p></article>)}
       {section.id === 'faq' && settings.faqs.map(item => <details key={item.id}><summary>{item.question}</summary><p>{item.answer}</p></details>)}
       {section.id === 'contact' && <><p>{settings.address}</p><p>{settings.email}</p><p>{settings.whatsapp}</p><p>Entrada: {settings.checkIn} · Salida: {settings.checkOut}</p></>}
-    </section>)}</div>
+    </section>)}</div></details>
   </div>;
 }

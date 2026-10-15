@@ -1,4 +1,5 @@
-/* Canonical FOR U design tokens. Keep legacy aliases neutral while old views migrate. */
+/* Legacy presentation tokens. Neutralizing overrides apply only to published v1 customer pages.
+   The application and opted-in v2 pages use materialExperience.css. */
 :root {
   --bg-primary: #ffffff;
   --bg-secondary: #fafafa;
@@ -59,26 +60,26 @@ html body {
   color: var(--text-primary) !important;
   font-family: var(--font-sans) !important;
 }
-body :is(h1, h2, h3, h4, h5, h6) {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) :is(h1, h2, h3, h4, h5, h6) {
   font-family: var(--font-sans) !important;
   font-weight: 600 !important;
   color: var(--text-primary) !important;
   -webkit-text-fill-color: currentColor !important;
 }
-body :is(input, button, textarea, select) {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) :is(input, button, textarea, select) {
   font-family: var(--font-sans);
 }
-body
+body .foru-customer-surface:not(:has(.foru-presentation-v2))
   :is(.foru-auth-wordmark, .foru-logo-wordmark, .foru-brand-title, .tk-logo) {
   font-family: var(--font-serif) !important;
 }
-body .gradient-text {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .gradient-text {
   color: var(--text-primary) !important;
   -webkit-text-fill-color: currentColor !important;
   background: none !important;
   animation: none;
 }
-body
+body .foru-customer-surface:not(:has(.foru-presentation-v2))
   :is(
     .magic-card,
     .foru-auth-card,
@@ -93,7 +94,7 @@ body
   border-radius: var(--radius-lg) !important;
   box-shadow: var(--shadow-xs) !important;
 }
-body
+body .foru-customer-surface:not(:has(.foru-presentation-v2))
   :is(
     .magic-button,
     .foru-auth-form button,
@@ -109,7 +110,7 @@ body
   border-radius: var(--radius-md) !important;
   box-shadow: var(--shadow-xs) !important;
 }
-body
+body .foru-customer-surface:not(:has(.foru-presentation-v2))
   :is(
     .magic-button,
     .foru-auth-form button,
@@ -123,33 +124,33 @@ body
   transform: none !important;
   box-shadow: var(--shadow-sm) !important;
 }
-body
+body .foru-customer-surface:not(:has(.foru-presentation-v2))
   :is(.foru-auth-form input, .foru-auth-form textarea, .foru-auth-form select) {
   border-radius: var(--radius-md) !important;
   border: 1px solid var(--border-medium) !important;
 }
-body :is(.foru-auth-form input:focus, .foru-auth-form textarea:focus) {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) :is(.foru-auth-form input:focus, .foru-auth-form textarea:focus) {
   border-color: var(--text-secondary) !important;
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06) !important;
 }
-body :is(.foru-auth-wordmark span, .foru-logo-wordmark strong, .tk-logo span) {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) :is(.foru-auth-wordmark span, .foru-logo-wordmark strong, .tk-logo span) {
   background: var(--accent-gradient) !important;
   background-clip: text !important;
   -webkit-background-clip: text !important;
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
 }
-body .foru-journey-node.is-active {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .foru-journey-node.is-active {
   background: var(--accent-gradient) !important;
 }
-body :is(.tk-app, .tk-public) {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) :is(.tk-app, .tk-public) {
   --tk-ink: var(--text-primary);
   --tk-muted: var(--text-secondary);
   --tk-line: var(--border-light);
   --tk-accent: var(--text-primary);
   background: var(--bg-secondary);
 }
-body
+body .foru-customer-surface:not(:has(.foru-presentation-v2))
   .tk-app
   :is(
     .tk-logo,
@@ -164,7 +165,7 @@ body
   ) {
   color: var(--text-primary);
 }
-body
+body .foru-customer-surface:not(:has(.foru-presentation-v2))
   .tk-app
   :is(
     .tk-rhythm,
@@ -179,34 +180,34 @@ body
   background: var(--bg-secondary);
   border-color: var(--border-light);
 }
-body .tk-app .tk-chat-fab {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .tk-app .tk-chat-fab {
   background: var(--bg-primary);
   color: var(--text-primary);
   border-color: var(--border-medium);
   box-shadow: var(--shadow-sm);
 }
-body .tk-app .tk-chat-drawer {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .tk-app .tk-chat-drawer {
   box-shadow: var(--shadow-lg);
 }
-body .tk-app .tk-progress-circle {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .tk-app .tk-progress-circle {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-medium);
 }
-body .tk-app .tk-progress-circle > strong {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .tk-app .tk-progress-circle > strong {
   background: var(--bg-primary);
 }
-body .tk-app .tk-sidebar button.is-active {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .tk-app .tk-sidebar button.is-active {
   background: var(--bg-tertiary);
   color: var(--text-primary);
 }
-body .tk-app .tk-tool-card:hover {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .tk-app .tk-tool-card:hover {
   box-shadow: var(--shadow-sm);
   border-color: var(--border-medium);
 }
-body :is(.tk-notice, .tk-chat-bubble, .tk-tip) {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) :is(.tk-notice, .tk-chat-bubble, .tk-tip) {
   color: var(--text-secondary) !important;
 }
-body
+body .foru-customer-surface:not(:has(.foru-presentation-v2))
   :is(
     .tk-landing-preview,
     .tk-landing-preview .tk-site-hero,
@@ -215,28 +216,28 @@ body
   ) {
   background: var(--bg-primary);
 }
-body
+body .foru-customer-surface:not(:has(.foru-presentation-v2))
   .tk-landing-preview
   :is(button, header > strong, .tk-site-hero h1, .tk-site-block h2) {
   color: var(--text-primary);
 }
-body .tk-landing-preview button {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .tk-landing-preview button {
   background: var(--bg-secondary);
   border-color: var(--border-medium);
 }
-body .tk-app :is(.tk-prompter-text, .tk-caption-preview) {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .tk-app :is(.tk-prompter-text, .tk-caption-preview) {
   color: #ffffff;
 }
-body .tk-app .tk-rec {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .tk-app .tk-rec {
   background: var(--bg-primary);
   color: var(--text-primary);
 }
-body .tk-app .tk-top-status > span {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .tk-app .tk-top-status > span {
   background: var(--success);
 }
-body :is(.tk-check input, input[type="range"], progress) {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) :is(.tk-check input, input[type="range"], progress) {
   accent-color: var(--text-primary);
 }
-body .tk-app [data-focus] {
+body .foru-customer-surface:not(:has(.foru-presentation-v2)) .tk-app [data-focus] {
   color: var(--text-primary);
 }

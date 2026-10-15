@@ -1,3 +1,5 @@
+import PresentationReview from '../presentation/PresentationReview';
+import {LandingPreview as DesignPreview} from './LandingPreview';
 import WidgetEditor from '../widgets/WidgetEditor';
 import { nativeOffers, offerPrice, sameOffers, type Offer, type ProposalSource } from '../proposal/model';
 import { readProposalSource } from '../proposal/sourceRepository';
@@ -322,6 +324,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   const proposalChanged = draft.proposalSource &&
     (documentRevision('module-proposal') !== draft.proposalSource.proposalRevision || (draft.catalogSource === 'proposal' && documentRevision('module-' + moduleType) !== draft.proposalSource.catalogRevision));
   const sourcePanel = <>
+    <PresentationReview value={draft.presentationVersion} disabled={busy} onChange={presentationVersion=>update({presentationVersion})} render={presentationVersion=><DesignPreview draft={{...draft,presentationVersion}}/>}/>
     {publicationError && <section role="alert" className="pe-proposal-notice"><p>{publicationError}</p><DSButtonSecondary disabled={busy} onClick={() => setPublicationAttempt(value => value + 1)}>Revisar estado de publicación</DSButtonSecondary></section>}
     {draft.proposalSource && <section className="pe-proposal-notice"><strong>{proposalChanged ? 'Tu página necesita revisión' : 'Ofertas vinculadas a Mi propuesta'}</strong><p>Los precios se editan en su fuente. Guardar la propuesta no actualiza la publicación.</p><Link to={'/dashboard/tools/proposal?project=' + projectId}>Revisar mi propuesta →</Link></section>}
     {offerReview && <section className="pe-proposal-notice" aria-label="Revisar ofertas para publicar"><h2>Ofertas guardadas que se publicarán</h2><p>Compara con la página en vivo. Actualizaremos solo las ofertas; conservaremos tus textos, imágenes de portada y dirección.</p><ul>{offerReview.offers.map(offer => <li key={offer.id}><strong>{offer.name}</strong> · {offerPrice(offer)}<p>{offer.description}</p>{offer.conditions && <p>{offer.conditions}</p>}</li>)}</ul><DSButtonPrimary disabled={busy} onClick={() => { update({ offers:offerReview.offers, menuItems:undefined, proposalSource:offerReview.source }); setOfferReview(null); setNotice('Ofertas revisadas en el borrador. Pulsa Publicar para actualizar la página pública.'); }}>Actualizar ofertas y conservar mis textos</DSButtonPrimary><DSButtonSecondary onClick={() => setOfferReview(null)}>Volver sin actualizar</DSButtonSecondary></section>}

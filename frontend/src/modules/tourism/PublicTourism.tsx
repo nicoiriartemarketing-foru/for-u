@@ -1,3 +1,4 @@
+import {presentationClass} from '../../presentation/model';
 import { ButtonSecondary as DSButtonSecondary } from '../../components/ui/DesignSystem';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -29,5 +30,5 @@ function PublicTourismSession({ slug }: { slug: string }) {
   }, [slug, attempt]);
   useEffect(() => { const previous = document.title; document.title = site ? `${site.content.settings.name} · Experiencias` : 'Experiencias · For U'; return () => { document.title = previous; }; }, [site]);
   if (!loaded) return <main className="tourism-module tourism-public"><p role="status">Cargando experiencias…</p></main>;
-  return <main onClickCapture={trackContact}>{site ? <><PublicTours site={site.content} revision={site.revision} slug={slug} /><CommerceCheckout slug={slug} sourceKind="module"/></> : <section className="tourism-module tourism-public"><h1>Página no disponible</h1><p role="status">{notice}</p><DSButtonSecondary onClick={() => setAttempt(value => value + 1)}>Reintentar</DSButtonSecondary></section>}</main>;
+  return <main className={presentationClass(site?.content.presentationVersion)} onClickCapture={trackContact}>{site ? <><PublicTours site={site.content} revision={site.revision} slug={slug} /><CommerceCheckout slug={slug} sourceKind="module"/></> : <section className="tourism-module tourism-public"><h1>Página no disponible</h1><p role="status">{notice}</p><DSButtonSecondary onClick={() => setAttempt(value => value + 1)}>Reintentar</DSButtonSecondary></section>}</main>;
 }

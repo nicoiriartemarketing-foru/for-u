@@ -1,3 +1,4 @@
+import {presentationClass} from '../presentation/model';
 import ProjectWidgets from '../widgets/ProjectWidgets';
 import { ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import type { LandingDraft } from "./types";
@@ -15,7 +16,7 @@ export function LandingPreview({
 }) {
   return (
     <article
-      className={`tk-landing-preview tk-template-${draft.template}`}
+      className={`tk-landing-preview tk-template-${draft.template} ${presentationClass(draft.presentationVersion)}`}
       style={
         {
           "--site-color": /^#[0-9a-f]{6}$/i.test(draft.color)

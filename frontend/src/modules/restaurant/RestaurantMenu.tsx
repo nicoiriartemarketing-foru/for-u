@@ -1,3 +1,4 @@
+import {presentationClass} from '../../presentation/model';
 import { Card as DSCard } from '../../components/ui/DesignSystem';
 import { Input as DSInput, ButtonSecondary as DSButtonSecondary } from '../../components/ui/DesignSystem';
 import ProjectImage from '../../components/shared/ProjectImage';
@@ -26,7 +27,7 @@ export default function RestaurantMenu({ data, slug }: { data: RestaurantMenuDat
     if (quote.lines.length) orderUrl = cartWhatsappUrl(settings.whatsapp, quote);
   } catch (error) { orderError = (error as Error).message; }
   const total = quote ? quote.totalCents / 100 : null;
-  return <div className="restaurant-menu-preview">
+  return <div className={`restaurant-menu-preview ${presentationClass(data.presentationVersion)}`}>
     {!data.sections.some(section => section.id === 'hero' && section.visible) && <h1>{settings.title}</h1>}
     {data.sections.filter(section => section.visible).map(section => <DSCard as="section" id={section.id} key={section.id} className="component-card" aria-label={section.title}>
       {section.id === 'hero' && <><h1>{settings.title}</h1><p>{settings.tagline}</p><a className="restaurant-order-cta" href="#menu">Ver menú y hacer mi pedido</a><ProjectImage className="restaurant-menu-cover" value={settings.coverImage} alt={settings.title} /></>}

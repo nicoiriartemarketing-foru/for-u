@@ -1,3 +1,4 @@
+import {presentationClass} from '../presentation/model';
 import ProjectWidgets from '../widgets/ProjectWidgets';
 import { LandingExtras } from "./LandingPreview";
 import { ButtonGhost, Card } from "../components/ui/DesignSystem";
@@ -104,7 +105,7 @@ export default function SiteEditorFrame() {
   const edit = (field: string, value: string, blockId?: string) =>
     send("foru:edit", { field, value, blockId });
   return (
-    <article className={"pe-editable-page tk-landing-preview tk-template-" + draft.template} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); const preset = event.dataTransfer.getData('application/foru-section'); if (preset) send('foru:add', { preset }); }}>
+    <article className={"pe-editable-page tk-landing-preview tk-template-" + draft.template+' '+presentationClass(draft.presentationVersion)} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); const preset = event.dataTransfer.getData('application/foru-section'); if (preset) send('foru:add', { preset }); }}>
       <header>
         <strong>{draft.name}</strong>
         <span>Haz clic en un texto para editarlo</span>

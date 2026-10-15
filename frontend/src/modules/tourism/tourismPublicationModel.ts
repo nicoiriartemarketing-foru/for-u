@@ -1,6 +1,7 @@
+import {presentationVersion} from '../../presentation/model';
 import type { TourismData, Tour } from './model';
 export const tourTimeZones = ['America/Lima', 'America/Bogota', 'America/Mexico_City', 'America/Argentina/Buenos_Aires', 'Europe/Madrid', 'UTC'] as const;
-export type PublishedTourism = { version: 1; type: 'tourism'; settings: { name: string; about: string; whatsapp: string; timeZone: string }; tours: Tour[] };
+export type PublishedTourism = { presentationVersion?: import('../../presentation/model').PresentationVersion; version: 1; type: 'tourism'; settings: { name: string; about: string; whatsapp: string; timeZone: string }; tours: Tour[] };
 export type PublicDeparture = { id: string; tourId: string; date: string; time: string; available: number };
 export type TourBookingReceipt = { bookingId: string; people: number; total: number; currency: 'PEN' };
 export function tourismSnapshot(data: TourismData): PublishedTourism {
@@ -12,7 +13,7 @@ export function tourismSnapshot(data: TourismData): PublishedTourism {
     return { id: tour.id, name: tour.name.trim(), description: tour.description, price: Math.round(tour.price * 100) / 100, durationMinutes: tour.durationMinutes, image: tour.image, active: true, meetingPoint: tour.meetingPoint, latitude: tour.latitude, longitude: tour.longitude, itinerary: tour.itinerary.map(stop => ({ id: stop.id, title: stop.title, description: stop.description })) };
   });
   if (!tours.length) throw new Error('Activa al menos una experiencia antes de publicar.');
-  return { version: 1, type: 'tourism', settings: { name: data.settings.name.trim(), about: data.settings.about, whatsapp: data.settings.whatsapp, timeZone }, tours };
+  return { ...(data.presentationVersion!==undefined?{presentationVersion:presentationVersion(data.presentationVersion)}:{}), version: 1, type: 'tourism', settings: { name: data.settings.name.trim(), about: data.settings.about, whatsapp: data.settings.whatsapp, timeZone }, tours };
 }
 export function parsePublishedTourism(value: unknown): PublishedTourism | null {
   try {
@@ -24,6 +25,6 @@ export function parsePublishedTourism(value: unknown): PublishedTourism | null {
       if (tour.itinerary.some(stop => !stop || ![stop.id,stop.title,stop.description].every(v => typeof v === 'string'))) return null;
     }
     if (new Set(data.tours.map(tour => tour.id)).size !== data.tours.length) return null;
-    return tourismSnapshot({ version: 1, settings: data.settings, tours: data.tours, departures: [], guides: [], bookings: [] });
+    return tourismSnapshot({ presentationVersion:data.presentationVersion,version: 1, settings: data.settings, tours: data.tours, departures: [], guides: [], bookings: [] });
   } catch { return null; }
 }

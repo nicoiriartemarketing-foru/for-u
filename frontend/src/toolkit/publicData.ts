@@ -1,3 +1,4 @@
+import {presentationVersion} from '../presentation/model';
 import { parseWidgets } from '../widgets/model';
 import type { LandingDraft } from "./types";
 import { safeHttps } from "./engine";
@@ -28,8 +29,10 @@ export function parseSiteData(value: unknown): LandingDraft | null {
       if (new Set(offers.map(offer => offer.id)).size !== offers.length) return null;
     } catch { return null; }
   }
+  let design;try{design=presentationVersion(data.presentationVersion);}catch{return null;}
   let widgets; try {widgets=parseWidgets(data.widgets);}catch{return null;}
   return {
+    ...(data.presentationVersion!==undefined?{presentationVersion:design}:{}),
     widgets: widgets.length ? widgets : undefined,
     bookingEnabled: typeof data.bookingEnabled === 'boolean' ? data.bookingEnabled : undefined,
     offers,
@@ -43,7 +46,7 @@ export function parseSiteData(value: unknown): LandingDraft | null {
     description: text("description", 1000),
     cta: text("cta", 50, "Consultar"),
     template: text("template", 40, "services"),
-    color: "#0A0A0A",
+    color: design===2 && /^#[0-9a-f]{6}$/i.test(text("color",7))?text("color",7):"#0A0A0A",
     whatsapp: /^\d{8,15}$/.test(text("whatsapp", 15))
       ? text("whatsapp", 15)
       : "",

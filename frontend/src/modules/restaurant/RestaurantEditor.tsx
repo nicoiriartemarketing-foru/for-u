@@ -1,3 +1,4 @@
+import {useEditorStage} from '../EditorStage';
 import { Card as DSCard } from '../../components/ui/DesignSystem';
 import { StepIndicator } from '../../components/ui/DesignSystem';
 import { ButtonSecondary as DSButtonSecondary, Input as DSInput, Textarea as DSTextarea, ButtonPrimary as DSButtonPrimary } from '../../components/ui/DesignSystem';
@@ -21,7 +22,7 @@ const blankDish = (): Dish => ({ id: crypto.randomUUID(), name: '', description:
 export default function RestaurantEditor({ data, onChange }: RestaurantEditorProps) {
   const [dish, setDish] = useState<Dish | null>(null);
   const [message, setMessage] = useState('');
-  const [currentStep, setCurrentStep] = useState(1);
+  const {stage:currentStep,setStage:setCurrentStep}=useEditorStage();
   useModuleDraft(!!dish);
   const settings = data.settings;
   function updateSettings(patch: Partial<RestaurantData['settings']>) {
@@ -60,15 +61,15 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
         background: var(--gradient-boton); color: var(--color-texto); border-radius: 999px; padding: 0.75rem 1.1rem; font-weight: 900; box-shadow: var(--sombra-media);
       }
     `}</style>
-    <StepIndicator currentStep={currentStep} totalSteps={3} labels={['Datos básicos', 'Menú', 'Publicar']} onStepChange={step => { setCurrentStep(step); document.getElementById(['restaurant-basics', 'restaurant-menu-edit', 'restaurant-publish'][step - 1])?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }} />
-    <DSCard as="section" className="component-card restaurant-quick-start"><h2>Tu menú en tres pasos</h2><p>1. Agrega tus productos o carga la demo. 2. Escribe tu WhatsApp y guarda. 3. Publica tu enlace al final de esta página.</p>{!data.dishes.length && <DSButtonSecondary type="button" className="magic-button magic-button-primary" disabled={!!dish} onClick={() => { try { onChange(loadAlfajoresDemo(data, window.location.origin)); setMessage('Demo cargada: revisa los precios, reemplaza las imágenes de ejemplo y agrega tu WhatsApp. Después guarda los cambios.'); } catch (error) { setMessage((error as Error).message); } }}>Cargar demo de alfajores</DSButtonSecondary>}<p>Los precios e imágenes de la demo son ejemplos editables.</p></DSCard>
+    <StepIndicator currentStep={currentStep} totalSteps={3} labels={['Tu negocio', 'Tus productos', 'Revisar y publicar']} onStepChange={step => {if(dish){setMessage('Aplica o cancela el producto antes de cambiar de paso.');return;}setCurrentStep(step);}} />
+    {!data.dishes.length&&currentStep===2&&<DSCard as="section" className="component-card restaurant-quick-start"><h2>Empieza por tu primer producto</h2>{!data.dishes.length && <DSButtonSecondary type="button" className="magic-button magic-button-primary" disabled={!!dish} onClick={() => { try { onChange(loadAlfajoresDemo(data, window.location.origin)); setMessage('Demo cargada: revisa los precios, reemplaza las imágenes de ejemplo y agrega tu WhatsApp. Después guarda los cambios.'); } catch (error) { setMessage((error as Error).message); } }}>Cargar demo de alfajores</DSButtonSecondary>}<p>Los precios e imágenes de la demo son ejemplos editables.</p></DSCard>}
     <p role="status">{message}</p>
-    <details className="component-card"><summary>Vista previa del menú para clientes</summary><p>Prueba la carta y el pedido antes de publicar. Esta vista todavía no es una dirección pública.</p><RestaurantMenu data={data} /></details>
-    <DSCard as="section" id="restaurant-basics" className="component-card">
+    {currentStep===3&&<details className="component-card"><summary>Vista previa del menú para clientes</summary><p>Prueba la carta y el pedido antes de publicar. Esta vista todavía no es una dirección pública.</p><RestaurantMenu data={data} /></details>}
+    <DSCard hidden={currentStep!==1} as="section" id="restaurant-basics" className="component-card">
       <h2 className="component-title">Portada principal</h2>
       <div className="restaurant-fields">
         <DSInput label="Nombre del restaurante" info="El nombre que tus clientes verán en la carta pública." value={settings.title} onChange={event => updateSettings({ title: event.target.value })} />
-        <DSInput label="WhatsApp con código de país" info="Incluye el código del país. Los pedidos se enviarán a este número por WhatsApp." type="tel" value={settings.whatsapp} onChange={event => updateSettings({ whatsapp: event.target.value })} placeholder="+51 999 888 777" />
+        <DSInput label="WhatsApp con código de país" info="Incluye el código del país. El cliente podrá contactarte; los pedidos registrados se gestionan en FOR U." type="tel" value={settings.whatsapp} onChange={event => updateSettings({ whatsapp: event.target.value })} placeholder="+51 999 888 777" />
         <DSInput label="Frase de portada" info="Describe tu negocio en una frase. Por ejemplo: Alfajores artesanales del Valle Sagrado." value={settings.tagline} onChange={event => updateSettings({ tagline: event.target.value })} />
         <ProjectImageField label="Imagen de portada" value={settings.coverImage} onChange={value => updateSettings({ coverImage: value })} />
       </div>
@@ -77,7 +78,7 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
         <div className="hero-editor-overlay"><h3>{settings.title}</h3><p>{settings.tagline}</p></div>
       </div>
     </DSCard>
-    <DSCard as="section" id="restaurant-menu-edit" className="component-card">
+    <DSCard hidden={currentStep!==2} as="section" id="restaurant-menu-edit" className="component-card">
       <div className="component-header"><h2 className="component-title">Productos de tu menú</h2><DSButtonSecondary type="button" onClick={() => { setDish(blankDish()); setMessage(''); }}>Nuevo producto</DSButtonSecondary></div>
       {dish && <form className="restaurant-form" onSubmit={submitDish}>
         <h3>{data.dishes.some(item => item.id === dish.id) ? 'Editar producto' : 'Agregar producto'}</h3>
@@ -99,7 +100,7 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
       </DSCard>)}</div>
       {!data.dishes.length && <p>Agrega tu primer plato para empezar la carta.</p>}
     </DSCard>
-    <details className="restaurant-advanced"><summary>Más opciones: historia, secciones y preguntas frecuentes</summary>
+    <details hidden={currentStep!==1} className="restaurant-advanced"><summary>Más opciones: historia, secciones y preguntas frecuentes</summary>
     <DSCard as="section" className="component-card">
       <h2 className="component-title">Secciones del menú</h2>
       <div className="sections-list">{data.sections.map((section, index) => <div key={section.id} className="section-item">
@@ -129,5 +130,6 @@ export default function RestaurantEditor({ data, onChange }: RestaurantEditorPro
       <DSButtonSecondary type="button" onClick={() => updateSettings({ faq: [...settings.faq, { id: crypto.randomUUID(), question: '', answer: '' }] })}>Agregar pregunta</DSButtonSecondary>
     </DSCard>
     </details>
+    {currentStep<3&&<div className="editor-next-step"><DSButtonPrimary disabled={!!dish} onClick={()=>setCurrentStep(currentStep+1)}>{currentStep===1?'Continuar con mis productos':'Revisar y publicar'} →</DSButtonPrimary><small>{currentStep===2?'Podrás guardar y revisar antes de publicar.':'Puedes volver a este paso cuando quieras.'}</small></div>}
   </div>;
 }

@@ -18,10 +18,10 @@ export default function EcommerceEditor({ data, onChange }: EcommerceProps) {
     catch (error) { setMessage((error as Error).message); }
   }
   return <div className="ecommerce-module"><h2>Catálogo y tienda</h2><p role="status">{message}</p>
-    <DSCard as="section" className="commerce-card commerce-form"><h3>Identidad de la tienda</h3><ProjectImageField label="Imagen de portada" value={data.settings.coverImage} onChange={value => onChange({ ...data, settings: { ...data.settings, coverImage: value } })} />
+    <details className="module-identity"><summary>Identidad y condiciones de mi tienda</summary><DSCard as="section" className="commerce-card commerce-form"><h3>Identidad de la tienda</h3><ProjectImageField label="Imagen de portada" value={data.settings.coverImage} onChange={value => onChange({ ...data, settings: { ...data.settings, coverImage: value } })} />
       {([['name', 'Nombre', 'Nombre que verán tus clientes en la tienda.'], ['tagline', 'Frase de portada', 'Resume en una frase qué ofreces.'], ['whatsapp', 'WhatsApp con código de país', 'Incluye el código de país, por ejemplo +51 para Perú.']] as const).map(([key, label, info]) => <DSInput key={key} label={label} info={info} type={key === 'whatsapp' ? 'tel' : 'text'} value={data.settings[key]} onChange={event => onChange({ ...data, settings: { ...data.settings, [key]: event.target.value } })} />)}
       {([['about', 'Sobre la tienda', 'Cuenta la historia y especialidad de tu negocio.'], ['shipping', 'Entregas y envíos', 'Explica zonas, plazos y costos de entrega.'], ['returns', 'Cambios y devoluciones', 'Describe tus condiciones y cómo solicitar un cambio.']] as const).map(([key, label, info]) => <DSTextarea key={key} label={label} info={info} value={data.settings[key]} onChange={event => onChange({ ...data, settings: { ...data.settings, [key]: event.target.value } })} />)}
-    </DSCard>
+    </DSCard></details>
     <DSCard as="section" className="commerce-card"><div className="commerce-header"><h3>Productos</h3><DSButtonSecondary onClick={() => setProduct({ id: crypto.randomUUID(), name: '', category: '', description: '', image: '', price: 0, stock: 0, active: true })}>Nuevo producto</DSButtonSecondary></div>
       {!data.products.length && <p>Agrega tu primer producto con su precio y stock.</p>}
       <div className="commerce-grid">{data.products.map(item => <article className="commerce-product" key={item.id}>

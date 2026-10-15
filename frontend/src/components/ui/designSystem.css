@@ -16,7 +16,7 @@
 @media(prefers-reduced-motion:reduce){.ds-button,.ds-input,.ds-textarea,.ds-tooltip{animation:none!important;transition:none!important}.ds-button:active:not(:disabled){transform:none}}
 
 .dashboard-home .area-open>.ds-info{position:absolute;right:12px;top:12px}.dashboard-home .area-open>.ds-button{margin-top:auto;width:100%}#restaurant-basics,#restaurant-menu-edit,#restaurant-publish{scroll-margin-top:110px}
-button.ds-button.ds-button-primary{background:#111827;color:#fff;border-color:#111827;font-weight:500}button.ds-button.ds-button-primary:hover:not(:disabled){background:#1f2937}
+
 
 /* Keep scrollbars understated without changing scrolling or canvas gestures. */
 :root{scrollbar-color:#d1d5db #fafafa;scrollbar-width:thin}

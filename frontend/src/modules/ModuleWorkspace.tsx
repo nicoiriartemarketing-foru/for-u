@@ -1,3 +1,8 @@
+import {EditorStageContext} from './EditorStage';
+import PresentationReview from '../presentation/PresentationReview';
+import RestaurantMenu from './restaurant/RestaurantMenu';
+import type {RestaurantData} from './restaurant/model';
+import {presentationClass,type PresentationVersion} from '../presentation/model';
 import { ButtonPrimary as DSButtonPrimary, ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
@@ -58,6 +63,7 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
   const location = useLocation();
   const editing = location.pathname.endsWith('/editor');
   const [data, setData] = useState<T | null>(null);
+  const [stage,setStage]=useState(1);
   const [revision, setRevision] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [pendingDraft, setPendingDraft] = useState(false);
@@ -71,6 +77,7 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
     loadModuleDocument(userId, project.id, config.type).then(document => {
       if (!active) return;
       const payload = document ? config.parse(document.payload) : config.create(project.name);
+      setStage(config.type==='restaurant'&&(payload as {dishes?:unknown[]}).dishes?.length?2:1);
       setData(payload); setRevision(document?.revision ?? null); setDirty(false); setStatus('');
     }).catch(reason => { if (active) setStatus(reason.message); });
     return () => { active = false; };
@@ -107,17 +114,18 @@ function ModuleSession<T>({ userId, project, projects, config }: { userId: strin
     <p role="status">{status}</p>
     <DSButtonSecondary disabled={saving} onClick={() => { if ((!dirty && !pendingDraft) || window.confirm('Actualizar recupera los datos guardados y descarta los cambios pendientes. ¿Continuar?')) { setData(null); setAttempt(value => value + 1); } }}>Actualizar datos</DSButtonSecondary>
     {pendingDraft && <p role="status">Termina y aplica el formulario abierto, o cancélalo, antes de guardar el proyecto.</p>}
-    <DSButtonSecondary disabled={saving} onClick={() => leave(`/content-creator?project=${encodeURIComponent(project.id)}`)}>Crear Contenido</DSButtonSecondary>
+    <details className="module-more-actions"><summary>Más herramientas del proyecto</summary><DSButtonSecondary disabled={saving} onClick={() => leave(`/content-creator?project=${encodeURIComponent(project.id)}`)}>Crear contenido</DSButtonSecondary>
     {config.type === 'restaurant' && <DSButtonSecondary onClick={() => leave(`/modules/restaurant/orders?project=${encodeURIComponent(project.id)}`)}>Pedidos internos · mesas y delivery</DSButtonSecondary>}
-    <nav className="module-navigation" aria-label={moduleLabels[config.type]}><DSButtonSecondary disabled={saving} onClick={() => leave('/dashboard?view=projects')}>Mis proyectos</DSButtonSecondary><DSButtonSecondary disabled={saving} aria-current={editing ? undefined : 'page'} onClick={() => changeView(`/modules/${config.type}?project=${encodeURIComponent(project.id)}`)}>{config.dashboardLabel}</DSButtonSecondary><DSButtonSecondary disabled={saving} aria-current={editing ? 'page' : undefined} onClick={() => changeView(`/modules/${config.type}/editor?project=${encodeURIComponent(project.id)}`)}>{config.editorLabel}</DSButtonSecondary></nav>
+    </details><nav className="module-navigation" aria-label={moduleLabels[config.type]}><DSButtonSecondary disabled={saving} onClick={() => leave('/dashboard?view=projects')}>Mis proyectos</DSButtonSecondary><DSButtonSecondary disabled={saving} aria-current={editing ? undefined : 'page'} onClick={() => changeView(`/modules/${config.type}?project=${encodeURIComponent(project.id)}`)}>{config.dashboardLabel}</DSButtonSecondary><DSButtonSecondary disabled={saving} aria-current={editing ? 'page' : undefined} onClick={() => changeView(`/modules/${config.type}/editor?project=${encodeURIComponent(project.id)}`)}>{config.editorLabel}</DSButtonSecondary></nav>
     <fieldset className="module-editing-area" disabled={saving}>
       <ModuleDraftContext.Provider value={setPendingDraft}>
       <MediaScope.Provider value={{ userId, projectId: project.id }}>
-      {editing ? <Editor data={data} onChange={update} project={project} userId={userId} /> : <Dashboard data={data} onChange={update} project={project} userId={userId} />}
+      <EditorStageContext.Provider value={{stage,setStage}}>{editing ? <Editor data={data} onChange={update} project={project} userId={userId} /> : <Dashboard data={data} onChange={update} project={project} userId={userId} />}</EditorStageContext.Provider>
       </MediaScope.Provider>
       </ModuleDraftContext.Provider>
     </fieldset>
-    {config.type === 'restaurant' && <div className="restaurant-save-step"><DSButtonPrimary disabled={!dirty || saving || pendingDraft} onClick={save}>{saving ? 'Guardando…' : '2. Guardar mi menú'}</DSButtonPrimary><p>{pendingDraft ? 'Aplica o cancela el formulario abierto antes de guardar y publicar.' : dirty ? 'Guarda antes de publicar para conservar tus productos.' : 'Tus cambios están guardados. Puedes publicar el menú.'}</p></div>}
-    {Publication && <Publication data={data} userId={userId} project={project} disabled={dirty || pendingDraft || saving} />}
+    {config.type === 'restaurant' && (!editing||stage===3) && <div className="restaurant-save-step"><DSButtonPrimary disabled={!dirty || saving || pendingDraft} onClick={save}>{saving ? 'Guardando…' : '2. Guardar mi menú'}</DSButtonPrimary><p>{pendingDraft ? 'Aplica o cancela el formulario abierto antes de guardar y publicar.' : dirty ? 'Guarda antes de publicar para conservar tus productos.' : 'Tus cambios están guardados. Puedes publicar el menú.'}</p></div>}
+    {Publication&&(!editing||config.type!=='restaurant'||stage===3)&&<PresentationReview value={(data as {presentationVersion?:PresentationVersion}).presentationVersion} disabled={saving||pendingDraft} onChange={presentationVersion=>update({...data,presentationVersion})} render={presentationVersion=>config.type==='restaurant'?<RestaurantMenu key={presentationVersion} data={{...data as RestaurantData,presentationVersion}}/>:<div className={presentationClass(presentationVersion)}><h2>{project.name}</h2>{((data as {tours?:{id:string;name:string;description:string;price:number}[]}).tours??[]).map(t=><article key={t.id}><h3>{t.name}</h3><p>{t.description}</p><strong>S/ {t.price.toFixed(2)}</strong></article>)}</div>}/>}
+    {Publication && (!editing||config.type!=='restaurant'||stage===3) && <Publication data={data} userId={userId} project={project} disabled={dirty || pendingDraft || saving} />}
   </main>;
 }

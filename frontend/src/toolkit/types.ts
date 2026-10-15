@@ -36,6 +36,7 @@ export function businessFromProject(project: ForUActiveProject): Business {
   };
 }
 export type CalendarEntry = {
+  guidance?: import('../ai/model').Guidance;
   id: string;
   title: string;
   date: string;
@@ -46,6 +47,7 @@ export type CalendarEntry = {
 };
 export type LandingBlock = { id: string; title: string; body: string };
 export type LandingDraft = {
+  presentationVersion?: import('../presentation/model').PresentationVersion;
   widgets?: ProjectWidget[];
   bookingEnabled?: boolean;
   catalogSource?: "module" | "proposal";

@@ -17,6 +17,7 @@ export type MenuSection = {
   title: string; visible: boolean;
 };
 export type RestaurantData = {
+  presentationVersion?: import('../../presentation/model').PresentationVersion;
   version: 1;
   dishes: Dish[]; inventory: Ingredient[]; recipes: Recipe[];
   preparations: Array<{ id: string; recipeId: string; name: string; batches: number; createdAt: string }>;

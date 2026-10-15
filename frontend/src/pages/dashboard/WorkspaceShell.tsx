@@ -1,3 +1,4 @@
+import WorkspaceTools from './WorkspaceTools';
 import { Tooltip } from '../../components/ui/DesignSystem';
 import { ButtonSecondary as DSButtonSecondary } from '../../components/ui/DesignSystem';
 import { useAreaDocuments } from './AreaDocuments';
@@ -65,6 +66,14 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
       ?? toolTitles[location.pathname.split('/').at(-1) ?? '']
       ?? (location.pathname.includes('/modules/') ? pageAccess.title : location.pathname.includes('/landing') ? 'Editor de página' : 'Creator Studio');
   const isLinkUnlocked = (_title: string) => Boolean(project);
+  const renderLink = ({icon,title,path,help}:typeof links[number]) => {
+          const unlocked = isLinkUnlocked(title);
+          return <Tooltip key={title} text={unlocked ? help : 'Elige un proyecto guardado para abrir esta herramienta.'}>
+            <Link className={unlocked ? '' : 'workspace-nav-locked'} aria-current={location.pathname === path.split('?')[0] ? 'page' : undefined} to={unlocked && project ? path : '/dashboard?create=1'} onClick={() => { if (unlocked) rememberNavigation(path); }} tabIndex={unlocked ? 0 : -1}>
+              <span className="workspace-nav-icon" aria-hidden="true">{icon}</span>{title}
+            </Link>
+          </Tooltip>;
+  };
   return <div className="workspace-shell">
     <aside className={`workspace-sidebar ${menuOpen ? 'menu-open' : ''}`}>
       <Link className="workspace-brand" to="/dashboard">for u<span>Un paso a tu ritmo</span></Link>
@@ -74,14 +83,8 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
       <DSButtonSecondary ref={menuButton} className="workspace-menu-toggle" aria-controls="workspace-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}>☰</DSButtonSecondary>
       <Link className="workspace-home-link" to="/dashboard">Mis proyectos y Hoy</Link>
       <nav id="workspace-navigation" aria-label="Navegación de tu negocio" onKeyDown={event => { if (event.key === 'Escape') { setMenuOpen(false); menuButton.current?.focus(); } }}>
-        {links.map(({icon, title, path, help}) => {
-          const unlocked = isLinkUnlocked(title);
-          return <Tooltip key={title} text={unlocked ? help : 'Elige un proyecto guardado para abrir esta herramienta.'}>
-            <Link className={unlocked ? '' : 'workspace-nav-locked'} aria-current={location.pathname === path.split('?')[0] ? 'page' : undefined} to={unlocked && project ? path : '/dashboard?create=1'} onClick={() => { if (unlocked) rememberNavigation(path); }} tabIndex={unlocked ? 0 : -1}>
-              <span className="workspace-nav-icon" aria-hidden="true">{icon}</span>{title}
-            </Link>
-          </Tooltip>;
-        })}
+        {links.filter(link=>['Mi propuesta','Creator Studio','Calendario',pageAccess.title].includes(link.title)).map(renderLink)}
+        <WorkspaceTools links={links} projectId={project?.id} type={type} onNavigate={rememberNavigation}/>
       </nav>
       {project && <PendingTasks projectId={project.id} type={type} />}
       <p>Tu espacio para avanzar.<br />Y también para respirar.</p>
@@ -89,7 +92,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     </aside>
 
     <div className="workspace-main">
-      <header className="workspace-top">
+      <header className="workspace-top"><div className="workspace-mobile-tools"><WorkspaceTools links={links} projectId={project?.id} type={type} onNavigate={rememberNavigation}/></div>
         <nav className="workspace-breadcrumbs" aria-label="Ubicación"><Link to="/dashboard">Mi espacio</Link><span aria-hidden="true">/</span><span aria-current="page">{currentTitle}</span></nav>
         <nav className="workspace-view-switch" aria-label="Vistas del proyecto">{requested && !project ? <span>Elige un proyecto para continuar</span> : <>
           <Link aria-current={location.pathname === '/dashboard' && Boolean(requested) ? 'page' : undefined} to={`/dashboard${query}${query ? '&' : '?'}view=management`}>Tablero</Link>
