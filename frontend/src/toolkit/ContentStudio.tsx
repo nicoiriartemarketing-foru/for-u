@@ -11,7 +11,7 @@ export default function ContentStudio({
 }: {
   onScript: (text: string) => void;
 }) {
-  const { business, docs, save, demo, track } = useToolkit();
+  const { business, docs, save, demo, track, projectId } = useToolkit();
   const [params] = useSearchParams();
   const section = sectionContext(docs.landing, params.get('section'));
   const contentKey = section ? `content-section-${section.id}` : 'content';
@@ -33,6 +33,7 @@ export default function ContentStudio({
         format as "caption" | "script" | "hashtags",
         `Tema: ${topic}. Tono: ${tone}.`,
         business,
+        {projectId},
       );
       setText(response);
       setStep(2);

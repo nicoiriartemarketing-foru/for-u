@@ -10,7 +10,7 @@ export default function ContextAssistant({
   currentTool: string;
   currentTask?: string;
 }) {
-  const { business, state, demo, track } = useToolkit();
+  const { business, state, demo, track, projectId } = useToolkit();
   const [messages, setMessages] = useState<{ role: string; text: string }[]>(
     [],
   );
@@ -28,6 +28,7 @@ export default function ContextAssistant({
     track("help");
     try {
       const text = await askAI("chat", prompt, business, {
+        projectId,
         context: { currentTool, currentTask, state },
         history: history.slice(-8),
       });

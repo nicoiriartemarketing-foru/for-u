@@ -12,9 +12,14 @@ export async function askAI(
     throw new Error(
       "Conecta tu cuenta para usar la IA. Puedes trabajar con una plantilla mientras tanto.",
     );
+  const scope=useActiveProjectsStore.getState();
+  const projectId=typeof extra.projectId==='string'?extra.projectId:scope.activeProjectId;
+  if(!projectId)throw new Error('Elige un proyecto guardado antes de usar la IA.');
   const { data, error } = await supabase.functions.invoke("toolkit-ai", {
-    body: { action, prompt, business, ...extra, projectId: useActiveProjectsStore.getState().activeProjectId },
+    body: { action, prompt, business, ...extra, projectId },
   });
+  const currentScope=useActiveProjectsStore.getState();
+  if(currentScope.cloudUserId!==scope.cloudUserId||currentScope.activeProjectId!==projectId)throw new Error('Cambiaste de cuenta o proyecto. La respuesta anterior no se aplicó.');
   if (error || data?.error)
     throw new Error(
       data?.error ??

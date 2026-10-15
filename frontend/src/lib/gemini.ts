@@ -11,6 +11,6 @@ export async function sendForUChatMessage(messages: ForUChatMessage[]) {
   const project = state.activeProjectId ? state.getProjectById(state.activeProjectId) : null;
   const business = project ? businessFromProject(project) : { name: 'Mi negocio', industry: 'servicios', objective: 'Definir mi siguiente paso', audience: 'mi comunidad', offer: 'mi servicio', location: '' };
   const last = [...messages].reverse().find(message => message.role === 'user')?.text ?? '';
-  try { return await askAI('chat', last, business, { history: messages.slice(-8), context: { nextAction: project ? state.getNextAction(project.id)?.title : null } }); }
+  try { return await askAI('chat', last, business, { projectId:project?.id, history: messages.slice(-8), context: { nextAction: project ? state.getNextAction(project.id)?.title : null } }); }
   catch (error) { return `${error instanceof Error ? error.message : 'No se pudo conectar con la IA.'}\n\nMientras tanto, elige una sola tarea y escribe su primer paso. Esta orientación es local.`; }
 }

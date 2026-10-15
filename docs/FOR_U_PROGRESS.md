@@ -323,3 +323,5 @@ La propietaria rechazó la primera muestra por apariencia neutra y exceso de opc
 - Commit visual/publicación: `897e190`. Navegación y presentación quedaron separadas de la activación de IA. Captura nueva `foru-focus-ready.jpg`; contraste de las combinaciones principales 5.75:1–11.28:1. Buscador móvil validado en portal (340px/top10, viewport360) y filtro Teleprompter comprobado. Viewport temporal restaurado. El servidor de vista previa está actualizado; no se hizo push ni despliegue Hostinger.
 
 - Commit IA: `721f13a`. Se conserva separada su activación. También se aclara que el Frasco de Ideas histórico usa guía local, no Gemini: etiquetas honestas y retirada de la espera artificial de 1.2s; se mantienen sus nodos y comportamiento.
+
+- Se pasó el UUID explícito del contexto de cada herramienta a las llamadas de IA y se descartan respuestas tardías tras cambiar de cuenta/proyecto. No se usa el nombre comercial enviado por el navegador como autorización.

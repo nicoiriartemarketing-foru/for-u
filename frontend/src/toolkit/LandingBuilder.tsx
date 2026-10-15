@@ -315,7 +315,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
     setBusy(true);
     setNotice("");
     try {
-      const result = await askAI("landing", `Ayuda a escribir la historia de este negocio sin inventar datos. Texto actual: ${draft.description}`, business);
+      const result = await askAI("landing", `Ayuda a escribir la historia de este negocio sin inventar datos. Texto actual: ${draft.description}`, business, {projectId});
       update({ description: result.slice(0, 1000) });
       setNotice("Sugerencia preparada. Revísala antes de publicar.");
     } catch (error) { setNotice((error as Error).message); }
@@ -545,6 +545,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
                 "landing",
                 "Propón título y descripción separados por un salto de línea.",
                 business,
+                {projectId},
               );
               const [headline, ...rest] = result.split("\n").filter(Boolean);
               update({

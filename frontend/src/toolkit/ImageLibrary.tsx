@@ -107,7 +107,7 @@ export default function ImageLibrary() {
         "tags",
         "Describe la imagen con 5 etiquetas cortas en español, separadas por comas. No identifiques personas.",
         business,
-        { imagePath: image.path },
+        { imagePath: image.path, projectId },
       );
       const list = response
         .split(/[,\n]/)
