@@ -1,3 +1,4 @@
+import Logo from '../../components/Logo';
 import WorkspaceTools from './WorkspaceTools';
 import { Tooltip } from '../../components/ui/DesignSystem';
 import { ButtonSecondary as DSButtonSecondary } from '../../components/ui/DesignSystem';
@@ -39,7 +40,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     ecommerce: { icon: '🛍️', title: 'Mi tienda', path: `/dashboard/tools/landing${query}`, help: 'Abre el editor de la página de tu tienda.' },
     hospitality: { icon: '🏡', title: 'Mi hospedaje', path: `/dashboard/tools/landing${query}`, help: 'Abre el editor de la página de tu hospedaje.' },
     tourism: { icon: '🗺️', title: 'Mis experiencias', path: `/dashboard/tools/landing${query}`, help: 'Abre el editor de la página de tus experiencias turísticas.' },
-    courses: { icon: '🎓', title: 'Mis cursos', path: `/dashboard/tools/landing${query}`, help: 'Abre el editor de la página donde presentas tus cursos.' },
+    courses: { icon: '🎓', title: 'Mis cursos', path: `/modules/courses/editor${query}`, help: 'Abre el editor de la página donde presentas tus cursos.' },
   }[type];
   const links = [
     { icon: '📱', title: 'Mi perfil', path: `/dashboard/tools/profile${query}`, help: 'Organiza bio, destacados y publicaciones. No modifica Instagram.' },
@@ -59,7 +60,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     const tool = pathname === '/creator-studio' ? 'studio' : pathname === '/dashboard/tools/orders' ? 'commerce-orders' : pathname.endsWith('/orders') ? 'orders' : pathname.startsWith('/modules/') ? 'editor' : pathname.split('/').at(-1);
     if (tool === 'studio' || knownTaskTool(tool)) remember({ projectId: project.id, tool });
   };
-  const toolTitles: Record<string, string> = { landing: 'Editor de página', bookings: 'Reservas y pedidos', content: 'Propuestas con IA', teleprompter: 'Teleprompter', video: 'Video', assistant: 'Asistente', automation: 'Respuestas automáticas' };
+  const toolTitles: Record<string, string> = { 'content-creator':'Creador visual', landing: 'Editor de página', bookings: 'Reservas y pedidos', content: 'Propuestas con IA', teleprompter: 'Teleprompter', video: 'Video', assistant: 'Asistente', automation: 'Respuestas automáticas' };
   const currentTitle = location.pathname === '/dashboard' ? (requested ? 'Mi tablero' : 'Mi espacio') : location.pathname === '/dashboard/world' ? 'Mi mundo'
     : params.get('view') === 'management' ? 'Gestión'
     : links.find(link => link.path.split('?')[0] === location.pathname)?.title
@@ -74,15 +75,15 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
             </Link>
           </Tooltip>;
   };
-  return <div className="workspace-shell">
+  return <div className="workspace-shell workspace-shell-immersive">
     <aside className={`workspace-sidebar ${menuOpen ? 'menu-open' : ''}`}>
-      <Link className="workspace-brand" to="/dashboard">for u<span>Un paso a tu ritmo</span></Link>
+      <Link className="workspace-brand" to="/dashboard" aria-label="FOR U · Mis proyectos"><Logo /></Link>
 
       {project && <TaskProgress projectId={project.id} type={type} />}
       <Tooltip text="Crea otro proyecto y conserva los que ya tienes en tu cuenta."><Link className="workspace-new magic-button-primary" to="/dashboard?create=1">＋ Crear nuevo proyecto</Link></Tooltip>
       <DSButtonSecondary ref={menuButton} className="workspace-menu-toggle" aria-controls="workspace-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}>☰</DSButtonSecondary>
       <Link className="workspace-home-link" to="/dashboard">Mis proyectos y Hoy</Link>
-      <nav id="workspace-navigation" aria-label="Navegación de tu negocio" onKeyDown={event => { if (event.key === 'Escape') { setMenuOpen(false); menuButton.current?.focus(); } }}>
+      <details className="workspace-account-menu"><summary aria-label="Opciones de cuenta">•••</summary><Link to="/dashboard">Mis proyectos y Hoy</Link><DSButtonSecondary onClick={() => { if (confirmWorkspaceNavigation()) { void signOut(); navigate('/login'); } }}>Cerrar sesión</DSButtonSecondary></details><Link className="immersive-new-project" to="/dashboard?create=1">＋ Proyecto</Link><nav id="workspace-navigation" aria-label="Navegación de tu negocio" onKeyDown={event => { if (event.key === 'Escape') { setMenuOpen(false); menuButton.current?.focus(); } }}>
         {links.filter(link=>['Mi propuesta','Creator Studio','Calendario',pageAccess.title].includes(link.title)).map(renderLink)}
         <WorkspaceTools links={links} projectId={project?.id} type={type} onNavigate={rememberNavigation}/>
       </nav>

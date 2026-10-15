@@ -1,5 +1,5 @@
 import { contentSizes, type ContentDraft } from './contentModel';
-export async function exportContentImage(draft: ContentDraft, imageUrl: string): Promise<Blob> {
+export async function exportContentImage(draft: ContentDraft, imageUrl: string,logoUrl=''): Promise<Blob> {
   const { width, height } = contentSizes[draft.format];
   const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
   const ctx = canvas.getContext('2d'); if (!ctx) throw new Error('El navegador no pudo crear la imagen.');
@@ -36,6 +36,9 @@ export async function exportContentImage(draft: ContentDraft, imageUrl: string):
   title.forEach(line => { ctx.fillText(line, 72, y, width - 144); y += fontSize * 1.2; });
   y += 28; const subtitle = lines(draft.subtitle, 32); ctx.font = '400 32px Arial, sans-serif';
   subtitle.forEach(line => { ctx.fillText(line, 72, y, width - 144); y += 42; });
-  if (y > height - 32) throw new Error('El texto no cabe completo. Acórtalo o cambia al formato Historia antes de exportar.');
+  if(draft.cta){y+=24;ctx.font='600 30px Arial, sans-serif';lines(draft.cta,30).forEach(line=>{ctx.fillText(line,72,y,width-144);y+=38;});}
+  if(draft.brandName){ctx.font='500 24px Arial, sans-serif';ctx.fillText(draft.brandName,72,height-48,logoUrl?width-360:width-144);}
+  if(logoUrl){const logo=new Image();logo.crossOrigin='anonymous';await new Promise<void>((resolve,reject)=>{logo.onload=()=>resolve();logo.onerror=()=>reject(new Error('No se pudo exportar el logo. Revisa su archivo.'));logo.src=logoUrl;});const scale=Math.min(160/logo.width,64/logo.height);ctx.drawImage(logo,width-72-logo.width*scale,height-80,logo.width*scale,logo.height*scale);}
+  if (y > height - 100) throw new Error('El texto no cabe completo. Acórtalo o cambia al formato Historia antes de exportar.');
   return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('No se pudo exportar la imagen.')), 'image/png'));
 }

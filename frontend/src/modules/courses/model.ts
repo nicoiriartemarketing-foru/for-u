@@ -1,3 +1,4 @@
+import {isPrivateMedia,mediaReference} from '../../components/shared/mediaReference';
 export type Lesson = { id: string; title: string; type: 'text' | 'video' | 'file' | 'quiz'; content: string; durationMinutes: number; question: string; options: string[]; correctOption: number };
 export type CourseModule = { id: string; title: string; lessons: Lesson[] };
 export type Course = { id: string; name: string; description: string; price: number; cover: string; modules: CourseModule[] };
@@ -15,7 +16,8 @@ export function saveCourse(data: CoursesData, course: Course): CoursesData {
       if (ids.has(lesson.id)) throw new Error('Las lecciones deben tener identificadores únicos.'); ids.add(lesson.id);
       if (!lesson.title.trim() || !Number.isFinite(lesson.durationMinutes) || lesson.durationMinutes < 0) throw new Error('Completa el título y la duración de cada lección.');
       if (lesson.type === 'quiz' && (!lesson.question.trim() || lesson.options.length < 2 || lesson.options.some(option => !option.trim()) || !Number.isInteger(lesson.correctOption) || lesson.correctOption < 0 || lesson.correctOption >= lesson.options.length)) throw new Error('Completa la pregunta, al menos dos opciones y una respuesta correcta.');
-      if (['video', 'file'].includes(lesson.type) && lesson.content && !/^https?:\/\//.test(lesson.content)) throw new Error('Usa un enlace https o http para videos y archivos.');
+      if (['video', 'file'].includes(lesson.type) && lesson.content && !/^https?:\/\//.test(lesson.content)&& !isPrivateMedia(lesson.content)) throw new Error('Sube el recurso a la biblioteca o usa un enlace https o http.');
+      if(isPrivateMedia(lesson.content))mediaReference(lesson.content.slice('foru-media:'.length));
     }
   }
   const value = { ...course, name: course.name.trim(), price: Math.round(course.price * 100) / 100 };

@@ -16,3 +16,5 @@ createRoot(document.getElementById('root')!).render(
     </AuthProvider>
   </StrictMode>,
 )
+
+import './experience/experience.css';

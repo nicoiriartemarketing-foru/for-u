@@ -156,3 +156,7 @@ Sidebar blanca, cabecera translúcida con breadcrumbs y selector de proyecto, co
 ## Instrucción vigente — experiencia completa e IA eficiente (15 de octubre)
 
 La entrega actual unifica el sistema de controles y simplifica los recorridos, incluyendo registro, herramientas y publicación versionada; conserva funciones y datos. La primera muestra fue rechazada por demasiado neutra y por no simplificar suficiente. Se priorizan revelado progresivo, una acción principal y estética FOR U futurista/elegante/jugable. No se considera visualmente aprobada aún. Alcance y activación segura de Gemini sin gasto nuevo en FOR_U_EXPERIENCE.md. Páginas reales solo cambian tras previsualizar y republicar; no se despliega Hostinger en esta entrega.
+
+## Dirección aprobada — 15 de octubre de 2026
+
+La instrucción vigente es «Tu negocio toma forma: ideas, mapa, creación y publicación», incluida la composición determinista de piezas desde cada sección de la landing. Su implementación y límites se siguen en FOR_U_CREATIVE_EXPERIENCE.md. La carita da ayuda local y captura ideas; Gemini se invoca explícitamente para clasificar y para operaciones creativas estructuradas. Imágenes generativas desactivadas, sin gasto nuevo. Conservar todas las entregas previas y su evidencia; no marcar cerrado el plan por una muestra de interfaz.

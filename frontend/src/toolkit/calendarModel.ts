@@ -18,7 +18,7 @@ export function readCalendar(value: unknown): CalendarEntry[] {
   }
   return value as CalendarEntry[];
 }
-export function calendarICS(entries: CalendarEntry[], now = new Date()): string {
+export function calendarICS(entries: CalendarEntry[], now = new Date(),tasks:{id:string;title:string;date:string;done:boolean}[]=[]): string {
   readCalendar(entries);
   const escape = (s: string) => s.replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
   const utc = (d: Date) => d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
@@ -27,5 +27,5 @@ export function calendarICS(entries: CalendarEntry[], now = new Date()): string 
   return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//FOR U//Agenda//ES',...entries.flatMap(e=>{
     const start=calendarDateTime(e.date,e.time);
     return ['BEGIN:VEVENT',`UID:${escape(e.id)}@foru`,`DTSTAMP:${utc(now)}`,`DTSTART:${utc(start)}`,`DTEND:${utc(new Date(start.getTime()+30*60_000))}`,`SUMMARY:${escape(e.title)}`,'STATUS:CONFIRMED',`X-FORU-DONE:${e.done?'TRUE':'FALSE'}`,...(e.done?[]:['BEGIN:VALARM','TRIGGER:-PT10M','ACTION:DISPLAY',`DESCRIPTION:${escape(e.title)}`,'END:VALARM']),'END:VEVENT'];
-  }),'END:VCALENDAR'].map(fold).join('\r\n')+'\r\n';
+  }),...tasks.flatMap(t=>{calendarDateTime(t.date,'00:00');return ['BEGIN:VEVENT',`UID:task-${escape(t.id)}@foru`,`DTSTAMP:${utc(now)}`,`DTSTART;VALUE=DATE:${t.date.replaceAll('-','')}`,`SUMMARY:${escape(t.title)}`,`X-FORU-DONE:${t.done?'TRUE':'FALSE'}`,'END:VEVENT'];}),'END:VCALENDAR'].map(fold).join('\r\n')+'\r\n';
 }

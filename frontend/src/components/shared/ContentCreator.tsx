@@ -1,3 +1,6 @@
+import {useUnsavedNavigation} from '../../lib/useUnsavedNavigation';
+import DesignSource from '../../experience/DesignSource';
+import {externalImageUrl} from './mediaReference';
 import { getPiece, pieceQuery, type Piece } from '../../social/model';
 import { ButtonPrimary as DSButtonPrimary, ButtonSecondary as DSButtonSecondary, Input as DSInput, Textarea as DSTextarea } from '../ui/DesignSystem';
 import { useEffect, useRef, useState } from 'react';
@@ -34,7 +37,7 @@ export default function ContentCreator({ currentProject, onProjectChange }: Cont
   const project = requested ? projects.find(item => item.id === requested) : projects[0];
   if (!project) return <main className="content-creator"><h1>Elige un proyecto para crear contenido</h1><p>{projects.length ? 'Este proyecto no está disponible en tu cuenta.' : 'Crea primero tu proyecto y selecciona su rubro.'}</p><Link to="/dashboard?view=projects">Ir a mis proyectos</Link></main>;
   function change(id: string) { if (onProjectChange) onProjectChange(id); if (!currentProject) { const next = new URLSearchParams(params); next.set('project', id); next.delete('piece'); next.delete('templates'); setParams(next); } }
-  return <ContentSession key={`${userId}:${project.id}:${params.get('piece') ?? ''}:${params.get('templates') ?? ''}`} userId={userId} project={project} projects={projects} onProjectChange={change} />;
+  return <ContentSession key={`${userId}:${project.id}:${params.get('piece') ?? ''}:${params.get('templates') ?? ''}:${params.get('design')??''}:${params.get('create')??''}`} userId={userId} project={project} projects={projects} onProjectChange={change} />;
 }
 
 const contentStorage = { load: loadModuleDocument, save: saveModuleDocument };
@@ -48,9 +51,12 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
   const [draft, setDraft] = useState<ContentDraft | null>(null);
   const [dirty, setDirty] = useState(false); const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState(''); const [attempt, setAttempt] = useState(0);
-  const [gallery, setGallery] = useState(false);
+  const [gallery, setGallery] = useState(false);const [galleryTarget,setGalleryTarget]=useState<'image'|'logo'>('image');const [logo,setLogo]=useState({path:'',url:''});
   const [image, setImage] = useState({ path: '', url: '' });
-  const saving = useRef(false);
+  useUnsavedNavigation(dirty||busy);
+  const previewRef=useRef<HTMLElement>(null);const [overflow,setOverflow]=useState(false);
+
+  const saving = useRef(false);const undoStack=useRef<ContentDraft[]>([]),redoStack=useRef<ContentDraft[]>([]);
   const rubro = project.type || 'restaurante';
   const sugerenciasContenido = useAgentInsights(project.id, rubro);
 
@@ -71,7 +77,8 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
       }, true);
     }
   };
-  const imageUrl = draft && image.path === draft.imagePath ? image.url : '';
+  const imageUrl = draft?.imagePath ? image.path === draft.imagePath ? image.url : '' : externalImageUrl(draft?.sourceImageUrl||'')||'';
+  useEffect(()=>{const el=previewRef.current;if(!el)return;const check=()=>setOverflow(el.scrollHeight>el.clientHeight+2);const observer=new ResizeObserver(check);observer.observe(el);if(el.lastElementChild)observer.observe(el.lastElementChild);check();return()=>observer.disconnect();},[draft,imageUrl]);
   useEffect(() => {
     let active = true;
     Promise.all([storage.load(userId, project.id, 'content-creator'), pieceId ? loadModuleDocument(userId,project.id,'social-profile') : Promise.resolve(null)]).then(([result, social]) => {
@@ -79,7 +86,7 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
       if (data && (data.version !== 1 || !Array.isArray(data.drafts) || data.drafts.some(item => item.projectId !== project.id))) throw new Error('El contenido guardado tiene un formato incompatible. No se ha sobrescrito.');
       const piece = pieceId ? getPiece(social?.payload,project.id,pieceId,userId).piece : null;
       if (active) {
-        setDocument(data ?? { version: 1, drafts: [] }); setRevision(result?.revision ?? null); setNotice(''); setLinkedPiece(piece);
+        const create=pieceParams.get('create');if(!piece&&!pieceParams.get('design')&&['post','portrait','story'].includes(create||'')){setDraft({...blankContent(project.id),format:create as ContentDraft['format']});setDirty(false);}const design=pieceParams.get('design');if(design&&!piece){const saved=data?.drafts.find(d=>d.id===design);if(saved){setDraft(saved);setDirty(false);}}setDocument(data ?? { version: 1, drafts: [] }); setRevision(result?.revision ?? null); setNotice(''); setLinkedPiece(piece);
         if(piece){const existing=data?.drafts.find(d=>d.id===piece.id); if(existing && pieceParams.get('templates')!=='1'){setDraft(existing);setDirty(false);}else if(pieceParams.get('templates')!=='1'){setDraft({...blankContent(project.id),id:piece.id,title:piece.title,caption:piece.text});setDirty(true);}}
       }
     }).catch(error => { if (active) setNotice(error.message); });
@@ -91,14 +98,18 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
     resolveMediaPath(path).then(url => { if (active) setImage({ path, url }); }).catch(error => { if (active) setNotice(error.message); });
     return () => { active = false; };
   }, [draft?.imagePath]);
+  useEffect(()=>{let active=true;if(draft?.logoPath)void resolveMediaPath(draft.logoPath).then(url=>{if(active)setLogo({path:draft.logoPath!,url});}).catch(e=>{if(active)setNotice(e.message);});return()=>{active=false;};},[draft?.logoPath]);
   useEffect(() => {
     if (!dirty) return;
     const guard = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
     window.addEventListener('beforeunload', guard); return () => window.removeEventListener('beforeunload', guard);
   }, [dirty]);
   function mayDiscard() { return !dirty || window.confirm('Tienes contenido sin guardar. ¿Descartarlo y continuar?'); }
-  function open(value: ContentDraft, changed: boolean) { if (!mayDiscard()) return; setDraft(linkedPiece ? { ...value,id:linkedPiece.id,caption:linkedPiece.text } : value); setDirty(changed); setGallery(false); setNotice(''); }
-  function update(patch: Partial<ContentDraft>) { if (draft) { setDraft({ ...draft, ...patch }); setDirty(true); } }
+  function open(value: ContentDraft, changed: boolean) { if (!mayDiscard()) return; undoStack.current=[];redoStack.current=[];setDraft(linkedPiece ? { ...value,id:linkedPiece.id,caption:linkedPiece.text } : value); setDirty(changed); setGallery(false); setNotice(''); }
+  function update(patch: Partial<ContentDraft>) { if (draft) {if(JSON.stringify({...draft,...patch})===JSON.stringify(draft))return;undoStack.current=[...undoStack.current,draft].slice(-30);redoStack.current=[];setDraft({ ...draft, ...patch }); setDirty(true); } }
+  function undo(){if(!draft)return;const previous=undoStack.current.pop();if(previous){redoStack.current.push(draft);setDraft(previous);setDirty(true);}}
+  function redo(){if(!draft)return;const next=redoStack.current.pop();if(next){undoStack.current.push(draft);setDraft(next);setDirty(true);}}
+  function variant(){if(!draft||!mayDiscard())return;setDraft({...draft,id:crypto.randomUUID(),updatedAt:new Date().toISOString()});setDirty(true);undoStack.current=[];redoStack.current=[];setNotice('Nueva variante preparada. Guárdala para conservar ambas versiones.');}
   async function save() {
     if (!document || !draft || saving.current) return;
     saving.current = true; setBusy(true);
@@ -111,11 +122,11 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
   }
   async function download() {
     if (!draft) return; setBusy(true);
-    try { if (draft.imagePath && !imageUrl) throw new Error('Espera a que cargue la imagen antes de exportar.'); downloadBlob(await exportContentImage(draft, imageUrl), `${project.type}-${draft.format}.png`); setNotice('Imagen lista para descargar.'); }
+    try { if (draft.logoPath&&logo.path!==draft.logoPath) throw new Error('Espera a que cargue el logo antes de exportar.');if (draft.imagePath && !imageUrl) throw new Error('Espera a que cargue la imagen antes de exportar.'); downloadBlob(await exportContentImage(draft, imageUrl,draft.logoPath&&logo.path===draft.logoPath?logo.url:''), `${project.type}-${draft.format}.png`); setNotice('Imagen lista para descargar.'); }
     catch (error) { setNotice((error as Error).message); } finally { setBusy(false); }
   }
   if (!document) return <main className="content-creator"><p role="status">{notice || 'Cargando el contenido del proyecto…'}</p>{notice && <DSButtonSecondary onClick={() => setAttempt(value => value + 1)}>Reintentar carga</DSButtonSecondary>}</main>;
-  return <div style={{ display: 'grid', gridTemplateColumns: linkedPiece ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) 340px', gap: '1.5rem', alignItems: 'start' }} className="creator-studio-layout">
+  return <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '1.5rem', alignItems: 'start' }} className="creator-studio-layout">
     <style>{`
       @media (max-width: 900px) {
         .creator-studio-layout { grid-template-columns: 1fr !important; }
@@ -138,35 +149,35 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
     <main className="content-creator magic-card">
       <header style={{ background: 'var(--gradient-fondo)', borderBottom: '1px solid rgba(212, 212, 212, 0.1)', padding: '1.5rem 2rem', borderRadius: 'var(--border-radius-grande) var(--border-radius-grande) 0 0', margin: '-2rem -2rem 2rem -2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontFamily: 'var(--font-titulos)', fontSize: 'clamp(1.8rem, 3vw, 2.4rem)', fontWeight: 900, margin: 0, letterSpacing: '-0.02em' }}>Creator Studio</h1>
-          <p style={{ color: 'var(--color-texto-suave)', margin: '0.5rem 0 0', fontSize: '1rem' }}>Tu contenido, generado desde todo lo que ya sabes de tu negocio</p>
+          <h1 style={{ fontFamily: 'var(--font-titulos)', fontSize: 'clamp(1.8rem, 3vw, 2.4rem)', fontWeight: 900, margin: 0, letterSpacing: '-0.02em' }}>Tu diseño, a tu manera</h1>
+          <p style={{ color: 'var(--color-texto-suave)', margin: '0.5rem 0 0', fontSize: '1rem' }}>Edita el texto directamente. Selecciona la foto para reemplazarla.</p>
         </div>
-        <DSButtonSecondary className="magic-button magic-button-soft" disabled={busy} onClick={() => { if (mayDiscard()) navigate(linkedPiece ? '/dashboard/tools/profile'+pieceQuery(project.id,linkedPiece.id) : `/modules/${project.type}?project=${encodeURIComponent(project.id)}`); }}>← Volver</DSButtonSecondary>
+        <DSButtonSecondary className="magic-button magic-button-soft" disabled={busy} onClick={() => { if (mayDiscard()) navigate(linkedPiece ? '/dashboard/tools/profile'+pieceQuery(project.id,linkedPiece.id) : `/creator-studio?project=${encodeURIComponent(project.id)}`); }}>← Volver</DSButtonSecondary>
       </header>
-      {linkedPiece&&<p>Diseño de {linkedPiece.title||'esta pieza'} · guarda antes de volver al perfil.</p>}<p role="status">{notice}</p><ProjectSelector projects={projects} value={project.id} disabled={busy} onChange={id => { if (mayDiscard()) onProjectChange(id); }} />
-      <fieldset className="creator-controls" disabled={busy}>
+      {linkedPiece&&<p>Diseño de {linkedPiece.title||'esta pieza'} · guarda antes de volver al perfil.</p>}<p role="status">{notice}</p><details><summary>Cambiar proyecto</summary><ProjectSelector projects={projects} value={project.id} disabled={busy} onChange={id => { if (mayDiscard()) onProjectChange(id); }} /></details>
+      {draft?.source&&<DesignSource user={userId} project={project.id} revision={draft.source.revision} section={draft.source.sectionId} mode={draft.source.mode}/>}<fieldset className="creator-controls" disabled={busy}>
       {draft ? <>
         <div className="creator-section-heading"><h2>{draft.templateId ? 'Personaliza tu plantilla' : 'Tu diseño desde cero'}</h2><DSButtonSecondary onClick={() => { if (mayDiscard()) { setDraft(null); setDirty(false); } }}>Elegir otra plantilla</DSButtonSecondary></div>
-        <div className="creator-editor"><section className="creator-fields">
+        <div className="creator-main-actions"><DSButtonSecondary aria-label="Deshacer edición de diseño" disabled={!undoStack.current.length} onClick={undo}>↶</DSButtonSecondary><DSButtonSecondary aria-label="Rehacer edición de diseño" disabled={!redoStack.current.length} onClick={redo}>↷</DSButtonSecondary><DSButtonPrimary onClick={save} disabled={!dirty}>Guardar diseño</DSButtonPrimary><DSButtonSecondary onClick={download}>Exportar imagen</DSButtonSecondary></div><div className="creator-editor"><details className="creator-fields"><summary>Texto, colores y ajustes</summary><DSButtonSecondary disabled={Boolean(linkedPiece)} onClick={variant}>Crear otra variante sin sustituir la guardada</DSButtonSecondary>
           <label>Título<DSInput maxLength={160} value={draft.title} onChange={event => update({ title: event.target.value })} /></label><label>Subtítulo<DSInput maxLength={240} value={draft.subtitle} onChange={event => update({ subtitle: event.target.value })} /></label>
           <label>Texto de la publicación<DSTextarea readOnly={!!linkedPiece} value={linkedPiece?.text ?? draft.caption} onChange={event => update({ caption: event.target.value })} /></label>
-          <label>Formato<select value={draft.format} onChange={event => update({ format: event.target.value as ContentDraft['format'] })}><option value="post">Publicación cuadrada · 1080 × 1080</option><option value="story">Historia · 1080 × 1920</option></select></label>
-          <div className="creator-colors"><label>Fondo<DSInput type="color" value={draft.background} onChange={event => update({ background: event.target.value })} /></label><label>Texto<DSInput type="color" value={draft.foreground} onChange={event => update({ foreground: event.target.value })} /></label></div>
-          <div className="creator-actions"><DSButtonSecondary onClick={() => setGallery(value => !value)}>{gallery ? 'Cerrar biblioteca' : 'Elegir imagen'}</DSButtonSecondary>{draft.imagePath && <DSButtonSecondary onClick={() => update({ imagePath: '' })}>Quitar imagen</DSButtonSecondary>}</div>
+          <label>Formato<select value={draft.format} onChange={event => update({ format: event.target.value as ContentDraft['format'] })}><option value="post">Publicación cuadrada · 1080 × 1080</option><option value="portrait">Vertical · 1080 × 1350</option><option value="story">Historia · 1080 × 1920</option></select></label>
+          <details><summary>Identidad y llamada a la acción</summary><DSButtonSecondary onClick={()=>{setGalleryTarget('logo');setGallery(true);}}>Elegir logo de mi biblioteca</DSButtonSecondary>{draft.logoPath&&<DSButtonSecondary onClick={()=>update({logoPath:''})}>Quitar logo del diseño</DSButtonSecondary>}<DSInput label="Nombre de marca" value={draft.brandName||''} onChange={e=>update({brandName:e.target.value})}/><DSInput label="Llamada a la acción" value={draft.cta||''} onChange={e=>update({cta:e.target.value})}/></details><div className="creator-colors"><label>Fondo<DSInput type="color" value={draft.background} onChange={event => update({ background: event.target.value })} /></label><label>Texto<DSInput type="color" value={draft.foreground} onChange={event => update({ foreground: event.target.value })} /></label></div>
+          <div className="creator-actions"><DSButtonSecondary onClick={() => {setGalleryTarget('image');setGallery(value => !value);}}>{gallery ? 'Cerrar biblioteca' : 'Elegir imagen'}</DSButtonSecondary>{(draft.imagePath||draft.sourceImageUrl) && <DSButtonSecondary onClick={() => update({ imagePath: '',sourceImageUrl:'' })}>Quitar imagen</DSButtonSecondary>}</div>
           <div className="creator-actions"><DSButtonPrimary tooltip="Guarda este diseño en tu proyecto. Guarda antes de salir para conservar los cambios." onClick={save} disabled={!dirty}>Guardar contenido</DSButtonPrimary><DSButtonSecondary tooltip="Descarga el diseño como imagen PNG para compartirlo." onClick={download}>Descargar imagen</DSButtonSecondary><DSButtonSecondary onClick={async () => { try { await navigator.clipboard.writeText(draft.caption); setNotice('Texto copiado.'); } catch { setNotice('No se pudo copiar. Selecciona y copia el texto desde el campo.'); } }}>Copiar texto</DSButtonSecondary></div>
-        </section><section className={`creator-preview creator-preview-${draft.format}`} aria-label="Vista previa del contenido" style={{ background: draft.background, color: draft.foreground }}>{imageUrl && <img src={imageUrl} alt="Imagen seleccionada para el contenido" />}<div><h2>{draft.title || 'Tu título'}</h2><p>{draft.subtitle}</p></div></section></div>
-        {gallery && <MediaGallery userId={userId} projectId={project.id} onSelect={media => { setImage({ path: media.path, url: media.url }); update({ imagePath: media.path }); setGallery(false); }} />}
+        </details><section ref={previewRef} className={`creator-preview creator-preview-${draft.format}`} aria-label="Vista previa del contenido" style={{ background: draft.background, color: draft.foreground }}>{imageUrl && <button className="creator-canvas-image" aria-label="Reemplazar imagen del diseño" onClick={()=>{setGalleryTarget('image');setGallery(true);}}><img src={imageUrl} alt="Imagen seleccionada para el contenido" /></button>}<div>{draft.logoPath&&logo.path===draft.logoPath&&<img className="creator-design-logo" src={logo.url} alt="Logo de tu proyecto"/>}<small>{draft.brandName}</small><h2 contentEditable suppressContentEditableWarning role="textbox" aria-label="Editar título en el diseño" tabIndex={0} onBlur={e=>update({title:e.currentTarget.textContent||''})}>{draft.title}</h2><p contentEditable suppressContentEditableWarning role="textbox" aria-label="Editar texto en el diseño" tabIndex={0} onBlur={e=>update({subtitle:e.currentTarget.textContent||''})}>{draft.subtitle}</p><strong>{draft.cta}</strong></div></section></div>
+        {overflow&&<p role="alert">El texto no cabe completo en este formato. Acórtalo o elige un formato más alto antes de exportar.</p>}{gallery && <MediaGallery userId={userId} projectId={project.id} onSelect={media => { if(galleryTarget==='logo'){setLogo({path:media.path,url:media.url});update({logoPath:media.path});}else{setImage({ path: media.path, url: media.url }); update({ imagePath: media.path,sourceImageUrl:'' });} setGallery(false); }} />}
       </> : <TemplateLibrary key={project.type} type={project.type} onSelect={template => open(contentFromTemplate(project, template), true)} onCreateFromScratch={() => open(blankContent(project.id), true)} />}
-      {!linkedPiece && document.drafts.length > 0 && <section><h2>Contenido guardado</h2><div className="creator-saved-grid">{document.drafts.map(item => <DSButtonSecondary key={item.id} onClick={() => open({ ...item }, false)}><strong>{item.title || item.caption.slice(0, 60)}</strong><span>{item.format === 'post' ? 'Publicación' : 'Historia'}</span></DSButtonSecondary>)}</div></section>}
+      {!linkedPiece && document.drafts.length > 0 && <section><h2>Contenido guardado</h2><div className="creator-saved-grid">{document.drafts.map(item => <DSButtonSecondary key={item.id} onClick={() => open({ ...item }, false)}><strong>{item.title || item.caption.slice(0, 60)}</strong><span>{item.format === 'story' ? 'Historia' : item.format === 'portrait' ? 'Publicación vertical' : 'Publicación'}</span></DSButtonSecondary>)}</div></section>}
     </fieldset>
   </main>
-  {!linkedPiece && <aside className="magic-card" style={{ padding: '1.5rem', animation: 'foru-focus-step-in 0.4s ease-out 0.2s both', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-magica)' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+  {!linkedPiece && <details className="magic-card" style={{ padding: '1.5rem', animation: 'foru-focus-step-in 0.4s ease-out 0.2s both', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-magica)' }}>
+    <summary>Más ideas para crear</summary><div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
       <span style={{ fontSize: '1.5rem' }}>💡</span>
       <h3 style={{ fontFamily: 'var(--font-titulos)', fontSize: '1.1rem', fontWeight: 900, margin: 0 }}>Ideas basadas en tus conversaciones</h3>
     </div>
     <p style={{ color: 'var(--color-texto-suave)', fontSize: '0.85rem', margin: '0 0 1rem', lineHeight: 1.5 }}>
-      Munay, Shippo, Oliver y Emma ya saben mucho de tu negocio. Aquí hay ideas listas para crear:
+      Sugerencias de tus notas disponibles. Revísalas antes de usarlas:
     </p>
     <div style={{ display: 'grid', gap: '0.75rem' }}>
       {sugerenciasContenido.map((idea, i) => (
@@ -180,6 +191,6 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
         </div>
       ))}
     </div>
-  </aside>}
+  </details>}
   </div>;
 }

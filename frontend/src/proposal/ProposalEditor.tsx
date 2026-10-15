@@ -1,3 +1,4 @@
+import JourneyImport from '../experience/JourneyImport';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToolkit } from '../toolkit/ToolkitContext';
@@ -97,7 +98,7 @@ function ProposalSession({ initial }: { initial: Proposal }) {
   }
   return <section className="proposal-page">
     <header><span className="proposal-kicker">MI PROPUESTA · {business.name}</span><h2>Una idea clara. Tu siguiente paso.</h2><p>Tu negocio puede ofrecer más de una cosa.</p></header>
-    <nav className="proposal-steps" aria-label="Pasos de mi propuesta">{['Qué ofrezco y para quién','Mis ofertas','Mensaje y contacto'].map((title,i) => <ButtonSecondary key={title} aria-current={i === step ? 'step' : undefined} onClick={() => setStep(i)}>{i+1}. {title}</ButtonSecondary>)}</nav>
+    <JourneyImport proposal={proposal} onApply={patch}/><nav className="proposal-steps" aria-label="Pasos de mi propuesta">{['Qué ofrezco y para quién','Mis ofertas','Mensaje y contacto'].map((title,i) => <ButtonSecondary key={title} aria-current={i === step ? 'step' : undefined} onClick={() => setStep(i)}>{i+1}. {title}</ButtonSecondary>)}</nav>
     <fieldset disabled={busy} className="proposal-fields">
       {step === 0 && <><h2>¿Qué quieres ofrecer?</h2><Textarea label="Qué ofrezco" value={proposal.offering} placeholder="Ej.: café y alfajores en mi espacio" maxLength={1000} onChange={e => patch({ offering:e.target.value })} /><Textarea label="Para quién" value={proposal.audience} placeholder="¿A quién quieres recibir o ayudar?" maxLength={1000} onChange={e => patch({ audience:e.target.value })} /><Textarea label="Qué necesita esa persona" value={proposal.need} maxLength={1000} onChange={e => patch({ need:e.target.value })} /><Textarea label="Qué hace valiosa mi oferta" value={proposal.value} placeholder="Describe algo que puedas cumplir" maxLength={1000} onChange={e => patch({ value:e.target.value })} /></>}
       {step === 1 && <><div className="proposal-section-title"><h2>Mis ofertas</h2><ButtonSecondary onClick={() => setOffer(blankOffer())}>＋ Añadir oferta</ButtonSecondary></div>

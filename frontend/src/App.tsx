@@ -1,3 +1,5 @@
+import ForUCompanion from './experience/ForUCompanion';
+import BrandWelcome from './experience/BrandWelcome';
 import { Card as DSCard } from './components/ui/DesignSystem';
 import { Toaster } from 'react-hot-toast';
 import { Component, lazy, Suspense, useEffect, type ErrorInfo, type ReactNode } from 'react';
@@ -101,15 +103,15 @@ function PrivateWorkspace({ children }: { children: ReactNode }) {
     );
   }
 
-  const commonShell = location.pathname.startsWith('/dashboard') || location.pathname === '/creator-studio' || location.pathname.startsWith('/modules/');
-  return session ? <>{commonShell ? <WorkspaceShell>{children}</WorkspaceShell> : children}<FloatingPomodoro /></> : <Navigate to={`/login?next=${encodeURIComponent(nextPath)}`} replace />;
+  const commonShell = location.pathname.startsWith('/dashboard') || location.pathname === '/creator-studio' || location.pathname === '/content-creator' || location.pathname.startsWith('/modules/');
+  return session ? <>{commonShell ? <WorkspaceShell>{children}</WorkspaceShell> : children}<FloatingPomodoro /><ForUCompanion /></> : <Navigate to={`/login?next=${encodeURIComponent(nextPath)}`} replace />;
 }
 
 function ExperienceSurface({children}:{children:ReactNode}) {
   const {pathname}=useLocation();
   // Customer pages opt in through their published snapshot, never through global CSS.
   const customer=/^\/(s|negocio|experiencias|p)\//.test(pathname)||pathname==='/site-preview'||(!['/','/login','/register','/pricing','/ia','/metodologia','/mundo-digital','/aventura','/studio','/onboarding','/workspace','/whatsapp','/content-creator','/creator-studio','/estudio','/registro','/preparacion','/reserva','/exito','/herramientas/demo','/mapa/demo'].includes(pathname)&&!/^\/(dashboard|modules|pedidos|compras|cobros|editor)(\/|$)/.test(pathname));
-  return <div className={customer?'foru-customer-surface':'foru-experience'}>{children}</div>;
+  return <div className={customer?'foru-customer-surface':'foru-experience'}>{children}{!customer&&<BrandWelcome/>}</div>;
 }
 function App() {
   return (

@@ -221,7 +221,7 @@ export default function Teleprompter({
   }
   if(pieceError)return <section role="alert">{pieceError}<Link to={'/dashboard/tools/profile?project='+projectId}>Volver al perfil</Link></section>;
   return (
-    <div className="tk-two-columns">
+    <div className="tk-two-columns foru-prompter">
       {pieceId&&<Link to={'/dashboard/tools/profile'+pieceQuery(projectId,pieceId)}>← Volver a esta pieza</Link>}
       <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-eyebrow">TU VOZ, TU NEGOCIO</div>
@@ -235,6 +235,7 @@ export default function Teleprompter({
             disabled={recording || busy}
           />
         </label>
+        <details className="prompter-settings"><summary>Ajustar lectura y subtítulos</summary>
         <label>
           Velocidad · {speed} píxeles/s
           <DSInput
@@ -286,7 +287,7 @@ export default function Teleprompter({
             ? "Opcional: el servicio de voz de tu navegador procesa el audio. Los tiempos son aproximados y puedes editarlos después."
             : "Este navegador no admite reconocimiento de voz en vivo. Puedes transcribir el archivo desde el editor."}
         </small>
-        <DSButtonSecondary disabled={busy} onClick={saveSettings}>Guardar guion y ritmo</DSButtonSecondary>
+        </details><DSButtonSecondary disabled={busy} onClick={saveSettings}>Guardar guion y ritmo</DSButtonSecondary>
       </DSCard>
       <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-camera">

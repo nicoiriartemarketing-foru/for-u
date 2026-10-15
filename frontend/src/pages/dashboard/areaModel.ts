@@ -8,14 +8,14 @@ export const areaDefinitions = [
   { id: 'operations', title: 'Operaciones', color: '#B9DCD7', pet: 'Munay', gradient: 'from-cyan-100 via-cyan-200 to-amber-100', accessory: '💌' },
 ] as const;
 export type AreaId = typeof areaDefinitions[number]['id'];
-export type AreaTask = { guidance?: import('../../ai/model').Guidance; id: string; area: AreaId; title: string; done: boolean; createdAt: string; completedAt?: string; firstCompletedAt?: string; tool?: string };
-export type AreaTasks = { version: 1; tasks: AreaTask[]; earnedAreas?: AreaId[] };
+export type AreaTask = { status?: 'todo' | 'doing' | 'done'; date?: string; guidance?: import('../../ai/model').Guidance; id: string; area: AreaId; title: string; done: boolean; createdAt: string; completedAt?: string; firstCompletedAt?: string; tool?: string };
+export type AreaTasks = { version: 1 | 2; tasks: AreaTask[]; earnedAreas?: AreaId[] };
 export type WorldState = { version: 1; areas: Partial<Record<AreaId, { decoration: number; searchReward: boolean; taskReward: boolean }>> };
 export function parseAreaTasks(value: unknown): AreaTasks {
   const doc = value as AreaTasks;
   const ids = new Set<string>();
-  if (!doc || doc.version !== 1 || !Array.isArray(doc.tasks) || (doc.earnedAreas !== undefined && (!Array.isArray(doc.earnedAreas) || !doc.earnedAreas.every(area => areaDefinitions.some(a => a.id === area)))) || !doc.tasks.every(task => {
-    if (!task || typeof task.id !== 'string' || ids.has(task.id) || !areaDefinitions.some(a => a.id === task.area) || typeof task.title !== 'string' || !task.title.trim() || task.title.length > 200 || (task.guidance!==undefined&&!validGuidance(task.guidance)) || typeof task.done !== 'boolean' || typeof task.createdAt !== 'string') return false;
+  if (!doc || ![1,2].includes(doc.version) || !Array.isArray(doc.tasks) || (doc.earnedAreas !== undefined && (!Array.isArray(doc.earnedAreas) || !doc.earnedAreas.every(area => areaDefinitions.some(a => a.id === area)))) || !doc.tasks.every(task => {
+    if (!task || typeof task.id !== 'string' || ids.has(task.id) || !areaDefinitions.some(a => a.id === task.area) || typeof task.title !== 'string' || !task.title.trim() || task.title.length > 200 || (task.guidance!==undefined&&!validGuidance(task.guidance)) || (task.status!==undefined&&!['todo','doing','done'].includes(task.status)) || (task.date!==undefined&&(!validTaskDate(task.date))) || typeof task.done !== 'boolean' || typeof task.createdAt !== 'string') return false;
     ids.add(task.id); return true;
   })) throw new Error('No se pudo interpretar la lista de tareas. Tus datos guardados no se modificaron.');
   return doc;
@@ -64,3 +64,8 @@ export function areaToolPath(tool: string, type: ModuleType, project: string) {
 function taskClaims(tasks:AreaTasks):AreaId[]{return areaDefinitions.filter(area=>tasks.earnedAreas?.includes(area.id)||tasks.tasks.some(task=>task.area===area.id&&(task.done||typeof task.firstCompletedAt==='string'&&Number.isFinite(Date.parse(task.firstCompletedAt))))).map(area=>area.id);}
 export function recordTaskClaims(previous:AreaTasks,next:AreaTasks):AreaTasks {const claims=areaDefinitions.filter(a=>taskClaims(previous).includes(a.id)||taskClaims(next).includes(a.id)).map(a=>a.id);return claims.length?{...next,earnedAreas:claims}:next;}
 export function recoveredTaskRewards(world:WorldState,tasks:AreaTasks):WorldState {let next=world;for(const area of taskClaims(tasks))next=rewardTask(next,area);return next;}
+
+export function taskStatus(task:AreaTask):'todo'|'doing'|'done'{return task.done?'done':task.status==='doing'?'doing':'todo';}
+export function updateTaskState(task:AreaTask,status:'todo'|'doing'|'done'):AreaTask{return {...task,status,done:status==='done',completedAt:status==='done'?(task.completedAt??new Date().toISOString()):undefined};}
+
+export function validTaskDate(value:string){if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;const d=new Date(value+'T12:00:00Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===value;}

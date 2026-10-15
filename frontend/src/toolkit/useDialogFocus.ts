@@ -25,6 +25,9 @@ export function useDialogFocus(
       );
     focusable()[0]?.focus();
     const key = (event: KeyboardEvent) => {
+      // Only the focused dialog handles keys when a welcome/picker overlays another dialog.
+      const focusedDialog = document.activeElement?.closest('[aria-modal="true"]');
+      if (focusedDialog && focusedDialog !== element && !element.contains(focusedDialog)) return;
       if (event.key === "Escape") {
         event.preventDefault();
         close.current();

@@ -9,7 +9,7 @@ import { projectDestination, taskDestination, resumePath, sameTask, type TaskRef
 
 export function FocusStatus() {
   const { state, save, reload } = useWorkspaceFocus();
-  if (!state.loaded && !state.error) return null;
+  if ((!state.loaded && !state.error)||(!state.dirty&&!state.busy&&!state.error)) return null;
   return <div className="focus-status" role={state.error ? 'alert' : 'status'}>
     <span>{state.error || (state.busy ? 'Guardando enfoque…' : state.dirty ? 'Tu enfoque tiene cambios sin guardar.' : state.revision ? 'Enfoque guardado en tu cuenta.' : 'Elige hasta tres pasos para Hoy.')}</span>
     {state.loaded && state.dirty && <Button disabled={state.busy} onClick={() => void save()}>Guardar enfoque</Button>}

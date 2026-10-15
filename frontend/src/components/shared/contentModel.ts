@@ -1,8 +1,8 @@
 import type { ContentTemplate } from '../../data/templates/types';
 import type { ModuleProject } from '../../modules/moduleProjects';
-export type ContentDraft = { id: string; projectId: string; title: string; subtitle: string; caption: string; format: 'post' | 'story'; background: string; foreground: string; imagePath: string; templateId: string | null; updatedAt: string };
+export type ContentDraft = { logoPath?:string;carouselId?:string;slide?:number;sourceImageUrl?:string; brandName?:string; cta?:string; source?:{mode?:'draft'|'published';kind:'landing';revision:string;sectionId:string}; id: string; projectId: string; title: string; subtitle: string; caption: string; format: 'post' | 'portrait' | 'story'; background: string; foreground: string; imagePath: string; templateId: string | null; updatedAt: string };
 export type ContentDocument = { version: 1; drafts: ContentDraft[] };
-export const contentSizes = { post: { width: 1080, height: 1080 }, story: { width: 1080, height: 1920 } };
+export const contentSizes = { post: { width: 1080, height: 1080 }, portrait: { width: 1080, height: 1350 }, story: { width: 1080, height: 1920 } };
 export function blankContent(projectId: string): ContentDraft {
   return { id: crypto.randomUUID(), projectId, title: '', subtitle: '', caption: '', format: 'post', background: '#ffffff', foreground: '#0f172a', imagePath: '', templateId: null, updatedAt: new Date().toISOString() };
 }

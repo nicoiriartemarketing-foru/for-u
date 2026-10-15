@@ -22,16 +22,10 @@ function useTip(text?: string) {
   }, [position]);
   return { id, show, hide, open: Boolean(position), bubble: position && typeof document !== 'undefined' ? createPortal(<span id={id} role="tooltip" className="ds-tooltip" style={{ left: position.left, top: position.top, transform: `translate(-50%, ${position.below ? '0' : '-100%'})` }}>{text}</span>, document.body) : null };
 }
-function nodeText(node: ReactNode): string {
-  if (typeof node === 'string' || typeof node === 'number') return String(node);
-  if (Array.isArray(node)) return node.map(nodeText).join(' ');
-  if (isValidElement<{ children?: ReactNode }>(node)) return nodeText(node.props.children);
-  return '';
-}
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { tooltip?: string };
 function makeButton(variant: string) {
   return forwardRef<HTMLButtonElement, ButtonProps>(function DesignButton({ children, tooltip, className = '', onFocus, onBlur, onMouseEnter, onMouseLeave, ...props }, ref) {
-    const tip = useTip(tooltip || props.title || props['aria-label'] || nodeText(children).trim() || 'Activar esta opción');
+    const tip = useTip(tooltip || props.title);
     return <><button {...props} ref={ref} className={`ds-button ds-button-${variant} ${className}`} aria-describedby={[props['aria-describedby'], tip.open ? tip.id : undefined].filter(Boolean).join(' ') || undefined} onFocus={event => { onFocus?.(event); tip.show(event.currentTarget); }} onBlur={event => { onBlur?.(event); tip.hide(); }} onMouseEnter={event => { onMouseEnter?.(event); tip.show(event.currentTarget); }} onMouseLeave={event => { onMouseLeave?.(event); tip.hide(); }}>{children}</button>{tip.bubble}</>;
   });
 }

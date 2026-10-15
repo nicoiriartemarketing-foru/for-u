@@ -1,3 +1,4 @@
+import type {AreaTask} from '../pages/dashboard/areaModel';
 import TaskSuggestion from '../ai/TaskSuggestion';
 import { Card as DSCard } from '../components/ui/DesignSystem';
 import { ButtonSecondary as DSButtonSecondary, Input as DSInput, ButtonPrimary as DSButtonPrimary } from '../components/ui/DesignSystem';
@@ -9,7 +10,7 @@ import { downloadBlob } from "./api";
 import type { CalendarEntry } from "./types";
 import { useUnsavedNavigation } from '../lib/useUnsavedNavigation';
 import { calendarDateTime, calendarICS, readCalendar } from './calendarModel';
-export default function Calendar() {
+export default function Calendar({linkedTasks=[],onOpenTask}:{linkedTasks?:AreaTask[];onOpenTask?:(task:AreaTask)=>void}={}) {
   const { docs, save, track, reload, projectId } = useToolkit();
   let initial: CalendarEntry[] = [], formatError = '';
   try { initial = readCalendar(docs.calendar); } catch(e) { formatError = (e as Error).message; }
@@ -110,7 +111,7 @@ export default function Calendar() {
   }
   function exportCalendar() {
     downloadBlob(
-      new Blob([calendarICS(entries)], { type: "text/calendar;charset=utf-8" }),
+      new Blob([calendarICS(entries,new Date(),linkedTasks.flatMap(t=>t.date?[{id:t.id,title:t.title,date:t.date,done:t.done}]:[]))], { type: "text/calendar;charset=utf-8" }),
       "agenda-for-u.ics",
     );
   }
@@ -290,6 +291,7 @@ export default function Calendar() {
                     day: "numeric",
                   })}
                 </time>
+                {linkedTasks.filter(task=>task.date===key).map(task=><DSButtonSecondary key={`task:${task.id}`} className="calendar-linked-task" onClick={()=>onOpenTask?.(task)}>{task.done?'✓':'○'} {task.title}<small>Tarea · sin hora</small></DSButtonSecondary>)}
                 {entries
                   .filter((item) => item.date === key)
                   .sort((a, b) => a.time.localeCompare(b.time))

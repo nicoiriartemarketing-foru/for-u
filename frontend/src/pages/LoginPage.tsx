@@ -1,3 +1,4 @@
+import Logo from '../components/Logo';
 import { Input as DSInput } from '../components/ui/DesignSystem';
 import { type FormEvent, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
@@ -42,7 +43,7 @@ export default function LoginPage() {
     <main className="foru-auth-page">
       <MagicCard as="section" className="foru-auth-card">
         <Link to="/" className="foru-auth-wordmark" aria-label="FOR U">
-          FOR <span>U</span>
+          <Logo />
         </Link>
         <h1>Entra a For U</h1>
         <p>Vuelve a tu Ruta Digital y continua desde la proxima accion clara.</p>

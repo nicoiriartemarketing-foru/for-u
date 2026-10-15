@@ -1,3 +1,4 @@
+import PageAI from '../experience/PageAI';
 import PresentationReview from '../presentation/PresentationReview';
 import {LandingPreview as DesignPreview} from './LandingPreview';
 import WidgetEditor from '../widgets/WidgetEditor';
@@ -338,8 +339,9 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         <p style={{ color: 'var(--color-texto-suave)' }}>Selecciona un texto para escribir. Arrastra secciones para cambiar su orden.</p></div>
         <span role="status" className="magic-badge">{autosaveStatus || (dirty ? 'Cambios pendientes' : 'Borrador cargado')}</span>
       </header>
-      <nav className="pe-context-links" aria-label="Herramientas para esta sección"><Link to={`/creator-studio?project=${encodeURIComponent(projectId)}`}>← Mi ruta creativa</Link><Link to={`/dashboard/tools/content?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Proponer contenido</Link><Link to={`/dashboard/tools/teleprompter?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Grabar con teleprompter</Link></nav>
+      <nav className="pe-context-links" aria-label="Herramientas para esta sección"><Link to={`/creator-studio?project=${encodeURIComponent(projectId)}`}>← Mi ruta creativa</Link><Link to={`/creator-studio?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Crear pieza desde esta sección</Link><Link to={`/dashboard/tools/content?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Proponer contenido</Link><Link to={`/dashboard/tools/teleprompter?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Grabar con teleprompter</Link></nav>
       {sourcePanel}
+      <PageAI draft={draft} disabled={dirty||busy||demo} onApply={update}/>
       <WidgetEditor projectId={projectId} widgets={draft.widgets} onChange={widgets=>update({widgets})} disabled={busy||demo}/>
       {notice && <p className="pe-feedback" role="status">{notice}</p>}
       <div className="pe-commandbar magic-card" style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem', flexWrap: 'wrap', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-suave)', marginBottom: '1rem' }}>
