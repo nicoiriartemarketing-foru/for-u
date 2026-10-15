@@ -2,7 +2,7 @@
 
 ## Plan vigente — aprobado el 13 de octubre de 2026
 
-Este plan sustituye las decisiones contradictorias del historial conservado abajo. Se ejecuta **una entrega por instrucción**; la instrucción vigente autoriza únicamente Mercado Pago por negocio y la base comercial necesaria para todas las ofertas. Pedidos internos y perfil opcional de cliente ya tienen recorrido QA; la entrega 2 incorporó publicación. No se declara terminado el objetivo completo mientras queden entregas pendientes.
+Este plan sustituye las decisiones contradictorias del historial conservado abajo. Se ejecuta **una entrega por instrucción**; la instrucción vigente autoriza cerrar Mi mundo y la experiencia visual/emocional, sin desplegar ni empezar otras integraciones. Mercado Pago conserva su bloqueo externo. Pedidos internos y perfil opcional de cliente ya tienen recorrido QA; la entrega 2 incorporó publicación. No se declara terminado el objetivo completo mientras queden entregas pendientes.
 
 FOR U organiza proyectos con identidad propia. El rubro principal orienta preguntas, herramientas y pasos, sin limitar tipos de oferta; las páginas podrán mostrar ofertas publicadas de otros proyectos mediante widgets autorizados.
 
@@ -36,6 +36,15 @@ Calcular precios en servidor, conservar instantáneas, un intento activo y clave
 Estado: código base preservado en `04e0c70`, SQL 27/28 y función desplegados con autorización QA. Compras/cotización/seguimiento y permisos principales comprobados en Supabase real; proveedor externo **pendiente** de aplicación, secretos, vendedor/comprador de prueba y origen HTTPS. Guía exacta: FOR_U_MERCADO_PAGO.md. No se han conectado cuentas financieras ni cobrado dinero. Cuotas de nube y publicación Meta no se empiezan en esta entrega. Mundo, mascotas, onboarding, Pomodoro y Pro siguen en el objetivo posterior. Los agentes acompañan sin reemplazar resultados guardados.
 
 ## Datos y protecciones
+
+### Cierre vigente — Mi mundo y experiencia FOR U
+
+- Tablero y Mi mundo gratuitos, con proyectos, tareas y progreso comunes; sin bloqueos por landing, onboarding o logro. Identidad dorado/rosa/violeta/cyan y herramientas existentes conservadas.
+- Una isla por proyecto guardado; barco y cámara controlados; cuatro espacios y mascotas con Avanzar/Descansar. Modal accesible, tres pendientes, búsqueda libre, caricias/snack y tres decoraciones por área; sin nuevas monedas ni premios duplicados.
+- Tareas y mundo mantienen revisiones independientes, estado por documento y recuperación explícita de conflictos. Guardado parcial conserva pendientes. Reclamos de primera tarea viajan con las tareas para sobrevivir a error de decoración, reapertura o eliminación; sin convertir marcas manuales antiguas en premios.
+- Propósito/emoción explícitos, omisión y edición desde Configuración; preservar JSONB ajeno a la brújula. Pomodoro global por cuenta/dispositivo, controles entre pestañas, reloj por vencimiento y celebración única. Temporizador antiguo conservado para recuperación explícita.
+- Modo Pro es un logro calculado desde las cuatro áreas completas guardadas: estadísticas reales, sin cambiar suscripción ni almacenamiento. Retirar activación comercial simulada y exclusividad de Mi mundo en la presentación de planes; no implementar cuotas ni contratación.
+- Carga 3D diferida, tres islas visibles, DPR limitado, pausa al ocultar, reducción de movimiento y alternativa ligera con reintento. Antes de desplegar: recorridos QA, 360/768/1440, teclado, errores/conflictos, TypeScript/build/pruebas y medición física de 60 segundos en iPhone 16/Safari. Segunda cuenta remota y prueba física no se declaran verificadas sin evidencia. Guía/evidencias en FOR_U_WORLD.md y FOR_U_PROGRESS.md.
 
 Conservar UUID, URLs, publicaciones, catálogos, tareas, nodos antiguos y borradores. Formatos nuevos versionados, sin conversión automática ni plantillas que sobrescriban documentos antiguos. Separar borrador/publicación y cuenta/proyecto; mantener revisiones y conflictos entre pestañas. Comparar SQL con esquema remoto antes de aplicar cambios; no ejecutar migraciones antiguas basadas en IDs de texto.
 
