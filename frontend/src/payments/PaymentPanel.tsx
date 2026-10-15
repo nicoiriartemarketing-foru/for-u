@@ -3,6 +3,7 @@ import {ButtonPrimary,ButtonSecondary,Input} from '../components/ui/DesignSystem
 import {paymentAction,PaymentError,paymentLabels,rememberPayment,safeCheckoutUrl,type PaymentAttempt,type PaymentKind,type PaymentMode,type PaymentReply} from './service';
 import './payments.css';
 export default function PaymentPanel({kind,order,token,closed=false}:{kind:PaymentKind;order:string;token:string|null;closed?:boolean}){return <Panel key={`${kind}:${order}:${token}`} kind={kind} order={order} token={token} closed={closed}/>;}
+export function PaymentDisclosure({kind,order,closed}:{kind:PaymentKind;order:string;closed:boolean}){const [open,setOpen]=useState(false);return <details onToggle={e=>setOpen(e.currentTarget.open)}><summary>Consultar pago</summary>{open&&<PaymentPanel kind={kind} order={order} token={null} closed={closed}/>}</details>;}
 function Panel({kind,order,token,closed}:{kind:PaymentKind;order:string;token:string|null;closed:boolean}){
  const key=`foru-payment-email:${kind}:${order}`;
  const [attempt,setAttempt]=useState<PaymentAttempt|null>(null),[policy,setPolicy]=useState<PaymentMode|null>(null),[email,setEmail]=useState(()=>{try{return sessionStorage.getItem(key)||'';}catch{return '';}}),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState('');const lock=useRef(false);

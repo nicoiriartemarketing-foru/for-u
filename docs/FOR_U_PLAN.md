@@ -2,7 +2,7 @@
 
 ## Plan vigente — aprobado el 13 de octubre de 2026
 
-Este plan sustituye las decisiones contradictorias del historial conservado abajo. Se ejecuta **una entrega por instrucción**; la instrucción vigente autoriza pedidos internos de restaurante y perfil opcional de cliente; la entrega 2 incorporó el recorrido de publicación. No se declara terminado el objetivo completo mientras queden entregas pendientes.
+Este plan sustituye las decisiones contradictorias del historial conservado abajo. Se ejecuta **una entrega por instrucción**; la instrucción vigente autoriza únicamente Mercado Pago por negocio y la base comercial necesaria para todas las ofertas. Pedidos internos y perfil opcional de cliente ya tienen recorrido QA; la entrega 2 incorporó publicación. No se declara terminado el objetivo completo mientras queden entregas pendientes.
 
 FOR U organiza proyectos con identidad propia. El rubro principal orienta preguntas, herramientas y pasos, sin limitar tipos de oferta; las páginas podrán mostrar ofertas publicadas de otros proyectos mediante widgets autorizados.
 
@@ -25,7 +25,15 @@ Decisiones sustituidas: el inicio general muestra proyectos y prioridades, sin e
 
 **Estado al 14 de octubre de 2026:** entrega 4 implementada (`004c912`) y recorrido QA remoto verificado tras activar SQL 22 y la corrección de permisos 23. QA Studio4U conserva su identidad y muestra oferta de QA Marketing4U mediante contenido con CTA y tarjeta. Guardado/recarga, publicación fuente, borrador independiente, retirada/restauración y eliminación de referencias comprobados. Lectura anónima pública válida y funciones privadas denegadas. Compartición entre dos cuentas probada en PostgreSQL aislado; falta segunda sesión para repetirla remotamente. Hostinger continúa pendiente, sin cambios a negocios reales. Evidencias en FOR_U_PROGRESS.md.
 
-Pedidos/clientes se implementan ahora por instrucción expresa, conservando los pendientes externos de entrega 5. Incluyen cálculo desde el catálogo publicado, mesa/recojo/delivery, invitado, seguimiento privado, favoritos e historial; Mercado Pago por negocio, cuotas reales de nube y Meta autorizado (una integración por entrega); mundo, barco, mascotas, juego, onboarding, Pomodoro y Pro. Los agentes acompañan, sin reemplazar resultados guardados.
+Pedidos/clientes implementados: cálculo desde catálogo publicado, mesa/recojo/delivery, invitado, seguimiento privado, favoritos e historial. Se conservan sus límites y los pendientes externos de entrega 5.
+
+### Integración vigente — Mercado Pago
+
+Únicamente Mercado Pago: PEN/Perú, cuenta autorizada explícitamente por proyecto, coordinación/opcional/obligatorio, OAuth con credenciales cifradas en servidor y producción desactivada. Reutilizar pedidos de restaurante; añadir compras comerciales para ofertas publicadas sin otro pedido transaccional. Un carrito pertenece a un negocio; widgets dirigen al proyecto fuente. Cotizaciones versionadas requieren aceptación vigente; hospedaje/experiencias/cursos no confirman fechas, cupos o acceso automáticamente.
+
+Calcular precios en servidor, conservar instantáneas, un intento activo y clave/cuerpo idempotentes; ante resultado incierto consultar antes de reintentar. Confirmar solo tras consulta a Mercado Pago con vendedor, app, referencia, importe, PEN y entorno válidos. Notificación firmada; retorno no equivale a pago. Pago y ejecución separados, bloqueo de ejecución obligatoria sin aprobación (excepto gratuito); cancelación no implica devolución. Devoluciones desde Mercado Pago; mantener histórico al desconectar.
+
+Estado: código base preservado en `04e0c70`, SQL 27/28 y función desplegados con autorización QA. Compras/cotización/seguimiento y permisos principales comprobados en Supabase real; proveedor externo **pendiente** de aplicación, secretos, vendedor/comprador de prueba y origen HTTPS. Guía exacta: FOR_U_MERCADO_PAGO.md. No se han conectado cuentas financieras ni cobrado dinero. Cuotas de nube y publicación Meta no se empiezan en esta entrega. Mundo, mascotas, onboarding, Pomodoro y Pro siguen en el objetivo posterior. Los agentes acompañan sin reemplazar resultados guardados.
 
 ## Datos y protecciones
 

@@ -43,6 +43,8 @@ test('resume retains the project and opens the task or correct rubric tool', () 
   assert.equal(url.searchParams.get('area'), 'finance');
   assert.equal(resumePath({ projectId, tool: 'editor' }, 'hospitality'), `/modules/hospitality/editor?project=${projectId}`);
   assert.equal(resumePath({ projectId, tool: 'studio' }, 'restaurant'), `/creator-studio?project=${projectId}`);
+  assert.equal(resumePath({ projectId, tool: 'commerce-orders' }, 'ecommerce'), `/dashboard/tools/orders?project=${projectId}`);
+  assert.equal(resumePath({ projectId, tool: 'commerce-orders' }, 'restaurant'), `/dashboard/tools/orders?project=${projectId}`);
 });
 
 test('legacy reads preserve the original document; explicit edits carry Today and its last destination', () => {

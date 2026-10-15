@@ -61,7 +61,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
   const rememberNavigation = (path: string) => {
     if (!project) return;
     const pathname = path.split('?')[0];
-    const tool = pathname === '/creator-studio' ? 'studio' : pathname.endsWith('/orders') ? 'orders' : pathname.startsWith('/modules/') ? 'editor' : pathname.split('/').at(-1);
+    const tool = pathname === '/creator-studio' ? 'studio' : pathname === '/dashboard/tools/orders' ? 'commerce-orders' : pathname.endsWith('/orders') ? 'orders' : pathname.startsWith('/modules/') ? 'editor' : pathname.split('/').at(-1);
     if (tool === 'studio' || knownTaskTool(tool)) remember({ projectId: project.id, tool });
   };
   const toolTitles: Record<string, string> = { landing: 'Editor de página', bookings: 'Reservas y pedidos', content: 'Propuestas con IA', teleprompter: 'Teleprompter', video: 'Video', assistant: 'Asistente', automation: 'Respuestas automáticas' };
@@ -70,7 +70,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     : links.find(link => link.path.split('?')[0] === location.pathname)?.title
       ?? toolTitles[location.pathname.split('/').at(-1) ?? '']
       ?? (location.pathname.includes('/modules/') ? pageAccess.title : location.pathname.includes('/landing') ? 'Editor de página' : 'Creator Studio');
-  const isLinkUnlocked = (title: string) => dopamineRoute.unlockedSidebarLinks.includes(title);
+  const isLinkUnlocked = (title: string) => title === 'Compras y cotizaciones' || title === 'Configuración' || dopamineRoute.unlockedSidebarLinks.includes(title);
   return <div className="workspace-shell">
     {/* Reward celebration overlay */}
     <RewardCelebration burst={reward.activeBurst} />
