@@ -1,3 +1,4 @@
+import TaskSuggestion from '../ai/TaskSuggestion';
 import { Card as DSCard } from '../components/ui/DesignSystem';
 import { ButtonSecondary as DSButtonSecondary, Input as DSInput, ButtonPrimary as DSButtonPrimary } from '../components/ui/DesignSystem';
 import toast from 'react-hot-toast';
@@ -116,7 +117,7 @@ export default function Calendar() {
   return (
     <div className="tk-stack magic-card">
       {formatError && <p role="alert">{formatError}</p>}
-      {pending !== null && <p role="status">{busy ? 'Guardando agenda…' : 'Cambios pendientes de guardar en tu cuenta.'}</p>}
+      {pending !== null && <div><p role="status">{busy ? 'Guardando agenda…' : 'Cambios pendientes de guardar en tu cuenta.'}</p><DSButtonPrimary disabled={blocked} onClick={()=>void update(pending)}>Guardar cambios de agenda</DSButtonPrimary></div>}
       {saveError && <div role="alert"><p>{saveError}</p>{!conflict && <DSButtonSecondary disabled={busy} onClick={() => pending && void update(pending)}>Reintentar guardado</DSButtonSecondary>}<DSButtonSecondary disabled={busy} onClick={() => setRecovery(true)}>Recuperar agenda guardada</DSButtonSecondary><DSButtonSecondary onClick={() => downloadBlob(new Blob([JSON.stringify({projectId,entries},null,2)],{type:'application/json'}),'agenda-pendiente.json')}>Descargar mis cambios pendientes</DSButtonSecondary></div>}
       {recovery && <section aria-label="Recuperar agenda"><p>Recuperar descartará los cambios pendientes de esta pantalla. Puedes descargarlos primero.</p><DSButtonSecondary onClick={() => setRecovery(false)}>Conservar mis cambios</DSButtonSecondary><DSButtonSecondary onClick={() => { setPending(null); setSaveError(''); void reload(); }}>Descartar pendientes y recuperar</DSButtonSecondary></section>}
       <style>{`
@@ -263,6 +264,7 @@ export default function Calendar() {
           </DSButtonSecondary>
           <DSButtonSecondary className="magic-button magic-button-soft" onClick={() => setAnchor(new Date())}>Hoy</DSButtonSecondary>
         </div>
+        {original&&<TaskSuggestion key={original.id} projectId={projectId} sourceId={original.id} title={original.title} kind="calendar" disabled={blocked||Boolean(pending)} onApply={(nextTitle,guidance)=>{const next=entries.map(item=>item.id===original.id?{...item,title:nextTitle,guidance}:item);setEntries(next);setPending(next);setTitle(nextTitle);}}/>}
         <div className="tk-calendar">
           {days.map((day) => {
             const key = localDate(day);

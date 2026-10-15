@@ -1,3 +1,4 @@
+import {validGuidance} from '../ai/model';
 import type { CalendarEntry } from './types';
 
 export function calendarDateTime(date: string, time: string): Date {
@@ -12,7 +13,7 @@ export function readCalendar(value: unknown): CalendarEntry[] {
   if (!Array.isArray(value)) throw new Error('La agenda guardada tiene un formato desconocido. No se reemplazará.');
   const ids = new Set<string>();
   for (const entry of value) {
-    if (!entry || typeof entry.id !== 'string' || !entry.id || ids.has(entry.id) || typeof entry.title !== 'string' || !entry.title.trim() || typeof entry.format !== 'string' || typeof entry.done !== 'boolean') throw new Error('La agenda guardada necesita recuperación. No se reemplazará.');
+    if (!entry || typeof entry.id !== 'string' || !entry.id || ids.has(entry.id) || typeof entry.title !== 'string' || !entry.title.trim() || typeof entry.format !== 'string' || typeof entry.done !== 'boolean'||(entry.guidance!==undefined&&!validGuidance(entry.guidance))) throw new Error('La agenda guardada necesita recuperación. No se reemplazará.');
     calendarDateTime(entry.date,entry.time); ids.add(entry.id);
   }
   return value as CalendarEntry[];

@@ -1,3 +1,4 @@
+import { useActiveProjectsStore } from '../stores/useActiveProjectsStore';
 import { supabase } from "../lib/supabaseClient";
 import type { Business } from "./types";
 import type { Segment } from "./engine";
@@ -12,7 +13,7 @@ export async function askAI(
       "Conecta tu cuenta para usar la IA. Puedes trabajar con una plantilla mientras tanto.",
     );
   const { data, error } = await supabase.functions.invoke("toolkit-ai", {
-    body: { action, prompt, business, ...extra },
+    body: { action, prompt, business, ...extra, projectId: useActiveProjectsStore.getState().activeProjectId },
   });
   if (error || data?.error)
     throw new Error(
