@@ -89,7 +89,7 @@ export function useRewardBurst() {
 
   const trigger = useCallback(
     (key: RewardKey, position?: { x: number; y: number }) => {
-      const config = REWARDS[key];
+      const config: RewardConfig = REWARDS[key];
       const tier = config.tier ?? classifyTier(config.xp);
 
       // Apply XP and coins to the store
