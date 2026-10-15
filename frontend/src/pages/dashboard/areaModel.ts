@@ -1,3 +1,4 @@
+import {randomId} from '../../lib/randomId';
 import type { ModuleType } from '../../modules/moduleProjects';
 export const areaDefinitions = [
   { id: 'marketing', title: 'Marketing', color: '#fde68a', pet: 'Oliver', gradient: 'from-amber-100 via-amber-200 to-pink-100', accessory: '🎨' },
@@ -32,7 +33,7 @@ export function initialTasks(type: ModuleType): AreaTasks {
     logistics: [['Planificar una actividad', 'calendar'], ['Revisar disponibilidad', 'summary'], ['Organizar entregas o agenda', 'calendar']],
     operations: [['Configurar mi contacto', 'editor'], ['Definir cómo recibir solicitudes', 'bookings'], ['Preparar una respuesta', 'automation']],
   };
-  return { version: 1, tasks: areaDefinitions.flatMap(area => definitions[area.id].map(([title, tool]) => ({ id: crypto.randomUUID(), area: area.id, title, tool, done: false, createdAt: new Date().toISOString() }))) };
+  return { version: 1, tasks: areaDefinitions.flatMap(area => definitions[area.id].map(([title, tool]) => ({ id: randomId(), area: area.id, title, tool, done: false, createdAt: new Date().toISOString() }))) };
 }
 export function areaProgress(tasks: AreaTask[], area: AreaId) {
   const own = tasks.filter(task => task.area === area);

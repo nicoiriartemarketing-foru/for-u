@@ -7,17 +7,17 @@ import './floatingPomodoro.css';
 export default function FloatingPomodoro() {
   const [open, setOpen] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
-  const { remainingSeconds, totalSeconds, running, completed, areaColor } = usePomodoro();
-  const previousCompleted = useRef(completed);
+  const { remainingSeconds, totalSeconds, running, completed, areaColor, completionEvent } = usePomodoro();
+  const previousCompleted = useRef(completionEvent);
   useEffect(() => {
-    const justFinished = completed && !previousCompleted.current;
-    previousCompleted.current = completed;
+    const justFinished = completionEvent > previousCompleted.current;
+    previousCompleted.current = completionEvent;
     if (!completed) setCelebrating(false);
     if (!justFinished) return;
     setCelebrating(true);
     const timer = window.setTimeout(() => setCelebrating(false), 3000);
     return () => window.clearTimeout(timer);
-  }, [completed]);
+  }, [completed, completionEvent]);
   const minutes = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
   const seconds = (remainingSeconds % 60).toString().padStart(2, '0');
   const progress = Math.max(0, Math.min(1, 1 - remainingSeconds / totalSeconds));

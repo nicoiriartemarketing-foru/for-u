@@ -13,7 +13,7 @@ export default function PomodoroTimer({
   durationSeconds = 25 * 60,
   onComplete,
 }: PomodoroTimerProps) {
-  const { remainingSeconds, running: isRunning, completed: hasCompleted, start, pause, reset, soundEnabled, setSoundEnabled } = usePomodoro();
+  const { remainingSeconds, running: isRunning, completed: hasCompleted, start, pause, reset, soundEnabled, setSoundEnabled, legacyAvailable, restoreLegacy } = usePomodoro();
   const [minutesInput,setMinutesInput]=useState("25");
   const completionReported = useRef(false);
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function PomodoroTimer({
         <p>{taskTitle ?? 'Selecciona una tarea pendiente para empezar con calma.'}</p>
       </div>
 
-      <label>Duración (minutos)<input aria-label="Duración del Pomodoro en minutos" type="number" min="0.1" max="120" step="0.1" disabled={isRunning} value={minutesInput} onChange={e=>setMinutesInput(e.target.value)}/></label><label><input type="checkbox" checked={soundEnabled} onChange={e=>setSoundEnabled(e.target.checked)}/> Sonido suave al terminar</label><div className="foru-pomodoro-actions">
+      {legacyAvailable && <DSButtonSecondary type="button" disabled={isRunning} onClick={restoreLegacy}>Recuperar mi temporizador anterior de este dispositivo</DSButtonSecondary>}<label>Duración (minutos)<input aria-label="Duración del Pomodoro en minutos" type="number" min="0.1" max="120" step="0.1" disabled={isRunning} value={minutesInput} onChange={e=>setMinutesInput(e.target.value)}/></label><label><input type="checkbox" checked={soundEnabled} onChange={e=>setSoundEnabled(e.target.checked)}/> Sonido suave al terminar</label><div className="foru-pomodoro-actions">
         <DSButtonSecondary
           type="button"
           onClick={() => start(hasCompleted || remainingSeconds === durationSeconds ? Number(minutesInput)*60 : remainingSeconds)}
@@ -70,7 +70,6 @@ export default function PomodoroTimer({
           onClick={() => {
             if (isRunning) pause(); else reset();
           }}
-          disabled={!isRunning && remainingSeconds === durationSeconds && !hasCompleted}
         >
           {isRunning ? 'Pausar' : 'Reiniciar'}
         </DSButtonSecondary>
