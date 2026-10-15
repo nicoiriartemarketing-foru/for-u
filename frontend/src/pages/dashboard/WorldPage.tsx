@@ -73,7 +73,9 @@ function IslandButton({ id, name, type, selected, onSelect }: {
     type: NonNullable<ReturnType<typeof projectModuleType>>;
     selected: boolean;
     onSelect: () => void;
-}) { const { entry } = useAreaDocuments(id, type); return <ButtonSecondary aria-pressed={selected} onClick={onSelect}>🏝️ {name}<small>{entry?.loaded ? `${entry.tasks.tasks.filter(t => t.done).length}/${entry.tasks.tasks.length} pasos${entry.taskDirty ? ' · pendientes de guardar' : ''}` : entry?.error ? 'Error al cargar tareas' : 'Cargando tareas…'}</small></ButtonSecondary>; }
+}) { const { entry } = useAreaDocuments(id, type); const button=useRef<HTMLButtonElement>(null);
+    useEffect(()=>{const element=button.current,parent=element?.parentElement;if(selected&&element&&parent){parent.scrollLeft=element.offsetLeft-parent.offsetLeft-(parent.clientWidth-element.clientWidth)/2;}},[selected]);
+    return <ButtonSecondary ref={button} aria-pressed={selected} onClick={onSelect}>🏝️ {name}<small>{entry?.loaded ? `${entry.tasks.tasks.filter(t => t.done).length}/${entry.tasks.tasks.length} pasos${entry.taskDirty ? ' · pendientes de guardar' : ''}` : entry?.error ? 'Error al cargar tareas' : 'Cargando tareas…'}</small></ButtonSecondary>; }
 function WorldAreas({ projectId, type, area, onArea }: {
     projectId: string;
     type: NonNullable<ReturnType<typeof projectModuleType>>;

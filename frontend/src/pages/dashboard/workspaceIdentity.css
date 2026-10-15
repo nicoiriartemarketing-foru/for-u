@@ -1,13 +1,13 @@
 /* Shared workspace identity. Scoped so published customer pages keep their branding. */
 .workspace-shell {
-  --color-fondo: #fff;
+  --color-fondo: #F4F0EA;
   --color-superficie: #fff;
   --color-superficie-fuerte: #fff;
-  --color-texto: #0a0a0a;
-  --color-texto-suave: #6b6b6b;
-  --gradient-iridiscente: linear-gradient(135deg,#fbbf24 0%,#f472b6 33%,#a78bfa 66%,#22d3ee 100%);
-  --gradient-boton: var(--gradient-iridiscente);
-  --gradient-fondo: linear-gradient(135deg,#fffbeb,#fdf2f8 50%,#f5f3ff);
+  --color-texto: #24232A;
+  --color-texto-suave: #625D6C;
+  --gradient-iridiscente: linear-gradient(115deg,#D9B46B,#EDE7F7 38%,#7751B8 65%,#A9E8D7);
+  --gradient-boton: linear-gradient(#7751B8,#7751B8);
+  --gradient-fondo: linear-gradient(135deg,#F4F0EA,#EDE7F7);
   --color-marketing: #fbbf24;
   --color-finanzas: #f472b6;
   --color-logistica: #a78bfa;
@@ -17,10 +17,10 @@
   --sombra-magica: 0 22px 70px rgb(0 0 0 / 8%);
   --border-radius: 16px;
   --border-radius-grande: 24px;
-  --font-titulos: Outfit,Inter,system-ui,sans-serif;
+  --font-titulos: Inter,system-ui,sans-serif;
   --ink: var(--color-texto);
   --muted: var(--color-texto-suave);
-  --paper: #f4f4f5;
+  --paper: #F4F0EA;
   background: var(--paper);
   color: var(--ink);
 }
@@ -30,14 +30,14 @@
 .workspace-shell .workspace-sidebar nav a,.workspace-shell .workspace-sidebar>button,.workspace-shell .workspace-pending {color:var(--ink)}
 .workspace-shell .workspace-sidebar nav a {min-height:48px;border:1px solid transparent;position:relative;padding:13px 14px;border-radius:16px}
 .workspace-shell .workspace-sidebar nav a:hover {background:#f5f3ff;color:var(--ink)}
-.workspace-shell .workspace-sidebar nav a[aria-current] {background:linear-gradient(white,white) padding-box,var(--gradient-iridiscente) border-box;border-color:transparent;color:var(--ink);font-weight:700}
+.workspace-shell .workspace-sidebar nav a[aria-current] {background:#EDE7F7;border-color:#DCD2EB;color:#513477;font-weight:700}
 /* Keep one orientation icon rather than repeating six decorative icons. */
 .workspace-shell .workspace-sidebar nav .workspace-nav-icon {display:none}
 .workspace-shell .workspace-sidebar nav a[aria-current] .workspace-nav-icon {display:grid;background:var(--gradient-fondo);box-shadow:none;flex-shrink:0}
-.workspace-shell .magic-button-primary {background:var(--gradient-boton);color:var(--ink);border:0;border-radius:999px;box-shadow:var(--sombra-media);font-weight:800;text-decoration:none;transition:transform .2s,box-shadow .2s}
-.workspace-shell .magic-button-primary:hover {transform:translateY(-3px);box-shadow:var(--sombra-magica)}
+.workspace-shell .magic-button-primary {background:var(--gradient-boton);color:white;border:0;border-radius:999px;box-shadow:var(--sombra-media);font-weight:650;text-decoration:none;transition:transform .2s,box-shadow .2s}
+.workspace-shell .magic-button-primary:hover {transform:translateY(-1px);box-shadow:var(--sombra-magica)}
 .workspace-shell .workspace-new {display:block;text-align:center;min-height:46px}
-.workspace-shell .workspace-top {background:rgb(250 250 250 / 88%);backdrop-filter:blur(18px);border-bottom:1px solid rgb(212 212 212 / 10%);flex-wrap:wrap;gap:16px;position:sticky;top:0}
+.workspace-shell .workspace-top {background:rgb(244 240 234 / 96%);backdrop-filter:blur(18px);border-bottom:1px solid rgb(212 212 212 / 10%);flex-wrap:wrap;gap:16px;position:sticky;top:0}
 .workspace-top .workspace-breadcrumbs {background:none;padding:0;align-items:center;gap:10px;flex:1;min-width:0;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 .workspace-top .workspace-breadcrumbs a {padding:0;color:var(--muted);min-height:44px;display:flex;align-items:center}
 .workspace-top .workspace-breadcrumbs [aria-current] {color:var(--ink);font-weight:700;overflow-wrap:anywhere}
@@ -47,7 +47,7 @@
 .workspace-shell .workspace-top select {border:1px solid #d4d4d4;border-radius:12px;padding:8px 12px;background:white;min-height:44px;max-width:220px}
 .workspace-shell .workspace-body {padding:2rem 2rem 110px;width:100%}
 .workspace-shell .magic-card {background:white;border:1px solid #d4d4d4;border-radius:24px;box-shadow:var(--sombra-suave);transition:transform .3s,box-shadow .3s}
-.workspace-shell a.magic-card:hover {background:linear-gradient(white,white) padding-box,var(--gradient-iridiscente) border-box;border-color:transparent;transform:translateY(-5px);box-shadow:var(--sombra-magica)}
+.workspace-shell a.magic-card:hover {background:#EDE7F7;border-color:transparent;transform:translateY(-2px);box-shadow:var(--sombra-magica)}
 .workspace-shell .cs-home {color:var(--ink)}
 .workspace-shell .cs-heading>span,.workspace-shell .cs-kicker,.workspace-shell .cs-home p,.workspace-shell .cs-preview>span,.workspace-shell .cs-journey small,.workspace-shell .cs-step-top>span:last-child {color:var(--muted)}
 .workspace-shell .cs-hero,.workspace-shell .cs-art {background:var(--gradient-fondo);border-radius:24px}
@@ -69,3 +69,44 @@
 @media(prefers-reduced-motion:reduce) {
   .workspace-shell a.magic-card:hover,.workspace-shell .magic-button-primary:hover {transform:none}
 }
+
+/* Brandbook 15–20: quiet Google-inspired structure, FOR U palette.
+   Scope stays private: published customer pages retain their own identity. */
+.workspace-shell{font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+.workspace-shell .workspace-brand{background:none;color:#24232A;font-weight:500;letter-spacing:-2px}
+.workspace-shell .workspace-brand span{letter-spacing:0;color:var(--muted)}
+.workspace-shell .workspace-home-link{color:#513477}
+.workspace-shell .workspace-sidebar nav .workspace-nav-icon{display:grid;place-items:center;width:28px;flex-shrink:0}
+.workspace-shell .workspace-sidebar nav a[aria-current] .workspace-nav-icon{background:#fff;border-radius:8px}
+.workspace-shell .workspace-top .workspace-view-switch a[aria-current]{background:#EDE7F7;color:#513477}
+.workspace-shell .magic-card{box-shadow:0 2px 10px #24232A05;border-color:#E1DCE6}
+.workspace-shell .world-intro h1{color:#24232A;font-weight:650;letter-spacing:-.035em}
+.workspace-shell .dashboard-home .dashboard-area-marketing{background:#F3E7CE;color:#24232A}
+.workspace-shell .dashboard-home .dashboard-area-finance{background:#DDF3EC;color:#24232A}
+.workspace-shell .dashboard-home .dashboard-area-logistics{background:#EDE7F7;color:#24232A}
+.workspace-shell .dashboard-home .dashboard-area-operations{background:#E4F0EF;color:#24232A}
+.workspace-shell .area-tabs button[aria-pressed=true],.workspace-shell .area-save>button:first-child{background:#7751B8;color:#fff}
+.workspace-shell :focus-visible{outline-color:#7751B8}
+.workspace-shell .workspace-sidebar .foru-route-progress-bar{background:#EDE7F7;color:#24232A}
+.workspace-shell .workspace-sidebar .foru-route-progress-bar progress{accent-color:#7751B8}
+
+/* Material-inspired hierarchy: one clear action, stable icon, quiet surface. */
+.workspace-shell .dashboard-home .area-open{gap:12px;border:1px solid #24232A0A;box-shadow:0 3px 14px #24232A06;transition:transform .18s ease,box-shadow .18s ease}
+.workspace-shell .dashboard-home .area-open .area-icon{display:grid;place-items:center;width:56px;height:56px;flex-shrink:0;border-radius:18px;background:#ffffffb3;font-size:28px}
+.workspace-shell .dashboard-home .area-open h2{font-size:24px;font-weight:650;letter-spacing:-.025em}
+.workspace-shell .dashboard-home .area-open:hover{transform:translateY(-3px);box-shadow:0 9px 24px #24232A0D}
+.workspace-shell .dashboard-home .area-open button{min-height:44px}
+.workspace-shell .dashboard-home .area-open button:active{transform:scale(.98)}
+.workspace-shell .area-modal-dialog{border:1px solid #E1DCE6;box-shadow:0 18px 64px #24232A1F}
+.workspace-shell .world-invitation{background:#EDE7F7;color:#513477}
+@media(prefers-reduced-motion:reduce){.workspace-shell .dashboard-home .area-open:hover,.workspace-shell .dashboard-home .area-open button:active{transform:none}.workspace-shell .dashboard-home .area-open{transition:none}}
+
+.workspace-shell .workspace-sidebar{overflow-y:auto;gap:18px}
+.workspace-shell .workspace-sidebar>*{flex-shrink:0}
+.workspace-shell .workspace-sidebar nav{gap:3px}
+.workspace-shell .workspace-sidebar nav a{min-height:44px;padding:10px 12px}
+.workspace-shell .workspace-new{height:auto;line-height:1.4;padding:12px;font-size:13px;white-space:normal}
+.workspace-shell .world-page .world-intro{margin-bottom:18px}
+.workspace-shell .world-page .world-intro p{margin:8px 0 14px}
+.workspace-shell .world-island-picker button{font-size:13px;padding:10px 14px;min-height:64px}
+@media(max-width:767px){.workspace-shell .workspace-sidebar{overflow:visible}.workspace-shell .world-island-picker button{max-width:180px}.workspace-shell .world-page .world-intro h1{font-size:30px}}

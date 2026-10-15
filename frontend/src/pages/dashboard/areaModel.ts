@@ -1,10 +1,10 @@
 import {randomId} from '../../lib/randomId';
 import type { ModuleType } from '../../modules/moduleProjects';
 export const areaDefinitions = [
-  { id: 'marketing', title: 'Marketing', color: '#fde68a', pet: 'Oliver', gradient: 'from-amber-100 via-amber-200 to-pink-100', accessory: '🎨' },
-  { id: 'finance', title: 'Finanzas', color: '#fbcfe8', pet: 'Shippo', gradient: 'from-pink-100 via-pink-200 to-purple-100', accessory: '🌱' },
-  { id: 'logistics', title: 'Logística', color: '#e9d5ff', pet: 'Emma', gradient: 'from-purple-100 via-purple-200 to-cyan-100', accessory: '🧭' },
-  { id: 'operations', title: 'Operaciones', color: '#a5f3fc', pet: 'Munay', gradient: 'from-cyan-100 via-cyan-200 to-amber-100', accessory: '💌' },
+  { id: 'marketing', title: 'Marketing', color: '#D9B46B', pet: 'Oliver', gradient: 'from-amber-100 via-amber-200 to-pink-100', accessory: '🎨' },
+  { id: 'finance', title: 'Finanzas', color: '#A9E8D7', pet: 'Shippo', gradient: 'from-pink-100 via-pink-200 to-purple-100', accessory: '🌱' },
+  { id: 'logistics', title: 'Logística', color: '#C7B4E4', pet: 'Emma', gradient: 'from-purple-100 via-purple-200 to-cyan-100', accessory: '🧭' },
+  { id: 'operations', title: 'Operaciones', color: '#B9DCD7', pet: 'Munay', gradient: 'from-cyan-100 via-cyan-200 to-amber-100', accessory: '💌' },
 ] as const;
 export type AreaId = typeof areaDefinitions[number]['id'];
 export type AreaTask = { id: string; area: AreaId; title: string; done: boolean; createdAt: string; completedAt?: string; firstCompletedAt?: string; tool?: string };
