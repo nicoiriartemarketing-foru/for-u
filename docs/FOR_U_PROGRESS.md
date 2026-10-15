@@ -303,3 +303,23 @@ Límites: gestión muestra últimos200 pedidos y perfil últimos100, sin paginac
 Captura de iPhone recibida y documentada. Se incorporó la paleta del brandbook aportado al contenedor privado, con superficies perladas/lavanda, acciones violeta e iconos consistentes; no se tocaron las identidades públicas. Pendiente recibir la referencia adicional de Canva. Commits de persistencia `d229f88` y mundo `c412808` conservan los anteriores sin reescribir historia.
 
 - Recorrido adicional nuevo: QA Mi mundo · onboarding `6566653a-0f3d-479e-9388-e1566202eaed`, crear → Explorar primero → tablero sin landing → guardar guía y decoración, ambos Guardado. No se guardó propósito ni emoción ficticios. Diseño final comprobado a 360/768/1440 sin overflow. Commit visual `3965618`; TypeScript/build final y 147/147 pruebas pasan.
+
+## 15 de octubre — sistema de experiencia e IA eficiente
+
+Trabajo en curso: sistema de controles compartido y superficie por ruta; publicación opt-in versionada; adaptador Gemini autenticado con fuentes privadas y revisión; caché distribuido por documento y cuota existente. 163/163 pruebas locales antes de últimos ajustes de revelado progresivo, TypeScript/build Vite4/Node20 pasan.
+
+La propietaria rechazó la primera muestra por apariencia neutra y exceso de opciones. Se modifican los recorridos: sidebar compacta y búsqueda global, área con tres pendientes y controles opcionales, restaurante con pasos reales y contexto de publicación, Creator Studio con una acción principal, piezas con secciones progresivas. No presentar como aprobado un simple cambio de colores. Pendientes logo/animación originales y activación QA de Gemini. Ver FOR_U_EXPERIENCE.md.
+
+### Evidencias de cierre técnico de esta iteración
+
+- 163/163 pruebas locales, TypeScript y build con Node20/Vite4 pasan; no se instalaron dependencias ni se ejecutó SQL. La prueba de permisos ejecuta el manejador real con transportes controlados; no equivale a una cuenta Gemini conectada. Caché distribuido probado entre manejadores independientes.
+- QA Studio4U: cambiar diseño a v2, guardar y recargar conservó la elección; la URL pública siguió en v1. Tras Publicar, `/s/qa-studio4u-propuesta` mostró v2 con el mismo título manual y ofertas Café QA/Alfajor QA. No se cambiaron sus precios. Otros negocios reales no se modificaron.
+- Menú QA: Tu negocio muestra sus campos y oculta Nuevo producto; Revisar y publicar oculta identidad y revela comparación/publicación. Datos y catálogo existentes conservados. Sidebar de cuatro accesos y búsqueda de todas las herramientas comprobadas; buscar menú abre el proyecto correcto. Modal de área muestra tres pendientes, sin formularios de ajustes/alta/herramientas abiertos.
+- 360/768/1440 CSS px comprobados sin overflow horizontal en el tablero. Modal 340px en viewport360, encabezado visible, scroll inicial0 y Escape devuelve foco a Abrir Marketing. Se corrigió la capa del buscador móvil mediante portal para evitar que lo recorte la cabecera.
+- Se detectaron anulaciones globales con !important que neutralizaban botones y superficies. Quedaron limitadas a páginas públicas v1; la app y v2 usan el nuevo ámbito. Se verificó backgroundImage real de tarjetas y sidebar con gradientes, no solo clases declaradas.
+- Comprobación local de build: no contiene el valor de las claves Gemini locales. Inspección remota de solo lectura: Supabase no tiene secretos personalizados ni toolkit-ai desplegada. Queda pendiente activar/probar Gemini con cuota gratuita verificada. No se copiaron secretos ni se cambió facturación.
+- La muestra inicial fue rechazada; la revisión humana del refinamiento futurista y los archivos originales de logo/animación siguen pendientes. No confundir cierre técnico con aprobación visual. Hostinger y segunda sesión remota siguen pendientes.
+
+- Commit visual/publicación: `897e190`. Navegación y presentación quedaron separadas de la activación de IA. Captura nueva `foru-focus-ready.jpg`; contraste de las combinaciones principales 5.75:1–11.28:1. Buscador móvil validado en portal (340px/top10, viewport360) y filtro Teleprompter comprobado. Viewport temporal restaurado. El servidor de vista previa está actualizado; no se hizo push ni despliegue Hostinger.
+
+- Commit IA: `721f13a`. Se conserva separada su activación. También se aclara que el Frasco de Ideas histórico usa guía local, no Gemini: etiquetas honestas y retirada de la espera artificial de 1.2s; se mantienen sus nodos y comportamiento.

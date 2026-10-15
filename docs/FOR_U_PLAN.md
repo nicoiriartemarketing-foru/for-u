@@ -152,3 +152,7 @@ Verificaremos:
 
 ## Actualización visual vigente — 10 de octubre
 Sidebar blanca, cabecera translúcida con breadcrumbs y selector de proyecto, contenido gris #F4F4F5. Unificar con tokens FOR U: dorado #fbbf24, rosa #f472b6, violeta #a78bfa y cyan #22d3ee; texto #0A0A0A y secundario #6B6B6B. Reutilizar magic-card y botones pill. Reducir iconografía decorativa y acciones principales; conservar navegación, proyecto, guardado y datos. Esta actualización sustituye la sidebar oscura anterior, no cancela reservas, pedidos, pagos ni verificaciones pendientes.
+
+## Instrucción vigente — experiencia completa e IA eficiente (15 de octubre)
+
+La entrega actual unifica el sistema de controles y simplifica los recorridos, incluyendo registro, herramientas y publicación versionada; conserva funciones y datos. La primera muestra fue rechazada por demasiado neutra y por no simplificar suficiente. Se priorizan revelado progresivo, una acción principal y estética FOR U futurista/elegante/jugable. No se considera visualmente aprobada aún. Alcance y activación segura de Gemini sin gasto nuevo en FOR_U_EXPERIENCE.md. Páginas reales solo cambian tras previsualizar y republicar; no se despliega Hostinger en esta entrega.

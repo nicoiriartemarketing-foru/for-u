@@ -96,7 +96,7 @@ export default function IdeaJarFab({ centered = false, hiddenLauncher = false, t
       closeIdeaJar();
       showToast(createdNodeIds.length > 0
         ? response.mensaje
-        : '⚓ La IA organizó ideas, pero no encontró una rama válida para soltarlas.');
+        : '⚓ La guía local organizó ideas, pero no encontró una rama válida para ubicarlas.');
     } catch {
       showToast('🌊 La marea se movió raro. Intenta organizar tus ideas otra vez.');
     } finally {
@@ -127,7 +127,7 @@ export default function IdeaJarFab({ centered = false, hiddenLauncher = false, t
           <p>{description}</p>
           {rawNotes.length > 0 ? <strong>{rawNotes.length === 1 ? 'Tienes 1 idea lista para organizar ✨' : `Tienes ${rawNotes.length} ideas listas para organizar ✨`}</strong> : null}
           <DSButtonSecondary type="button" onClick={openIdeaJar}>
-            {rawNotes.length > 0 ? '✨ Organizar con IA' : '✨ Echar ideas al frasco'}
+            {rawNotes.length > 0 ? '✨ Organizar con guía local' : '✨ Echar ideas al frasco'}
           </DSButtonSecondary>
         </section>
       ) : (
@@ -209,7 +209,7 @@ export default function IdeaJarFab({ centered = false, hiddenLauncher = false, t
                 onClick={organizeWithAi}
                 disabled={rawNotes.length === 0 || isProcessing || !activeProjectId}
               >
-                {isProcessing ? 'La IA está organizando tus ideas... ⚓' : '✨ Organizar mi Cerebro con IA'}
+                {isProcessing ? 'Organizando tus ideas…' : '✨ Ordenar mis ideas · guía local'}
               </DSButtonSecondary>
             </motion.section>
           </motion.div>
