@@ -1,4 +1,4 @@
-import { areaDefinitions, areaProgress, initialTasks, parseAreaTasks, parseWorldState, type AreaTasks, type WorldState } from './areaModel';
+import { areaDefinitions, areaProgress, initialTasks, parseAreaTasks, parseWorldState, recoveredTaskRewards, recordTaskClaims, type AreaTasks, type WorldState } from './areaModel';
 import type { ModuleType } from '../../modules/moduleProjects';
 export type DocumentStatus = 'pending' | 'saving' | 'saved' | 'error' | 'conflict';
 export type AreaEntry = {
@@ -50,15 +50,18 @@ export class AreaPersistence {
         try {
             const [tasks, world, history] = await Promise.all(['area-tasks', 'world-state', 'dashboard-progress'].map(kind => this.transport.load(project, kind as 'area-tasks' | 'world-state' | 'dashboard-progress')));
             const taskPayload = tasks ? parseAreaTasks(tasks.payload) : before?.tasks ?? initialTasks(type);
-            const worldPayload = world ? parseWorldState(world.payload) : { version: 1 as const, areas: {} };
+            const storedWorld = world ? parseWorldState(world.payload) : { version: 1 as const, areas: {} };
+            const worldPayload = recoveredTaskRewards(storedWorld,taskPayload);
+            const earnedPending = JSON.stringify(storedWorld)!==JSON.stringify(worldPayload);
             const current = this.cache[project];
             if (current?.loaded && !recover) {
+                const dirtyWorld=current.worldDirty||earnedPending;
                 const taskConflict = current.taskDirty && current.taskRevision !== (tasks?.revision ?? null);
                 const worldConflict = current.worldDirty && current.worldRevision !== (world?.revision ?? null);
-                this.patch(project, { ...(current.taskDirty ? {} : { tasks: taskPayload, taskRevision: tasks?.revision ?? null, taskStatus: tasks ? 'saved' : 'pending' }), ...(current.worldDirty ? {} : { world: worldPayload, worldRevision: world?.revision ?? null, worldStatus: world ? 'saved' : 'pending' }), ...(taskConflict ? { taskStatus: 'conflict' as const } : {}), ...(worldConflict ? { worldStatus: 'conflict' as const } : {}), error: taskConflict || worldConflict ? 'Cambió en otra pestaña. Conservamos tus pendientes; recupera explícitamente antes de guardar.' : current.taskDirty || current.worldDirty ? current.error : '', historical: Boolean(history) });
+                this.patch(project, { ...(current.taskDirty ? {} : { tasks: taskPayload, taskRevision: tasks?.revision ?? null, taskStatus: tasks ? 'saved' : 'pending' }), ...(current.worldDirty ? {} : { world: worldPayload, worldRevision: world?.revision ?? null, worldStatus: earnedPending ? 'pending' : world ? 'saved' : 'pending', worldDirty: earnedPending }), ...(taskConflict ? { taskStatus: 'conflict' as const } : {}), ...(worldConflict ? { worldStatus: 'conflict' as const } : {}), error: taskConflict || worldConflict ? 'Cambió en otra pestaña. Conservamos tus pendientes; recupera explícitamente antes de guardar.' : current.taskDirty || current.worldDirty ? current.error : '', historical: Boolean(history), dirty: current.taskDirty||dirtyWorld });
             }
             else
-                this.patch(project, { tasks: taskPayload, world: worldPayload, taskRevision: tasks?.revision ?? null, worldRevision: world?.revision ?? null, loaded: true, dirty: false, taskDirty: false, worldDirty: false, taskStatus: tasks ? 'saved' : 'pending', worldStatus: world ? 'saved' : 'pending', historical: Boolean(history), error: '' });
+                this.patch(project, { tasks: taskPayload, world: worldPayload, taskRevision: tasks?.revision ?? null, worldRevision: world?.revision ?? null, loaded: true, dirty: earnedPending, taskDirty: false, worldDirty: earnedPending, taskStatus: tasks ? 'saved' : 'pending', worldStatus: earnedPending ? 'pending' : world ? 'saved' : 'pending', historical: Boolean(history), error: '' });
         }
         catch (e) {
             this.patch(project, { error: (e as Error).message });
@@ -72,6 +75,7 @@ export class AreaPersistence {
         const entry = this.cache[project];
         if (!entry?.loaded || this.locks.has(project) || !this.alive)
             return;
+        if(update.tasks){const tasks=recordTaskClaims(entry.tasks,update.tasks);update={...update,tasks,world:recoveredTaskRewards(update.world??entry.world,tasks)};}
         const taskDirty = entry.taskDirty || Boolean(update.tasks && JSON.stringify(update.tasks) !== JSON.stringify(entry.tasks));
         const worldDirty = entry.worldDirty || Boolean(update.world && JSON.stringify(update.world) !== JSON.stringify(entry.world));
         this.patch(project, { ...update, taskDirty, worldDirty, dirty: taskDirty || worldDirty, taskStatus: entry.taskStatus === 'conflict' ? 'conflict' : taskDirty ? 'pending' : entry.taskStatus, worldStatus: entry.worldStatus === 'conflict' ? 'conflict' : worldDirty ? 'pending' : entry.worldStatus });
