@@ -1,62 +1,27 @@
 import toast from 'react-hot-toast';
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { loadModuleDocument, saveModuleDocument } from '../../services/moduleDocuments';
-import { initialTasks, parseAreaTasks, parseWorldState, type AreaTasks, type WorldState } from './areaModel';
-import type { ModuleType } from '../../modules/moduleProjects';
-
-type Entry = { tasks: AreaTasks; world: WorldState; taskRevision: string | null; worldRevision: string | null; loaded: boolean; dirty: boolean; busy: boolean; error: string; historical: boolean };
-type Cache = Record<string, Entry>;
-const Context = createContext<{ cache: Cache; loads: Set<string>; patch: (key: string, update: Partial<Entry>) => void } | null>(null);
-export function AreaDocumentsProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const [cache, setCache] = useState<Cache>({});
-  const loads = useRef(new Set<string>()).current;
-  useEffect(() => { setCache({}); }, [user?.id]);
-  useEffect(() => {
-    if (!Object.values(cache).some(entry => entry.dirty)) return;
-    const guard = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
-    window.addEventListener('beforeunload', guard);
-    return () => window.removeEventListener('beforeunload', guard);
-  }, [cache]);
-  return <Context.Provider value={{ cache, loads, patch: (key, update) => setCache(old => ({ ...old, [key]: { ...old[key], ...update } })) }}>{children}</Context.Provider>;
+import {createContext,useContext,useEffect,useMemo,useSyncExternalStore,type ReactNode} from 'react';
+import {useAuth} from '../../contexts/AuthContext';
+import {loadModuleDocument,saveModuleDocument} from '../../services/moduleDocuments';
+import type {ModuleType} from '../../modules/moduleProjects';
+import {AreaPersistence,type AreaEntry} from './areaPersistence';
+const Context=createContext<AreaPersistence|null>(null);
+export function AreaDocumentsProvider({children}:{children:ReactNode}){
+  const {user}=useAuth();const id=user?.id??'';
+  const controller=useMemo(()=>new AreaPersistence({load:(project,kind)=>loadModuleDocument(id,project,kind),save:(project,kind,payload,revision)=>saveModuleDocument(id,project,kind,payload,revision)}),[id]);
+  const cache=useSyncExternalStore(controller.subscribe,controller.snapshot);
+  const dirty=Object.values(cache).some(e=>e.dirty);
+  useEffect(()=>{if(!dirty)return;const guard=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue="";};window.addEventListener("beforeunload",guard);return()=>window.removeEventListener("beforeunload",guard);},[dirty]);
+  useEffect(()=>{controller.activate();return()=>controller.dispose();},[controller]);
+  useEffect(()=>{
+    const refresh=()=>{if(!document.hidden)controller.refresh();};
+    const timer=window.setInterval(refresh,15000);window.addEventListener('focus',refresh);window.addEventListener('storage',refresh);document.addEventListener('visibilitychange',refresh);
+    return()=>{clearInterval(timer);window.removeEventListener('focus',refresh);window.removeEventListener('storage',refresh);document.removeEventListener('visibilitychange',refresh);};
+  },[controller]);
+  return <Context.Provider value={controller}>{children}</Context.Provider>;
 }
-export function useAreaDocuments(projectId: string, type: ModuleType) {
-  const context = useContext(Context)!;
-  const { user } = useAuth();
-  const key = `${user?.id}:${projectId}`;
-  const entry = context.cache[key];
-  const requested = useRef('');
-  const lock = useRef(false);
-  async function load() {
-    if (!user || entry?.busy || context.loads.has(key)) return;
-    context.loads.add(key);
-    context.patch(key, { busy: true, error: '' });
-    try {
-      const [tasks, world, history] = await Promise.all([loadModuleDocument(user.id, projectId, 'area-tasks'), loadModuleDocument(user.id, projectId, 'world-state'), loadModuleDocument(user.id, projectId, 'dashboard-progress')]);
-      const taskPayload = tasks ? parseAreaTasks(tasks.payload) : initialTasks(type);
-      const worldPayload = world ? parseWorldState(world.payload) : { version: 1 as const, areas: {} };
-      context.patch(key, { tasks: taskPayload, world: worldPayload, taskRevision: tasks?.revision ?? null, worldRevision: world?.revision ?? null, loaded: true, dirty: false, busy: false, error: '', historical: Boolean(history) });
-    } catch (error) { context.patch(key, { busy: false, error: (error as Error).message }); }
-    finally { context.loads.delete(key); }
-  }
-  useEffect(() => {
-    if (entry?.loaded || entry?.busy || requested.current === key || !user) return;
-    requested.current = key;
-    void load();
-  }, [key, user?.id, entry?.loaded, entry?.busy]);
-  async function save() {
-    if (!user || !entry?.loaded || entry.busy || lock.current) return;
-    lock.current = true;
-    context.patch(key, { busy: true, error: '' });
-    try {
-      const taskRevision = await saveModuleDocument(user.id, projectId, 'area-tasks', entry.tasks, entry.taskRevision);
-      context.patch(key, { taskRevision });
-      const worldRevision = await saveModuleDocument(user.id, projectId, 'world-state', entry.world, entry.worldRevision);
-      context.patch(key, { worldRevision, dirty: false });
-      toast.success('Tareas y mundo guardados', { id: `area-save-${projectId}` });
-    } catch (error) { context.patch(key, { error: (error as Error).message }); }
-    finally { lock.current = false; context.patch(key, { busy: false }); }
-  }
-  return { entry, save, reload: load, change: (update: Partial<Pick<Entry, 'tasks' | 'world'>>) => { if (!entry?.busy) context.patch(key, { ...update, dirty: true }); } };
+export function useAreaDocuments(projectId:string,type:ModuleType){
+  const controller=useContext(Context)!;const {user}=useAuth();const cache=useSyncExternalStore(controller.subscribe,controller.snapshot);const entry=cache[projectId];
+  useEffect(()=>{if(user&&!controller.cache[projectId]?.loaded)void controller.load(projectId,type);},[controller,projectId,type,user?.id]);
+  return {entry,save:async()=>{if(await controller.save(projectId))toast.success('Tareas y mundo guardados',{id:`area-save-${projectId}`});},reload:()=>controller.load(projectId,type),recover:()=>controller.load(projectId,type,true),change:(update:Partial<Pick<AreaEntry,'tasks'|'world'>>)=>controller.change(projectId,update)};
 }
+export function useAreaCache(){const controller=useContext(Context)!;return useSyncExternalStore(controller.subscribe,controller.snapshot);}

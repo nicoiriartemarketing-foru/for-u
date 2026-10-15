@@ -110,7 +110,7 @@ function App() {
     <AppErrorBoundary>
       <Router>
         <Toaster position="top-right" toastOptions={{ duration: 3500, success: { style: { background: '#f0fdf4', color: '#14532d', border: '1px solid #86efac' } } }} />
-        <AreaDocumentsProvider><WorkspaceFocusProvider><PomodoroProvider><Suspense fallback={<RouteLoader />}>
+        <AreaDocumentsProvider><WorkspaceFocusProvider><PersonalPomodoro><Suspense fallback={<RouteLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/ia" element={<AiForU />} />
@@ -168,7 +168,7 @@ function App() {
             <Route path="/p/:slug" element={<PublicLanding />} />
             <Route path="/:slug" element={<PublicRestaurant />} />
           </Routes>
-        </Suspense></PomodoroProvider></WorkspaceFocusProvider></AreaDocumentsProvider>
+        </Suspense></PersonalPomodoro></WorkspaceFocusProvider></AreaDocumentsProvider>
       </Router>
     </AppErrorBoundary>
   );
@@ -214,3 +214,5 @@ function RouteLoader() {
 }
 
 export default App;
+
+function PersonalPomodoro({children}:{children:ReactNode}) { const {user}=useAuth();return <PomodoroProvider key={user?.id??"guest"} account={user?.id??"guest"}>{children}</PomodoroProvider>; }

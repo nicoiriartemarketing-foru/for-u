@@ -1,91 +1,17 @@
-import { playUiTone } from '../lib/sound';
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-
-type PomodoroState = {
-  endsAt: number | null;
-  pausedRemaining: number | null;
-  completed: boolean;
-  totalSeconds?: number;
-};
-
-type PomodoroContextValue = {
-  remainingSeconds: number;
-  running: boolean;
-  completed: boolean;
-  totalSeconds: number;
-  areaColor: string;
-  setAreaColor: (color: string) => void;
-  start: (seconds?: number) => void;
-  pause: () => void;
-  reset: () => void;
-};
-
-const defaultSeconds = 25 * 60;
-const storageKey = 'foru:pomodoro-v1';
-const PomodoroContext = createContext<PomodoroContextValue | null>(null);
-
-function readState(): PomodoroState {
-  try {
-    const value = JSON.parse(window.localStorage.getItem(storageKey) || 'null') as PomodoroState | null;
-    if (value && (typeof value.endsAt === 'number' || value.endsAt === null)) return value;
-  } catch { /* Start a clean session when an older value cannot be read. */ }
-  return { endsAt: null, pausedRemaining: null, completed: false };
+import {playUiTone} from '../lib/sound';
+import {createContext,useContext,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
+import {emptyPomodoro,parsePomodoro,remainingPomodoro,type PomodoroState} from '../lib/pomodoroModel';
+type Value={remainingSeconds:number;running:boolean;completed:boolean;totalSeconds:number;areaColor:string;soundEnabled:boolean;setSoundEnabled:(value:boolean)=>void;setAreaColor:(value:string)=>void;start:(seconds?:number)=>void;pause:()=>void;reset:()=>void};
+const Context=createContext<Value|null>(null);
+export function PomodoroProvider({children,account='local'}:{children:ReactNode;account?:string}){
+ const key=account==='local'?'foru:pomodoro-v1':`foru:pomodoro-v2:${account}`;
+ const [state,setState]=useState<PomodoroState>(()=>{try{return parsePomodoro(window.localStorage.getItem(key));}catch{return emptyPomodoro();}}),[now,setNow]=useState(Date.now()),[areaColor,setAreaColor]=useState('#fbbf24');
+ const tab=useRef(crypto.randomUUID());const latest=useRef(state);latest.current=state;const notified=useRef<string|null>(null);
+ function persist(value:PomodoroState){latest.current=value;try{window.localStorage.setItem(key,JSON.stringify(value));}catch{/* Visible timer still works without browser storage. */}setState(value);}
+ useEffect(()=>{const event=(e:StorageEvent)=>{if(e.key===key){const value=parsePomodoro(e.newValue);latest.current=value;setState(value);setNow(Date.now());}};window.addEventListener('storage',event);const timer=setInterval(()=>setNow(Date.now()),1000);const wake=()=>setNow(Date.now());document.addEventListener('visibilitychange',wake);return()=>{clearInterval(timer);window.removeEventListener('storage',event);document.removeEventListener('visibilitychange',wake);};},[key]);
+ useEffect(()=>{if(!state.endsAt||state.endsAt>now)return;const id=state.sessionId;if(state.ownerTab===tab.current){const value={...state,endsAt:null,pausedRemaining:0,completed:true};persist(value);if(id&&notified.current!==id){notified.current=id;if(state.soundEnabled&&!document.hidden)try{playUiTone('success');}catch{/* Sound is optional. */}}}else{setState(current=>({...current,endsAt:null,pausedRemaining:0,completed:true}));}},[now,state.endsAt]);
+ const remaining=remainingPomodoro(state,now);
+ const value=useMemo<Value>(()=>({remainingSeconds:remaining,totalSeconds:state.totalSeconds,areaColor,setAreaColor,running:Boolean(state.endsAt&&state.endsAt>now),completed:state.completed,soundEnabled:state.soundEnabled,setSoundEnabled:soundEnabled=>persist({...latest.current,soundEnabled}),start(seconds=remaining||state.totalSeconds){seconds=Math.round(seconds);if(!Number.isFinite(seconds)||seconds<1||seconds>7200)return;const current=latest.current;setNow(Date.now());persist({...current,endsAt:Date.now()+seconds*1000,pausedRemaining:null,completed:false,totalSeconds:current.pausedRemaining!==null&&!current.completed?current.totalSeconds:seconds,sessionId:current.completed||!current.sessionId?crypto.randomUUID():current.sessionId,ownerTab:tab.current});},pause(){const current=latest.current;if(current.endsAt)persist({...current,endsAt:null,pausedRemaining:remainingPomodoro(current,Date.now()),completed:false,ownerTab:tab.current});},reset(){persist({...emptyPomodoro(),soundEnabled:latest.current.soundEnabled});}}),[remaining,now,state,areaColor]);
+ return <Context.Provider value={value}>{children}</Context.Provider>;
 }
-
-export function PomodoroProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<PomodoroState>(readState);
-  const [now, setNow] = useState(Date.now());
-  const [areaColor, setAreaColor] = useState('#2563eb');
-  const notifiedEnd = useRef<number | null>(null);
-
-  useEffect(() => {
-    try { window.localStorage.setItem(storageKey, JSON.stringify(state)); } catch { /* The timer still works when browser storage is unavailable. */ }
-  }, [state]);
-  useEffect(() => {
-    const interval = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(interval);
-  }, []);
-  useEffect(() => {
-    if (state.endsAt && state.endsAt <= now) {
-      if (notifiedEnd.current !== state.endsAt) {
-        notifiedEnd.current = state.endsAt;
-        try { playUiTone('success'); } catch { /* Audio is optional. */ }
-      }
-      setState(current => current.endsAt && current.endsAt <= Date.now()
-        ? { ...current, endsAt: null, pausedRemaining: 0, completed: true }
-        : current);
-    }
-  }, [now, state.endsAt]);
-
-  const remainingSeconds = state.endsAt
-    ? Math.max(0, Math.ceil((state.endsAt - now) / 1000))
-    : state.pausedRemaining ?? defaultSeconds;
-  const value = useMemo<PomodoroContextValue>(() => ({
-    remainingSeconds,
-    totalSeconds: state.totalSeconds || defaultSeconds,
-    areaColor,
-    setAreaColor,
-    running: Boolean(state.endsAt),
-    completed: state.completed,
-    start(seconds = remainingSeconds || defaultSeconds) {
-      if (!Number.isFinite(seconds) || seconds <= 0) return;
-      try { playUiTone('tap'); } catch { /* The browser may disable audio. */ }
-      setNow(Date.now());
-      setState({ endsAt: Date.now() + seconds * 1000, pausedRemaining: null, completed: false, totalSeconds: state.pausedRemaining !== null && !state.completed ? state.totalSeconds || defaultSeconds : seconds });
-    },
-    pause() {
-      setState(current => current.endsAt
-        ? { ...current, endsAt: null, pausedRemaining: Math.max(0, Math.ceil((current.endsAt - Date.now()) / 1000)), completed: false }
-        : current);
-    },
-    reset() { setState({ endsAt: null, pausedRemaining: null, completed: false }); },
-  }), [remainingSeconds, state.completed, state.endsAt, state.totalSeconds, state.pausedRemaining, areaColor]);
-
-  return <PomodoroContext.Provider value={value}>{children}</PomodoroContext.Provider>;
-}
-
-export function usePomodoro() {
-  const value = useContext(PomodoroContext);
-  if (!value) throw new Error('El Pomodoro necesita su proveedor.');
-  return value;
-}
+export function usePomodoro(){const value=useContext(Context);if(!value)throw new Error('El Pomodoro necesita su proveedor.');return value;}

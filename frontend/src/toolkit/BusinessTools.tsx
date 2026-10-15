@@ -313,7 +313,7 @@ export function Analytics({
   );
   return (
     <div className={`tk-stack analytics-experience ${proUnlocked ? 'is-pro' : ''}`} >
-      {proUnlocked && <span className="pro-gold-badge">✦ Pro Desbloqueado</span>}
+      {proUnlocked && <div><span className="pro-gold-badge">✦ Modo Pro · logro del proyecto</span><p>Completaste tus cuatro áreas. Este logro no cambia tu suscripción ni concede almacenamiento.</p></div>}
       <DSCard as="section" className="tk-card">
         <div className="tk-toolbar">
           <div>

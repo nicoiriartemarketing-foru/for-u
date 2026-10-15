@@ -4,7 +4,7 @@ import { useAreaDocuments } from './AreaDocuments';
 import type { ModuleType } from '../../modules/moduleProjects';
 import EmotionalCompass from './EmotionalCompass';
 import { confirmWorkspaceNavigation } from '../../lib/useUnsavedNavigation';
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useActiveProjectsStore } from '../../stores/useActiveProjectsStore';
@@ -13,13 +13,9 @@ import { isSavedProject } from './areaModel';
 import { FocusStatus } from './WorkspaceHome';
 import { useWorkspaceFocus } from './WorkspaceFocus';
 import { knownTaskTool } from './workspaceFocusModel';
-import { useDopamineRoute, needsEnergyCheck, type EnergyLevel } from '../../hooks/useDopamineRoute';
-import { useRewardBurst } from '../../hooks/useRewardBurst';
-import RewardCelebration from '../../components/RewardCelebration';
 import './workspace.css';
 import './workspaceIdentity.css';
 
-const EnergyCheck = lazy(() => import('../../components/EnergyCheck'));
 export default function WorkspaceShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
   const { remember } = useWorkspaceFocus();
@@ -29,10 +25,6 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
-  const dopamineRoute = useDopamineRoute();
-  const reward = useRewardBurst();
-  const [energyLevel, setEnergyLevel] = useState<EnergyLevel | null>(null);
-  const [showEnergyCheck, setShowEnergyCheck] = useState(() => needsEnergyCheck() && dopamineRoute.onboardingComplete);
   useEffect(() => setMenuOpen(false), [location.pathname, location.search]);
   const projects = store.cloudUserId === user?.id ? Object.values(store.projectsById).filter(p => projectModuleType(p) && isSavedProject(p.id) && !p.cloudPending) : [];
   const requested = params.get('project');
@@ -70,24 +62,12 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     : links.find(link => link.path.split('?')[0] === location.pathname)?.title
       ?? toolTitles[location.pathname.split('/').at(-1) ?? '']
       ?? (location.pathname.includes('/modules/') ? pageAccess.title : location.pathname.includes('/landing') ? 'Editor de página' : 'Creator Studio');
-  const isLinkUnlocked = (title: string) => title === 'Compras y cotizaciones' || title === 'Configuración' || dopamineRoute.unlockedSidebarLinks.includes(title);
+  const isLinkUnlocked = (_title: string) => Boolean(project);
   return <div className="workspace-shell">
-    {/* Reward celebration overlay */}
-    <RewardCelebration burst={reward.activeBurst} />
-
-    {/* Energy check interceptor */}
-    {showEnergyCheck && <Suspense fallback={null}><EnergyCheck isOpen={showEnergyCheck} userName={user?.user_metadata?.display_name} onComplete={(level) => { setEnergyLevel(level); setShowEnergyCheck(false); }} /></Suspense>}
-
     <aside className={`workspace-sidebar ${menuOpen ? 'menu-open' : ''}`}>
       <Link className="workspace-brand" to="/dashboard">for u<span>Un paso a tu ritmo</span></Link>
 
-      {/* Route progress bar */}
-      {dopamineRoute.onboardingComplete && <div className="foru-route-progress-bar" role="progressbar" aria-valuenow={dopamineRoute.progress} aria-valuemin={0} aria-valuemax={100}>
-        <small>{dopamineRoute.currentStation?.emoji} {dopamineRoute.currentStation?.shortLabel ?? 'Completo'}</small>
-        <div className="foru-route-progress-track"><div className="foru-route-progress-fill" style={{ width: `${dopamineRoute.progress}%` }} /></div>
-        <strong>{dopamineRoute.progress}%</strong>
-      </div>}
-
+      {project && <TaskProgress projectId={project.id} type={type} />}
       <Tooltip text="Crea otro proyecto y conserva los que ya tienes en tu cuenta."><Link className="workspace-new magic-button-primary" to="/dashboard?create=1">＋ Crear nuevo proyecto</Link></Tooltip>
       <DSButtonSecondary ref={menuButton} className="workspace-menu-toggle" aria-controls="workspace-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}>☰</DSButtonSecondary>
       <Link className="workspace-home-link" to="/dashboard">Mis proyectos y Hoy</Link>
@@ -130,3 +110,5 @@ function PendingTasks({ projectId, type }: { projectId: string; type: ModuleType
   const count = entry?.loaded ? entry.tasks.tasks.filter(task => !task.done).length : null;
   return <Link className="workspace-pending" to={`/dashboard?project=${projectId}&view=management`}>Mis próximos pasos{count !== null && count > 0 && <span aria-label={`${count} tareas pendientes`}>{count}</span>}</Link>;
 }
+
+function TaskProgress({projectId,type}:{projectId:string;type:ModuleType}) { const {entry}=useAreaDocuments(projectId,type); if(!entry?.loaded)return null; const done=entry.tasks.tasks.filter(t=>t.done).length,total=entry.tasks.tasks.length; return <div className="foru-route-progress-bar"><small>{done}/{total} pas · {entry.taskDirty ? "pendientes de guardar" : "guardados"}</small><progress aria-label="Progreso de tareas del proyecto" max={total||1} value={done}/></div>; }

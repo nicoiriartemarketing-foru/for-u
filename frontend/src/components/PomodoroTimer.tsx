@@ -1,5 +1,5 @@
 import { ButtonSecondary as DSButtonSecondary } from './ui/DesignSystem';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePomodoro } from '../contexts/PomodoroContext';
 
 type PomodoroTimerProps = {
@@ -13,7 +13,8 @@ export default function PomodoroTimer({
   durationSeconds = 25 * 60,
   onComplete,
 }: PomodoroTimerProps) {
-  const { remainingSeconds, running: isRunning, completed: hasCompleted, start, pause, reset } = usePomodoro();
+  const { remainingSeconds, running: isRunning, completed: hasCompleted, start, pause, reset, soundEnabled, setSoundEnabled } = usePomodoro();
+  const [minutesInput,setMinutesInput]=useState("25");
   const completionReported = useRef(false);
   useEffect(() => {
     if (hasCompleted && !completionReported.current) {
@@ -56,10 +57,10 @@ export default function PomodoroTimer({
         <p>{taskTitle ?? 'Selecciona una tarea pendiente para empezar con calma.'}</p>
       </div>
 
-      <div className="foru-pomodoro-actions">
+      <label>Duración (minutos)<input aria-label="Duración del Pomodoro en minutos" type="number" min="0.1" max="120" step="0.1" disabled={isRunning} value={minutesInput} onChange={e=>setMinutesInput(e.target.value)}/></label><label><input type="checkbox" checked={soundEnabled} onChange={e=>setSoundEnabled(e.target.checked)}/> Sonido suave al terminar</label><div className="foru-pomodoro-actions">
         <DSButtonSecondary
           type="button"
-          onClick={() => start(remainingSeconds || durationSeconds)}
+          onClick={() => start(hasCompleted || remainingSeconds === durationSeconds ? Number(minutesInput)*60 : remainingSeconds)}
           disabled={isRunning}
         >
           {isRunning ? 'En foco' : hasCompleted ? 'Empezar otro Pomodoro' : 'Empezar Pomodoro'}

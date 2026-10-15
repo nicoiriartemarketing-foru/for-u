@@ -1,48 +1,40 @@
-import { Input as DSInput, ButtonSecondary as DSButtonSecondary } from '../../components/ui/DesignSystem';
-import { Component, lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { useActiveProjectsStore } from '../../stores/useActiveProjectsStore';
-import { useAuth } from '../../contexts/AuthContext';
-import { useAreaDocuments } from './AreaDocuments';
-import type { ModuleType } from '../../modules/moduleProjects';
-import { projectModuleType } from '../../modules/moduleProjects';
-import { areaDefinitions, areaProgress, isSavedProject, type AreaId } from './areaModel';
+import {Input,ButtonSecondary} from '../../components/ui/DesignSystem';
+import {Component,lazy,Suspense,useCallback,useEffect,useRef,useState,type ReactNode} from 'react';
+import {Link,useSearchParams} from 'react-router-dom';
+import {useActiveProjectsStore} from '../../stores/useActiveProjectsStore';
+import {useAuth} from '../../contexts/AuthContext';
+import {useAreaDocuments,useAreaCache} from './AreaDocuments';
+import {projectModuleType} from '../../modules/moduleProjects';
+import {areaDefinitions,areaProgress,isSavedProject,type AreaId} from './areaModel';
+import {useDialogFocus} from '../../toolkit/useDialogFocus';
+import {confirmWorkspaceNavigation} from '../../lib/useUnsavedNavigation';
 import AreaPanel from './AreaPanel';
-const WorldScene = lazy(() => import('./WorldScene'));
-class SceneBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() { return { failed: true }; }
-  render() { return this.state.failed ? this.props.fallback : this.props.children; }
+import './worldExperience.css';
+const WorldScene=lazy(()=>import('./WorldScene'));
+class SceneBoundary extends Component<{children:ReactNode;fallback:ReactNode;onFailure:()=>void},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return {failed:true};}componentDidCatch(){this.props.onFailure();}render(){return this.state.failed?this.props.fallback:this.props.children;}}
+export default function WorldPage(){
+ const {user}=useAuth();const store=useActiveProjectsStore();const [params,setParams]=useSearchParams();const cache=useAreaCache();
+ const [area,setArea]=useState<AreaId|null>(null),[lite,setLite]=useState(false),[sceneError,setSceneError]=useState(false),[zoom,setZoom]=useState(34),[attempt,setAttempt]=useState(0);
+ const [reduced,setReduced]=useState(()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches),[visible,setVisible]=useState(!document.hidden);
+ const [measure,setMeasure]=useState(0),[sample,setSample]=useState<string>('');
+ const dialog=useRef<HTMLDivElement>(null);useDialogFocus(dialog,area!==null,()=>setArea(null));
+ useEffect(()=>{const m=window.matchMedia('(prefers-reduced-motion: reduce)');const change=()=>setReduced(m.matches);m.addEventListener('change',change);return()=>m.removeEventListener('change',change);},[]);
+ useEffect(()=>{const change=()=>setVisible(!document.hidden);document.addEventListener('visibilitychange',change);return()=>document.removeEventListener('visibilitychange',change);},[]);
+ useEffect(()=>{if(!area)return;const previous=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.body.style.overflow=previous;};},[area]);
+ const projects=store.cloudUserId===user?.id?Object.values(store.projectsById).filter(p=>isSavedProject(p.id)&&!p.cloudPending&&projectModuleType(p)):[];
+ const requested=params.get('project');const project=requested?projects.find(p=>p.id===requested):projects.find(p=>p.id===store.activeProjectId)??projects[0];
+ useEffect(()=>{setArea(null);if(project&&store.activeProjectId!==project.id)store.switchProject(project.id);},[project?.id]);
+ const failed=useCallback(()=>{setSceneError(true);setLite(true);setSample('La escena no respondió. Medición no válida.');},[]);
+ if(!project)return <section className="world-intro"><h1>{requested?'Este proyecto no está disponible':'Tu mundo empieza con una isla'}</h1><p>{store.isCloudSyncing?'Cargando proyectos…':requested?'No abriremos otra isla en su lugar.':'Cada proyecto guardado tendrá su propio lugar.'}</p><Link to="/dashboard">Mis proyectos</Link></section>;
+ const select=(id:string)=>{if(id===project.id)return;if(!confirmWorkspaceNavigation())return;store.switchProject(id);setParams({project:id});setArea(null);};
+ const fallback=<div className="world-lite"><span aria-hidden="true">⛵</span><h2>{project.name}</h2><p>{sceneError?'El 3D no está disponible. Tus tareas y juegos siguen aquí.':'Vista ligera: las mismas tareas, mascotas y juegos.'}</p>{sceneError&&<ButtonSecondary onClick={()=>{setSceneError(false);setLite(false);setAttempt(n=>n+1);}}>Reintentar escena 3D</ButtonSecondary>}</div>;
+ return <section className="world-page"><header className="world-intro"><small>Tu espacio para avanzar y descansar</small><h1>Mi mundo</h1><p>Elige una isla y un espacio. Un paso a tu ritmo.</p><div className="world-options"><label><Input type="checkbox" checked={lite} onChange={e=>setLite(e.target.checked)}/> Vista ligera</label><label><Input type="checkbox" checked={reduced} onChange={e=>setReduced(e.target.checked)}/> Reducir movimiento</label></div></header><nav className="world-island-picker" aria-label="Viajar entre islas">{projects.map(p=><IslandButton key={p.id} id={p.id} name={p.name} type={projectModuleType(p)!} selected={p.id===project.id} onSelect={()=>select(p.id)}/>)}</nav>
+ {!lite&&<div className="area-tabs"><ButtonSecondary aria-label="Alejar la isla" disabled={zoom<=24} onClick={()=>setZoom(v=>Math.max(24,v-5))}>− Alejar</ButtonSecondary><ButtonSecondary aria-label="Acercar la isla" disabled={zoom>=49} onClick={()=>setZoom(v=>Math.min(49,v+5))}>＋ Acercar</ButtonSecondary></div>}
+ {lite?fallback:<SceneBoundary key={attempt} fallback={fallback} onFailure={failed}><Suspense fallback={<div className="world-lite" role="status">Preparando el mar…</div>}><WorldScene projects={projects} cache={cache} activeId={project.id} onSelect={select} onArea={setArea} reduced={reduced} visible={visible} onFailure={failed} zoom={zoom} measure={measure} onSample={setSample}/></Suspense></SceneBoundary>}
+ <WorldAreas projectId={project.id} type={projectModuleType(project)!} area={area} onArea={setArea}/>
+ {area&&<div className="area-modal-backdrop"><div ref={dialog} className="area-modal-dialog world-area-dialog" role="dialog" aria-modal="true" aria-labelledby="world-area-title"><header className="area-modal-heading"><h2 id="world-area-title">{areaDefinitions.find(a=>a.id===area)!.title} · {project.name}</h2><ButtonSecondary onClick={()=>setArea(null)} aria-label="Cerrar espacio">Cerrar ×</ButtonSecondary></header><AreaPanel key={`${project.id}:${area}`} projectId={project.id} type={projectModuleType(project)!} area={area}/></div></div>}
+ <details className="world-performance"><summary>Comprobar rendimiento de este dispositivo</summary><p>Mide 60 segundos: navega entre islas y abre espacios. Si ocultas la pestaña, la medición se cancela. No envía información al servidor.</p><ButtonSecondary disabled={lite||reduced||!visible} onClick={()=>{setSample('Midiendo 60 segundos…');setMeasure(n=>n+1);}}>Medir 60 segundos</ButtonSecondary><p role="status">{sample}</p><small>Anota modelo, sistema y navegador. Este resultado no representa otros móviles.</small></details>
+ </section>;
 }
-export default function WorldPage() {
-  const { user } = useAuth();
-  const store = useActiveProjectsStore();
-  const [params, setParams] = useSearchParams();
-  const [area, setArea] = useState<AreaId | null>(null);
-  const [lite, setLite] = useState(false);
-  const [sceneError, setSceneError] = useState(false);
-  const sceneFailed = useCallback(() => { setSceneError(true); setLite(true); }, []);
-  const [zoom, setZoom] = useState(34);
-  const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const [visible, setVisible] = useState(!document.hidden);
-  const projects = store.cloudUserId === user?.id ? Object.values(store.projectsById).filter(p => isSavedProject(p.id) && !p.cloudPending && projectModuleType(p)) : [];
-  const project = projects.find(p => p.id === params.get('project')) ?? projects.find(p => p.id === store.activeProjectId) ?? projects[0];
-  useEffect(() => { const change = () => setVisible(!document.hidden); document.addEventListener('visibilitychange', change); return () => document.removeEventListener('visibilitychange', change); }, []);
-  if (!project) return <section className="world-intro"><h1>Tu mundo empieza con una isla</h1><p>Cada proyecto guardado tendrá su propio lugar.</p><Link to="/dashboard?create=1">Crear mi primera isla</Link></section>;
-  const select = (id: string) => { store.switchProject(id); setParams({ project: id }); setArea(null); };
-  const fallback = <div className="world-lite"><span aria-hidden="true">⛵</span><h2>{project.name}</h2><p>{sceneError ? 'La escena 3D no respondió. Puedes usar todos los espacios y juegos en esta vista ligera.' : 'Vista ligera. Todos los espacios y juegos siguen disponibles.'}</p></div>;
-  return <section className="world-page"><header className="world-intro"><span>Un lugar para tus ideas</span><h1>Mi pequeño mundo</h1><p>Navega a tu isla. Avanza un poco o juega con tus compañeros.</p><div className="world-options"><label><DSInput type="checkbox" checked={lite} onChange={e => setLite(e.target.checked)} /> Vista ligera</label><label><DSInput type="checkbox" checked={reduced} onChange={e => setReduced(e.target.checked)} /> Reducir movimiento</label></div></header><nav className="world-island-picker" aria-label="Viajar entre islas">{projects.map(p => <DSButtonSecondary key={p.id} aria-pressed={p.id === project.id} onClick={() => select(p.id)}>🏝️ {p.name}</DSButtonSecondary>)}</nav>
-    {!lite && <div className="area-tabs"><DSButtonSecondary aria-label="Alejar la isla" disabled={zoom <= 24} onClick={() => setZoom(v => v - 5)}>− Alejar</DSButtonSecondary><DSButtonSecondary aria-label="Acercar la isla" disabled={zoom >= 49} onClick={() => setZoom(v => v + 5)}>＋ Acercar</DSButtonSecondary></div>}
-    {lite ? fallback : <SceneBoundary fallback={fallback}><Suspense fallback={<div className="world-lite">Preparando el mar…</div>}><WorldScene projects={projects} activeId={project.id} onSelect={select} onArea={setArea} reduced={reduced} visible={visible} onFailure={sceneFailed} zoom={zoom} /></Suspense></SceneBoundary>}
-    <WorldAreas projectId={project.id} type={projectModuleType(project)!} area={area} onArea={setArea} />
-    {area && <div className="world-panel" key={`${project.id}:${area}`}><DSButtonSecondary onClick={() => setArea(null)}>Cerrar espacio</DSButtonSecondary><AreaPanel projectId={project.id} type={projectModuleType(project)!} area={area} /></div>}
-  </section>;
-}
-
-function WorldAreas({ projectId, type, area, onArea }: { projectId: string; type: ModuleType; area: AreaId | null; onArea: (area: AreaId) => void }) {
-  const { entry } = useAreaDocuments(projectId, type);
-  return <nav className="world-area-picker" aria-label="Espacios de la isla">{areaDefinitions.map(a => {
-    const progress = areaProgress(entry?.tasks?.tasks ?? [], a.id);
-    return <DSButtonSecondary key={a.id} aria-pressed={area === a.id} style={{ borderColor: a.color }} onClick={() => onArea(a.id)}><span>{a.accessory}</span><strong>{a.title}</strong><small>{a.pet} te espera</small><small>{entry?.loaded ? progress.total ? `${progress.completed}/${progress.total} tareas` : 'Sin tareas' : entry?.error ? 'Reintenta al abrir' : 'Cargando tareas…'}</small></DSButtonSecondary>;
-  })}</nav>;
-}
+function IslandButton({id,name,type,selected,onSelect}:{id:string;name:string;type:NonNullable<ReturnType<typeof projectModuleType>>;selected:boolean;onSelect:()=>void}){const {entry}=useAreaDocuments(id,type);return <ButtonSecondary aria-pressed={selected} onClick={onSelect}>🏝️ {name}<small>{entry?.loaded?`${entry.tasks.tasks.filter(t=>t.done).length}/${entry.tasks.tasks.length} pasos${entry.taskDirty?' · pendientes de guardar':''}`:entry?.error?'Error al cargar tareas':'Cargando tareas…'}</small></ButtonSecondary>;}
+function WorldAreas({projectId,type,area,onArea}:{projectId:string;type:NonNullable<ReturnType<typeof projectModuleType>>;area:AreaId|null;onArea:(area:AreaId)=>void}){const {entry}=useAreaDocuments(projectId,type);return <nav className="world-area-picker" aria-label="Espacios de la isla">{areaDefinitions.map(a=>{const progress=areaProgress(entry?.tasks?.tasks??[],a.id),decor=entry?.world?.areas[a.id]?.decoration??0;return <ButtonSecondary key={a.id} aria-pressed={area===a.id} style={{borderColor:a.color}} onClick={()=>onArea(a.id)}><span aria-hidden="true">{a.accessory} {['🌿','🌸','⭐'][decor]}</span><strong>{a.title}</strong><small>{a.pet} te espera</small><small>{entry?.loaded?progress.total?`${progress.completed}/${progress.total} tareas`:'Sin tareas':entry?.error?'Reintenta al abrir':'Cargando tareas…'}</small></ButtonSecondary>;})}</nav>;}
