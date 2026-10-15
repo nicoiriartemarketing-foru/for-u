@@ -13,8 +13,10 @@ import { isSavedProject } from './areaModel';
 import { FocusStatus } from './WorkspaceHome';
 import { useWorkspaceFocus } from './WorkspaceFocus';
 import { knownTaskTool } from './workspaceFocusModel';
+import './unifiedDashboard.css';
 import './workspace.css';
 import './workspaceIdentity.css';
+import './worldExperience.css';
 
 export default function WorkspaceShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
@@ -74,7 +76,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
       <nav id="workspace-navigation" aria-label="Navegación de tu negocio" onKeyDown={event => { if (event.key === 'Escape') { setMenuOpen(false); menuButton.current?.focus(); } }}>
         {links.map(({icon, title, path, help}) => {
           const unlocked = isLinkUnlocked(title);
-          return <Tooltip key={title} text={unlocked ? help : `Se desbloquea más adelante en tu ruta`}>
+          return <Tooltip key={title} text={unlocked ? help : 'Elige un proyecto guardado para abrir esta herramienta.'}>
             <Link className={unlocked ? '' : 'workspace-nav-locked'} aria-current={location.pathname === path.split('?')[0] ? 'page' : undefined} to={unlocked && project ? path : '/dashboard?create=1'} onClick={() => { if (unlocked) rememberNavigation(path); }} tabIndex={unlocked ? 0 : -1}>
               <span className="workspace-nav-icon" aria-hidden="true">{icon}</span>{title}
             </Link>
@@ -89,9 +91,9 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     <div className="workspace-main">
       <header className="workspace-top">
         <nav className="workspace-breadcrumbs" aria-label="Ubicación"><Link to="/dashboard">Mi espacio</Link><span aria-hidden="true">/</span><span aria-current="page">{currentTitle}</span></nav>
-        <nav className="workspace-view-switch" aria-label="Vistas del proyecto">
+        <nav className="workspace-view-switch" aria-label="Vistas del proyecto">{requested && !project ? <span>Elige un proyecto para continuar</span> : <>
           <Link aria-current={location.pathname === '/dashboard' && Boolean(requested) ? 'page' : undefined} to={`/dashboard${query}${query ? '&' : '?'}view=management`}>Tablero</Link>
-          <Link aria-current={location.pathname === '/dashboard/world' ? 'page' : undefined} to={`/dashboard/world${query}`}>Mi mundo</Link>
+          <Link aria-current={location.pathname === '/dashboard/world' ? 'page' : undefined} to={`/dashboard/world${query}`}>Mi mundo</Link></>}
         </nav>
         <label>Proyecto activo<select value={project?.id ?? ''} onChange={event => { if (!confirmWorkspaceNavigation()) return; store.switchProject(event.target.value); const next = projects.find(p => p.id === event.target.value); const path = location.pathname.startsWith('/modules/') && next ? `/modules/${projectModuleType(next)}${location.pathname.endsWith('/orders') && projectModuleType(next) === 'restaurant' ? '/orders' : location.pathname.endsWith('/editor') ? '/editor' : ''}` : location.pathname; navigate(`${path}?project=${encodeURIComponent(event.target.value)}`); }}><option value="" disabled>Elige un proyecto</option>{projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
       </header>

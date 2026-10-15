@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Vector3 } from 'three';
 import Island3D from '../../components/Island3D';
 import Sailboat from '../../components/Sailboat';
@@ -44,26 +44,31 @@ function Sample({ run, visible, reduced, onSample }: {
     reduced: boolean;
     onSample: (value: string) => void;
 }) {
+    const gl=useThree(s=>s.gl);
+    const cancelled = useRef(0);
     const meter = useRef<{
         start: number;
         frames: number;
         pauses: number;
         max: number;
     } | null>(null);
-    useEffect(() => { meter.current = run && visible && !reduced ? { start: performance.now(), frames: 0, pauses: 0, max: 0 } : null; if (run && (!visible || reduced))
+    useEffect(() => { if(run && (!visible||reduced))cancelled.current=run; meter.current = run && run!==cancelled.current && visible && !reduced ? { start: performance.now(), frames: 0, pauses: 0, max: 0 } : null; if (run && (!visible || reduced))
         onSample('Medición cancelada: vuelve a medir con la pestaña visible y movimiento activo.'); }, [run, visible, reduced, onSample]);
     useFrame((_state, delta) => { const m = meter.current; if (!m)
         return; m.frames++; m.max = Math.max(m.max, delta * 1000); if (delta > .1)
         m.pauses++; const seconds = (performance.now() - m.start) / 1000; if (seconds >= 60) {
-        onSample(`${(m.frames / seconds).toFixed(1)} FPS medios · ${seconds.toFixed(1)} s · ${m.pauses} cuadros >100 ms · máximo ${Math.round(m.max)} ms · viewport ${window.innerWidth}×${window.innerHeight} · DPR limitado a ${window.innerWidth < 768 ? 1 : 1.5}. ${navigator.userAgent}`);
+        onSample(`${(m.frames / seconds).toFixed(1)} FPS medios · ${seconds.toFixed(1)} s · ${m.pauses} cuadros >100 ms · máximo ${Math.round(m.max)} ms · viewport ${window.innerWidth}×${window.innerHeight} · DPR ${gl.getPixelRatio()}. ${navigator.userAgent}`);
         meter.current = null;
     } });
     return null;
 }
 export default function WorldScene({ projects, cache, activeId, onSelect, onArea, reduced, visible, onFailure, zoom, measure, onSample }: Props) {
+    const alive=useRef(true);
+    useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
     const index = Math.max(0, projects.findIndex(p => p.id === activeId));
-    const mobile = window.innerWidth < 768;
-    return <div className="world-canvas" role="group" aria-label="Archipiélago 3D. Los botones de islas y espacios ofrecen las mismas acciones con teclado."><Canvas orthographic camera={{ position: [8, 16, 19], zoom, near: .1, far: 400 }} dpr={mobile ? 1 : [1, 1.5]} frameloop={visible && !reduced ? 'always' : 'demand'} gl={{ antialias: false, powerPreference: 'low-power' }} onCreated={({ gl }) => { gl.domElement.addEventListener('webglcontextlost', event => { event.preventDefault(); onFailure(); }, { once: true }); }} fallback={<p>No hay WebGL. Activa Vista ligera para continuar.</p>}>
+    const [mobile,setMobile]=useState(()=>window.innerWidth<768);
+    useEffect(()=>{const resize=()=>setMobile(window.innerWidth<768);window.addEventListener("resize",resize);return()=>window.removeEventListener("resize",resize);},[]);
+    return <div className="world-canvas" role="group" aria-label="Archipiélago 3D. Los botones de islas y espacios ofrecen las mismas acciones con teclado."><Canvas orthographic camera={{ position: [8, 16, 19], zoom, near: .1, far: 400 }} dpr={mobile ? 1 : [1, 1.5]} frameloop={visible && !reduced ? 'always' : 'demand'} gl={{ antialias: false, powerPreference: 'low-power' }} onCreated={({ gl }) => { gl.domElement.addEventListener('webglcontextlost', event => { if(alive.current){event.preventDefault(); onFailure();} }, { once: true }); }} fallback={<p>No hay WebGL. Activa Vista ligera para continuar.</p>}>
  <FrameWatchdog visible={visible} onFailure={onFailure}/><Sample run={measure} visible={visible} reduced={reduced} onSample={onSample}/><color attach="background" args={['#d6eef1']}/><ambientLight intensity={1.8}/><directionalLight position={[6, 12, 8]} intensity={2}/><CameraTravel x={index * 12} reduced={reduced || !visible} zoom={zoom}/>
  <mesh position={[index * 12, -1.35, 0]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[100, 70]}/><meshStandardMaterial color="#90d5dd" roughness={1}/></mesh>
  {projects.map((p, i) => Math.abs(i - index) <= 1 && <Island3D key={p.id} project={p} position={[i * 12, 0, 0]} isSelected={p.id === activeId} onSelect={() => onSelect(p.id)} animated={!reduced && visible} subtitle={cache[p.id]?.loaded ? `${cache[p.id].tasks.tasks.filter(t => t.done).length}/${cache[p.id].tasks.tasks.length} pasos${cache[p.id].taskDirty ? ' · provisional' : ''}` : 'Cargando tareas…'}>
