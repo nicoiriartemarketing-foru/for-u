@@ -1,0 +1,40 @@
+import {useState} from 'react';
+import {Link} from 'react-router-dom';
+import {ButtonPrimary,ButtonSecondary,Input,Textarea,Select} from '../components/ui/DesignSystem';
+import InlineText from '../components/shared/InlineText';
+import ProjectImage from '../components/shared/ProjectImage';
+import MediaGallery from '../components/shared/MediaGallery';
+import {MediaScope} from '../components/shared/mediaScope';
+import {mediaReference} from '../components/shared/mediaReference';
+import type {ContentDraft} from '../components/shared/contentModel';
+import EditorSheet from '../toolkit/EditorSheet';
+import PieceAI from '../experience/PieceAI';
+import MaterialAttachments from '../experience/MaterialAttachments';
+import {pieceQuery,type Piece} from './model';
+import './pieceWorkspace.css';
+type Panel='photo'|'script'|'plan'|'ai'|'material'|null;
+export default function PieceWorkspace({piece,design,user,project,dirty,busy,error,status,revision,onEdit,onDesign,onSave,onBack,onRecover}:{piece:Piece;design:ContentDraft;user:string;project:string;dirty:boolean;busy:boolean;error:string;status:string;revision:string|null;onEdit:(v:Partial<Piece>)=>void;onDesign:(v:Partial<ContentDraft>)=>void;onSave:()=>void;onBack:()=>void;onRecover:()=>void}){
+ const [panel,setPanel]=useState<Panel>(null),[view,setView]=useState<'design'|'caption'>('design');
+ const image=design.imagePath?mediaReference(design.imagePath):design.sourceImageUrl||'';
+ const title=panel==='photo'?'Tu imagen':panel==='script'?'Tu voz y tus tomas':panel==='plan'?'El siguiente paso':panel==='material'?'Material de esta pieza':'Crear conmigo';
+ return <MediaScope.Provider value={{userId:user,projectId:project}}><section className="piece-workspace">
+  <header className="piece-topbar"><ButtonSecondary disabled={busy} onClick={onBack}>← Mi perfil</ButtonSecondary><span role="status">{busy?'Guardando…':error?'No se guardó':dirty?'Cambios pendientes':'Guardado'}</span><ButtonPrimary disabled={busy||!dirty} onClick={onSave}>Guardar</ButtonPrimary></header>
+  <div className="piece-intro"><small>CREATOR STUDIO · TU PIEZA</small><h2>Dale tu forma.</h2><p>Toca el texto o la foto. El resultado está aquí.</p></div>
+  <div className="piece-view-switch" role="group" aria-label="Qué editar"><ButtonSecondary aria-pressed={view==='design'} onClick={()=>setView('design')}>◈ Diseño</ButtonSecondary><ButtonSecondary aria-pressed={view==='caption'} onClick={()=>setView('caption')}>≋ Texto del post</ButtonSecondary></div>
+  {view==='design'&&<div className="piece-stage" aria-busy={busy}><div className={'piece-poster piece-poster-'+design.format} aria-label="Tu publicación editable" style={{background:design.background,color:design.foreground}}>
+   <button className={'piece-photo '+(!image?'piece-photo-empty':'')} disabled={busy} onClick={()=>setPanel('photo')} aria-label="Cambiar foto de la publicación">{image?<ProjectImage value={image} alt={design.title||'Imagen de tu publicación'}/>:<span>＋<br/>Tu primera foto</span>}<span className="piece-photo-hint">Cambiar foto</span></button>
+   <div className="piece-poster-copy"><small>{design.brandName}</small>{design.logoPath&&<ProjectImage className="piece-logo" value={mediaReference(design.logoPath)} alt="Logo"/>}<InlineText as="h2" value={design.title} label="Editar titular de la publicación" onChange={value=>{if(!busy){onDesign({title:value});onEdit({title:value});}}}/><InlineText value={design.subtitle} label="Editar texto del diseño" onChange={subtitle=>{if(!busy)onDesign({subtitle});}}/>{design.cta&&<strong>{design.cta}</strong>}</div>
+  </div></div>}
+  {view==='caption'&&<section className="piece-caption">{image&&<ProjectImage className="piece-caption-photo" value={image} alt="Imagen del post"/>}<small>TEXTO QUE ACOMPAÑA TU PUBLICACIÓN</small><InlineText value={piece.text} label="Editar texto del post" onChange={text=>{if(!busy){onEdit({text});onDesign({caption:text});}}}/>{!piece.text&&<p>Toca arriba para escribir tu mensaje.</p>}</section>}
+  <nav className="piece-dock" aria-label="Herramientas de esta pieza"><ButtonSecondary disabled={busy} onClick={()=>setPanel('photo')}>▧ Foto</ButtonSecondary><ButtonSecondary disabled={busy} onClick={()=>setPanel('script')}>◉ Guion</ButtonSecondary><ButtonSecondary disabled={busy} onClick={()=>setPanel('plan')}>◷ Planificar</ButtonSecondary><ButtonSecondary disabled={busy} onClick={()=>setPanel('ai')}>✦ Ayuda IA</ButtonSecondary></nav>
+  <p className="piece-feedback" role={error?'alert':'status'}>{error||status||'Planificación privada · todavía no se publica en Instagram.'}{error&&<ButtonSecondary onClick={onRecover}>Recuperar versión guardada</ButtonSecondary>}</p>
+  <EditorSheet open={panel!==null} title={title} onClose={()=>setPanel(null)}>
+   {panel==='photo'&&<MediaGallery userId={user} projectId={project} onSelect={file=>{onDesign({imagePath:file.path,sourceImageUrl:''});if(!piece.files.some(f=>f.path===file.path))onEdit({files:[...piece.files,{path:file.path,name:file.name}]});setPanel(null);}}/>}
+   {panel==='script'&&<><Textarea label="Guion" value={piece.script} disabled={busy} maxLength={20000} onChange={e=>onEdit({script:e.target.value})}/><details><summary>Lista de tomas</summary><Textarea label="Tomas" value={piece.shots} maxLength={10000} disabled={busy} onChange={e=>onEdit({shots:e.target.value})}/></details>{dirty?<ButtonPrimary disabled={busy} onClick={onSave}>Guardar para ensayar</ButtonPrimary>:<Link className="pe-action-link" to={'/dashboard/tools/teleprompter'+pieceQuery(project,piece.id)}>▶ Ensayar en teleprompter</Link>}</>}
+   {panel==='plan'&&<><Textarea label="¿Qué quieres conseguir con esta pieza?" value={piece.objective} maxLength={2000} disabled={busy} onChange={e=>onEdit({objective:e.target.value})}/><Input label="Fecha" type="date" value={piece.date} disabled={busy} onChange={e=>onEdit({date:e.target.value})}/><Select label="Estado" value={piece.status} disabled={busy} onChange={e=>onEdit({status:e.target.value as Piece['status']})}><option value="idea">Idea</option><option value="draft">En preparación</option><option value="ready">Lista</option><option value="published-manual">Publicada por mí · sin verificación</option></Select><details><summary>Formato y colores</summary><Select label="Formato" value={design.format} onChange={e=>onDesign({format:e.target.value as ContentDraft['format']})}><option value="post">Cuadrado</option><option value="portrait">Vertical</option><option value="story">Historia</option></Select><Input label="Fondo" type="color" value={design.background} onChange={e=>onDesign({background:e.target.value})}/><Input label="Texto" type="color" value={design.foreground} onChange={e=>onDesign({foreground:e.target.value})}/></details></>}
+   {panel==='material'&&<MaterialAttachments user={user} project={project} files={piece.files} disabled={busy} onChange={files=>onEdit({files})}/>}
+   {panel==='ai'&&<PieceAI project={project} source={piece.id} revision={revision} disabled={dirty||busy} onApply={onEdit}/>}
+  </EditorSheet>
+  <details className="piece-more"><summary>Archivos, plantillas y exportación</summary><ButtonSecondary onClick={()=>setPanel('material')}>Ver y añadir material · {piece.files.length}</ButtonSecondary>{dirty?<p>Guarda para abrir otra herramienta con estos cambios.</p>:<><Link className="pe-action-link" to={'/content-creator'+pieceQuery(project,piece.id)}>Variantes y exportar PNG</Link><Link className="pe-action-link" to={'/content-creator'+pieceQuery(project,piece.id)+'&templates=1'}>Cambiar plantilla</Link></>}</details>
+ </section></MediaScope.Provider>;
+}
