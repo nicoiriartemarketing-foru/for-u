@@ -63,6 +63,7 @@ export type LandingDraft = {
   headline: string;
   description: string;
   cta: string;
+  ctaDesign?: { version?: 1; url?: string; align?: 'start'|'center'|'end'; tone?: 'violet'|'mint'|'gold' };
   whatsapp: string;
   calendly: string;
   color: string;

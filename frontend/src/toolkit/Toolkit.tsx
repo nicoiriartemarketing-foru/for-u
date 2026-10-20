@@ -291,7 +291,7 @@ function ToolkitShell({
         </span>
       </header>}
       <main
-        className={"hoy-main" + (page === "today" ? " is-today" : "")}
+        className={"hoy-main" + (page === "today" ? " is-today" : tool === "landing" ? " is-page-editor" : "")}
         inert={menu}
       >
         {loading ? (
@@ -306,7 +306,7 @@ function ToolkitShell({
           </Suspense>
         ) : (
           <>
-            <header className="hoy-tool-heading">
+            <header className="hoy-tool-heading" hidden={tool === "landing"}>
               <h1>{current?.name}</h1>
               <p>{current?.description}</p>
             </header>

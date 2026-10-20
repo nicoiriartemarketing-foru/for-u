@@ -1,3 +1,9 @@
+import {applyPreviewText} from './editorBridge';
+import ProjectImageField from '../components/shared/ProjectImageField';
+import { MediaScope } from '../components/shared/mediaScope';
+import { mediaReference } from '../components/shared/mediaReference';
+import EditorSheet from './EditorSheet';
+import { insertEditorSection } from './editorSections';
 import PageAI from '../experience/PageAI';
 import PresentationReview from '../presentation/PresentationReview';
 import {LandingPreview as DesignPreview} from './LandingPreview';
@@ -30,7 +36,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   const { business, docs, save, userId, projectId, demo, track, documentRevision } = useToolkit();
   const [routeParams] = useSearchParams();
   const requestedStep = routeParams.get("step");
-  const [history, dispatchHistory] = useReducer(editorHistory<LandingDraft>, { past: [], present: (docs.landing as LandingDraft) ?? defaultLanding(business), future: [] } as EditorHistory<LandingDraft>);
+  const [history, dispatchHistory] = useReducer(editorHistory<LandingDraft>, { past: [], present: (docs.landing as LandingDraft) ?? {...defaultLanding(business), headline:'',description:'',cta:'',blocks:[],fields:[],bookingEnabled:false,presentationVersion:2,color:'#7751B8'}, future: [] } as EditorHistory<LandingDraft>);
   const draft = history.present;
   const setDraft = useCallback((value: LandingDraft | ((current: LandingDraft) => LandingDraft)) => dispatchHistory({ type: 'edit', value }), []);
   const [busy, setBusy] = useState(false);
@@ -55,10 +61,15 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   const [dirty, setDirty] = useState(false);
   useUnsavedNavigation(!wizard && (dirty || busy));
   const drag = useRef(-1);
+  const uploading = useRef(false);
   const [selectedId, setSelectedId] = useState(requestedStep === 'offer' ? ((docs.landing as LandingDraft)?.blocks?.[0]?.id ?? 'hero') : 'hero');
   const [sectionsOpen, setSectionsOpen] = useState(requestedStep === "offer");
   const [settingsOpen, setSettingsOpen] = useState(requestedStep === "identity" || requestedStep === "publish");
   const [propertiesOpen, setPropertiesOpen] = useState(requestedStep === "identity" || requestedStep === "offer");
+  const [selectedOfferId, setSelectedOfferId] = useState('');
+  const [context, setContext] = useState<'text'|'image'|'cta'|'offer'>('text');
+  const [insertBefore, setInsertBefore] = useState<string | null>(null);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
   const moduleType = business.moduleType && business.moduleType in moduleLabels ? business.moduleType as ModuleType : null;
   const industry = editorIndustry(business.moduleType || business.industry);
@@ -81,7 +92,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
     };
     void (async () => {
       try {
-        const resolved = { ...draft, offers: draft.offers ? await Promise.all(draft.offers.map(async offer => ({ ...offer, image: await previewImage(offer.image) }))) : undefined };
+        const resolved = { ...draft, heroImage: await previewImage(draft.heroImage || ''), gallery: draft.gallery ? await Promise.all(draft.gallery.map(async image => ({...image, url: await previewImage(image.url)}))) : undefined, offers: draft.offers ? await Promise.all(draft.offers.map(async offer => ({ ...offer, image: await previewImage(offer.image) }))) : undefined };
         if (!active) return;
         previewDraft.current = resolved; setPreviewImageError('');
         frame.current?.contentWindow?.postMessage({ type: 'foru:render', channel, projectId, draft: resolved, selectedId: selectedRef.current }, window.location.origin);
@@ -110,6 +121,17 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         return;
       }
       if (busy) return;
+      if (event.data.type === 'foru:context') {
+        if (['image','cta'].includes(event.data.target)) { setSelectedId('hero'); setContext(event.data.target); setPropertiesOpen(true); }
+        else if (event.data.target === 'offer' && draftRef.current.offers?.some(offer => offer.id === event.data.id)) { setSelectedOfferId(event.data.id); setContext('offer'); setPropertiesOpen(true); }
+        return;
+      }
+      if (event.data.type === 'foru:sections') {
+        const before = event.data.beforeId;
+        if (before !== null && !draftRef.current.blocks.some(block => block.id === before)) return;
+        setInsertBefore(before); setSectionsOpen(true); return;
+      }
+      if (event.data.type === 'foru:image-drop' && event.data.target === 'hero' && event.data.file instanceof File) { void uploadPrivateCover(event.data.file); return; }
       if (event.data.type === 'foru:select' && typeof event.data.id === 'string') {
         if (event.data.id === 'hero' || draftRef.current.blocks.some(block => block.id === event.data.id)) setSelectedId(event.data.id);
         return;
@@ -119,7 +141,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
       }
       if (event.data.type === 'foru:add' && typeof event.data.preset === 'string') {
         const block = createEditorSection(business.moduleType || business.industry, event.data.preset);
-        if (block && draftRef.current.blocks.length < 8) { setDraft(current => ({ ...current, blocks: [...current.blocks, block] })); setSelectedId(block.id); setDirty(true); }
+        if (block && draftRef.current.blocks.length < 8 && (event.data.beforeId == null || draftRef.current.blocks.some(item => item.id === event.data.beforeId))) { setDraft(current => ({ ...current, blocks: insertEditorSection(current.blocks, block, event.data.beforeId ?? null) })); setSelectedId(block.id); setDirty(true); }
         return;
       }
       if (
@@ -128,35 +150,9 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         typeof event.data.value !== "string"
       )
         return;
-      const { field, value, blockId } = event.data;
-      setDraft((current) => {
-        let next = current;
-        if (["headline", "description", "cta"].includes(field))
-          next = {
-            ...current,
-            [field]: value.slice(
-              0,
-              field === "description" ? 1000 : field === "headline" ? 180 : 50,
-            ),
-          };
-        else if (
-          ["title", "body"].includes(field) &&
-          typeof blockId === "string"
-        )
-          next = {
-            ...current,
-            blocks: current.blocks.map((block) =>
-              block.id === blockId
-                ? {
-                    ...block,
-                    [field]: value.slice(0, field === "title" ? 150 : 2000),
-                  }
-                : block,
-            ),
-          };
-        return next;
-      });
-      setDirty(true);
+      const next = applyPreviewText(draftRef.current, event.data);
+      if (next !== draftRef.current) { setDraft(next); setDirty(true); }
+
     };
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);
@@ -198,6 +194,20 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
     });
     setDirty(true);
   };
+  async function uploadPrivateCover(file: File) {
+    if (uploading.current) return;
+    if (!supabase || demo) { setNotice('Inicia sesión para subir una foto.'); return; }
+    uploading.current=true; setBusy(true); setNotice('Subiendo foto de portada…');
+    try {
+      const blob = await compressImage(file);
+      const path = `${userId}/${projectId}/${crypto.randomUUID()}.jpg`;
+      const {error} = await supabase.storage.from('user-uploads').upload(path, blob, {contentType:'image/jpeg',upsert:false});
+      if (error) throw new Error('No se subió la foto. Conservamos la anterior; vuelve a intentarlo.');
+      update({heroImage:mediaReference(path),heroImageAlt:file.name.replace(/\.[^.]+$/, '').slice(0,160)});
+      setNotice('Foto en tu borrador privado. Publicar actualizará la página pública.');
+    } catch(error) { setNotice((error as Error).message); }
+    finally { uploading.current=false; setBusy(false); }
+  }
   async function saveDraft() {
     setBusy(true);
     try {
@@ -222,6 +232,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         throw new Error(
           "Usa una dirección de 3 a 60 letras minúsculas, números o guiones.",
         );
+      if (draft.ctaDesign?.url && !safeHttps(draft.ctaDesign.url)) throw new Error("El destino del botón debe ser un enlace HTTPS válido.");
       if (!draft.headline.trim())
         throw new Error("Agrega un título a tu página.");
       if (draft.whatsapp && !/^\d{8,15}$/.test(draft.whatsapp))
@@ -302,9 +313,9 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
     try {
       const blob = await compressImage(file);
       const path = `${userId}/${projectId}/${crypto.randomUUID()}.jpg`;
-      const { error } = await supabase.storage.from("site-assets").upload(path, blob, { contentType: "image/jpeg", upsert: false });
+      const { error } = await supabase.storage.from("user-uploads").upload(path, blob, { contentType: "image/jpeg", upsert: false });
       if (error) throw new Error("No se pudo subir la imagen. Puedes reintentar.");
-      const url = supabase.storage.from("site-assets").getPublicUrl(path).data.publicUrl;
+      const url = mediaReference(path);
       const alt = file.name.replace(/\.[^.]+$/, "");
       if (role === "Portada") update({ heroImage: url, heroImageAlt: alt });
       else update({ gallery: [...(draft.gallery || []).filter(photo => photo.role !== role), { role, url, alt }] });
@@ -333,31 +344,28 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   if (wizard) return <>{sourcePanel}<LandingWizard draft={draft} update={update} busy={busy} dirty={dirty} demo={demo} notice={notice} publishedUrl={publishedUrl} onSave={saveDraft} onPublish={publish} onUpload={uploadCover} onSuggest={suggestStory} /></>;
   return (
     <div className={`foru-professional-editor pe-wide-editor tk-visual-editor ${sectionsOpen ? 'pe-sections-open' : ''}`} inert={busy} aria-busy={busy}>
-      <header className="pe-topbar magic-card" style={{ padding: '1.5rem', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-suave)', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div><small>EDITOR VISUAL · {industry.name}</small>
-        <h2>Tu página, a tu manera</h2>
-        <p style={{ color: 'var(--color-texto-suave)' }}>Selecciona un texto para escribir. Arrastra secciones para cambiar su orden.</p></div>
-        <span role="status" className="magic-badge">{autosaveStatus || (dirty ? 'Cambios pendientes' : 'Borrador cargado')}</span>
+      <header className="pe-studio-bar">
+        <Link className="pe-action-link" to={`/creator-studio?project=${encodeURIComponent(projectId)}`} aria-label="Regresar a Creator Studio">← <span>Studio</span></Link>
+        <div className="pe-studio-title"><strong>{draft.name || 'Tu página'}</strong><small role="status">{busy ? 'Guardando…' : autosaveStatus || (dirty ? 'Cambios pendientes' : 'Borrador cargado')}</small></div>
+        <div className="pe-device-switch" aria-label="Tamaño de vista previa"><DSButtonSecondary aria-label="Vista escritorio" aria-pressed={viewport==='desktop'} onClick={()=>setViewport('desktop')}>▰</DSButtonSecondary><DSButtonSecondary aria-label="Vista móvil" aria-pressed={viewport==='mobile'} onClick={()=>setViewport('mobile')}>▯</DSButtonSecondary></div>
+        <DSButtonSecondary aria-label="Deshacer" disabled={busy||!history.past.length} onClick={()=>{dispatchHistory({type:'undo'});setDirty(true);}}>↶</DSButtonSecondary>
+        <DSButtonSecondary aria-label="Rehacer" disabled={busy||!history.future.length} onClick={()=>{dispatchHistory({type:'redo'});setDirty(true);}}>↷</DSButtonSecondary>
+        <DSButtonSecondary aria-label="Herramientas de página" aria-expanded={advancedOpen} onClick={()=>setAdvancedOpen(true)}>•••</DSButtonSecondary>
+        <DSButtonPrimary disabled={busy||demo} onClick={publish}>Publicar</DSButtonPrimary>
       </header>
-      <nav className="pe-context-links" aria-label="Herramientas para esta sección"><Link to={`/creator-studio?project=${encodeURIComponent(projectId)}`}>← Mi ruta creativa</Link><Link to={`/creator-studio?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Crear pieza desde esta sección</Link><Link to={`/dashboard/tools/content?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Proponer contenido</Link><Link to={`/dashboard/tools/teleprompter?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>Grabar con teleprompter</Link></nav>
-      {sourcePanel}
-      <PageAI draft={draft} disabled={dirty||busy||demo} onApply={update}/>
-      <WidgetEditor projectId={projectId} widgets={draft.widgets} onChange={widgets=>update({widgets})} disabled={busy||demo}/>
-      {notice && <p className="pe-feedback" role="status">{notice}</p>}
-      <div className="pe-commandbar magic-card" style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem', flexWrap: 'wrap', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-suave)', marginBottom: '1rem' }}>
-        <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-expanded={sectionsOpen} aria-controls="page-sections" onClick={() => setSectionsOpen(value => !value)}>☰ Secciones</DSButtonSecondary>
-        <div className="pe-preview-toolbar"><div><DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-pressed={viewport === 'desktop'} tooltip="Revisa la página con un ancho de escritorio." onClick={() => setViewport('desktop')}>Escritorio</DSButtonSecondary><DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-pressed={viewport === 'mobile'} tooltip="Revisa la página a 360 píxeles de ancho." onClick={() => setViewport('mobile')}>Móvil</DSButtonSecondary></div></div>        <div className="tk-toolbar" aria-label="Historial de edición">
-          <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" tooltip="Deshace el último cambio del borrador. No retira una publicación existente." disabled={busy || !history.past.length} onClick={() => { dispatchHistory({ type: 'undo' }); setDirty(true); }}>↶ Deshacer</DSButtonSecondary>
-          <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" tooltip="Recupera el cambio que acabas de deshacer." disabled={busy || !history.future.length} onClick={() => { dispatchHistory({ type: 'redo' }); setDirty(true); }}>↷ Rehacer</DSButtonSecondary>
-        </div>
-<DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-expanded={propertiesOpen} aria-controls="page-selection" onClick={() => setPropertiesOpen(value => !value)}>Editar selección</DSButtonSecondary>
-        <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" aria-expanded={settingsOpen} aria-controls="page-settings" onClick={() => setSettingsOpen(value => !value)}>Configurar página</DSButtonSecondary>
-        <DSButtonSecondary className="magic-button magic-button-soft" style={{ minHeight: '2.5rem', padding: '0 0.9rem', fontSize: '0.85rem' }} type="button" onClick={saveDraft} tooltip="Guarda el borrador sin cambiar la página pública.">Guardar</DSButtonSecondary>
-        <DSButtonPrimary className="magic-button magic-button-primary" type="button" disabled={busy || demo} onClick={publish} tooltip="Publica los cambios para que los vean tus visitantes.">Publicar</DSButtonPrimary>
-      </div>
-      {propertiesOpen && <DSCard id="page-selection" className="pe-selection-panel">        {selectedBlock ? <div className="pe-properties"><h3>Sección seleccionada</h3><DSInput label="Título de sección" info="Este título se muestra en tu página pública al publicar los cambios." value={selectedBlock.title} maxLength={150} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, title: event.target.value } : block) })} /><Textarea label="Texto de sección" info="Describe esta parte de tu oferta con información real de tu negocio." value={selectedBlock.body} maxLength={2000} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, body: event.target.value } : block) })} /></div> : <div className="pe-properties"><h3>Portada</h3><DSInput label="Título principal" info="La primera frase que verán tus visitantes." value={draft.headline} maxLength={180} onChange={event => update({ headline: event.target.value })} /><Textarea label="Historia de tu negocio" info="Explica qué ofreces y qué hace especial a tu negocio." value={draft.description} maxLength={1000} onChange={event => update({ description: event.target.value })} /><DSInput label="Texto del botón" info="Describe la acción que quieres que realice tu visitante." value={draft.cta} maxLength={50} onChange={event => update({ cta: event.target.value })} /></div>}
-</DSCard>}
-      <DSCard id="page-sections" as="section" hidden={!sectionsOpen} className="tk-card tk-stack tk-editor-sections">
+      {(notice || previewImageError) && <p className="pe-feedback" role={previewImageError ? 'alert' : 'status'}>{previewImageError || notice}</p>}
+      <div className="pe-selection-strip"><span>Toca lo que quieres transformar</span><DSButtonSecondary onClick={()=>{setContext('text');setPropertiesOpen(true);}}>Editar selección</DSButtonSecondary><Link className="pe-action-link" to={`/creator-studio?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>✦ Crear pieza</Link></div>
+      <EditorSheet open={advancedOpen} title="Tu página · herramientas" onClose={()=>setAdvancedOpen(false)}>
+        <div className="pe-tool-choices"><DSButtonSecondary onClick={()=>{setAdvancedOpen(false);setSectionsOpen(true);setInsertBefore(null);}}>Secciones y orden</DSButtonSecondary><DSButtonSecondary onClick={()=>{setAdvancedOpen(false);setSettingsOpen(true);}}>Configuración y contacto</DSButtonSecondary><DSButtonSecondary disabled={busy} onClick={saveDraft}>Guardar borrador ahora</DSButtonSecondary></div>
+        {sourcePanel}
+        <PageAI draft={draft} disabled={dirty||busy||demo} onApply={update}/>
+        <WidgetEditor projectId={projectId} widgets={draft.widgets} onChange={widgets=>update({widgets})} disabled={busy||demo}/>
+        <nav className="pe-tool-choices"><Link className="pe-action-link" to={`/dashboard/tools/proposal?project=${projectId}`}>Mi propuesta</Link><Link className="pe-action-link" to={`/dashboard/tools/teleprompter?project=${projectId}&section=${encodeURIComponent(selectedId)}`}>Teleprompter</Link></nav>
+      </EditorSheet>
+      <EditorSheet open={propertiesOpen} title={context==='image'?'Tu foto':context==='cta'?'Tu llamada a la acción':context==='offer'?'Tu oferta':'Editar selección'} onClose={()=>setPropertiesOpen(false)}>
+        {context==='image' ? <MediaScope.Provider value={{userId,projectId}}><ProjectImageField label="Foto de portada" value={draft.heroImage||''} onChange={heroImage=>update({heroImage})}/><DSInput label="Descripción de la foto" value={draft.heroImageAlt||''} maxLength={160} onChange={e=>update({heroImageAlt:e.target.value})}/></MediaScope.Provider> : context==='offer' ? <><p>Los precios, presentaciones y extras se editan en el catálogo original. Después revisa la actualización de tu página antes de publicar.</p><Link className="pe-action-link" to={selectedOfferId.startsWith(`${moduleType}:`)?`/modules/${moduleType}/editor?project=${projectId}&offer=${encodeURIComponent(selectedOfferId.slice(selectedOfferId.indexOf(':')+1))}`:`/dashboard/tools/proposal?project=${projectId}&offer=${encodeURIComponent(selectedOfferId)}`}>Editar en su catálogo →</Link></> : context==='cta' ? <><DSInput label="Texto del botón" value={draft.cta} maxLength={50} onChange={e=>update({cta:e.target.value})}/><DSInput label="Destino HTTPS (opcional)" type="url" value={draft.ctaDesign?.url||''} onChange={e=>update({ctaDesign:{...draft.ctaDesign,url:e.target.value}})}/><small>Sin enlace propio, se conserva el formulario de contacto de tu página.</small><DSSelect label="Alineación" value={draft.ctaDesign?.align||'start'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,align:e.target.value as 'start'|'center'|'end'}})}><option value="start">Izquierda</option><option value="center">Centro</option><option value="end">Derecha</option></DSSelect><DSSelect label="Color del botón" value={draft.ctaDesign?.tone||'violet'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,tone:e.target.value as 'violet'|'mint'|'gold'}})}><option value="violet">Violeta</option><option value="mint">Mint</option><option value="gold">Dorado</option></DSSelect></> : <DSCard id="page-selection" className="pe-selection-panel">        {selectedBlock ? <div className="pe-properties"><h3>Sección seleccionada</h3><DSInput label="Título de sección" info="Este título se muestra en tu página pública al publicar los cambios." value={selectedBlock.title} maxLength={150} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, title: event.target.value } : block) })} /><Textarea label="Texto de sección" info="Describe esta parte de tu oferta con información real de tu negocio." value={selectedBlock.body} maxLength={2000} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, body: event.target.value } : block) })} /></div> : <div className="pe-properties"><h3>Portada</h3><DSInput label="Título principal" info="La primera frase que verán tus visitantes." value={draft.headline} maxLength={180} onChange={event => update({ headline: event.target.value })} /><Textarea label="Historia de tu negocio" info="Explica qué ofreces y qué hace especial a tu negocio." value={draft.description} maxLength={1000} onChange={event => update({ description: event.target.value })} /><DSInput label="Texto del botón" info="Describe la acción que quieres que realice tu visitante." value={draft.cta} maxLength={50} onChange={event => update({ cta: event.target.value })} /></div>}
+</DSCard>}</EditorSheet>
+      <EditorSheet open={sectionsOpen} title="Añade y organiza" onClose={()=>setSectionsOpen(false)}><DSCard id="page-sections" as="section" hidden={!sectionsOpen} className="tk-card tk-stack tk-editor-sections">
         <h2>Secciones <InfoIcon text="Arrastra una sección para reordenarla o usa Subir y Bajar. Selecciónala para editar sus propiedades." /></h2>
         <DSButtonSecondary type="button" aria-pressed={selectedId === 'hero'} tooltip="Edita el título, la historia y el botón principal." onClick={() => setSelectedId('hero')}>Portada</DSButtonSecondary>
         <p>Arrastra para ordenar o usa las flechas.</p>
@@ -411,7 +419,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
           </article>
         ))}
         <h3>Bloques para {industry.name.toLowerCase()}</h3>
-        {sectionPresets(business.moduleType || business.industry).map(preset => <DSButtonSecondary key={preset.key} type="button" draggable={!busy && draft.blocks.length < 8} onDragStart={event => { event.dataTransfer.setData('application/foru-section', preset.key); event.dataTransfer.effectAllowed = 'copy'; }} disabled={busy || draft.blocks.length >= 8} tooltip={preset.description} onClick={() => { const block = createEditorSection(business.moduleType || business.industry, preset.key); if (block) { update({ blocks: [...draft.blocks, block] }); setSelectedId(block.id); } }}>＋ {preset.title}</DSButtonSecondary>)}
+        {sectionPresets(business.moduleType || business.industry).map(preset => <DSButtonSecondary key={preset.key} type="button" draggable={!busy && draft.blocks.length < 8} onDragStart={event => { event.dataTransfer.setData('application/foru-section', preset.key); event.dataTransfer.effectAllowed = 'copy'; }} disabled={busy || draft.blocks.length >= 8} tooltip={preset.description} onClick={() => { const block = createEditorSection(business.moduleType || business.industry, preset.key); if (block) { update({ blocks: insertEditorSection(draft.blocks, block, insertBefore) }); setSelectedId(block.id); setSectionsOpen(false); } }}><span className="pe-section-miniature" aria-hidden="true">▰<br/>━━<br/>━━━━</span>{preset.title}</DSButtonSecondary>)}
         <DSButtonSecondary
           disabled={busy || draft.blocks.length >= 8}
           onClick={() =>
@@ -421,7 +429,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
                 {
                   id: crypto.randomUUID(),
                   title: "Nueva sección",
-                  body: "Escribe aquí lo que quieres compartir.",
+                  body: "",
                 },
               ],
             })
@@ -430,7 +438,8 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
           Agregar sección
         </DSButtonSecondary>
       </DSCard>
-      {moduleType && draft.catalogSource !== 'proposal' && <details className="pe-catalog-panel"><summary>Oferta de tu negocio {draft.catalogSource === 'module' ? '· vinculada' : ''}</summary><p>{draft.catalogSource === 'module' ? 'Al publicar consultaremos los precios y la disponibilidad guardados. La página pública solo cambia cuando publicas.' : 'Puedes usar el catálogo de tu negocio en esta página. Primero revisa los cambios en la vista previa.'}</p><Link to={`/modules/${moduleType}/editor?project=${encodeURIComponent(projectId)}`}>Editar mi oferta</Link><DSButtonSecondary type="button" onClick={() => {
+      </EditorSheet>
+      {settingsOpen && moduleType && draft.catalogSource !== 'proposal' && <details className="pe-catalog-panel"><summary>Oferta de tu negocio {draft.catalogSource === 'module' ? '· vinculada' : ''}</summary><p>{draft.catalogSource === 'module' ? 'Al publicar consultaremos los precios y la disponibilidad guardados. La página pública solo cambia cuando publicas.' : 'Puedes usar el catálogo de tu negocio en esta página. Primero revisa los cambios en la vista previa.'}</p><Link to={`/modules/${moduleType}/editor?project=${encodeURIComponent(projectId)}`}>Editar mi oferta</Link><DSButtonSecondary type="button" onClick={() => {
         try {
           const items = nativeOffers(moduleType, docs[`module-${moduleType}`]);
           if ((draft.menuItems?.length || draft.offers?.length) && draft.catalogSource !== 'module' && !window.confirm('¿Reemplazar los productos de esta landing por el catálogo guardado? Puedes deshacer antes de publicar.')) return;
@@ -438,8 +447,9 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
           setNotice(`${items.length} ofertas del catálogo en la vista previa. Guarda o publica cuando estén listas.`);
         } catch (error) { setNotice((error as Error).message); }
       }}>{draft.catalogSource === 'module' ? 'Actualizar vista previa del catálogo' : 'Usar mi catálogo guardado'}</DSButtonSecondary></details>}
-      <section className="tk-editor-preview tk-stack magic-card" style={{ padding: '1rem', border: '1px solid rgba(212, 212, 212, 0.76)', borderRadius: 'var(--border-radius-grande)', background: 'var(--color-superficie)', boxShadow: 'var(--sombra-magica)' }}>
-        <p style={{ color: 'var(--color-texto-suave)', fontSize: '0.9rem', textAlign: 'center' }}>Haz clic sobre cualquier título o párrafo para editarlo.</p>
+      {!docs.landing&&!dirty&&<section className="pe-start-page"><h2>Tu página empieza contigo</h2><p>Trae lo que ya definiste o comienza sobre este lienzo vacío.</p><Link className="pe-action-link" to={`/dashboard/tools/proposal?project=${projectId}`}>Usar mi propuesta →</Link><DSButtonSecondary onClick={()=>void saveDraft()}>Empezar con esta estructura vacía</DSButtonSecondary></section>}
+      <section className="tk-editor-preview pe-live-stage">
+
         {previewImageError && <p role="alert">{previewImageError}</p>}
         <div className={`pe-canvas pe-canvas-${viewport}`}><iframe
           ref={frame}
@@ -452,7 +462,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
             (dirty ? "Cambios pendientes" : "Borrador guardado")}
         </p>
       </section>
-      <DSCard id="page-settings" as="section" hidden={!settingsOpen} className="tk-card tk-stack tk-editor-tools">
+      <EditorSheet open={settingsOpen} title="Configuración de tu página" onClose={()=>setSettingsOpen(false)}><DSCard id="page-settings" as="section" hidden={!settingsOpen} className="tk-card tk-stack tk-editor-tools">
         <h2>Configuración de la página</h2>
         <h3>Datos de la página</h3>
         <label><input type="checkbox" checked={draft.bookingEnabled === true || (draft.bookingEnabled === undefined && draft.offers === undefined)} disabled={busy} onChange={e => update({ bookingEnabled:e.target.checked })} /> Mostrar agenda de reservas (requiere disponibilidad configurada)</label>
@@ -478,47 +488,8 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
             maxLength={60}
             onChange={(e) => update({ slug: e.target.value.toLowerCase() })}
           />
-        <DSInput label="Foto de portada" info="Sube una imagen JPG, PNG o WebP autorizada. El archivo se almacenará públicamente."
-            disabled={busy || demo}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file || !supabase) return;
-              setBusy(true);
-              try {
-                const blob = await compressImage(file);
-                const path =
-                  userId + "/" + projectId + "/" + crypto.randomUUID() + ".jpg";
-                const { error } = await supabase.storage
-                  .from("site-assets")
-                  .upload(path, blob, {
-                    contentType: "image/jpeg",
-                    upsert: false,
-                  });
-                if (error) throw new Error("No se pudo subir la imagen.");
-                const { data } = supabase.storage
-                  .from("site-assets")
-                  .getPublicUrl(path);
-                update({
-                  heroImage: data.publicUrl,
-                  heroImageAlt: file.name.replace(/\.[^.]+$/, ""),
-                });
-                setNotice(
-                  "Imagen subida. Publica para mostrarla en tu página.",
-                );
-              } catch (error) {
-                setNotice((error as Error).message);
-              } finally {
-                setBusy(false);
-                e.target.value = "";
-              }
-            }}
-          />
-        <small>
-          La imagen de portada será pública. Usa una foto autorizada de tu
-          negocio.
-        </small>
+        <MediaScope.Provider value={{userId,projectId}}><ProjectImageField label="Foto de portada" value={draft.heroImage||''} onChange={heroImage=>update({heroImage})}/></MediaScope.Provider>
+        <small>La foto se conserva en tu biblioteca privada. Publicar prepara su versión pública.</small>
         {draft.heroImage && (
           <>
             <DSInput label="Descripción de la imagen" info="Describe la foto para quienes usan lectores de pantalla."
@@ -608,7 +579,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
             {notice}
           </p>
         )}
-      </DSCard>
+      </DSCard></EditorSheet>
     </div>
   );
 }

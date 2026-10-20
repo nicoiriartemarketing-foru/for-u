@@ -351,3 +351,19 @@ Prueba autenticada desde idea QA: primero devolvió configuración pendiente; tr
 - Prueba real de Gemini después de guardar la clave, y recorrido completo contenido/guion/teleprompter con proveedor.
 - Validación específica de todos los rubros/aula y todas las herramientas; aprobación visual de la propietaria. No declarar terminado todo el plan por esta revisión.
 - Aislamiento remoto con segunda sesión autorizada; pruebas físicas nuevas si cambia 3D; despliegue Hostinger y republicación de negocios reales fuera de esta sesión.
+
+
+## 20 octubre 2026 — Editor como centro creativo (en ejecución)
+
+Plan aprobado: A editor directo y controles contextuales → B creación guiada y propuesta visual → C captura de texto/fotos/audio e interpretación explícita → D composiciones conectadas a landing → E extensión y verificación integrada. Sustituye el orden previo que comenzaba por formularios. La página es la superficie de trabajo; controles secundarios bajo selección. Se conserva todo el estado y la publicación solo cambia con Publicar. INTI CHURIN es referencia de interacción, de solo lectura.
+
+Primer hito: oferta manual → foto → landing editable → guardar → recargar, independiente de Gemini. Pruebas QA, Node20/Vite4/Tailwind3, 360/768/1440 y prueba física iPhone16/Safari por separado. No incluye publicar negocios reales, Hostinger o facturación. Gemini real/audio y accesos externos permanecen pendientes hasta evidencia. Este apartado registra trabajo iniciado, no cierre ni aprobación visual.
+
+### Entrega A — avance verificado el 20 de octubre
+
+- Editor con página principal, barra compacta y herramientas/configuración recogidas. Panel accesible con Escape, foco contenido y retorno; panel inferior en móvil. Fotos, CTA y ofertas tienen selección específica; las ofertas abren su fuente sin precio independiente.
+- Texto directo conserva saltos de línea. Inserción entre bloques valida identificadores y posición; secciones nuevas no guardan instrucciones de ejemplo como contenido comercial. Reordenado por flechas y arrastre existente. CTA tiene configuración aditiva v1 (destino HTTPS, alineación, violeta/mint/dorado); páginas antiguas no necesitan conversión.
+- La foto del borrador usa biblioteca privada. Previsualización resuelve portada, galería y ofertas; Publicar conserva la preparación pública existente. Creator Studio también resuelve portada privada.
+- QA Studio4U `135fcc67-e2e5-4d2d-be7e-d290caf98605`: edición de título/2 párrafos, CTA centrado mint, inserción de Nuestra historia y subida mediante flecha; carga de PNG técnico QA a biblioteca, selección como portada, descripción y recarga recuperadas. Se conserva Café S/6, Alfajor S/4, presentaciones y extras técnicos. No son precios del negocio real.
+- Ruta pública `/s/qa-studio4u-propuesta` conserva título «edición manual conservada», CTA anterior y ninguna portada nueva después de guardar el borrador. Captura `docs/evidence/2026-10-20/publicacion-conservada.png`. Aún no se republicó QA en esta ejecución ni se verificó una sesión anónima independiente.
+- Node20.20.2/Vite4: TypeScript y build pasan; revisión visual móvil sigue en ejecución. Pruebas de este tramo y registros finales se completan abajo. No se considera aprobada visualmente por la usuaria.

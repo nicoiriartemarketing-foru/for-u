@@ -45,6 +45,7 @@ export function parseSiteData(value: unknown): LandingDraft | null {
     headline: text("headline", 180),
     description: text("description", 1000),
     cta: text("cta", 50, "Consultar"),
+    ctaDesign: parseCtaDesign(data.ctaDesign),
     template: text("template", 40, "services"),
     color: design===2 && /^#[0-9a-f]{6}$/i.test(text("color",7))?text("color",7):"#0A0A0A",
     whatsapp: /^\d{8,15}$/.test(text("whatsapp", 15))
@@ -81,4 +82,11 @@ export function parseSiteData(value: unknown): LandingDraft | null {
       : [],
     published: true,
   };
+}
+
+export function parseCtaDesign(value: unknown): LandingDraft['ctaDesign'] {
+ if(!value||typeof value!=='object'||Array.isArray(value))return undefined;
+ const data=value as Record<string,unknown>;
+ if(data.version!==undefined&&data.version!==1)return undefined;
+ return {version:1,url:typeof data.url==='string'?safeHttps(data.url.slice(0,1000)):'',align:['start','center','end'].includes(String(data.align))?data.align as 'start'|'center'|'end':'start',tone:['violet','mint','gold'].includes(String(data.tone))?data.tone as 'violet'|'mint'|'gold':'violet'};
 }

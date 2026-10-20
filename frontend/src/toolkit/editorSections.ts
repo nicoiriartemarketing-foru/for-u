@@ -18,10 +18,17 @@ export function editorIndustry(industry: string) {
 export function sectionPresets(industry: string): SectionPreset[] { return [...editorIndustry(industry).sections, ...common]; }
 export function createEditorSection(industry: string, key: string): LandingBlock | null {
  const preset = sectionPresets(industry).find(item => item.key === key);
- return preset ? { id: crypto.randomUUID(), title: preset.title, body: preset.body } : null;
+ return preset ? { id: crypto.randomUUID(), title: preset.title, body: '' } : null;
 }
 export function reorderEditorSections(blocks: LandingBlock[], fromId: string, toId: string): LandingBlock[] {
  const from = blocks.findIndex(block => block.id === fromId), to = blocks.findIndex(block => block.id === toId);
  if (from < 0 || to < 0 || from === to) return blocks;
  const next = [...blocks]; const [item] = next.splice(from, 1); next.splice(to, 0, item); return next;
+}
+/** beforeId is an existing destination, never a browser-supplied object path. */
+export function insertEditorSection(blocks: LandingBlock[], block: LandingBlock, beforeId: string | null): LandingBlock[] {
+ if (blocks.length >= 8 || blocks.some(item=>item.id===block.id)) return blocks;
+ const index=beforeId===null?blocks.length:blocks.findIndex(item=>item.id===beforeId);
+ if(index<0)return blocks;
+ const next=[...blocks];next.splice(index,0,block);return next;
 }

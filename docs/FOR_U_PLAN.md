@@ -160,3 +160,10 @@ La entrega actual unifica el sistema de controles y simplifica los recorridos, i
 ## Dirección aprobada — 15 de octubre de 2026
 
 La instrucción vigente es «Tu negocio toma forma: ideas, mapa, creación y publicación», incluida la composición determinista de piezas desde cada sección de la landing. Su implementación y límites se siguen en FOR_U_CREATIVE_EXPERIENCE.md. La carita da ayuda local y captura ideas; Gemini se invoca explícitamente para clasificar y para operaciones creativas estructuradas. Imágenes generativas desactivadas, sin gasto nuevo. Conservar todas las entregas previas y su evidencia; no marcar cerrado el plan por una muestra de interfaz.
+
+
+## 20 octubre 2026 — Editor como centro creativo (en ejecución)
+
+Plan aprobado: A editor directo y controles contextuales → B creación guiada y propuesta visual → C captura de texto/fotos/audio e interpretación explícita → D composiciones conectadas a landing → E extensión y verificación integrada. Sustituye el orden previo que comenzaba por formularios. La página es la superficie de trabajo; controles secundarios bajo selección. Se conserva todo el estado y la publicación solo cambia con Publicar. INTI CHURIN es referencia de interacción, de solo lectura.
+
+Primer hito: oferta manual → foto → landing editable → guardar → recargar, independiente de Gemini. Pruebas QA, Node20/Vite4/Tailwind3, 360/768/1440 y prueba física iPhone16/Safari por separado. No incluye publicar negocios reales, Hostinger o facturación. Gemini real/audio y accesos externos permanecen pendientes hasta evidencia. Este apartado registra trabajo iniciado, no cierre ni aprobación visual.

@@ -74,7 +74,7 @@ function PublicSiteView({ slug }: { slug?: string }) {
         hostSlug={slug}
         onCTA={() => {
           click();
-          form.current?.scrollIntoView({ behavior: "smooth" });
+          if (!draft.ctaDesign?.url) form.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? "auto" : "smooth" });
         }}
       >
         {slug&&<CommerceCheckout slug={slug} sourceKind="toolkit"/>}

@@ -1,3 +1,4 @@
+import '../../toolkit/professionalEditor.css';
 import { Link } from 'react-router-dom';
 import { ButtonSecondary as Button } from '../../components/ui/DesignSystem';
 import type { ForUActiveProject } from '../../stores/useActiveProjectsStore';
@@ -41,7 +42,7 @@ function ProjectCard({ project }: { project: ForUActiveProject }) {
   const { state, remember } = useWorkspaceFocus();
   const last = projectDestination(state.data, project.id);
   const saved = entry?.loaded && entry.taskRevision !== null;
-  return <article className="workspace-project-card magic-card"><small>{moduleLabels[type]}</small><h3>{project.name}</h3><p>{entry?.error ? 'No se pudo consultar el progreso.' : saved ? `${entry.tasks.tasks.filter(t => t.done).length} de ${entry.tasks.tasks.length} pasos completados${entry.dirty ? ' · cambios pendientes' : ''}` : entry?.loaded ? 'Tu guía inicial está lista para adaptar.' : 'Cargando progreso…'}</p><nav aria-label={`Acciones de ${project.name}`}><Link className="magic-button-primary" to={resumePath(last, type)} onClick={() => remember(last)}>Continuar →</Link><Link to={`/creator-studio?project=${project.id}`} onClick={() => remember({ projectId: project.id, tool: 'studio' })}>Creator Studio</Link></nav></article>;
+  return <article className="workspace-project-card magic-card"><small>{moduleLabels[type]}</small><h3>{project.name}</h3><p>{entry?.error ? 'No se pudo consultar el progreso.' : saved ? `${entry.tasks.tasks.filter(t => t.done).length} de ${entry.tasks.tasks.length} pasos completados${entry.dirty ? ' · cambios pendientes' : ''}` : entry?.loaded ? 'Tu guía inicial está lista para adaptar.' : 'Cargando progreso…'}</p><nav aria-label={`Acciones de ${project.name}`}><Link className="magic-button-primary" to={resumePath(last, type)} onClick={() => remember(last)}>Continuar →</Link><Link className="pe-action-link" to={`/creator-studio?project=${project.id}`} onClick={() => remember({ projectId: project.id, tool: 'studio' })}>Creator Studio</Link></nav></article>;
 }
 function UnavailableTask({ reference, title = 'Este paso ya no está disponible o pertenece a un proyecto que no se pudo cargar.' }: { reference: TaskReference; title?: string }) {
   const { state, toggle } = useWorkspaceFocus();
