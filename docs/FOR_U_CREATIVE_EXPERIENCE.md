@@ -20,16 +20,19 @@ Nuevas operaciones autenticadas en toolkit-ai: `classify` y `studio` (`content`,
 
 Se conserva cuota de 30/h, caché de cinco minutos por revisión/operación, exclusión de duplicados entre instancias y logs solo de uso. La operación forma parte de la clave de caché para no confundir composición y texto. Sin llamadas al abrir pantallas, fallback de pago, caché explícita de pago o generación de imágenes. La clave local no configura Supabase.
 
-Falta completar la activación externa: confirmar proyecto Google sin facturación y cuota disponible; configurar personalmente secreto en Supabase, comprobar modelo real, desplegar función completa y probar respuestas reales. No se ha leído ni mostrado la clave, no se activó facturación y no se simula éxito. La usuaria pidió instrucciones para comprobar AI Studio; se enviaron. El cierre end-to-end Gemini queda pendiente hasta verificarlo.
+La usuaria confirmó nivel gratuito en Google AI Studio. El 19 de octubre se desplegó toolkit-ai y se configuraron proveedor Gemini, modelo gemini-3.5-flash-lite, confirmación del nivel gratuito y funciones pagadas desactivadas. Se desactivó el verificador JWT heredado con autorización específica; auth.getUser y propiedad siguen comprobándose en el código. Falta guardar personalmente GEMINI_API_KEY en Supabase y probar respuestas reales. La documentación oficial del modelo y su tabla de precios gratuitos se comprobaron el 19 de octubre. No se ha leído ni mostrado la clave, no se activó facturación y no se simula éxito. La usuaria pidió instrucciones para comprobar AI Studio; se enviaron. El cierre end-to-end Gemini queda pendiente hasta verificarlo.
 
 ## Límites que siguen abiertos
 
-- Bandeja personal independiente de proyectos: no implementada todavía. toolkit_documents exige proyecto UUID no nulo y FK de propietario; no se usará un UUID ficticio ni se ligará ocultamente una bandeja personal a un proyecto que pueda borrarse. Hace falta confirmar almacenamiento por cuenta y preparar un cambio acotado si procede.
+- Bandeja personal independiente implementada en foru_account_documents, con RLS por cuenta y revisión. Migración 29 autorizada y tabla remota confirmada el 19 de octubre. Captura, guardado, recarga y asignación explícita al proyecto QA comprobados; queda pendiente aislamiento remoto con segunda cuenta. No usa un proyecto ficticio.
 - Verificación completa de todos los rubros, aula de cursos y todas las herramientas: no cerrada por cambiar controles comunes. Validar recorridos específicos.
-- Compositor utiliza borrador guardado; todavía no ofrece elegir la publicación como fuente alternativa. No afirmar que incluye esa selección.
-- Los diseños del carrusel conservan grupo y diapositiva; la exportación actual es por imagen, no un archivo conjunto. Logo como capa gráfica independiente y variantes visuales adicionales siguen pendientes.
+- Compositor permite borrador guardado o última publicación como fuente; conserva modo y huella de revisión. Selección de fuente publicada, composición Café QA, guardado, recarga y PNG comprobados el 19 de octubre; ver registro.
+- Los diseños del carrusel conservan grupo y diapositiva; la exportación actual es por imagen, no un archivo conjunto. Logo como capa gráfica independiente y deshacer/rehacer/variantes están implementados; queda validar todos sus recorridos de interfaz.
 - Ayuda preparada no entiende cualquier pregunta libre; búsqueda sin coincidencias ofrece guardar la duda. No se presenta como conversación IA.
 - Autoguardado de cada respuesta inicial aún no existe: se guarda explícitamente, manteniendo edición pendiente en la sesión de trabajo. La recarga advierte si hay cambios pendientes.
 - No se declara completado todo el plan mientras falten esos recorridos y la prueba externa. No se desplegó Hostinger ni se publicaron negocios reales en esta revisión.
 
 La evidencia de navegador y pruebas se añade al registro al completar las comprobaciones.
+
+
+El registro del 19 de octubre documenta la recuperación de entorno y las comprobaciones remotas/UI. Gemini Flash-Lite figura con structured outputs y nivel gratuito en la documentación oficial consultada: [modelo](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite), [precios](https://ai.google.dev/gemini-api/docs/pricing). Esto no sustituye probar la cuota y respuesta de la clave concreta.

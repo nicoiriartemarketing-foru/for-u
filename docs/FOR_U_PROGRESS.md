@@ -325,3 +325,29 @@ La propietaria rechazó la primera muestra por apariencia neutra y exceso de opc
 - Commit IA: `721f13a`. Se conserva separada su activación. También se aclara que el Frasco de Ideas histórico usa guía local, no Gemini: etiquetas honestas y retirada de la espera artificial de 1.2s; se mantienen sus nodos y comportamiento.
 
 - Se pasó el UUID explícito del contexto de cada herramienta a las llamadas de IA y se descartan respuestas tardías tras cambiar de cuenta/proyecto. No se usa el nombre comercial enviado por el navegador como autorización.
+
+## 19 de octubre de 2026 — recuperación del entorno y recorrido creativo
+
+Se conserva el commit humano `0f2a7c0` que contiene la implementación previa. La vista abierta intentaba cargar un CSS antiguo y el servidor temporal anterior ya no existía. Se preparó `/tmp/foru-oct19` desde archivos identificados del repositorio, sin sustituir el checkout; iCloud tenía archivos y dependencias dataless. Descarga de archivos existentes y dependencias en temporal, Node20.20.2, Vite4.5.3; no se modificó package-lock ni se añadió una dependencia al producto. Preview restaurada en 127.0.0.1:4173.
+
+### Comprobado en esta sesión
+
+- Diagnóstico remoto de solo lectura: `foru_account_documents` y `toolkit_take_ai_request()` existen. No se reaplicó migración 29 ni se ejecutaron migraciones históricas.
+- Bandeja personal: captura técnica «QA · portada de café desde mi landing · 19 octubre» → guardar → recargar → recuperar el texto → asignar explícitamente a QA Ruta creativa `b44bc1dc-0837-4018-945e-557c7cbf6185`. El texto original aparece una sola vez en el proyecto; la bandeja personal confirma el traslado. No se usó IA, ni se modificaron tareas o negocios reales. Se corrigieron estados Guardando/Asignando y selección de ámbito accesible.
+- Mapa QA Studio4U `135fcc67-e2e5-4d2d-be7e-d290caf98605`: ramas y tareas existentes, Marketing abre modal; seleccionar tarea muestra proceso y destino con el mismo UUID. Escape cierra y devuelve foco a Marketing. Anchos efectivos del mapa 360/768/1440, scrollWidth igual a innerWidth; se corrigieron desbordamiento del buscador móvil y capa que tapaba el selector de proyecto en escritorio. Evidencias en docs/evidence/2026-10-19. Las ventanas nativas existentes no siempre obedecen al viewport: se contrastó el ancho efectivo antes de afirmar cada tamaño.
+- Creator Studio: elegir Última publicación → Café QA → 4:5 → preparar sin IA → guardar diseño `7b176840-436d-454a-92cc-c740805dc03e` → editar título/texto → guardar → recargar. Recuperó «Café QA · desde mi página» y CTA/identidad. Exportación real PNG1080×1350 en Downloads/restaurant-portrait (2).png, inspeccionada: usa imagen y precios técnicos QA, no datos comerciales inventados. Ninguna publicación se actualizó. Se corrigieron el aviso de vacío durante carga de publicación, invalidación de propuestas al cambiar formato/sección, alcance de la fuente por cuenta/proyecto, escala del texto en móvil y pérdida de saltos de línea al editar directamente. La prueba se repitió con dos párrafos: guardado, recarga y PNG conservaron el salto. Editor comprobado en anchos efectivos360/768/1440 sin overflow horizontal.
+- TypeScript y build de producción pasan en Node20; 177/177 pruebas frontend pasan. Los resultados controlados de pruebas no se cuentan como Gemini real. No se repitió el benchmark físico de mundo porque no se cambió su renderer.
+
+### IA externa: avance comprobado y bloqueo concreto
+
+La usuaria confirmó «nivel gratuito» en Google AI Studio. Documentación oficial comprobada: https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite y https://ai.google.dev/gemini-api/docs/pricing . Se desplegó `toolkit-ai` desde los cuatro archivos del repo reunidos sin secretos; copia completa27957 caracteres verificada antes de Deploy. Se desactivó Verify JWT with legacy secret con autorización específica de la usuaria; el código conserva auth.getUser, propietario, revisión, cuota y validación JSON. No se modificaron verificadores de otras funciones.
+
+Se configuraron únicamente valores no credenciales: FORU_AI_PROVIDER=gemini, GEMINI_MODEL=gemini-3.5-flash-lite, FORU_AI_FREE_TIER_CONFIRMED=true, FORU_AI_PAID_FEATURES_ENABLED=false. Supabase confirmó sus nombres. No se activó facturación ni imágenes generativas. La pantalla de secretos inicialmente no tenía secretos personalizados; se dejó abierta para que la usuaria guarde personalmente GEMINI_API_KEY. No se leyó ni trasladó la clave local.
+
+Prueba autenticada desde idea QA: primero devolvió configuración pendiente; tras configurar parámetros devolvió «Falta configurar Gemini en el servidor». La idea permaneció guardada, sin clasificar ni crear tareas. Esto verifica el rechazo recuperable y el acceso a la fuente, NO una respuesta del proveedor. Falta la clave remota y una llamada real de clasificación/contenido/guion para cerrar IA.
+
+### Continúa pendiente
+
+- Prueba real de Gemini después de guardar la clave, y recorrido completo contenido/guion/teleprompter con proveedor.
+- Validación específica de todos los rubros/aula y todas las herramientas; aprobación visual de la propietaria. No declarar terminado todo el plan por esta revisión.
+- Aislamiento remoto con segunda sesión autorizada; pruebas físicas nuevas si cambia 3D; despliegue Hostinger y republicación de negocios reales fuera de esta sesión.

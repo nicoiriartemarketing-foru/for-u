@@ -22,3 +22,23 @@
 @media(min-width:1024px){.workspace-shell-immersive .workspace-top{position:absolute;left:220px;top:15px;z-index:26;border:0;background:none!important;padding:0!important;box-shadow:none;width:240px}.workspace-shell-immersive .workspace-top select{max-width:230px}.foru-experience.foru-experience .dashboard-home>.world-intro{max-width:60%;min-height:72px}.foru-experience.foru-experience .dashboard-home>.project-area-intro{margin-top:-60px;margin-bottom:18px;min-height:42px}.mind-map-space{min-height:525px}.mind-map-space .mind-branch h3{font-size:20px}}
 @media(max-width:767px){.mind-map-space{min-height:0;margin-top:16px}.mind-map-space .mind-map-center{position:relative;left:auto;top:auto;transform:none;margin:0 auto 20px;width:110px;height:110px;padding:12px}.mind-map-space .mind-map-center h2{font-size:15px}.mind-map-space .mind-connections{display:none}.mind-map-space .mind-branches{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.mind-map-space .mind-branch header{border-radius:24px;padding:12px;display:grid;gap:4px;text-align:center}.mind-map-space .mind-branch header>button:first-child{justify-content:center;gap:6px}.mind-map-space .mind-branch h3{font-size:17px;flex-basis:100%}.mind-map-space .mind-branch header small{font-size:12px}.mind-map-space .mind-branch header>.ds-button{justify-self:center}.mind-map-space .mind-branch>div{display:none}.mind-map-space.is-focused .mind-branch>div{display:grid;margin-left:14px}.mind-map-space.is-focused .mind-branches{grid-template-columns:1fr}.mind-map-space.is-focused .mind-branch header>button:first-child{justify-content:flex-start}.mind-map-space.is-focused .mind-branch h3{flex-basis:auto}}
 .mind-fact{font-size:12px;line-height:1.4;color:#62596e;margin:8px 20px;max-width:95%;overflow-wrap:anywhere}.mind-fact small{font-weight:650;margin-right:6px;color:#563080}@media(max-width:767px){.mind-fact{margin:8px 4px;font-size:11px}.mind-fact small{display:block}}
+/* Compact navigation must fit even when shared button styles load later. */
+@media(max-width:767px){
+.foru-experience .workspace-shell-immersive .workspace-sidebar{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:6px;min-width:0}
+.foru-experience .workspace-shell-immersive .workspace-sidebar nav{min-width:0;margin:0}
+.foru-experience .workspace-shell-immersive .workspace-sidebar nav .workspace-tool-search{width:44px!important;min-width:44px!important;max-width:44px;padding:8px!important;font-size:0!important;overflow:hidden}
+.foru-experience .workspace-shell-immersive .workspace-sidebar nav .workspace-tool-search span{display:none}
+.foru-experience .workspace-shell-immersive .workspace-sidebar nav .workspace-tool-search::before{content:'⌕';font-size:22px}
+.foru-experience .workspace-shell-immersive .workspace-account-menu{margin:0}
+.foru-experience .workspace-shell-immersive .workspace-sidebar .workspace-brand{min-width:0;overflow:hidden}
+}
+@media(max-width:380px){.workspace-sidebar .foru-original-logo{width:92px;height:48px}.workspace-sidebar .foru-original-logo img{width:155px!important;height:155px!important;left:-22px;top:-56px}}
+@media(min-width:1024px){.foru-experience .workspace-shell-immersive .workspace-top{z-index:41}}
+/* Scale the artwork, rather than judging overflow with desktop text on a phone. */
+.foru-experience .content-creator .creator-preview{container-type:inline-size}
+.foru-experience .content-creator .creator-preview>div{padding:4cqw}
+.foru-experience .content-creator .creator-preview h2{font-size:clamp(14px,5cqw,32px);line-height:1.15;margin:1.5cqw 0}
+.foru-experience .content-creator .creator-preview p{font-size:clamp(11px,3cqw,18px);line-height:1.4;margin:1.5cqw 0}
+.foru-experience .content-creator .creator-preview small{font-size:clamp(10px,2.4cqw,14px)}
+.foru-experience .content-creator .creator-preview strong{font-size:clamp(11px,3cqw,18px);margin-top:1.5cqw}
+.foru-experience .area-modal-backdrop{z-index:6000}

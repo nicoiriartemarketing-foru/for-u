@@ -60,3 +60,8 @@ Se verificaron superficies reales con gradiente (computed backgroundImage), cuat
 La prueba física previa de FPS no se repite como si validara esta nueva interfaz: no cambió el renderer 3D; falta repetir en teléfono si aparecen problemas con la capa visual. Captura actual: `/tmp/foru-delivery1/foru-focus-ready.jpg`.
 
 El Frasco de Ideas histórico sigue usando reglas locales (no consume Gemini); sus etiquetas se corrigieron para indicarlo y se retiró una espera artificial. No se cambiaron los nodos antiguos ni sus recompensas.
+
+
+## Reconciliación — 19 de octubre de 2026
+
+Las notas anteriores describen la revisión previa. Logo y animación originales ya fueron recibidos e integrados; navegación horizontal, mapa conectado y bandeja personal están implementados. La usuaria confirmó nivel gratuito. toolkit-ai se desplegó hoy con autenticación interna autorizada y proveedor Gemini configurado, funciones pagadas desactivadas. La clave local sigue sin equivaler al secreto remoto: falta GEMINI_API_KEY y la prueba real. Ver FOR_U_CREATIVE_EXPERIENCE.md y el registro más reciente; no interpretar los antiguos pendientes como el estado actual.
