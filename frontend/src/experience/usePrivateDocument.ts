@@ -23,7 +23,7 @@ export function usePrivateDocument<T>(user:string,project:string,kind:ModuleDocu
   try{const revision=await (kind==='personal-ideas'?saveAccountIdeas(user,parse(before.data),before.revision):saveModuleDocument(user,project,kind,parse(before.data),before.revision));patch({revision,dirty:snapshot().data!==before.data});return snapshot().data===before.data;}
   catch(e){const message=(e as Error).message;patch({error:message,conflict:/conflict|otra pestaña|otra versión|otra ventana|cambió/i.test(message)});return false;}finally{patch({busy:false,operation:null});}
  }
- useEffect(()=>{if(!snapshot().loaded)void load();const refresh=()=>{if(!document.hidden)void load();};window.addEventListener('focus',refresh);window.addEventListener('foru:documents-updated',refresh);const timer=setInterval(refresh,15000);return()=>{window.removeEventListener('focus',refresh);window.removeEventListener('foru:documents-updated',refresh);clearInterval(timer);};},[key]);
+ useEffect(()=>{void load();const refresh=()=>{if(!document.hidden)void load();};window.addEventListener('focus',refresh);window.addEventListener('foru:documents-updated',refresh);const timer=setInterval(refresh,15000);return()=>{window.removeEventListener('focus',refresh);window.removeEventListener('foru:documents-updated',refresh);clearInterval(timer);};},[key]);
  useEffect(()=>{if(!entry.dirty)return;const guard=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue='';};window.addEventListener('beforeunload',guard);return()=>window.removeEventListener('beforeunload',guard);},[entry.dirty]);
  return {...entry,change:(data:T)=>{if(snapshot().loaded)patch({data,dirty:true});},save,reload:()=>load(),recover:()=>load(true)};
 }

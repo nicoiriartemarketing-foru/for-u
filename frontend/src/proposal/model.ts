@@ -83,3 +83,8 @@ export function prepareLanding(base: LandingDraft, proposal: Proposal, offers: O
   if (fields.includes('offers')) { next.offers = offers.map(publicOffer); next.catalogSource = 'proposal'; next.menuItems = undefined; next.proposalSource = source; }
   return next;
 }
+/** Only meaningful public differences are offered; a revision change alone is not a text change. */
+export function changedPreparationFields(base: LandingDraft, proposal: Proposal, offers: Offer[]): PreparationField[] {
+ const prepared=prepareLanding(base,proposal,offers,{proposalRevision:'comparison',catalogRevision:null},[...preparationFields]);
+ return preparationFields.filter(field=>field==='offers'?!sameOffers(offers,base.offers):field==='conditions'?(base.blocks.find(b=>b.id==='proposal-conditions')?.body||'')!==(prepared.blocks.find(b=>b.id==='proposal-conditions')?.body||''):base[field]!==prepared[field]);
+}
