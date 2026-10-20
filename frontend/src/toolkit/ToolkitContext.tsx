@@ -99,6 +99,7 @@ export function ToolkitProvider({
   const queues = useRef(new Map<string, Promise<void>>());
   const revisions = useRef(new Map<string, string>());
   const documentsReady = useRef(demo);
+  const epoch=useRef(0);
 
   const reload = useCallback(async () => {
     if (demo) return;
@@ -108,6 +109,7 @@ export function ToolkitProvider({
       setLoading(false);
       return;
     }
+    const generation=++epoch.current;documentsReady.current=false;
     setLoading(true);
     try {
     const [documents, history, preferences] = await Promise.all([
@@ -128,7 +130,7 @@ export function ToolkitProvider({
         .eq("user_id", userId)
         .maybeSingle(),
     ]);
-    if (!mounted.current) return;
+    if (!mounted.current||generation!==epoch.current) return;
     documentsReady.current = !documents.error;
     setLoadError(Boolean(documents.error));
     if (documents.error)
@@ -157,8 +159,8 @@ export function ToolkitProvider({
     }
     if (preferences.data) setAdaptiveValue(preferences.data.adaptive_enabled);
     } catch {
-      if(mounted.current){documentsReady.current=false;setLoadError(true);setStatus('No se pudo consultar la nube. Reintenta antes de editar.');}
-    } finally {if(mounted.current)setLoading(false);}
+      if(mounted.current&&generation===epoch.current){documentsReady.current=false;setLoadError(true);setStatus('No se pudo consultar la nube. Reintenta antes de editar.');}
+    } finally {if(mounted.current&&generation===epoch.current)setLoading(false);}
   }, [demo, projectId, userId]);
 
   // Subscribe to the authenticated remote documents for this provider instance.
@@ -181,10 +183,12 @@ export function ToolkitProvider({
       if (!supabase) throw new Error("Conecta tu cuenta para guardar.");
       if (!documentsReady.current) throw new Error('No se cargaron los datos guardados. Recarga antes de editar para no sobrescribirlos.');
       const client = supabase;
+      const generation=epoch.current;
       const previous = queues.current.get(kind) ?? Promise.resolve();
       const pending = previous
         .catch(() => {})
         .then(async () => {
+          if(generation!==epoch.current||!documentsReady.current||!mounted.current)throw new Error('La herramienta se recuperó o cerró. No se guardó la edición anterior.');
           const revision = revisions.current.get(kind);
           const updated_at = new Date().toISOString();
           const record = { user_id: userId, project_id: projectId, kind, payload: value, updated_at };
@@ -196,7 +200,7 @@ export function ToolkitProvider({
             throw new Error(
               "No se guardó en la nube. Conserva esta pantalla y vuelve a intentar.",
             );
-          if (mounted.current) {
+          if (mounted.current && generation===epoch.current) {
             revisions.current.set(kind, data!.updated_at);
             setDocs((current) => ({ ...current, [kind]: value }));
             setStatus("Guardado en tu cuenta");

@@ -1,3 +1,4 @@
+import {readableStudioDraft} from '../pages/dashboard/studioJourney';
 import {applyPreviewText} from './editorBridge';
 import ProjectImageField from '../components/shared/ProjectImageField';
 import { MediaScope } from '../components/shared/mediaScope';
@@ -32,8 +33,13 @@ import { askAI } from "./api";
 import { moveItem, safeHttps } from "./engine";
 import { defaultLanding, type LandingDraft } from "./types";
 export { LandingPreview } from "./LandingPreview";
-export default function LandingBuilder({ wizard = false }: { wizard?: boolean }) {
-  const { business, docs, save, userId, projectId, demo, track, documentRevision } = useToolkit();
+export default function LandingBuilder(props: {wizard?:boolean}) {
+ const {docs,reload}=useToolkit();
+ if(docs.landing!==undefined&&!readableStudioDraft(docs.landing))return <section role="alert"><h2>Conservamos tu borrador</h2><p>Su formato necesita revisión. No lo sustituimos por una plantilla.</p><DSButtonSecondary onClick={()=>void reload()}>Reintentar lectura</DSButtonSecondary></section>;
+ return <LandingBuilderSession {...props}/>;
+}
+function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
+  const { business, docs, save, reload, userId, projectId, demo, track, documentRevision } = useToolkit();
   const [routeParams] = useSearchParams();
   const requestedStep = routeParams.get("step");
   const [history, dispatchHistory] = useReducer(editorHistory<LandingDraft>, { past: [], present: (docs.landing as LandingDraft) ?? {...defaultLanding(business), headline:'',description:'',cta:'',blocks:[],fields:[],bookingEnabled:false,presentationVersion:2,color:'#7751B8'}, future: [] } as EditorHistory<LandingDraft>);
@@ -66,6 +72,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   const [sectionsOpen, setSectionsOpen] = useState(requestedStep === "offer");
   const [settingsOpen, setSettingsOpen] = useState(requestedStep === "identity" || requestedStep === "publish");
   const [propertiesOpen, setPropertiesOpen] = useState(requestedStep === "identity" || requestedStep === "offer");
+  const [imageRole, setImageRole] = useState('hero');
   const [selectedOfferId, setSelectedOfferId] = useState('');
   const [context, setContext] = useState<'text'|'image'|'cta'|'offer'>('text');
   const [insertBefore, setInsertBefore] = useState<string | null>(null);
@@ -74,8 +81,12 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   const moduleType = business.moduleType && business.moduleType in moduleLabels ? business.moduleType as ModuleType : null;
   const industry = editorIndustry(business.moduleType || business.industry);
   const selectedBlock = draft.blocks.find(block => block.id === selectedId);
+  const selectedPhoto = imageRole==='hero'?{url:draft.heroImage||'',alt:draft.heroImageAlt||''}:draft.gallery?.find(photo=>photo.role===imageRole.slice(8));
+  const updatePhoto=(patch:{url?:string;alt?:string})=>{if(imageRole==='hero')update({...('url'in patch?{heroImage:patch.url}:{}),...('alt'in patch?{heroImageAlt:patch.alt}:{})});else update({gallery:draft.gallery?.map(photo=>photo.role===imageRole.slice(8)?{...photo,...patch}:photo)});};
   const frame = useRef<HTMLIFrameElement>(null);
   const [channel] = useState(() => crypto.randomUUID());
+  const [saveError,setSaveError]=useState('');
+  const [recoverOpen,setRecoverOpen]=useState(false);
   const [autosaveStatus, setAutosaveStatus] = useState("");
   const draftRef = useRef(draft);
   const selectedRef = useRef(selectedId);
@@ -122,7 +133,8 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
       }
       if (busy) return;
       if (event.data.type === 'foru:context') {
-        if (['image','cta'].includes(event.data.target)) { setSelectedId('hero'); setContext(event.data.target); setPropertiesOpen(true); }
+        if (['image','cta'].includes(event.data.target)) { setImageRole('hero'); setSelectedId('hero'); setContext(event.data.target); setPropertiesOpen(true); }
+        else if(event.data.target==='gallery'&&draftRef.current.gallery?.some(photo=>photo.role===event.data.role)){setImageRole('gallery:'+event.data.role);setContext('image');setPropertiesOpen(true);}
         else if (event.data.target === 'offer' && draftRef.current.offers?.some(offer => offer.id === event.data.id)) { setSelectedOfferId(event.data.id); setContext('offer'); setPropertiesOpen(true); }
         return;
       }
@@ -158,7 +170,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
     return () => window.removeEventListener("message", receive);
   }, [channel, busy, business.industry, business.moduleType, setDraft]);
   useEffect(() => {
-    if (!dirty || busy || wizard) return;
+    if (!dirty || busy || wizard || saveError) return;
     const snapshot = draft;
     pending.current = snapshot;
     const timer = window.setTimeout(() => {
@@ -168,10 +180,11 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
           if (pending.current === snapshot) {
             pending.current = null;
             setDirty(false);
-            setAutosaveStatus("Borrador guardado");
+            setAutosaveStatus("Borrador guardado"); setSaveError('');
           }
         },
-        () => {
+        (error) => {
+          setSaveError((error as Error).message);
           setAutosaveStatus(
             "No se guardó el último cambio. Usa Guardar borrador para reintentar.",
           );
@@ -179,14 +192,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
       );
     }, 400);
     return () => clearTimeout(timer);
-  }, [draft, dirty, busy, save, wizard]);
-  useEffect(
-    () => () => {
-      if (pending.current)
-        void save("landing", pending.current).catch(() => {});
-    },
-    [save],
-  );
+  }, [draft, dirty, busy, save, wizard, saveError]);
   const update = (patch: Partial<LandingDraft>) => {
     setDraft((current) => {
       const next = { ...current, ...patch };
@@ -211,14 +217,14 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
   async function saveDraft() {
     setBusy(true);
     try {
-      await save("landing", draft);
+      await save("landing", draft); setSaveError('');
       pending.current = null;
       setDirty(false);
       setNotice(
         "Borrador guardado. Publica para actualizar la página visible a tus clientes.",
       );
     } catch (e) {
-      setNotice((e as Error).message);
+      setSaveError((e as Error).message); setNotice((e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -353,6 +359,8 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         <DSButtonSecondary aria-label="Herramientas de página" aria-expanded={advancedOpen} onClick={()=>setAdvancedOpen(true)}>•••</DSButtonSecondary>
         <DSButtonPrimary disabled={busy||demo} onClick={publish}>Publicar</DSButtonPrimary>
       </header>
+      {saveError&&<section className="pe-feedback" role="alert"><p>{saveError}</p><DSButtonSecondary disabled={busy||/otra pestaña|otra versión|otra ventana/i.test(saveError)} onClick={()=>void saveDraft()}>Reintentar guardado</DSButtonSecondary><DSButtonSecondary onClick={()=>setRecoverOpen(true)}>Recuperar versión guardada</DSButtonSecondary></section>}
+      <EditorSheet open={recoverOpen} title="Recuperar borrador" onClose={()=>setRecoverOpen(false)}><p>Recuperar sustituirá las ediciones pendientes por el borrador guardado. Tu publicación no cambia.</p><DSButtonSecondary onClick={()=>setRecoverOpen(false)}>Conservar mis cambios</DSButtonSecondary><DSButtonPrimary onClick={()=>{pending.current=null;setDirty(false);setRecoverOpen(false);void reload();}}>Descartar pendientes y recuperar</DSButtonPrimary></EditorSheet>
       {(notice || previewImageError) && <p className="pe-feedback" role={previewImageError ? 'alert' : 'status'}>{previewImageError || notice}</p>}
       <div className="pe-selection-strip"><span>Toca lo que quieres transformar</span><DSButtonSecondary onClick={()=>{setContext('text');setPropertiesOpen(true);}}>Editar selección</DSButtonSecondary><Link className="pe-action-link" to={`/creator-studio?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>✦ Crear pieza</Link></div>
       <EditorSheet open={advancedOpen} title="Tu página · herramientas" onClose={()=>setAdvancedOpen(false)}>
@@ -363,7 +371,7 @@ export default function LandingBuilder({ wizard = false }: { wizard?: boolean })
         <nav className="pe-tool-choices"><Link className="pe-action-link" to={`/dashboard/tools/proposal?project=${projectId}`}>Mi propuesta</Link><Link className="pe-action-link" to={`/dashboard/tools/teleprompter?project=${projectId}&section=${encodeURIComponent(selectedId)}`}>Teleprompter</Link></nav>
       </EditorSheet>
       <EditorSheet open={propertiesOpen} title={context==='image'?'Tu foto':context==='cta'?'Tu llamada a la acción':context==='offer'?'Tu oferta':'Editar selección'} onClose={()=>setPropertiesOpen(false)}>
-        {context==='image' ? <MediaScope.Provider value={{userId,projectId}}><ProjectImageField label="Foto de portada" value={draft.heroImage||''} onChange={heroImage=>update({heroImage})}/><DSInput label="Descripción de la foto" value={draft.heroImageAlt||''} maxLength={160} onChange={e=>update({heroImageAlt:e.target.value})}/></MediaScope.Provider> : context==='offer' ? <><p>Los precios, presentaciones y extras se editan en el catálogo original. Después revisa la actualización de tu página antes de publicar.</p><Link className="pe-action-link" to={selectedOfferId.startsWith(`${moduleType}:`)?`/modules/${moduleType}/editor?project=${projectId}&offer=${encodeURIComponent(selectedOfferId.slice(selectedOfferId.indexOf(':')+1))}`:`/dashboard/tools/proposal?project=${projectId}&offer=${encodeURIComponent(selectedOfferId)}`}>Editar en su catálogo →</Link></> : context==='cta' ? <><DSInput label="Texto del botón" value={draft.cta} maxLength={50} onChange={e=>update({cta:e.target.value})}/><DSInput label="Destino HTTPS (opcional)" type="url" value={draft.ctaDesign?.url||''} onChange={e=>update({ctaDesign:{...draft.ctaDesign,url:e.target.value}})}/><small>Sin enlace propio, se conserva el formulario de contacto de tu página.</small><DSSelect label="Alineación" value={draft.ctaDesign?.align||'start'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,align:e.target.value as 'start'|'center'|'end'}})}><option value="start">Izquierda</option><option value="center">Centro</option><option value="end">Derecha</option></DSSelect><DSSelect label="Color del botón" value={draft.ctaDesign?.tone||'violet'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,tone:e.target.value as 'violet'|'mint'|'gold'}})}><option value="violet">Violeta</option><option value="mint">Mint</option><option value="gold">Dorado</option></DSSelect></> : <DSCard id="page-selection" className="pe-selection-panel">        {selectedBlock ? <div className="pe-properties"><h3>Sección seleccionada</h3><DSInput label="Título de sección" info="Este título se muestra en tu página pública al publicar los cambios." value={selectedBlock.title} maxLength={150} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, title: event.target.value } : block) })} /><Textarea label="Texto de sección" info="Describe esta parte de tu oferta con información real de tu negocio." value={selectedBlock.body} maxLength={2000} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, body: event.target.value } : block) })} /></div> : <div className="pe-properties"><h3>Portada</h3><DSInput label="Título principal" info="La primera frase que verán tus visitantes." value={draft.headline} maxLength={180} onChange={event => update({ headline: event.target.value })} /><Textarea label="Historia de tu negocio" info="Explica qué ofreces y qué hace especial a tu negocio." value={draft.description} maxLength={1000} onChange={event => update({ description: event.target.value })} /><DSInput label="Texto del botón" info="Describe la acción que quieres que realice tu visitante." value={draft.cta} maxLength={50} onChange={event => update({ cta: event.target.value })} /></div>}
+        {context==='image' ? <MediaScope.Provider value={{userId,projectId}}><ProjectImageField label="Foto de portada" value={selectedPhoto?.url||''} onChange={url=>updatePhoto({url})}/><DSInput label="Descripción de la foto" value={selectedPhoto?.alt||''} maxLength={160} onChange={e=>updatePhoto({alt:e.target.value})}/></MediaScope.Provider> : context==='offer' ? <><p>Los precios, presentaciones y extras se editan en el catálogo original. Después revisa la actualización de tu página antes de publicar.</p><Link className="pe-action-link" to={selectedOfferId.startsWith(`${moduleType}:`)?`/modules/${moduleType}/editor?project=${projectId}&offer=${encodeURIComponent(selectedOfferId.slice(selectedOfferId.indexOf(':')+1))}`:`/dashboard/tools/proposal?project=${projectId}&offer=${encodeURIComponent(selectedOfferId)}`}>Editar en su catálogo →</Link></> : context==='cta' ? <><DSInput label="Texto del botón" value={draft.cta} maxLength={50} onChange={e=>update({cta:e.target.value})}/><DSInput label="Destino HTTPS (opcional)" type="url" value={draft.ctaDesign?.url||''} onChange={e=>update({ctaDesign:{...draft.ctaDesign,version:1,url:e.target.value}})}/><small>Sin enlace propio, se conserva el formulario de contacto de tu página.</small><DSSelect label="Alineación" value={draft.ctaDesign?.align||'start'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,version:1,align:e.target.value as 'start'|'center'|'end'}})}><option value="start">Izquierda</option><option value="center">Centro</option><option value="end">Derecha</option></DSSelect><DSSelect label="Color del botón" value={draft.ctaDesign?.tone||'violet'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,version:1,tone:e.target.value as 'violet'|'mint'|'gold'}})}><option value="violet">Violeta</option><option value="mint">Mint</option><option value="gold">Dorado</option></DSSelect></> : <DSCard id="page-selection" className="pe-selection-panel">        {selectedBlock ? <div className="pe-properties"><h3>Sección seleccionada</h3><DSInput label="Título de sección" info="Este título se muestra en tu página pública al publicar los cambios." value={selectedBlock.title} maxLength={150} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, title: event.target.value } : block) })} /><Textarea label="Texto de sección" info="Describe esta parte de tu oferta con información real de tu negocio." value={selectedBlock.body} maxLength={2000} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, body: event.target.value } : block) })} /></div> : <div className="pe-properties"><h3>Portada</h3><DSInput label="Título principal" info="La primera frase que verán tus visitantes." value={draft.headline} maxLength={180} onChange={event => update({ headline: event.target.value })} /><Textarea label="Historia de tu negocio" info="Explica qué ofreces y qué hace especial a tu negocio." value={draft.description} maxLength={1000} onChange={event => update({ description: event.target.value })} /><DSInput label="Texto del botón" info="Describe la acción que quieres que realice tu visitante." value={draft.cta} maxLength={50} onChange={event => update({ cta: event.target.value })} /></div>}
 </DSCard>}</EditorSheet>
       <EditorSheet open={sectionsOpen} title="Añade y organiza" onClose={()=>setSectionsOpen(false)}><DSCard id="page-sections" as="section" hidden={!sectionsOpen} className="tk-card tk-stack tk-editor-sections">
         <h2>Secciones <InfoIcon text="Arrastra una sección para reordenarla o usa Subir y Bajar. Selecciónala para editar sus propiedades." /></h2>

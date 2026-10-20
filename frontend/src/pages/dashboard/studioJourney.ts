@@ -5,11 +5,13 @@ export const studioOfferLabels: Record<ModuleType, string> = {
   restaurant: 'Presenta tu menú', ecommerce: 'Presenta tus productos',
   hospitality: 'Presenta tus habitaciones', tourism: 'Presenta tus experiencias', courses: 'Presenta tus cursos',
 };
+export function readableStudioDraft(value: unknown): value is LandingDraft {
+ if(!value||typeof value!=='object'||Array.isArray(value))return false;
+ const d=value as LandingDraft;
+ return ['name','slug','template','headline','description','cta','whatsapp','calendly','color'].every(key=>typeof (d as unknown as Record<string,unknown>)[key]==='string')&&[undefined,1,2].includes(d.presentationVersion)&&(!d.ctaDesign||[undefined,1].includes(d.ctaDesign.version))&&Array.isArray(d.fields)&&Array.isArray(d.blocks)&&new Set(d.blocks.map(b=>b?.id)).size===d.blocks.length&&d.blocks.every(b=>b&&typeof b.id==='string'&&typeof b.title==='string'&&typeof b.body==='string');
+}
 export function validStudioDraft(value: unknown): value is LandingDraft {
-  if (!value || typeof value !== 'object') return false;
-  const draft = value as Partial<LandingDraft>;
-  return typeof draft.headline === 'string' && Boolean(draft.headline.trim()) &&
-    typeof draft.slug === 'string' && /^[a-z0-9][a-z0-9-]{2,59}$/.test(draft.slug) && Array.isArray(draft.blocks) && draft.blocks.every(block => Boolean(block) && typeof block.id === "string" && typeof block.title === "string" && typeof block.body === "string");
+ const d=value as Partial<LandingDraft>|null;return Boolean(d&&typeof d==='object'&&typeof d.headline==='string'&&d.headline.trim()&&typeof d.slug==='string'&&/^[a-z0-9][a-z0-9-]{2,59}$/.test(d.slug)&&Array.isArray(d.blocks)&&d.blocks.every(b=>b&&typeof b.id==='string'&&typeof b.title==='string'&&typeof b.body==='string'));
 }
 export function studioCatalog(type: ModuleType, value: unknown): Array<{id: string; name: string; price: number}> {
   if (!value || typeof value !== 'object') return [];

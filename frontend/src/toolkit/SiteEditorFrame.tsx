@@ -155,7 +155,7 @@ export default function SiteEditorFrame() {
         </Card></div>
       ))}
       <button type="button" className="pe-insert-section" onClick={()=>send('foru:sections',{beforeId:null})}>＋ Sección</button>
-      <LandingExtras draft={draft} onEditOffer={id=>send('foru:context',{target:'offer',id})} />
+      <LandingExtras draft={draft} onEditGallery={role=>send('foru:context',{target:'gallery',role})} onEditOffer={id=>send('foru:context',{target:'offer',id})} />
       {hostProject&&<ProjectWidgets widgets={draft.widgets??[]} hostProject={hostProject}/>}
       <footer>{draft.name} · Creado con FOR U</footer>
     </article>
