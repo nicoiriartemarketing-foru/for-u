@@ -1,6 +1,6 @@
 # FOR U — Registro de ejecución de los 16 objetivos
 
-Actualizado: 21 de octubre de 2026. **Instrucción activa: solo objetivo1.** La existencia de este registro no autoriza comenzar objetivos posteriores. Especificación: [maestra](FOR_U_MASTER_SPEC.md); detalle de aceptación: [155 requisitos](FOR_U_REQUIREMENTS.csv); diagnóstico: [base](FOR_U_BASELINE.md).
+Actualizado: 21 de octubre de 2026. **Instrucción activa: objetivo 2 y corrección de una pregunta a la vez.** La existencia de este registro no autoriza comenzar objetivos posteriores. Especificación: [maestra](FOR_U_MASTER_SPEC.md); detalle de aceptación: [155 requisitos](FOR_U_REQUIREMENTS.csv); diagnóstico: [base](FOR_U_BASELINE.md).
 
 ## Estados y criterio de cierre
 
@@ -18,7 +18,7 @@ Registrar además evidencia de código, prueba local, transporte controlado, SQL
 | Objetivo | Resultado | Dependencia | Estado de esta secuencia | Prueba/cierre |
 | --- | --- | --- | --- | --- |
 | 01 | Acuerdo, matriz, base y registro persistentes | Instrucción actual | comprobado | Auditoría documental A01–A10 y FOR_U_AGREEMENT_AUDIT.json |
-| 02 | Maqueta actualizada y recorrido aprobado | 01 | pendiente | Propietaria revisa los tres escenarios; no aprobación previa |
+| 02 | Maqueta actualizada y recorrido aprobado | 01 | pendiente de aprobación visual | Muestra navegable y QA local en FOR_U_MOCKUP_REVIEW.md; falta aprobación expresa |
 | 03 | Datos compartidos y navegación | 02 **aprobado explícitamente** | pendiente | Dos proyectos, referencias, compatibilidad y retorno |
 | 04 | Bienvenida, persona y proyecto | 03 | pendiente | Omitir/manual/retomar y audio privado |
 | 05 | Diagnóstico adaptativo de cuatro áreas | 04 | pendiente | Respuestas cambian recomendaciones sin bloqueos |
@@ -165,3 +165,9 @@ Evidencia estructural: [FOR_U_AGREEMENT_AUDIT.json](FOR_U_AGREEMENT_AUDIT.json).
 4. Mantener evidencia de cambios/pruebas/versión y estado por requisito. No marcar producto comprobado por documentación.
 5. Si hace falta intervención externa, indicar acción concreta sin claves por chat y avanzar partes independientes.
 6. Entregar recorrido revisable; conservar gate visual y futuras instrucciones por objetivo. No comenzar otro automáticamente por tenerlo documentado.
+
+## 21 octubre — Objetivo 2: muestra personalizada y corrección de preguntas
+
+Actualizada la maqueta independiente existente. Evidencia, límites y recorridos: [FOR_U_MOCKUP_REVIEW.md](FOR_U_MOCKUP_REVIEW.md). La propietaria rechazó la campaña con cuatro campos simultáneos: la regla ahora es global, una pregunta o decisión de edición por momento, también en paneles secundarios. Campaña, producto, promoción, perfil y calendario se recorrieron con controles progresivos y resumen revisable; el fondo se recoge mientras se responde.
+
+La muestra está lista para revisar, **sin aprobación visual y sin autorización para objetivo 3**. Ningún resultado del prototipo cierra requisitos de la aplicación. No se modificaron frontend, Supabase, INTI CHURIN ni negocios reales. No se ejecutaron build/TypeScript de la app porque esta entrega no cambia su código.

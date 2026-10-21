@@ -1,6 +1,6 @@
 # FOR U — Especificación maestra vigente
 
-Fecha de consolidación: 21 de octubre de 2026. Alcance activo: **objetivo 1, documentación e inspección**. No autoriza cambios de aplicación, SQL, secretos, despliegues ni publicaciones.
+Fecha de consolidación: 21 de octubre de 2026. Alcance activo: **objetivo 2, maqueta independiente para revisión**. No autoriza cambios de aplicación, SQL, secretos, despliegues ni publicaciones.
 
 ## 1. Autoridad y documentos de trabajo
 
@@ -22,7 +22,7 @@ FOR U debe conocerte antes de proponerte trabajo. Debe sentirse futurista, elega
 
 - Identidad original: logo y animación recibidos; Inter; perlado `#F4F0EA`, lavanda `#EDE7F7`, violeta `#7751B8`, mint `#A9E8D7`, dorado `#D9B46B`, carbón `#24232A`. Rosa/cyan anteriores se conservan donde tengan identidad histórica justificada, sin sustituir la paleta confirmada.
 - Brillos iridiscentes puntuales, formas suaves, iconos coherentes, transiciones breves; sin burbujas aleatorias, esperas artificiales ni nuevos premios comerciales.
-- Una acción principal por momento; revelar controles cuando corresponden; resultado visible. No convertir formularios largos en lienzos vacíos ni menús incomprensibles.
+- **Una sola pregunta o decisión de edición visible a la vez en toda FOR U**, no solo en la bienvenida. Incluye campañas, ofertas, perfil, calendario, operación y configuración. Opciones de una misma pregunta pueden mostrarse juntas. Una página terminada o un resumen puede mostrar varios datos, pero corregirlos abre un único detalle. Recoger el trabajo de fondo mientras se responde; no apilar el panel debajo de contenidos. Atrás conserva lo escrito; omitir o revisar no obliga a completar campos. Una acción principal por momento; revelar controles cuando corresponden; resultado visible. No convertir formularios largos en lienzos vacíos ni menús incomprensibles.
 - Pantalla de trabajo amplia, navegación compacta y controles secundarios recogidos; botones con icono/texto centrados, dimensiones consistentes y foco visible. Acciones no deben parecer enlaces subrayados sin contexto.
 - Conservar todas las funciones; niveles guían recomendaciones y controles destacados, **no bloquean herramientas ni cambian suscripción**.
 - La aceptación técnica y la aprobación de experiencia visual son independientes.
