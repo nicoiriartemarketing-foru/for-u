@@ -1,5 +1,7 @@
 # For U
 
+> **Plan vigente (21 octubre 2026):** [especificación maestra](docs/FOR_U_MASTER_SPEC.md), [ejecución de los 16 objetivos](docs/FOR_U_EXECUTION.md), [matriz de aceptación](docs/FOR_U_REQUIREMENTS.csv) e [inspección de la base](docs/FOR_U_BASELINE.md). La guía de uso inferior refleja etapas anteriores y no es prueba de la nueva experiencia. Compatibilidad acordada: Node18/20, Vite4 y Tailwind3. No ejecutar todas las migraciones históricas por seguir esta guía: cada reparación requiere diagnóstico del entorno y prueba aislada. El objetivo1 es documental; no autoriza cambios remotos ni despliegues.
+
 Aplicación React, Vite y TypeScript con una sesión Supabase, proyectos por rubro y herramientas compartidas.
 
 ## Ejecutar en desarrollo

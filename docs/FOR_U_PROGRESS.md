@@ -1,5 +1,7 @@
 # FOR U: registro de entrega
 
+> **Estado documental — 21 octubre 2026:** la secuencia vigente es la de [16 objetivos](FOR_U_EXECUTION.md), basada en [la especificación maestra](FOR_U_MASTER_SPEC.md) y [155 requisitos](FOR_U_REQUIREMENTS.csv). Este archivo conserva evidencia histórica; sus tablas antiguas no certifican la nueva experiencia. Objetivo1 consolida documentación; objetivo2 actualiza la maqueta antes de solicitar aprobación para implementar en la app. No se modificó Supabase ni aplicación durante esa consolidación.
+
 Registro consolidado: 2026-10-14. La tabla histórica de octubre 7 se conserva abajo; prevalece este resumen vigente. Ningún requisito se considera verificado por abrir una pantalla o compilar. Numeración aprobada: publicación incluida en entrega 2, perfil/piezas en 3, widgets en 4 y gestión fiable en 5.
 
 ## Estado vigente — 14 de octubre

@@ -1,5 +1,7 @@
 # FOR U: proyectos con propósito, rutas por rubro y páginas conectadas
 
+> **Aviso de precedencia — 21 octubre 2026:** este archivo conserva el plan y la evidencia históricos. La definición vigente está en [FOR_U_MASTER_SPEC.md](FOR_U_MASTER_SPEC.md), su [matriz](FOR_U_REQUIREMENTS.csv) y el [registro de los 16 objetivos](FOR_U_EXECUTION.md). Las instrucciones antiguas contradictorias no autorizan implementación, SQL ni despliegues. El objetivo activo es documental; la maqueta del objetivo2 requiere aprobación antes de extender cambios a la aplicación.
+
 ## Plan vigente — aprobado el 13 de octubre de 2026
 
 Este plan sustituye las decisiones contradictorias del historial conservado abajo. Se ejecuta **una entrega por instrucción**; la instrucción vigente autoriza cerrar Mi mundo y la experiencia visual/emocional, sin desplegar ni empezar otras integraciones. Mercado Pago conserva su bloqueo externo. Pedidos internos y perfil opcional de cliente ya tienen recorrido QA; la entrega 2 incorporó publicación. No se declara terminado el objetivo completo mientras queden entregas pendientes.
