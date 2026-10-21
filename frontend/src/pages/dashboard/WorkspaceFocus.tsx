@@ -5,12 +5,13 @@ import { projectModuleType } from '../../modules/moduleProjects';
 import { loadWorkspaceFocus } from '../../services/workspaceFocus';
 import { saveModuleDocument } from '../../services/moduleDocuments';
 import { isSavedProject } from './areaModel';
-import { emptyFocus, parseWorkspaceFocus, rememberDestination, toggleToday, type LastWork, type TaskReference, type WorkspaceFocus } from './workspaceFocusModel';
+import { emptyFocus, parseWorkspaceFocus, rememberDestination, toggleToday, changeAccountPreferences, type AccountPreferences, type LastWork, type TaskReference, type WorkspaceFocus } from './workspaceFocusModel';
 
-type State = { data: WorkspaceFocus; anchor: string | null; revision: string | null; loaded: boolean; busy: boolean; dirty: boolean; error: string };
-const initial = (): State => ({ data: emptyFocus(), anchor: null, revision: null, loaded: false, busy: false, dirty: false, error: '' });
+type State = { data: WorkspaceFocus; anchor: string | null; revision: string | null; loaded: boolean; busy: boolean; dirty: boolean; error: string;conflict:boolean };
+const initial = (): State => ({ data: emptyFocus(), anchor: null, revision: null, loaded: false, busy: false, dirty: false, error: '',conflict:false });
 const Context = createContext<{
-  state: State; reload: () => Promise<void>; save: () => Promise<void>;
+  state: State; reload: (recover?:boolean) => Promise<void>; save: () => Promise<void>;
+  setPreferences:(preferences:AccountPreferences)=>void;
   toggle: (ref: TaskReference) => void; remember: (work: LastWork) => void;
 } | null>(null);
 
@@ -30,13 +31,15 @@ function AccountFocus({ userId, children }: { userId?: string; children: ReactNo
     if (!alive.current) return;
     current.current = { ...current.current, ...update }; setState(current.current);
   };
-  async function reload() {
+  async function reload(recover=false) {
     if (!userId || lock.current) return;
-    lock.current = true; patch({ busy: true, loaded: false, error: '' });
+    const before=current.current;
+    lock.current = true; patch({ busy: true, error: '' });
     try {
       const saved = await loadWorkspaceFocus(userId);
-      patch({ data: saved?.payload ?? emptyFocus(), anchor: saved?.projectId ?? null, revision: saved?.revision ?? null, loaded: true, dirty: false });
-    } catch (error) { patch({ error: (error as Error).message }); }
+      if(current.current.dirty&&(!recover||current.current.data!==before.data)){patch({conflict:true,error:'Hay cambios pendientes. Conservamos tus datos; recupera explícitamente para sustituirlos.'});return;}
+      patch({conflict:false, data: saved?.payload ?? emptyFocus(), anchor: saved?.projectId ?? null, revision: saved?.revision ?? null, loaded: true, dirty: false });
+    } catch (error) { const message=(error as Error).message;patch({ error:message,conflict:/otra ventana|otra pestaña|conflict|cambió/i.test(message) }); }
     finally { lock.current = false; patch({ busy: false }); }
   }
   useEffect(() => { if (userId) void reload(); }, [userId]);
@@ -48,7 +51,7 @@ function AccountFocus({ userId, children }: { userId?: string; children: ReactNo
   }, [state.dirty]);
   async function save() {
     const snapshot = current.current;
-    if (!userId || !snapshot.loaded || lock.current) return;
+    if (!userId || !snapshot.loaded || lock.current || snapshot.conflict) return;
     const owned = store.cloudUserId === userId ? Object.values(store.projectsById).filter(p => isSavedProject(p.id) && !p.cloudPending && projectModuleType(p)) : [];
     const anchor = snapshot.anchor ?? owned.map(p => p.id).sort()[0];
     if (!anchor || !owned.some(p => p.id === anchor)) { patch({ error: 'No se guardó Hoy. Abre o recupera el proyecto asociado a tu enfoque.' }); return; }
@@ -58,7 +61,7 @@ function AccountFocus({ userId, children }: { userId?: string; children: ReactNo
       const revision = await saveModuleDocument(userId, anchor, 'workspace-focus', parseWorkspaceFocus(snapshot.data), snapshot.revision);
       patch({ anchor, revision, dirty: current.current.data !== snapshot.data });
       saved = true;
-    } catch (error) { patch({ error: (error as Error).message }); }
+    } catch (error) { const message=(error as Error).message;patch({ error:message,conflict:/otra ventana|otra pestaña|conflict|cambió/i.test(message) }); }
     finally {
       lock.current = false; patch({ busy: false });
       // A second navigation during a write keeps its own destination and saves
@@ -73,10 +76,13 @@ function AccountFocus({ userId, children }: { userId?: string; children: ReactNo
   }
   function remember(work: LastWork) {
     if (!current.current.loaded) return;
+    const existing=current.current.data.version===1?current.current.data.lastWork:current.current.data.destinations[work.projectId];
+    if(JSON.stringify(existing)===JSON.stringify(work))return;
     patch({ data: rememberDestination(current.current.data, work), dirty: true });
     void save();
   }
-  return <Context.Provider value={{ state, reload, save, toggle, remember }}>{children}</Context.Provider>;
+  const setPreferences=(preferences:AccountPreferences)=>{if(!current.current.loaded)return;patch({data:changeAccountPreferences(current.current.data,preferences),dirty:true});};
+  return <Context.Provider value={{ state, reload, save, toggle, remember, setPreferences }}>{children}</Context.Provider>;
 }
 export function useWorkspaceFocus() {
   const context = useContext(Context);

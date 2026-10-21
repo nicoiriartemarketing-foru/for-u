@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, Link, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useActiveProjectsStore } from '../../stores/useActiveProjectsStore';
 import Toolkit from '../../toolkit/Toolkit';
@@ -18,6 +18,7 @@ export default function DashboardTool() {
   useEffect(() => { if (user?.id && cloudUserId !== user.id) void hydrate(user.id); }, [cloudUserId, hydrate, user?.id]);
   if (!user || cloudUserId !== user.id) return <main className="dashboard-tool-loader"><p>Cargando tus herramientas…</p></main>;
   if (!project || !tools.has(tool as ToolId)) return <main className="dashboard-tool-loader"><h1>Esta herramienta no está disponible</h1><Link to="/dashboard">Volver al tablero</Link></main>;
+  if(tool==='calendar')return <Navigate replace to={`/dashboard?project=${encodeURIComponent(project.id)}&view=calendar`}/>;
   const templates = params.get('page') === 'templates';
   return <Toolkit embedded key={`${project.id}:${tool}:${templates}:${params.get("section") ?? ""}:${params.get("step") ?? ""}:${tool === "profile" ? "" : params.get("piece") ?? ""}`} project={project} initialTool={templates ? undefined : tool as ToolId} initialPage={templates ? 'templates' : undefined} onBack={() => window.history.back()} />;
 }

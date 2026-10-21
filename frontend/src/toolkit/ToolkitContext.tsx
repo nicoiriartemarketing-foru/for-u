@@ -1,3 +1,4 @@
+import {writeRevisionDocument} from '../services/revisionDocuments';
 import {
   createContext,
   useCallback,
@@ -189,19 +190,10 @@ export function ToolkitProvider({
         .catch(() => {})
         .then(async () => {
           if(generation!==epoch.current||!documentsReady.current||!mounted.current)throw new Error('La herramienta se recuperó o cerró. No se guardó la edición anterior.');
-          const revision = revisions.current.get(kind);
-          const updated_at = new Date().toISOString();
-          const record = { user_id: userId, project_id: projectId, kind, payload: value, updated_at };
-          const { data, error } = revision
-            ? await client.from('toolkit_documents').update({ payload: value, updated_at }).eq('user_id', userId).eq('project_id', projectId).eq('kind', kind).eq('updated_at', revision).select('updated_at').maybeSingle()
-            : await client.from('toolkit_documents').insert(record).select('updated_at').single();
-          if (error?.code === '23505' || (!error && !data)) throw new Error('Esta herramienta cambió en otra pestaña. Conserva tus cambios y recarga antes de guardar.');
-          if (error)
-            throw new Error(
-              "No se guardó en la nube. Conserva esta pantalla y vuelve a intentar.",
-            );
+          const revision = revisions.current.get(kind) ?? null;
+          const updatedRevision=await writeRevisionDocument(client,userId,projectId,kind,value,revision);
           if (mounted.current && generation===epoch.current) {
-            revisions.current.set(kind, data!.updated_at);
+            revisions.current.set(kind, updatedRevision);
             setDocs((current) => ({ ...current, [kind]: value }));
             setStatus("Guardado en tu cuenta");
           }

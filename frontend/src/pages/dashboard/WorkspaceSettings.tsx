@@ -1,3 +1,4 @@
+import AccountPreferences from '../../workspace/AccountPreferences';
 import {useState} from 'react';
 import EmotionalCompass,{CompassBadge} from './EmotionalCompass';
 import {ButtonSecondary} from '../../components/ui/DesignSystem';
@@ -17,5 +18,5 @@ export default function WorkspaceSettings() {
   const [params] = useSearchParams();
   const project = store.projectsById[params.get('project') ?? store.activeProjectId ?? ''];
   if (!user || !project || store.cloudUserId !== user.id) return <p>Elige un proyecto desde el tablero.</p>;
-  return <section className="workspace-settings"><h1>Configuración</h1><p>Gestiona los datos de tu negocio y sus conexiones.</p><Link to={`/modules/${projectModuleType(project)}/editor?project=${project.id}`}>Editar datos del negocio →</Link><section className="magic-card"><h2>Mi brújula</h2><CompassBadge projectId={project.id}/><p>Tu propósito y la emoción que eliges. Puedes cambiarlos a tu ritmo.</p><ButtonSecondary onClick={()=>setCompass(true)}>Editar mi propósito y emoción</ButtonSecondary>{compass&&<EmotionalCompass key={project.id} projectId={project.id} edit onDone={()=>setCompass(false)}/>}</section><PaymentSettings project={project.id}/><ToolkitProvider key={`${user.id}:${project.id}`} userId={user.id} projectId={project.id} business={businessFromProject(project)}><ConnectionStatus /></ToolkitProvider></section>;
+  return <section className="workspace-settings"><AccountPreferences/><h1>Configuración</h1><p>Gestiona los datos de tu negocio y sus conexiones.</p><Link to={`/modules/${projectModuleType(project)}/editor?project=${project.id}`}>Editar datos del negocio →</Link><section className="magic-card"><h2>Mi brújula</h2><CompassBadge projectId={project.id}/><p>Tu propósito y la emoción que eliges. Puedes cambiarlos a tu ritmo.</p><ButtonSecondary onClick={()=>setCompass(true)}>Editar mi propósito y emoción</ButtonSecondary>{compass&&<EmotionalCompass key={project.id} projectId={project.id} edit onDone={()=>setCompass(false)}/>}</section><PaymentSettings project={project.id}/><ToolkitProvider key={`${user.id}:${project.id}`} userId={user.id} projectId={project.id} business={businessFromProject(project)}><ConnectionStatus /></ToolkitProvider></section>;
 }

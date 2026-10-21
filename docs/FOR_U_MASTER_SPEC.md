@@ -1,6 +1,6 @@
 # FOR U — Especificación maestra vigente
 
-Fecha de consolidación: 21 de octubre de 2026. Alcance activo: **objetivo 2, maqueta independiente para revisión**. No autoriza cambios de aplicación, SQL, secretos, despliegues ni publicaciones.
+Fecha de consolidación: 21 de octubre de 2026. Alcance ejecutado: **objetivo 3, datos compartidos y navegación, tras aprobación expresa de la base**. Su cierre técnico está en FOR_U_OBJECTIVE_03_AUDIT.md. No autoriza comenzar objetivos posteriores ni modificar SQL, secretos, despliegues o publicaciones.
 
 ## 1. Autoridad y documentos de trabajo
 

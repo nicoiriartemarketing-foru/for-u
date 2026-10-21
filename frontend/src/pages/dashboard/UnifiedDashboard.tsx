@@ -1,3 +1,4 @@
+import {accountPreferences} from './workspaceFocusModel';
 import ProjectJourney, {ProjectWizard} from '../../experience/ProjectJourney';
 import ProjectViews from '../../experience/ProjectViews';
 import {savedAreaAchievement} from './areaPersistence';
@@ -18,6 +19,8 @@ import { useWorkspaceFocus } from './WorkspaceFocus';
 import PizarraAgent from '../../components/PizarraAgent';
 export default function UnifiedDashboard() {
   const { user } = useAuth();
+  const {state:focusState}=useWorkspaceFocus();
+  const preferredName=accountPreferences(focusState.data).preferredName;
   const store = useActiveProjectsStore();
   const [params, setParams] = useSearchParams();
   const owned = store.cloudUserId === user?.id ? Object.values(store.projectsById) : [];
@@ -27,7 +30,7 @@ export default function UnifiedDashboard() {
   const project = requested ? projects.find(p => p.id === requested) : undefined;
   useEffect(() => { if (user && store.cloudUserId !== user.id) void store.hydrateFromSupabase(user.id); }, [user?.id, store.cloudUserId]);
   useEffect(() => { if (project && store.activeProjectId !== project.id) store.switchProject(project.id); }, [project?.id, store.activeProjectId]);
-  return <section className="dashboard-home"><header className="world-intro"><span>Tu espacio de trabajo</span><h1>{project?project.name:`Hola, ${user?.user_metadata?.display_name || 'emprendedora'}`}</h1><p>{project?'¿En qué quieres avanzar hoy?':'Tus proyectos, tus prioridades. Un paso pequeño también cuenta.'}</p></header>
+  return <section className="dashboard-home"><header className="world-intro"><span>Tu espacio de trabajo</span><h1>{project?project.name:`Hola, ${preferredName || user?.user_metadata?.display_name || 'qué bueno verte'}`}</h1><p>{project?'¿En qué quieres avanzar hoy?':'Tus proyectos, tus prioridades. Un paso pequeño también cuenta.'}</p></header>
     {legacy.length > 0 && !project && <details className="recovery-notice"><summary>{legacy.length} borrador(es) pendiente(s) de recuperación</summary><p>Estos borradores aún no están confirmados en la nube. Se conservan en este dispositivo; algunos usan IDs antiguos.</p><ul>{legacy.map(p => <li key={p.id}>{p.name} <DSButtonSecondary onClick={() => { const blob = new Blob([JSON.stringify(p, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `borrador-${p.id}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }}>Descargar respaldo</DSButtonSecondary></li>)}</ul></details>}
     {store.isCloudSyncing && <p role="status">Cargando tus proyectos…</p>}
     {store.projectLoadError && <div className="recovery-notice" role="alert">{store.projectLoadError} <DSButtonSecondary onClick={() => { if (user) void store.hydrateFromSupabase(user.id); }}>Reintentar proyectos</DSButtonSecondary></div>}
@@ -41,7 +44,8 @@ export default function UnifiedDashboard() {
 function ProjectAreas({ projectId, type }: { projectId: string; type: ModuleType }) {
   const { entry, reload } = useAreaDocuments(projectId, type);
   const [params, setParams] = useSearchParams();
-  const { remember } = useWorkspaceFocus();
+  const { remember, state: focusState } = useWorkspaceFocus();
+  const preferredName = accountPreferences(focusState.data).preferredName;
   const { user } = useAuth();
   const task = entry?.tasks?.tasks.find(t => t.id === params.get('task'));
   const requestedArea = areaDefinitions.find(a => a.id === params.get('area'))?.id;
@@ -76,7 +80,7 @@ function ProjectAreas({ projectId, type }: { projectId: string; type: ModuleType
     {chatOpen && (
       <PizarraAgent
         area={activeArea}
-        userName={user?.user_metadata?.display_name || 'emprendedora'}
+        userName={preferredName || user?.user_metadata?.display_name || 'qué bueno verte'}
         isOpen={chatOpen}
         onClose={() => setChatOpen(false)}
       />

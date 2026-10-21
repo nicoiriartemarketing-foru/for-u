@@ -18,7 +18,7 @@ import {
   X,
   Menu,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { type ForUActiveProject } from "../stores/useActiveProjectsStore";
 import { ToolkitProvider, useToolkit } from "./ToolkitContext";
@@ -245,7 +245,9 @@ function ToolkitShell({
     project,
     (docs.today as TodayProgress | undefined) ?? { completed: [] },
   ).task.title;
+  const navigate=useNavigate();
   function open(next: ToolId) {
+    if(next==='calendar'&&!demo){navigate(`/dashboard?project=${encodeURIComponent(project.id)}&view=calendar`);return;}
     setTool(next);
     setPage("tool");
     setMenu(false);

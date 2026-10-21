@@ -1,3 +1,4 @@
+import type {Piece} from '../social/model';
 import type {AreaTask} from '../pages/dashboard/areaModel';
 import TaskSuggestion from '../ai/TaskSuggestion';
 import { Card as DSCard } from '../components/ui/DesignSystem';
@@ -10,7 +11,7 @@ import { downloadBlob } from "./api";
 import type { CalendarEntry } from "./types";
 import { useUnsavedNavigation } from '../lib/useUnsavedNavigation';
 import { calendarDateTime, calendarICS, readCalendar } from './calendarModel';
-export default function Calendar({linkedTasks=[],onOpenTask}:{linkedTasks?:AreaTask[];onOpenTask?:(task:AreaTask)=>void}={}) {
+export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOpenPiece}:{linkedTasks?:AreaTask[];onOpenTask?:(task:AreaTask)=>void;linkedPieces?:Piece[];onOpenPiece?:(id:string)=>void}={}) {
   const { docs, save, track, reload, projectId } = useToolkit();
   let initial: CalendarEntry[] = [], formatError = '';
   try { initial = readCalendar(docs.calendar); } catch(e) { formatError = (e as Error).message; }
@@ -291,6 +292,7 @@ export default function Calendar({linkedTasks=[],onOpenTask}:{linkedTasks?:AreaT
                     day: "numeric",
                   })}
                 </time>
+                {linkedPieces.filter(piece=>piece.date===key).map(piece=><DSButtonSecondary key={`piece:${piece.id}`} className="calendar-linked-task" onClick={()=>onOpenPiece?.(piece.id)}>{piece.title||'Pieza sin título'}<small>Contenido planificado · abre la pieza original</small></DSButtonSecondary>)}
                 {linkedTasks.filter(task=>task.date===key).map(task=><DSButtonSecondary key={`task:${task.id}`} className="calendar-linked-task" onClick={()=>onOpenTask?.(task)}>{task.done?'✓':'○'} {task.title}<small>Tarea · sin hora</small></DSButtonSecondary>)}
                 {entries
                   .filter((item) => item.date === key)

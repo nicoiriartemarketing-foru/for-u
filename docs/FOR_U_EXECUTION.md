@@ -1,6 +1,6 @@
 # FOR U — Registro de ejecución de los 16 objetivos
 
-Actualizado: 21 de octubre de 2026. **Instrucción activa: objetivo 2 y corrección de una pregunta a la vez.** La existencia de este registro no autoriza comenzar objetivos posteriores. Especificación: [maestra](FOR_U_MASTER_SPEC.md); detalle de aceptación: [155 requisitos](FOR_U_REQUIREMENTS.csv); diagnóstico: [base](FOR_U_BASELINE.md).
+Actualizado: 21 de octubre de 2026. **Objetivo 3 comprobado en su alcance técnico; una pregunta a la vez se conserva.** La existencia de este registro no autoriza comenzar objetivos posteriores. Especificación: [maestra](FOR_U_MASTER_SPEC.md); detalle de aceptación: [155 requisitos](FOR_U_REQUIREMENTS.csv); diagnóstico: [base](FOR_U_BASELINE.md).
 
 ## Estados y criterio de cierre
 
@@ -18,8 +18,8 @@ Registrar además evidencia de código, prueba local, transporte controlado, SQL
 | Objetivo | Resultado | Dependencia | Estado de esta secuencia | Prueba/cierre |
 | --- | --- | --- | --- | --- |
 | 01 | Acuerdo, matriz, base y registro persistentes | Instrucción actual | comprobado | Auditoría documental A01–A10 y FOR_U_AGREEMENT_AUDIT.json |
-| 02 | Maqueta actualizada y recorrido aprobado | 01 | pendiente de aprobación visual | Muestra navegable y QA local en FOR_U_MOCKUP_REVIEW.md; falta aprobación expresa |
-| 03 | Datos compartidos y navegación | 02 **aprobado explícitamente** | pendiente | Dos proyectos, referencias, compatibilidad y retorno |
+| 02 | Maqueta actualizada y recorrido aprobado | 01 | comprobado | Base aprobada explícitamente el 21 octubre: «Sí, apruebo la base; continúa». No aprobación global del producto. |
+| 03 | Datos compartidos y navegación | 02 **aprobado explícitamente** | comprobado | FOR_U_OBJECTIVE_03_AUDIT.md: dos proyectos QA, recarga, referencias, 360/768/1440, TypeScript y build. Alcances posteriores y prueba física separados. |
 | 04 | Bienvenida, persona y proyecto | 03 | pendiente | Omitir/manual/retomar y audio privado |
 | 05 | Diagnóstico adaptativo de cuatro áreas | 04 | pendiente | Respuestas cambian recomendaciones sin bloqueos |
 | 06 | Ruta y resultados derivados | 05 y contratos03 | pendiente | Síntesis, diferencias, idempotencia y vistas compartidas |
@@ -48,7 +48,7 @@ Aceptación: cobertura de todas las secciones, fuentes identificables, estados h
 
 Actualizar la maqueta existente, no empezar otra inconexa: tres entradas, persona/proyecto, preguntas adaptativas de cuatro áreas, resumen corregible, preparación real ilustrada y resultados diferenciados. Página y oferta con landing propia; campaña→intención/oferta→tres propuestas→pieza→guion/video→perfil/destacados; cuatro vistas visibles y seis rubros. Probar sin materiales, principiante y negocio existente en360/768/1440.
 
-Aceptación: cada recomendación entendible y derivada de elecciones; simulaciones identificadas; entregar para revisión de la propietaria. **Detener extensión a app hasta aprobación explícita.** Actual aprobación: no obtenida; «un poco mejor, aún no me llena» exige corrección.
+Aceptación: cada recomendación entendible y derivada de elecciones; simulaciones identificadas; entregar para revisión de la propietaria. **Detener extensión a app hasta aprobación explícita.** Base aprobada explícitamente el 21 octubre: «Sí, apruebo la base; continúa». No aprobación global de la aplicación.
 
 ### 03 — Datos compartidos y navegación
 

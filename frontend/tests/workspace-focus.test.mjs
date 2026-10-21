@@ -53,7 +53,7 @@ test('legacy reads preserve the original document; explicit edits carry Today an
   const original = structuredClone(legacy);
   assert.equal(parseWorkspaceFocus(legacy), legacy);
   const next = rememberDestination(legacy, { projectId: b, tool: 'studio' });
-  assert.equal(next.version, 2);
+  assert.equal(next.version, 3);
   assert.deepEqual(next.today, legacy.today);
   assert.deepEqual(projectDestination(next, a), legacy.lastWork);
   assert.equal(projectDestination(next, b).tool, 'studio');
@@ -62,7 +62,7 @@ test('legacy reads preserve the original document; explicit edits carry Today an
   const edited = rememberDestination(reloaded, { projectId: a, tool: 'analytics' });
   assert.equal(projectDestination(edited, b).tool, 'studio');
   assert.equal(projectDestination(edited, a).tool, 'analytics');
-  assert.equal(toggleToday(legacy, legacy.today[0]).version, 2);
+  assert.equal(toggleToday(legacy, legacy.today[0]).version, 3);
   assert.throws(() => parseWorkspaceFocus({ version: 2, today: [], destinations: { [a]: { projectId: b } } }));
   assert.throws(() => parseWorkspaceFocus({ version: 2, today: [], destinations: { [a]: null } }));
 });
