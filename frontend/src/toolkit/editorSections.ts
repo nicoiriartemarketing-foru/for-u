@@ -1,3 +1,4 @@
+import {sectionKind} from './sectionComposition';
 import type { LandingBlock } from './types';
 export type SectionPreset = { key: string; title: string; description: string; body: string };
 const common: SectionPreset[] = [
@@ -18,7 +19,7 @@ export function editorIndustry(industry: string) {
 export function sectionPresets(industry: string): SectionPreset[] { return [...editorIndustry(industry).sections, ...common]; }
 export function createEditorSection(industry: string, key: string): LandingBlock | null {
  const preset = sectionPresets(industry).find(item => item.key === key);
- return preset ? { id: crypto.randomUUID(), title: preset.title, body: '' } : null;
+ return preset ? { id: crypto.randomUUID(), title: preset.title, body: '',kind:sectionKind({id:'',title:preset.title,body:''})||'details' } : null;
 }
 export function reorderEditorSections(blocks: LandingBlock[], fromId: string, toId: string): LandingBlock[] {
  const from = blocks.findIndex(block => block.id === fromId), to = blocks.findIndex(block => block.id === toId);

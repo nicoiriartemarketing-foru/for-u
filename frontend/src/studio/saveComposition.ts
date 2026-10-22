@@ -1,3 +1,4 @@
+import {mainSlots,setMainSlot} from '../social/organization';
 import {nativeOffers,parseProposal} from '../proposal/model';
 import {pageSections} from '../experience/pageComposition';
 import type {LandingDraft} from '../toolkit/types';
@@ -15,7 +16,7 @@ export function contentDocument(value:unknown,project:string):ContentDocument{
  d.drafts.forEach(row=>validateCreativeContext(row,project));return d;
 }
 /** Ordered, retryable writes. A partial success is retained and named, not rolled back or hidden. */
-export async function saveComposition(user:string,project:string,draft:ContentDraft,status:(message:string)=>void=()=>{},storage=studioStorage){
+export async function saveComposition(user:string,project:string,draft:ContentDraft,status:(message:string)=>void=()=>{},storage=studioStorage,mainIndex?:number){
  validateCreativeContext(draft,project);if(draft.projectId!==project)throw new Error('El diseño pertenece a otro proyecto.');
  for(const path of [draft.imagePath,draft.logoPath])if(path){mediaReference(path);if(!path.startsWith(`${user}/${project}/`))throw new Error('Un archivo pertenece a otro proyecto.');}
  const reference=draft.creative?.reference;
@@ -28,7 +29,8 @@ export async function saveComposition(user:string,project:string,draft:ContentDr
  const campaignDoc=campaigns?parseCampaigns(campaigns.payload,project):emptyCampaigns(project);
  if(draft.creative?.campaignId&&!campaignDoc.campaigns.some(row=>row.id===draft.creative!.campaignId))throw new Error('La campaña no está disponible. Vuelve a elegirla.');
  const next=saveContentDraft(contentDocument(designs?.payload,project),draft,project);
- const social=connectDesignPiece(profile?.payload,project,user,draft);
+ let social=connectDesignPiece(profile?.payload,project,user,draft);
+ if(mainIndex!==undefined){if(!Number.isInteger(mainIndex)||mainIndex<0||mainIndex>2)throw new Error('Este espacio del perfil no es válido.');const current=mainSlots(social)[mainIndex];if(current&&current!==draft.id)throw new Error('Este espacio ya tiene una pieza. Vuelve al perfil para revisarla; no la reemplazamos.');social=setMainSlot(social,mainIndex,draft.id,user);}
  let saved='';
  try{
   status('Guardando tu diseño…');await storage.save(user,project,'content-creator',next,designs?.revision??null);saved='El diseño ya está guardado. ';

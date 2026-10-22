@@ -1,3 +1,4 @@
+import {landingReturn} from '../studio/navigation';
 import DesignArtwork from '../studio/DesignArtwork';
 import {resolveMediaPath} from '../components/shared/mediaStorage';
 import EditorDecision from '../toolkit/EditorDecision';
@@ -24,7 +25,7 @@ export default function PieceWorkspace({piece,design,user,project,dirty,busy,err
  const image=design.imagePath?mediaReference(design.imagePath):design.sourceImageUrl||'';
  const title=panel==='photo'?'Tu imagen':panel==='script'?'Tu voz y tus tomas':panel==='plan'?'El siguiente paso':panel==='material'?'Material de esta pieza':'Crear conmigo';
  return <MediaScope.Provider value={{userId:user,projectId:project}}><section className="piece-workspace">
-  <header className="piece-topbar"><ButtonSecondary disabled={busy} onClick={onBack}>← Mi perfil</ButtonSecondary><span role="status">{busy?'Guardando…':error?'No se guardó':dirty?'Cambios pendientes':'Guardado'}</span><ButtonPrimary disabled={busy||!dirty} onClick={onSave}>Guardar</ButtonPrimary></header>
+  <header className="piece-topbar">{landingReturn(design.creative?.origin,project)?<Link className="pe-action-link" to={landingReturn(design.creative?.origin,project)!}>← Volver a mi página</Link>:<ButtonSecondary disabled={busy} onClick={onBack}>← Mi perfil</ButtonSecondary>}<span role="status">{busy?'Guardando…':error?'No se guardó':dirty?'Cambios pendientes':'Guardado'}</span><ButtonPrimary disabled={busy||!dirty} onClick={onSave}>Guardar</ButtonPrimary></header>
   <div className="piece-intro"><small>CREATOR STUDIO · TU PIEZA</small><h2>Dale tu forma.</h2><p>Toca el texto o la foto. El resultado está aquí.</p></div>
   <div className="piece-view-switch" role="group" aria-label="Qué editar"><ButtonSecondary aria-pressed={view==='design'} onClick={()=>setView('design')}>◈ Diseño</ButtonSecondary><ButtonSecondary aria-pressed={view==='caption'} onClick={()=>setView('caption')}>≋ Texto del post</ButtonSecondary></div>
   {view==='design'&&<div className="piece-stage" aria-busy={busy}><div className={'piece-poster piece-poster-'+design.format+(design.layout?' piece-poster-composed':'')} aria-label="Tu publicación editable" style={{background:design.background,color:design.foreground}}>

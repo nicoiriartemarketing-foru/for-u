@@ -1,3 +1,4 @@
+import './editorSheet.css';
 import {useEffect,useRef,type ReactNode} from 'react';
 import {createPortal} from 'react-dom';
 import {ButtonSecondary} from '../components/ui/DesignSystem';
@@ -14,6 +15,7 @@ export default function EditorSheet({open,title,onClose,children}:{open:boolean;
   return()=>{queueMicrotask(()=>{if(opener?.isConnected&&!opener.closest('[inert]'))opener.focus();});};
  },[open]);
  useDialogFocus(ref,open,onClose);
+ useEffect(()=>{if(open)ref.current?.querySelector('h2')?.focus();},[open,title]);
  useEffect(()=>{
   if(!open)return;
   const root=document.getElementById('root');
@@ -22,5 +24,5 @@ export default function EditorSheet({open,title,onClose,children}:{open:boolean;
   return()=>{openSheets--;if(openSheets===0){document.body.style.overflow=previousOverflow;if(root)root.inert=previousInert;}};
  },[open]);
  if(!open)return null;
- return createPortal(<div className="pe-sheet-backdrop" onClick={event=>{if(event.target===event.currentTarget)onClose();}}><section ref={ref} role="dialog" aria-modal="true" aria-label={title} className="pe-context-sheet foru-experience"><header><h2>{title}</h2><ButtonSecondary aria-label="Cerrar panel" onClick={onClose}>Listo ×</ButtonSecondary></header><div className="pe-sheet-content">{children}</div></section></div>,document.body);
+ return createPortal(<div className="pe-sheet-backdrop" onClick={event=>{if(event.target===event.currentTarget)onClose();}}><section ref={ref} role="dialog" aria-modal="true" aria-label={title} className="pe-context-sheet foru-experience"><header><h2 tabIndex={-1} style={{outline:'none'}}>{title}</h2><ButtonSecondary aria-label="Cerrar panel" onClick={onClose}>Listo ×</ButtonSecondary></header><div className="pe-sheet-content">{children}</div></section></div>,document.body);
 }

@@ -78,3 +78,26 @@ test('every prepared task can open and resume its actual tool in the same projec
   }
  }
 });
+
+test('compatible answers allow multiple needs, retain them when changing priority, and restore canonical choices',async()=>{
+ const {choiceValues,normalizePriority}=await import('../src/experience/personalizationModel.ts');
+ const needs=['Mostrar lo que ofrezco','Preparar contenido para darme a conocer'];
+ const a=normalizePriority({needs,goal:needs[1]});
+ assert.deepEqual(a.needs,needs);assert.equal(a.goal,needs[1]);
+ const qs=buildQuestions('restaurant',a);
+ assert.equal(qs.find(q=>q.key==='needs').multi,true);
+ assert.deepEqual(qs.find(q=>q.key==='goal').options,needs);
+ for(const key of ['offering','audience','need','sections','tools','comfort','intent'])assert.equal(qs.find(q=>q.key===key)?.multi,true,key);
+ assert.deepEqual(choiceValues({multi:true},'Café · Pasteles'),['Café','Pasteles']);
+ assert.equal(normalizePriority({...a,needs:[needs[0]]}).goal,needs[0]);
+ assert.equal(normalizePriority({...a,needs:[]}).goal,'');
+ assert.equal(normalizePriority({goal:'Crear contenido'}).goal,'Crear contenido');
+});
+test('multiple needs produce separate referenced tasks, with only the selected priority sorted first',()=>{
+ const needs=['Mostrar lo que ofrezco','Preparar contenido para darme a conocer','Organizar mis pendientes'];
+ const suggestions=routeSuggestions('restaurant',{needs,goal:needs[2]});
+ assert.equal(suggestions[0].key,'planning');
+ assert.ok(suggestions.some(t=>t.key==='page'));
+ assert.ok(suggestions.some(t=>t.key==='content'));
+ assert.equal(suggestions.find(t=>t.key==='planning').tool,'kanban');
+});

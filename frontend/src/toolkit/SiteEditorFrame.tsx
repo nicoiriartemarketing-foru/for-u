@@ -1,3 +1,6 @@
+import {GripVertical,ArrowUp,ArrowDown} from 'lucide-react';
+import SectionComposition from './PageSectionBody';
+import {sectionKind,sectionHint} from './sectionComposition';
 import {presentationClass} from '../presentation/model';
 import ProjectWidgets from '../widgets/ProjectWidgets';
 import { LandingExtras } from "./LandingPreview";
@@ -69,8 +72,10 @@ export default function SiteEditorFrame() {
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [imageDrop, setImageDrop] = useState(false);
   const [selected, setSelected] = useState("hero");
+  const [resume,setResume]=useState<string|null>(null);
   const [hostProject,setHostProject]=useState<string>();
   const [draft, setDraft] = useState<LandingDraft | null>(null);
+  useEffect(()=>{if(!draft||!resume)return;const target=resume==='hero'?document.querySelector('.tk-site-hero'):Array.from(document.querySelectorAll<HTMLElement>('[data-block-id]')).find(el=>el.dataset.blockId===resume);if(target){target.scrollIntoView({block:'start'});setResume(null);}},[draft,resume]);
   const channel = new URLSearchParams(window.location.search).get("channel");
   const send = (type: string, payload: object = {}) => {
     if (window.parent !== window)
@@ -93,7 +98,7 @@ export default function SiteEditorFrame() {
         setDraft(next);
         setHostProject(typeof event.data.projectId==='string'&&/^[0-9a-f-]{36}$/i.test(event.data.projectId)?event.data.projectId:undefined);
         const id = event.data.selectedId;
-        if (id === 'hero' || next.blocks.some(block => block.id === id)) setSelected(id);
+        if (id === 'hero' || next.blocks.some(block => block.id === id)){setSelected(id);if(event.data.resumeSelection===true)setResume(id);}
       }
     };
     window.addEventListener("message", receive);
@@ -136,9 +141,9 @@ export default function SiteEditorFrame() {
         <button type="button" className="pe-insert-section" onClick={()=>send('foru:sections',{beforeId:block.id})}>＋ Sección</button>
         <Card as="section" key={block.id} data-block-id={block.id} className={`tk-site-block pe-editable-section ${selected === block.id ? 'pe-selected' : ''} ${dropTarget === block.id ? 'pe-drop-target' : ''}`} onClick={() => { setSelected(block.id); send('foru:select', { id: block.id }); }} onFocus={() => { setSelected(block.id); send('foru:select', { id: block.id }); }} onDragOver={event => { event.preventDefault(); setDropTarget(block.id); }} onDragLeave={() => setDropTarget(null)} onDrop={event => { setDropTarget(null); if (!drag.current) return; event.preventDefault(); event.stopPropagation(); send('foru:move', { from: drag.current, to: block.id }); drag.current = null; }}>
           <div className="pe-block-controls" contentEditable={false}>
-            <ButtonGhost type="button" draggable aria-label={`Arrastrar ${block.title}`} tooltip="Arrastra para mover esta sección. También puedes usar los botones Subir y Bajar." onDragStart={event => { drag.current = block.id; event.dataTransfer.setData('text/plain', block.id); event.dataTransfer.effectAllowed = 'move'; }} onDragEnd={() => { drag.current = null; setDropTarget(null); }}>⠿</ButtonGhost>
-            <ButtonGhost type="button" aria-label={`Subir ${block.title}`} disabled={index === 0} onClick={() => send('foru:move', { from: block.id, to: draft.blocks[index - 1].id })}>↑</ButtonGhost>
-            <ButtonGhost type="button" aria-label={`Bajar ${block.title}`} disabled={index === draft.blocks.length - 1} onClick={() => send('foru:move', { from: block.id, to: draft.blocks[index + 1].id })}>↓</ButtonGhost>
+            <ButtonGhost type="button" draggable aria-label={`Arrastrar ${block.title}`} tooltip="Arrastra para mover esta sección. También puedes usar los botones Subir y Bajar." onDragStart={event => { drag.current = block.id; event.dataTransfer.setData('text/plain', block.id); event.dataTransfer.effectAllowed = 'move'; }} onDragEnd={() => { drag.current = null; setDropTarget(null); }}><GripVertical size={18} aria-hidden="true"/></ButtonGhost>
+            <ButtonGhost type="button" aria-label={`Subir ${block.title}`} disabled={index === 0} onClick={() => send('foru:move', { from: block.id, to: draft.blocks[index - 1].id })}><ArrowUp size={18} aria-hidden="true"/></ButtonGhost>
+            <ButtonGhost type="button" aria-label={`Bajar ${block.title}`} disabled={index === draft.blocks.length - 1} onClick={() => send('foru:move', { from: block.id, to: draft.blocks[index + 1].id })}><ArrowDown size={18} aria-hidden="true"/></ButtonGhost>
           </div>
           <Editable
             value={block.title}
@@ -147,17 +152,17 @@ export default function SiteEditorFrame() {
             tag="h2"
             onEdit={edit}
           />
-          <Editable
-            value={block.body}
-            field="body"
-            blockId={block.id}
-            tag="p"
-            onEdit={edit}
-          />
+          {draft.presentationVersion===3&&sectionKind(block)==='catalog'?<>
+            <SectionComposition block={block} draft={draft} onEditOffer={id=>send('foru:context',{target:'offer',id})}/>
+            {!draft.offers?.length&&<div className="page-section-setup"><span aria-hidden="true">＋</span><p>{sectionHint('catalog',draft.template)}</p><button type="button" onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'catalog'});}}>Preparar mi catálogo →</button></div>}
+          </>:<>
+            {draft.presentationVersion===3&&sectionKind(block)==='faq'&&block.body.trim()?<><SectionComposition block={block} draft={draft}/><button className="pe-action-link" type="button" onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'text'});}}>Editar preguntas y respuestas</button></>:<Editable value={block.body} field="body" blockId={block.id} tag="p" onEdit={edit}/>}
+            {draft.presentationVersion===3&&!block.body.trim()&&<p className="page-section-hint">{sectionHint(sectionKind(block),draft.template)}</p>}
+          </>}
         </Card></div>
       ))}
       <button type="button" className="pe-insert-section" onClick={()=>send('foru:sections',{beforeId:null})}>＋ Sección</button>
-      <LandingExtras draft={draft} onEditGallery={role=>send('foru:context',{target:'gallery',role})} onEditOffer={id=>send('foru:context',{target:'offer',id})} />
+      <LandingExtras draft={draft} hideCatalog={draft.presentationVersion===3&&draft.blocks.some(b=>sectionKind(b)==='catalog')} onEditGallery={role=>send('foru:context',{target:'gallery',role})} onEditOffer={id=>send('foru:context',{target:'offer',id})} />
       {hostProject&&<ProjectWidgets widgets={draft.widgets??[]} hostProject={hostProject}/>}
       <footer>{draft.name} · Creado con FOR U</footer>
     </article>

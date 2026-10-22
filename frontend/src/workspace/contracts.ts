@@ -16,7 +16,7 @@ export type SpecificOffer={id:string;title:string;source:SourceReference|null;be
 export type SpecificOffers={version:1;projectId:string;offers:SpecificOffer[]};
 export type Materials={version:1;projectId:string;materials:Material[]};
 const areas=['marketing','finance','logistics','operations'];
-const questions=new Set(['projectName','route','age','team','teamSize','stage','origin','purpose','vision','audience','offering','need','goal','web','sales','salesPeriod','marketingStart','intent','comfort','avoid','resources','tools','time','friction','channel','diffusion','budget','reminders','sections','otherAreas','prices','cost','moneyTracking','delivery','control','logisticsFriction','requests','tracking','responsible','operationGoal']);
+const questions=new Set(['projectName','route','age','team','teamSize','stage','origin','purpose','vision','audience','offering','need','needs','goal','web','sales','salesPeriod','marketingStart','intent','comfort','avoid','resources','tools','time','friction','channel','diffusion','budget','reminders','sections','otherAreas','prices','cost','moneyTracking','delivery','control','logisticsFriction','requests','tracking','responsible','operationGoal']);
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const text=(v:unknown,n=3000):v is string=>typeof v==='string'&&v.length<=n;
 const unique=(ids:unknown,n=200):ids is string[]=>Array.isArray(ids)&&ids.length<=n&&ids.every(x=>text(x,200)&&!!x)&&new Set(ids).size===ids.length;

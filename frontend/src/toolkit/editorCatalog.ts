@@ -1,8 +1,19 @@
-import {nativeOffers} from '../proposal/model';
+import {sectionKind} from './sectionComposition';
+import {nativeOffers,parseProposal,proposalOffers} from '../proposal/model';
 import type {ModuleType} from '../modules/moduleProjects';
 import type {LandingDraft} from './types';
 /** A module-bound draft previews its confirmed catalog. Public snapshots are untouched. */
-export function editorCatalog(draft:LandingDraft,type:ModuleType|undefined,payload:unknown):LandingDraft{
+export function editorCatalog(draft:LandingDraft,type:ModuleType|undefined,payload:unknown,proposalPayload?:unknown):LandingDraft{
+ if(!type&&draft.catalogSource==='proposal'&&proposalPayload!==undefined)return {...draft,offers:proposalOffers(parseProposal(proposalPayload),undefined,undefined),menuItems:undefined};
  if(draft.catalogSource!=='module'||!type||payload===undefined)return draft;
- return {...draft,offers:nativeOffers(type,payload),menuItems:undefined};
+ const offers=nativeOffers(type,payload);
+ const settings=(payload as {settings?:Record<string,unknown>})?.settings||{};
+ const text=(key:string)=>typeof settings[key]==='string'?settings[key] as string:'';
+ const blocks=draft.presentationVersion===3?draft.blocks.map(block=>{
+  if(block.body.trim()||!block.useModuleDetails)return block;
+  const kind=sectionKind(block);
+  const body=kind==='story'?text('about'):kind==='location'?[text('address'),text('hours')].filter(Boolean).join('\n'):'';
+  return body?{...block,body}:block;
+ }):draft.blocks;
+ return {...draft,blocks,offers,menuItems:undefined};
 }

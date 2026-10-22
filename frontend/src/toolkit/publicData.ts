@@ -1,3 +1,4 @@
+import {sectionKinds,type SectionKind} from './sectionComposition';
 import {presentationVersion} from '../presentation/model';
 import { parseWidgets } from '../widgets/model';
 import type { LandingDraft } from "./types";
@@ -29,6 +30,7 @@ export function parseSiteData(value: unknown): LandingDraft | null {
       if (new Set(offers.map(offer => offer.id)).size !== offers.length) return null;
     } catch { return null; }
   }
+  if(data.blocks.some(block=>block&&typeof block==='object'&&'kind' in block&&!sectionKinds.includes(block.kind as SectionKind)))return null;
   let design;try{design=presentationVersion(data.presentationVersion);}catch{return null;}
   let widgets; try {widgets=parseWidgets(data.widgets);}catch{return null;}
   return {
@@ -54,7 +56,7 @@ export function parseSiteData(value: unknown): LandingDraft | null {
     calendly: safeHttps(text("calendly", 400), "calendly.com"),
     blocks: data.blocks
       .slice(0, 8)
-      .filter((block): block is { id: string; title: string; body: string } =>
+      .filter((block): block is { kind?:SectionKind; id: string; title: string; body: string } =>
         Boolean(
           block &&
           typeof block === "object" &&
@@ -64,6 +66,7 @@ export function parseSiteData(value: unknown): LandingDraft | null {
         ),
       )
       .map((block) => ({
+        ...(block.kind?{kind:block.kind}:{}),
         id: block.id.slice(0, 80),
         title: block.title.slice(0, 150),
         body: block.body.slice(0, 2000),

@@ -1,6 +1,6 @@
 import { privateMediaPath, isPrivateMedia, mediaReference } from '../components/shared/mediaReference';
 export type Piece = { id:string; title:string; objective:string; text:string; script:string; shots:string; date:string; status:'idea'|'draft'|'ready'|'published-manual'; files:{path:string;name:string}[]; campaignId?:string; materialIds?:string[]; videoId?:string; coverId?:string; source?:{projectId:string;id:string;kind:'proposal'|'catalog'|'page'|'offer';revision:string} };
-export type SocialDocument = { version:1|2; gridOrder?:string[]; projectId:string; photo:string; name:string; bio:string; link:string; highlights:{id:string;title:string;cover:string}[]; main:string[]; pieces:Piece[] };
+export type SocialDocument = { version:1|2; mainSlots?:(string|null)[]; gridOrder?:string[]; projectId:string; photo:string; name:string; bio:string; link:string; highlights:{id:string;title:string;cover:string}[]; main:string[]; pieces:Piece[] };
 export const uuid = (value:unknown):value is string => typeof value==='string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 export function emptySocial(projectId:string):SocialDocument {return {version:1,projectId,photo:'',name:'',bio:'',link:'',highlights:[],main:[],pieces:[]};}
 export function newPiece():Piece {return {id:crypto.randomUUID(),title:'',objective:'',text:'',script:'',shots:'',date:'',status:'idea',files:[]};}
@@ -16,6 +16,7 @@ export function parseSocial(value:unknown,projectId:string,userId?:string):Socia
  if(new Set(d.pieces.map(p=>p.id)).size!==d.pieces.length||d.main.some(id=>!d.pieces.some(p=>p.id===id))||d.highlights.some(h=>!uuid(h.id)||!text(h.title,80)||!text(h.cover,2000)))throw new Error('Revisa las referencias del perfil.');
  const ids=(v:unknown):v is string[]=>Array.isArray(v)&&v.length<=300&&v.every(uuid)&&new Set(v).size===v.length;
  if(d.version===2&&(!ids(d.gridOrder)||d.gridOrder.some(id=>!d.pieces.some(p=>p.id===id))))throw new Error('El orden del perfil contiene una pieza no disponible.');
+ if(d.mainSlots!==undefined&&(d.version!==2||!Array.isArray(d.mainSlots)||d.mainSlots.length!==3||d.mainSlots.some(id=>id!==null&&(!uuid(id)||!d.pieces.some(p=>p.id===id)))||JSON.stringify(d.mainSlots.filter(id=>id!==null))!==JSON.stringify(d.main)))throw new Error('Los espacios principales del perfil necesitan revisión. Se conservan sin reemplazar.');
  if(d.pieces.some(p=>(p.campaignId!==undefined&&!uuid(p.campaignId))||(p.materialIds!==undefined&&!ids(p.materialIds))||(p.videoId!==undefined&&!uuid(p.videoId))||(p.coverId!==undefined&&!uuid(p.coverId))||(p.source!==undefined&&(!p.source||p.source.projectId!==projectId||!text(p.source.id,200)||!p.source.id||!['proposal','catalog','page','offer'].includes(p.source.kind)||!text(p.source.revision,100)||!p.source.revision))))throw new Error('Una referencia de la pieza no es compatible con este proyecto.');
  return d;
 }

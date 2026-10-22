@@ -4,7 +4,7 @@ import type { ModuleType } from '../../modules/moduleProjects';
 
 export const taskTools = [
   ['profile', 'Mi perfil y publicaciones'], ['proposal', 'Mi propuesta'], ['landing', 'Mi página'], ['editor', 'Editar oferta'], ['summary', 'Resumen del negocio'],
-  ['studio', 'Creator Studio'], ['creator', 'Creador visual'], ['content', 'Contenido con IA'], ['teleprompter', 'Teleprompter'],
+  ['studio', 'Creator Studio'], ['kanban', 'Mi Kanban'], ['creator', 'Creador visual'], ['content', 'Contenido con IA'], ['teleprompter', 'Teleprompter'],
   ['orders', 'Pedidos internos de restaurante'], ['commerce-orders', 'Compras y cotizaciones'], ['calendar', 'Calendario'], ['bookings', 'Reservas y pedidos'], ['automation', 'Contacto y respuestas'],
   ['images', 'Uploads'], ['analytics', 'Estadísticas'],
 ] as const;

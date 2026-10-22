@@ -247,3 +247,44 @@ Verificación local con dependencias del lockfile en snapshot temporal: 209 prue
 Evidencia persistente en `docs/evidence/2026-10-22/`: `studio-editor-360.png`, `studio-campana-360.png`, `studio-intencion-360.png`, `studio-intencion-1440.png`.
 
 **Pendientes explícitos de Studio:** adaptar composiciones/plantillas por rubro y momento comercial, filtros completos de comodidad y ofertas específicas, fuente publicada y aviso integral de revisión, carrusel progresivo, organización del perfil/grid/destacados/calendario, biblioteca unificada de todos los tipos de material, grabación/portada/exportación real y Safari físico. La biblioteca integrada de este avance muestra diseños y la biblioteca de fotos existente; no se declara completa la biblioteca multimedia. Continuar además las entregas 1 y 3 y la matriz de todas las herramientas. Gemini real/audio, aislamiento remoto con segunda cuenta e integraciones externas siguen sin prueba de cierre.
+
+## Addendum de prueba personal — 22 octubre: siete ajustes, alcance acumulativo
+
+Se incorpora al acuerdo vigente, sin sustituir las tres entregas ni sus requisitos: multiselección compatible; necesidades separadas de una prioridad; composiciones/widgets por seis rubros; tutorial posterior a preparar página; primeros contenidos Conóceme/Conversemos/Mi oferta; creación desde sección; retorno al origen con proyecto y cambios conservados.
+
+Avance de implementación, todavía sin cierre visual:
+- Preguntas compatibles admiten varias selecciones, conservan el texto comercial canónico y restauran opciones separadas por « · ». Necesidades múltiples producen recomendaciones independientes; prioridad solo ordena, sin quitar necesidades. Se conserva la lectura de respuestas anteriores.
+- Perfil con vista de resultado, destacados, tres posiciones principales, cuadrícula/lista/calendario y filtros; selección y orden mediante referencias a piezas. Pruebas QA previas: biografía/destacado recargados, posición tercera conservada, orden orgánico guardado sin cambiar fechas ni borrar piezas. No equivale a completar grabación o biblioteca multimedia.
+- Tutorial contextual y omisible al abrir la página preparada desde la guía: Crear mis primeros contenidos / Seguir editando. Un propósito por elección; propuestas por reglas y recursos confirmados.
+- Origen cerrado de landing guardado dentro del diseño, validado por proyecto; regreso desde editor y pieza recupera sección conocida. Se evita interpretar metadatos como rutas arbitrarias. Selección inválida vuelve al hero.
+- La acción contextual guarda primero el borrador cuando hace falta y solo navega si el guardado termina correctamente.
+
+Verificación local inicial: 222 pruebas aprobadas, TypeScript y build. Se inicia QA autenticado en proyecto desechable `aa420f8a-2267-4fbf-b1bb-e756278fd352`, pestaña separada; no se altera el proyecto de prueba personal `87b198a9-9d1c-4934-800e-89b14eb1517f`.
+
+Pendiente para este addendum: comprobación completa de ida/vuelta, estado/scroll y Atrás; widgets/composiciones especializados; dos proyectos y recorrido nuevo completo; tamaños y teclado; aprobación visual de Nicole. Se mantienen TODOS los pendientes externos y de las entregas anteriores. No se publica, no se activa facturación ni se despliega en Hostinger.
+
+QA adicional comprobado en interfaz: tutorial → Conóceme → fuente hero confirmada → formato vertical → tres propuestas → guardado del diseño `b274dbe5-e9b5-4dc9-b8f4-7363e4592375` → recarga → botón «Volver a mi página» → landing del mismo proyecto con `section=hero&resume=1` y borrador cargado. Evidencia: `studio-retorno-origen.png`. Durante QA se detectó una selección de fuente repetida tras elegir intención desde la landing; se corrigió para usar la sección conocida en Conóceme/Conversemos. Mi oferta sigue solicitando una oferta confirmada para no convertir historia en una venta inventada. Último TypeScript/build de esa corrección aprobados. Falta repetirla visualmente y verificar sección distinta de hero, guion, móvil y Atrás; no cierre del recorrido total.
+
+## Secciones tipadas y composición conectada — 22 octubre (avance abierto)
+
+Las estructuras nuevas identifican catálogo, historia, FAQ, ubicación y detalles. Se conserva lectura de bloques previos y solo la presentación v3 usa estas composiciones. El menú/catálogo confirmado se muestra dentro de su sección, sin una segunda copia al final; tarjetas conservan IDs, precios, condiciones, presentaciones y extras. Sin catálogo, el editor ofrece configurar su fuente; no aparecen productos ficticios en público.
+
+Preguntas frecuentes con pares pregunta/respuesta explícitos se muestran en desplegables nativos. Historia y contacto reciben composiciones propias. La proyección del catálogo puede reutilizar historia/dirección/horario confirmados únicamente en secciones nuevas que lo permiten; borrar o editar el texto desactiva ese origen para no restaurar contenido contra la decisión de la persona. Datos de costos/inventario no se incorporan a la página.
+
+227 pruebas aprobadas, TypeScript y build. QA autenticado: menú dentro de Menú con producto original; FAQ «¿Es una oferta real?» abre «No. Esta página contiene datos de prueba QA.»; creación contextual desde FAQ lleva sus textos a tres composiciones sin pedir nuevamente la fuente. Evidencia `secciones-menu-faq.png` muestra el desplegable abierto (no acredita todas las secciones ni todos los tamaños).
+
+Pendientes conservados: modalidades/horarios de pedido integrados con validación, composiciones específicas completas y acciones operativas por seis rubros, configuración guiada de todas las secciones, regreso desde sección distinta de hero tras guion y recarga, móvil y dos proyectos, aprobación visual. No confundir los widgets de otros proyectos publicados con los componentes operativos del negocio. No se ha publicado esta página ni desplegado a Hostinger.
+
+QA contextual adicional: FAQ `b196865e-1239-4404-9624-1642af0c3020` → intención confianza → formato cuadrado → composición guardada `b20fee32-126b-43cf-809a-11575f9dc098` → Volver a mi página devuelve esa sección exacta y carga borrador/FAQ/catálogo. No acredita todavía guion, calendario, Atrás o móvil. Pestaña QA conservada para continuar. Git status/diff global siguen sin devolver resultado en los handles observados; los cambios permanecen en el árbol de trabajo y el commit revisable continúa pendiente, sin reiniciar ni descartar procesos por timeout.
+
+## Retorno de vista y controles móviles — 22 octubre (sin cierre global)
+
+Se guarda selección/vista de edición en sesión por cuenta/proyecto; se ignoran secciones eliminadas y datos de caché inválidos. El origen de una pieza admite vista móvil/escritorio validada, sin destinos arbitrarios. Atrás del navegador vuelve a la landing conservando la vista móvil elegida. Comprobado QA en CSS360: ancho de documento 360, sin desbordamiento horizontal; retorno de Studio a FAQ con vista móvil activa. La captura `editor-seccion-360.png` acredita esa superficie, no el recorrido físico iPhone.
+
+Se corrigió herencia de texto blanco en flechas de ordenar sección; controles de sección se revelan con selección/foco y mantienen alternativa táctil. Iconos de dispositivo/undo/redo pasan a SVG de la librería ya instalada, sin dependencia nueva.
+
+Diagnóstico adicional: la ruta Servicios creaba una página vinculada a un módulo que no existe. Ahora usa las ofertas de su propuesta y puede comprobarlas antes de publicar sin pedir un catálogo de restaurante. Se oculta el enlace `/modules/undefined/editor`; se conserva rechazo de referencias nativas inexistentes. Cambio probado localmente; falta recorrido remoto completo de servicios y publicación QA explícita.
+
+230 pruebas aprobadas, TypeScript/build. No se modifica la publicación de ningún negocio. Permanecen pendientes el recorrido nuevo con dos proyectos, calendario/guion/origen completo, componentes operativos por rubro, matriz global y aprobación visual.
+
+QA nuevo creado desde cero: `c902defd-93f6-4542-bd79-24545e231315`, «QA Servicios · multiselección 22 octubre». Se omiten preferencias personales, sin sustituir nombre ni tratamiento de la cuenta. Ruta Servicios, inicio exploratorio sin materiales; preguntas opcionales omitidas. En oferta, «Un servicio» y «Una asesoría» quedan seleccionadas a la vez sin avanzar; Continuar inicia guardado. Se continúa verificando regreso y recarga antes de preparar su página. El proyecto personal de Nicole sigue intacto.

@@ -114,3 +114,10 @@
 
 .pe-tap-hint{font-size:12px;line-height:1.5;margin:10px 8px;color:#625d6c}
 .pe-wide-editor .pe-studio-bar{width:100%;max-width:100%;box-sizing:border-box;flex-wrap:wrap;align-self:stretch}
+/* Editor-only controls must not inherit the public CTA's white text. */
+.pe-editable-page .pe-block-controls .ds-button{color:#543285!important;background:#ede7f7!important;border:1px solid #daceed!important;min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;font-size:18px}
+.pe-editable-page .pe-block-controls .ds-button:disabled{color:#736581!important;background:#f5f1f9!important;opacity:.55}
+.pe-editable-page .pe-block-controls{opacity:0;pointer-events:none;transition:opacity .12s ease}
+.pe-editable-page .pe-editable-section:hover .pe-block-controls,.pe-editable-page .pe-editable-section:focus-within .pe-block-controls,.pe-editable-page .pe-editable-section.pe-selected .pe-block-controls{opacity:1;pointer-events:auto}
+@media(hover:none){.pe-editable-page .pe-block-controls{opacity:1;pointer-events:auto}}
+@media(prefers-reduced-motion:reduce){.pe-editable-page .pe-block-controls{transition:none}}

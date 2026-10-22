@@ -45,9 +45,9 @@ export function nativeOffers(type: ModuleType, payload: unknown): Offer[] {
   });
 }
 // No price copies in proposal references. Always resolve the stored source.
-export function proposalOffers(proposal: Proposal, type: ModuleType, payload: unknown): Offer[] {
+export function proposalOffers(proposal: Proposal, type: ModuleType | undefined, payload: unknown): Offer[] {
   parseProposal(proposal);
-  const native = nativeOffers(type, payload);
+  const native = type?nativeOffers(type, payload):[];
   const missing = proposal.nativeIds.filter(id => !native.some(offer => offer.id === id));
   if (missing.length) throw new Error('Una oferta elegida ya no está disponible en el catálogo. Revisa tu propuesta antes de preparar o publicar.');
   const offers = [...native.filter(offer => proposal.nativeIds.includes(offer.id)), ...proposal.offers];
