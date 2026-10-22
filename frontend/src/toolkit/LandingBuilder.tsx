@@ -1,3 +1,5 @@
+import FaqSectionEditor from './FaqSectionEditor';
+import {sectionKind} from './sectionComposition';
 import {useSavedNavigation} from '../lib/useSavedNavigation';
 import {Monitor,Smartphone,Undo2,Redo2,MoreHorizontal} from 'lucide-react';
 import {parseLandingWorkspace,workspaceKey} from './landingWorkspace';
@@ -415,7 +417,8 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
           {id:'tone',title:'Elige su color',hint:'Tres acentos de FOR U, con texto legible.',icon:'◉',content:<DSSelect label="Color del botón" value={draft.ctaDesign?.tone||'violet'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,version:1,tone:e.target.value as 'violet'|'mint'|'gold'}})}><option value="violet">Violeta</option><option value="mint">Mint</option><option value="gold">Dorado</option></DSSelect>}
         ]:selectedBlock?[
           {id:'title',title:'El título de esta sección',hint:'También puedes escribir directamente sobre la página.',icon:'✎',content:<DSInput label="Título de sección" value={selectedBlock.title} maxLength={150} onChange={e=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,title:e.target.value}:block)})}/>},
-          {id:'body',title:'Cuenta esta parte',hint:'Usa tus palabras y datos confirmados de tu negocio.',icon:'≋',content:<Textarea label="Texto de sección" value={selectedBlock.body} maxLength={2000} onChange={e=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,useModuleDetails:false,body:e.target.value}:block)})}/>}
+          {id:'body',title:sectionKind(selectedBlock)==='faq'?'Preguntas y respuestas':'Cuenta esta parte',hint:sectionKind(selectedBlock)==='faq'?'Resuelve una duda por vez. Verás el resultado desplegable en tu página.':'Usa tus palabras y datos confirmados de tu negocio.',icon:'≋',content:sectionKind(selectedBlock)==='faq'?<FaqSectionEditor body={selectedBlock.body} disabled={busy} onChange={body=>{if(body.length>2000){setNotice('Esta sección admite hasta 2000 caracteres. Conservamos el texto anterior; acorta una respuesta antes de continuar.');return;}update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,useModuleDetails:false,body}:block)});}}/>:<Textarea label="Texto de sección" value={selectedBlock.body} maxLength={2000} onChange={e=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,useModuleDetails:false,body:e.target.value}:block)})}/>}
+
         ]:[
           {id:'headline',title:'Tu mensaje principal',hint:'¿Qué quieres que alguien entienda al llegar?',icon:'✦',content:<DSInput label="Título principal" value={draft.headline} maxLength={180} onChange={e=>update({headline:e.target.value})}/>},
           {id:'description',title:'Cuéntalo con tus palabras',hint:'Una explicación breve de lo que ofreces.',icon:'≋',content:<Textarea label="Descripción" value={draft.description} maxLength={1000} onChange={e=>update({description:e.target.value})}/>},

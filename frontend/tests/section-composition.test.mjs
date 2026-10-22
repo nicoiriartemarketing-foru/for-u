@@ -50,3 +50,18 @@ test('service pages resolve their own proposal offers without a fabricated modul
  assert.equal(proposalOffers(proposal,undefined,undefined).length,1);
  assert.throws(()=>proposalOffers({...proposal,nativeIds:['restaurant:foreign']},undefined,undefined),/catálogo/);
 });
+
+test('guided FAQ editing preserves unfinished questions and only publishes complete pairs',async()=>{
+ const {draftFaqRows,serializeFaqRows}=await import('../src/toolkit/sectionComposition.ts');
+ const rows=[{question:'¿Cómo coordino?',answer:'Escribe al contacto confirmado.\nCoordinamos antes de atender.'},{question:'¿Cuándo?',answer:''}];
+ const body=serializeFaqRows(rows);assert.deepEqual(draftFaqRows(body),rows);assert.deepEqual(faqRows(body),[rows[0]]);
+ const page=prepareRoutePage('QA','services',{},emptyProposal());
+ const incomplete={id:'faq',kind:'faq',title:'Preguntas frecuentes',body:serializeFaqRows([rows[1]])};
+ assert.equal(sectionConfigured(incomplete,page),false);
+ // Clearing a question must not reinterpret its answer as a new public question.
+ const cleared=serializeFaqRows([{question:'',answer:'Primera línea\nSegunda línea'}]);
+ assert.deepEqual(draftFaqRows(cleared),[{question:'',answer:'Primera línea\nSegunda línea'}]);assert.deepEqual(faqRows(cleared),[]);
+ assert.equal(sectionConfigured({...incomplete,body},page),true);
+});
+
+test('FAQ typing keeps trailing spaces between keystrokes until public rendering',async()=>{const {draftFaqRows,serializeFaqRows}=await import('../src/toolkit/sectionComposition.ts');let rows=[{question:'Cómo ',answer:''}];rows=draftFaqRows(serializeFaqRows(rows));assert.equal(rows[0].question,'Cómo ');rows[0].question+='pedir';rows[0].answer='Con ';rows=draftFaqRows(serializeFaqRows(rows));assert.equal(rows[0].answer,'Con ');rows[0].answer+='calma';assert.deepEqual(faqRows(serializeFaqRows(rows)),[{question:'Cómo pedir',answer:'Con calma'}]);});

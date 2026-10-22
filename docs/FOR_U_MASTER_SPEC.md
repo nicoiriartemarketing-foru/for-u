@@ -263,3 +263,7 @@ Interpretar audio o generar textos con IA requiere acción explícita y pruebas 
 - No visitar perfiles ni invocar IA al adjuntar o guardar. Cualquier interpretación futura será explícita y revisable. No copiar automáticamente textos, fotos ni identidad de terceros.
 - Las composiciones conservan una instantánea privada de las notas confirmadas, sin introducir perfiles o notas como texto público ni copiar capturas a diseños. No anunciar análisis de perfiles no realizado.
 - Guardado compatible en diagnóstico versionado y por proyecto; conservar documentos anteriores, publicaciones y catálogo. No activar facturación ni publicar negocios reales.
+
+## 22. IA contextual inspirada en NotebookLM
+
+Referencia investigada y adaptación detallada en [FOR_U_NOTEBOOKLM_REFERENCE.md](FOR_U_NOTEBOOKLM_REFERENCE.md). Fuentes elegidas, acciones contextuales, procedencia verificable, resultados separados y aceptación explícita. Integrar identidad/pilares/referencias mediante selección del usuario y resolución autorizada en servidor; no asumir lectura de perfiles ni enviar todo el negocio. Mantener una entrada contextual a IA y las composiciones locales sin consumo. Conservar límites, caché por revisión y trabajo manual, sin ahorro prometido, facturación nueva ni automatismos al navegar. Esta ampliación sigue pendiente de implementación y prueba con proveedor real; no confundir investigar la referencia con disponer de esas capacidades.

@@ -318,3 +318,15 @@ QA real en `c902defd-93f6-4542-bd79-24545e231315` (Servicios, adaptador compatib
 También se comprobó diseño `57aefb2a-dd04-40bb-8c78-a82c98a90547` → Crear video/guion → Studio/mi perfil con misma pieza y pilar «Proceso y método», sin falso aviso de salida tras guardar. Protección de Atrás con guion pendiente conserva cambios al cancelar (evidencia `proteccion-atras-guion.png`). Pilares confirmados visibles en `studio-pilares-confirmados.png`.
 
 TypeScript, build y 238 pruebas correctos en snapshot Node20; fuentes canónicas en frontend. Corrección adicional de foco del título y etiqueta explícita «Guardar y volver a Studio» se validan en la misma versión antes de entrega. Estas comprobaciones no cierran las rutas operativas, widgets restantes, proveedor real, aislamiento con segunda cuenta, prueba física Safari ni aprobación visual. No se modificó el proyecto del usuario 87b198a9… ni se publicaron negocios reales.
+
+### 22 octubre — referencia NotebookLM y preguntas frecuentes
+
+Se investigó documentación oficial de Google sobre fuentes seleccionadas, citas, artefactos y control de generación, y documentación de Gemini sobre JSON/caché. Propuesta de adaptación y límites registrada en FOR_U_NOTEBOOKLM_REFERENCE.md y requisito AI-NB01: una entrada contextual, fuentes autorizadas elegidas, procedencia y aceptación separadas. Investigación no equivale a integración ni prueba real de proveedor; identidad/referencias siguen pendientes como fuentes seleccionables de IA.
+
+Hallazgo reparado localmente: toolkit-ai rechazaba perfiles v2 al preparar guiones/textos. creativePieceSource ahora acepta v1/v2 del proyecto autorizado y selecciona solo una pieza y campos limitados; rechaza versiones desconocidas, proyecto ajeno y pieza ausente. Pruebas del handler y helper correctas. Backend no desplegado en esta revisión; no se acredita respuesta real Gemini.
+
+FAQ: se sustituye la caja de formato manual por editor contextual pregunta → respuesta → lista. Se conserva formato de almacenamiento; preguntas incompletas no se publican ni convierten una respuesta huérfana en pregunta. Pruebas de secciones correctas; recorrido visible y guardado se documentarán después de comprobarlos.
+
+FAQ comprobada en restaurante QA `aa420f8a-2267-4fbf-b1bb-e756278fd352`, sección `b196865e-1239-4404-9624-1642af0c3020`: añadir pregunta → recuperar pendiente tras recarga → editar pregunta → escribir respuesta → cerrar panel → Borrador guardado → abrir desplegable muestra respuesta íntegra. Se detectó durante la prueba una pérdida de espacios al normalizar en cada tecla; corregida conservando texto en edición y normalizando únicamente para render público. Prueba de regresión incluida y repetición real de escritura conserva espacios. Evidencia `faq-configurada-desplegable.png`. No se pulsó Publicar. Esto acredita ese widget, no el conjunto de pedidos/reservas de todos los rubros.
+
+Validación del checkpoint: 241 pruebas aprobadas, TypeScript y build correctos en Node20. Backend de compatibilidad probado localmente; despliegue y proveedor real pendientes. Mantener objetivo general activo y aprobación visual separada.

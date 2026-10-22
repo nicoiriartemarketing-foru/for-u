@@ -1,5 +1,5 @@
 import {materialSchema,parseMaterial,authorizedMaterialPaths,materialInstruction} from './material.ts';
-import {creativeSchema,parseCreative,creativeInstruction,type CreativeKind} from './creative.ts';
+import {creativePieceSource,creativeSchema,parseCreative,creativeInstruction,type CreativeKind} from './creative.ts';
 import {sharedRequest} from './sharedCache.ts';
 import { AIError, RequestCache, compactBusiness, compactHistory, geminiGenerate, missionInstruction } from './core.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -91,8 +91,7 @@ Deno.serve(async req => {
       }else if(sourceKind==='module-proposal'){
         if(payload?.version!==1)throw new AIError('invalid_source','La propuesta requiere revisión.',400);source=Object.fromEntries(['offering','audience','need','value','message','conditions','cta'].map(k=>[k,typeof payload[k]==='string'?payload[k].slice(0,1500):'']));
       }else if(sourceKind==='module-social-profile'){
-        const piece=payload?.pieces?.find((p:any)=>p.id===body.sourceId);if(payload?.version!==1||payload.projectId!==body.projectId||!piece)throw new AIError('invalid_source','La pieza no está disponible.',404);
-        source={title:String(piece.title||'').slice(0,200),objective:String(piece.objective||'').slice(0,1000),text:String(piece.text||'').slice(0,2000),script:String(piece.script||'').slice(0,3000)};
+        try{source=creativePieceSource(payload,body.projectId,body.sourceId);}catch(e){throw new AIError('invalid_source',(e as Error).message,404);}
       }else{
         const offer=typeof body.sourceId==='string'&&body.sourceId.startsWith('offer:')?payload?.offers?.find((o:any)=>`offer:${o.id}`===body.sourceId):null;const section=offer?{title:offer.name,body:[offer.description,offer.pricing==='quote'?'Solicitar cotización':offer.pricing==='free'?'Gratis':typeof offer.price==='number'?`S/ ${offer.price.toFixed(2)}`:'',offer.conditions].filter(Boolean).join('\n')}:body.sourceId==='hero'?{title:payload?.headline,body:payload?.description}:payload?.blocks?.find((b:any)=>b.id===body.sourceId);
         if(!section||typeof section.title!=='string'||typeof section.body!=='string')throw new AIError('invalid_source','La sección no está disponible.',404);
