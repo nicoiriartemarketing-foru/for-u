@@ -56,6 +56,7 @@ export function areaToolPath(tool: string, type: ModuleType, project: string) {
   if (tool === 'commerce-orders') return `/dashboard/tools/orders${query}`;
   if (tool === 'editor') return `/modules/${type}/editor${query}`;
   if (tool === 'summary') return `/modules/${type}${query}`;
+  if (tool === 'studio') return `/creator-studio${query}`;
   if (tool === 'creator') return `/content-creator${query}`;
   return `/dashboard/tools/${tool}${query}`;
 }

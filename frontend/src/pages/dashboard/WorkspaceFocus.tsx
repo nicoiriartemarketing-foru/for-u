@@ -10,7 +10,7 @@ import { emptyFocus, parseWorkspaceFocus, rememberDestination, toggleToday, chan
 type State = { data: WorkspaceFocus; anchor: string | null; revision: string | null; loaded: boolean; busy: boolean; dirty: boolean; error: string;conflict:boolean };
 const initial = (): State => ({ data: emptyFocus(), anchor: null, revision: null, loaded: false, busy: false, dirty: false, error: '',conflict:false });
 const Context = createContext<{
-  state: State; reload: (recover?:boolean) => Promise<void>; save: () => Promise<void>;
+  state: State; reload: (recover?:boolean) => Promise<void>; save: () => Promise<boolean>;
   setPreferences:(preferences:AccountPreferences)=>void;
   toggle: (ref: TaskReference) => void; remember: (work: LastWork) => void;
 } | null>(null);
@@ -51,10 +51,10 @@ function AccountFocus({ userId, children }: { userId?: string; children: ReactNo
   }, [state.dirty]);
   async function save() {
     const snapshot = current.current;
-    if (!userId || !snapshot.loaded || lock.current || snapshot.conflict) return;
+    if (!userId || !snapshot.loaded || lock.current || snapshot.conflict) return false;
     const owned = store.cloudUserId === userId ? Object.values(store.projectsById).filter(p => isSavedProject(p.id) && !p.cloudPending && projectModuleType(p)) : [];
     const anchor = snapshot.anchor ?? owned.map(p => p.id).sort()[0];
-    if (!anchor || !owned.some(p => p.id === anchor)) { patch({ error: 'No se guardó Hoy. Abre o recupera el proyecto asociado a tu enfoque.' }); return; }
+    if (!anchor || !owned.some(p => p.id === anchor)) { patch({ error: 'No se guardó Hoy. Abre o recupera el proyecto asociado a tu enfoque.' }); return false; }
     lock.current = true; patch({ busy: true, error: '' });
     let saved = false;
     try {
@@ -68,6 +68,7 @@ function AccountFocus({ userId, children }: { userId?: string; children: ReactNo
       // after the first revision returns. Failed writes never loop automatically.
       if (alive.current && saved && current.current.data !== snapshot.data) void save();
     }
+    return saved;
   }
   function toggle(ref: TaskReference) {
     if (!current.current.loaded || lock.current) return;

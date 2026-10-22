@@ -41,14 +41,14 @@ export async function loadModuleProjects(userId: string): Promise<ModuleProject[
   });
 }
 
-export type ModuleDocumentKind = ModuleType | 'content-creator' | 'dashboard-progress' | 'area-tasks' | 'world-state' | 'workspace-focus' | 'proposal' | 'social-profile' | 'project-journey' | 'idea-inbox' | 'personal-ideas' | 'project-diagnostic' | 'project-route' | 'campaigns' | 'specific-offers' | 'materials';
+export type ModuleDocumentKind = ModuleType | 'content-creator' | 'dashboard-progress' | 'area-tasks' | 'world-state' | 'workspace-focus' | 'proposal' | 'social-profile' | 'project-journey' | 'idea-inbox' | 'personal-ideas' | 'project-diagnostic' | 'project-route' | 'campaigns' | 'specific-offers' | 'materials' | 'landing';
 
 export async function loadModuleDocument(userId: string, projectId: string, type: ModuleDocumentKind) {
-  const { data, error } = await client().from('toolkit_documents').select('payload,updated_at').eq('user_id', userId).eq('project_id', projectId).eq('kind', `module-${type}`).maybeSingle();
+  const { data, error } = await client().from('toolkit_documents').select('payload,updated_at').eq('user_id', userId).eq('project_id', projectId).eq('kind', type === 'landing' ? 'landing' : `module-${type}`).maybeSingle();
   if (error) throw new Error(`No se pudo cargar este módulo. Revisa la configuración de Supabase antes de editar. Detalle: ${error.message}`);
   return data ? { payload: data.payload as unknown, revision: data.updated_at as string } : null;
 }
 
 export async function saveModuleDocument(userId: string, projectId: string, type: ModuleDocumentKind, payload: unknown, revision: string | null): Promise<string> {
-  return writeRevisionDocument(client(), userId, projectId, `module-${type}`, payload, revision);
+  return writeRevisionDocument(client(), userId, projectId, type === 'landing' ? 'landing' : `module-${type}`, payload, revision);
 }

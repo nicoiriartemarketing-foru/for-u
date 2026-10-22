@@ -23,7 +23,7 @@ export function projectViewPath(projectId:string,view:ProjectView):string {
 export function workspaceSpaces(projectId:string,type:ModuleType){
  const q=`?project=${encodeURIComponent(projectId)}`;
  return [
-  {id:'page',title:'Mi página',path:(type==='restaurant'||type==='courses'?`/modules/${type}/editor`:'/dashboard/tools/landing')+q},
+  {id:'page',title:'Mi página',path:'/dashboard/tools/landing'+q},
   {id:'studio',title:'Creator Studio',path:'/creator-studio'+q},
   {id:'operation',title:'Mi operación',path:`/modules/${type}`+q},
   {id:'results',title:'Resultados',path:'/dashboard/tools/analytics'+q},

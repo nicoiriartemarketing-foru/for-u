@@ -47,7 +47,7 @@ export function parseSiteData(value: unknown): LandingDraft | null {
     cta: text("cta", 50, "Consultar"),
     ctaDesign: parseCtaDesign(data.ctaDesign),
     template: text("template", 40, "services"),
-    color: design===2 && /^#[0-9a-f]{6}$/i.test(text("color",7))?text("color",7):"#0A0A0A",
+    color: design>=2 && /^#[0-9a-f]{6}$/i.test(text("color",7))?text("color",7):"#0A0A0A",
     whatsapp: /^\d{8,15}$/.test(text("whatsapp", 15))
       ? text("whatsapp", 15)
       : "",

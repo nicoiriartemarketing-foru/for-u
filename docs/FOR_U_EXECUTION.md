@@ -1,6 +1,6 @@
 # FOR U — Registro de ejecución de los 16 objetivos
 
-Actualizado: 21 de octubre de 2026. **Objetivo 3 comprobado en su alcance técnico; una pregunta a la vez se conserva.** La existencia de este registro no autoriza comenzar objetivos posteriores. Especificación: [maestra](FOR_U_MASTER_SPEC.md); detalle de aceptación: [155 requisitos](FOR_U_REQUIREMENTS.csv); diagnóstico: [base](FOR_U_BASELINE.md).
+Actualizado: 21 de octubre de 2026. **Autorización vigente: ejecutar tres entregas completas; una pregunta a la vez. Entrega 1 en curso.** La existencia de este registro no autoriza comenzar objetivos posteriores. Especificación: [maestra](FOR_U_MASTER_SPEC.md); detalle de aceptación: [155 requisitos](FOR_U_REQUIREMENTS.csv); diagnóstico: [base](FOR_U_BASELINE.md).
 
 ## Estados y criterio de cierre
 
@@ -171,3 +171,55 @@ Evidencia estructural: [FOR_U_AGREEMENT_AUDIT.json](FOR_U_AGREEMENT_AUDIT.json).
 Actualizada la maqueta independiente existente. Evidencia, límites y recorridos: [FOR_U_MOCKUP_REVIEW.md](FOR_U_MOCKUP_REVIEW.md). La propietaria rechazó la campaña con cuatro campos simultáneos: la regla ahora es global, una pregunta o decisión de edición por momento, también en paneles secundarios. Campaña, producto, promoción, perfil y calendario se recorrieron con controles progresivos y resumen revisable; el fondo se recoge mientras se responde.
 
 La muestra está lista para revisar, **sin aprobación visual y sin autorización para objetivo 3**. Ningún resultado del prototipo cierra requisitos de la aplicación. No se modificaron frontend, Supabase, INTI CHURIN ni negocios reales. No se ejecutaron build/TypeScript de la app porque esta entrega no cambia su código.
+
+## Agrupación autorizada: tres entregas utilizables
+
+La propietaria autorizó el 21 octubre: «Ejecuta estas tres entregas usando el acuerdo guardado. Empieza por el recorrido completo de entrada a página editable; corrige también la pantalla actual. No cierres la entrega por pruebas técnicas si el recorrido sigue siendo confuso». Sustituye la obligación de copiar objetivos uno por uno; los 16 y sus requisitos se conservan como lista interna. No autoriza publicar negocios reales, activar facturación ni modificar INTI CHURIN.
+
+1. **Mi negocio toma forma — en curso:** entrada/proyectos actual, bienvenida, tres entradas, preguntas de cuenta/proyecto, diagnóstico, revisión/preparación, mapas y página editable especializada. Objetivos 04–08 y partes pertinentes de 14–15; reutiliza 01–03.
+2. **Creo y organizo contenido — pendiente:** ofertas/campañas/plantillas/composición, biblioteca/perfil/cuadrícula, guion/teleprompter/video/portada/calendario. Objetivos 08–11 y capacidades de 12 pertinentes.
+3. **Gestiono y compruebo mi negocio — pendiente:** operación y resultados de seis rubros, herramientas restantes y cierre integrado. Objetivos 13–16.
+
+Persistencia, móvil, accesibilidad e IA por acción acompañan cada entrega. El cierre visual exige recorrido real entendible, no solo TypeScript/build. No se eliminan requisitos por esta agrupación.
+
+## Avance de la entrega 1 — entrada y página editable (21 octubre)
+
+Estado: **en curso; sin cierre visual**. Se implementaron la bienvenida con tres entradas, preguntas progresivas, diagnóstico seleccionable, resumen revisable y preparación idempotente de ruta, tareas y borrador por rubro. Se conservan los documentos históricos y la publicación existente. El acceso Mi página converge en el editor compartido; los catálogos originales siguen disponibles.
+
+QA autenticado: proyecto `aa420f8a-2267-4fbf-b1bb-e756278fd352`, «QA Ruta visual · 21 octubre». Crear → responder → revisar → preparar guardó dos tareas y un borrador. Editar título directamente → esperar «Borrador guardado» → recargar conservó «Un café para encontrarnos · QA». No se publicó la página. Una respuesta comercial requirió reintento; se conservó y luego guardó, sin diagnóstico definitivo de causa remota.
+
+Inicio: corregidos enlace de Hoy y accesos de recuperación que conservaban azul/subrayado nativo. Vista compilada de 4175 actualizada; comprobación DOM: sin enlaces visibles azules subrayados; ancho CSS360 con documento360. Carita/timer compactados. Cabecera del editor compactada; resumen muestra primero elecciones esenciales.
+
+Verificación: 25 pruebas pertinentes aprobadas, build aprobado; TypeScript aprobado también después de la última compactación. Evidencia local: `/tmp/foru-delivery-evidence/inicio-actual.png`, `/tmp/foru-delivery-evidence/inicio-360.png`. No equivale a aprobación visual ni prueba física iPhone.
+
+Pendientes de esta entrega: edición contextual de una decisión por momento, ofertas/catálogo y navegación completa por seis rubros, mapa/Kanban/calendario con resultados reales, recuperación/conflictos, móvil integral. Entregas 2 y 3 siguen pendientes. Gemini real, audio interpretado, publicación de presentación3, aislamiento con segunda cuenta y pruebas físicas no verificados en esta sesión. Sin cambios en negocios reales, INTI CHURIN, Hostinger ni facturación.
+
+## Avance de la entrega 1 — edición por decisión (22 octubre)
+
+Estado: **implementación parcial, QA visual pendiente; entrega no cerrada**.
+
+- Panel contextual de la landing: elegir un ajuste antes de mostrar su control; texto, destino, alineación y color de CTA separados. Fotos y descripción accesible separadas. Configuración agrupada por identidad, contacto, publicación y ayuda.
+- Añadir sección separado de ordenar; composiciones con miniaturas y sección libre insertada en el destino elegido, conservando arrastre, flechas e historial.
+- Oferta nueva: tipo → nombre → descripción → modalidad de precio → importe cuando corresponde → revisión. Fotos, condiciones, presentaciones y extras opcionales después. Los productos confirmados siguen usando el catálogo original; no se cambia el contrato de precios ni de IDs.
+- Presentaciones y extras: nombre, precio y disponibilidad por momentos. Una opción nueva usa precio pendiente, sin asumir cero.
+- Paneles portados fuera del contenido: fondo inerte, foco contenido y devolución al cerrar, bloqueo de scroll con recuento de paneles y áreas seguras. Conservan la clase de identidad para evitar botones negros fuera del contenedor principal. Este comportamiento todavía requiere comprobación visual/teclado real.
+- Sugerencia textual antigua de configuración ahora requiere revisión y aceptación; no se aplica automáticamente. No se probó proveedor real.
+- Mapa/Kanban: motivos de tareas leídos de la ruta, información del diagnóstico nuevo con lectura compatible anterior. Reparado `studio` como herramienta reconocida: los pasos generados pueden abrir Creator Studio y conservar el destino desde Hoy.
+
+Validación local con Node20.20.2 en copia temporal y dependencias del lockfile: suite completa 199/199; tras añadir regresión de destinos, 12/12 pruebas de ruta/enfoque; TypeScript aprobado. Build aprobado también después del ajuste de devolución de foco. Se respeta «Marketing más adelante» sin añadir la sugerencia de contenido. No se modificaron Vite4/Tailwind3/dependencias del proyecto. La carpeta original de dependencias bloqueaba las comprobaciones; no se reemplazó.
+
+Vista local restablecida en `http://127.0.0.1:4175/dashboard`. La pestaña del usuario seguía en 50118 sin servidor. El control del navegador rechazó adquirir la pestaña por política de URL; no se intentó eludirlo. Se pidió al usuario abrir 4175 manualmente. Sin captura nueva ni recorrido visual de este avance: no sustituirlos por las capturas del 21. Continúan pendientes las pruebas integradas y físicas indicadas en el acuerdo.
+
+### Continuación de QA y corrección de densidad — 22 octubre
+
+La usuaria abrió 4175 y se retomó el navegador autorizado. Verificado en `aa420f8a-2267-4fbf-b1bb-e756278fd352`: CTA → un único input visible en panel → cambio a «Ver mi propuesta QA» → «Borrador guardado» → recarga conserva el texto. En CSS360, documento360 y raíz de fondo con atributo inert. Evidencia `/tmp/foru-o22-evidence/editor-one-question-360.png`.
+
+Nueva oferta QA por preguntas: producto → nombre «Café de prueba QA · no comercial» → descripción de prueba → precio confirmado S/6 → revisión → guardado en catálogo → guardado de selección en propuesta. Recarga y vuelta a Tus ofertas muestra una sola oferta con el precio confirmado. No se publicó ni se completó una tarea. Evidencia del paso de precio `/tmp/foru-o22-evidence/oferta-precio-360.png`.
+
+La usuaria rechazó la cantidad de botones de la pantalla de propuesta durante QA. Se redujo la navegación permanente dentro de herramientas a Mapa, proyecto y menú; las cuatro vistas siguen visibles al estar en el mapa y disponibles en el menú de herramientas. Eliminados títulos duplicados y tres pestañas grandes de propuesta; selector compacto de vistas. Acciones de ajustes/catálogo recogidas, una acción principal, sin foto vacía en oferta. Foto/condiciones/opciones de la revisión recogidas explícitamente. La aprobación visual final sigue pendiente. Evidencia `/tmp/foru-o22-evidence/propuesta-simplificada-360.png`.
+
+Añadida lectura del catálogo confirmado en un borrador vinculado al módulo para que la oferta recién guardada aparezca al abrir la página; conserva textos y documentos guardados, y no cambia publicaciones. Regresión comprueba aislamiento respecto a páginas vinculadas a propuesta e inmutabilidad de snapshot. Suite final 201/201, TypeScript y build aprobados; comprobar actualización final de la vista al cerrar. La vista se actualiza conservando los assets anteriores para evitar fallos de carga de pestañas abiertas durante una compilación.
+
+Pendientes conservados: prueba de reemplazo/subida/encuadre real de foto, recorrido de CTA/secciones completo y recuperación bajo conflicto, QA móvil integral de cada rubro, proveedor real/audio e iPhone físico, contenido y operación de las entregas 2–3. Este registro no declara completa la entrega 1 por tener checks técnicos.
+
+Cierre de este avance parcial: verificado producto QA visible en la landing vinculada, FAQ insertada antes de Historia, subida con flecha, deshacer, texto de dos párrafos, guardado y recarga conservando orden/contenido. La barra de tablet desbordaba30px; corregida y medidos documento/viewport iguales en360/768/1440. La barra de edición contextual se recoge hasta seleccionar. Evidencia persistente en `docs/evidence/2026-10-22/`, en especial `ofertas-sin-navegacion-duplicada-360.png`. No se trata de una prueba física de Safari ni de aprobación final del diseño.

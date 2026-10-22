@@ -48,3 +48,21 @@ test('design links one editorial piece without replacing a script or duplicating
  assert.equal(edited.pieces.length,1);assert.equal(edited.pieces[0].script,'Mi guion manual');
  assert.throws(()=>connectDesignPiece(null,'foreign','owner',draft));
 });
+
+
+test('module-bound editor previews confirmed catalog without modifying the saved draft or proposal-bound page',async()=>{
+ const {editorCatalog}=await import('../src/toolkit/editorCatalog.ts');
+ const {prepareRoutePage}=await import('../src/experience/routePreparation.ts');
+ const {emptyProposal,blankOffer}=await import('../src/proposal/model.ts');
+ const {createNativeProduct}=await import('../src/proposal/catalogEditing.ts');
+ const page=prepareRoutePage('QA','restaurant',{},emptyProposal());
+ const before=JSON.stringify(page);
+ const offer={...blankOffer(),kind:'product',name:'Prueba QA',pricing:'fixed',price:6};
+ const catalog=createNativeProduct('restaurant',undefined,offer,'QA');
+ const result=editorCatalog(page,'restaurant',catalog);
+ assert.equal(result.offers[0].price,6);assert.equal(result.offers[0].name,'Prueba QA');
+ assert.equal(JSON.stringify(page),before);assert.equal(result.headline,page.headline);
+ const independent={...page,catalogSource:'proposal',offers:[]};
+ assert.equal(editorCatalog(independent,'restaurant',catalog),independent);
+ assert.equal(editorCatalog(page,'restaurant',undefined),page);
+});

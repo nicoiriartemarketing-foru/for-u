@@ -34,7 +34,6 @@ export function useAreaDocuments(projectId: string, type: ModuleType) {
     const entry = cache[projectId];
     useEffect(() => { if (user && !controller.cache[projectId]?.loaded)
         void controller.load(projectId, type); }, [controller, projectId, type, user?.id]);
-    return { entry, save: async () => { if (await controller.save(projectId))
-            toast.success('Tareas y mundo guardados', { id: `area-save-${projectId}` }); }, reload: () => controller.load(projectId, type), recover: () => controller.load(projectId, type, true), change: (update: Partial<Pick<AreaEntry, 'tasks' | 'world'>>) => controller.change(projectId, update) };
+    return { entry, save: async () => { const saved=await controller.save(projectId); if(saved) toast.success('Tareas y mundo guardados', { id: `area-save-${projectId}` }); return saved; }, reload: () => controller.load(projectId, type), recover: () => controller.load(projectId, type, true), change: (update: Partial<Pick<AreaEntry, 'tasks' | 'world'>>) => controller.change(projectId, update) };
 }
 export function useAreaCache() { const controller = useContext(Context)!; return useSyncExternalStore(controller.subscribe, controller.snapshot); }

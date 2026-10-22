@@ -1,3 +1,4 @@
+import './pagePresentation.css';
 import {presentationClass} from '../presentation/model';
 import ProjectWidgets from '../widgets/ProjectWidgets';
 import { ButtonSecondary as DSButtonSecondary } from '../components/ui/DesignSystem';
@@ -44,7 +45,7 @@ export function LandingPreview({
         <p>{draft.description}</p>
         {draft.ctaDesign?<div className={`pe-site-cta pe-cta-${draft.ctaDesign.tone||'violet'}`} style={{textAlign:draft.ctaDesign.align}}>{draft.ctaDesign?.url ? <a href={draft.ctaDesign.url} onClick={onCTA}>{draft.cta}</a> : <DSButtonSecondary onClick={onCTA}>{draft.cta}</DSButtonSecondary>}</div>:<DSButtonSecondary onClick={onCTA}>{draft.cta}</DSButtonSecondary>}
       </section>
-      {draft.blocks.map((block) => (
+      {draft.blocks.filter(block=>draft.presentationVersion!==3||block.body.trim()).map((block) => (
         <section key={block.id} className="tk-site-block">
           <h2>{block.title}</h2>
           <p>{block.body}</p>
@@ -60,7 +61,7 @@ export function LandingPreview({
 
 export function LandingExtras({ draft, onEditOffer, onEditGallery }: { draft: LandingDraft; onEditOffer?: (id:string)=>void; onEditGallery?: (role:string)=>void }) { return <>
       {!!draft.gallery?.length && <section className="tk-site-gallery">{draft.gallery.map(photo => <figure key={photo.role}>{onEditGallery?<button className="pe-image-target" type="button" aria-label={`Cambiar foto ${photo.role}`} onClick={()=>onEditGallery(photo.role)}><img src={photo.url} alt={photo.alt} loading="lazy"/><span className="pe-image-caption">Cambiar foto</span></button>:<img src={photo.url} alt={photo.alt} loading="lazy"/>}<figcaption>{photo.role}</figcaption></figure>)}</section>}
-      {!!draft.offers?.length && <section className="tk-site-block"><h2>Nuestras ofertas</h2><div className="tk-public-offers">{draft.offers.map(offer => <article key={offer.id}>{onEditOffer&&<button type="button" className="pe-action-link" onClick={()=>onEditOffer(offer.id)}>Editar {offer.name}</button>}{offer.image && <img src={offer.image} alt={offer.name} loading="lazy" />}<h3>{offer.name}</h3><p>{offer.description}</p><strong>{offerPrice(offer)}</strong>{offer.conditions && <p>{offer.conditions}</p>}{!!offer.variants?.length && <div><h4>Presentaciones</h4><ul>{offer.variants.map(option => <li key={option.id}>{option.name} · {new Intl.NumberFormat('es-PE', { style:'currency', currency:'PEN' }).format(option.price)}</li>)}</ul></div>}{!!offer.extras?.length && <div><h4>Extras por unidad</h4><ul>{offer.extras.map(option => <li key={option.id}>{option.name} · +{new Intl.NumberFormat('es-PE', { style:'currency', currency:'PEN' }).format(option.price)}</li>)}</ul></div>}</article>)}</div></section>}
+      {!!draft.offers?.length && <section className="tk-site-block"><h2>{({restaurant:'Nuestro menú',ecommerce:'Nuestra selección',hospitality:'Habitaciones y estadías',tourism:'Experiencias para descubrir',courses:'Cursos y talleres',services:'Cómo podemos ayudarte'} as Record<string,string>)[draft.template]||'Nuestras ofertas'}</h2><div className="tk-public-offers">{draft.offers.map(offer => <article key={offer.id}>{onEditOffer&&<button type="button" className="pe-action-link" onClick={()=>onEditOffer(offer.id)}>Editar {offer.name}</button>}{offer.image && <img src={offer.image} alt={offer.name} loading="lazy" />}<h3>{offer.name}</h3><p>{offer.description}</p><strong>{offerPrice(offer)}</strong>{offer.conditions && <p>{offer.conditions}</p>}{!!offer.variants?.length && <div><h4>Presentaciones</h4><ul>{offer.variants.map(option => <li key={option.id}>{option.name} · {new Intl.NumberFormat('es-PE', { style:'currency', currency:'PEN' }).format(option.price)}</li>)}</ul></div>}{!!offer.extras?.length && <div><h4>Extras por unidad</h4><ul>{offer.extras.map(option => <li key={option.id}>{option.name} · +{new Intl.NumberFormat('es-PE', { style:'currency', currency:'PEN' }).format(option.price)}</li>)}</ul></div>}</article>)}</div></section>}
       {draft.offers === undefined && !!draft.menuItems?.length && <section className="tk-site-block"><h2>Nuestros productos</h2><ul className="tk-site-products">{draft.menuItems.map(item => <li key={item.id}><strong>{item.name}</strong><span>{new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(item.price)}</span></li>)}</ul></section>}
 
 </>; }

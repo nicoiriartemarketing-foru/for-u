@@ -1,9 +1,14 @@
+import {prepareRoutePage} from '../experience/routePreparation';
+import {emptyProposal} from '../proposal/model';
+import type {BusinessRoute} from '../workspace/contracts';
 import {readableStudioDraft} from '../pages/dashboard/studioJourney';
 import {applyPreviewText} from './editorBridge';
 import ProjectImageField from '../components/shared/ProjectImageField';
 import { MediaScope } from '../components/shared/mediaScope';
 import { mediaReference } from '../components/shared/mediaReference';
 import EditorSheet from './EditorSheet';
+import EditorDecision from './EditorDecision';
+import {editorCatalog} from './editorCatalog';
 import { insertEditorSection } from './editorSections';
 import PageAI from '../experience/PageAI';
 import PresentationReview from '../presentation/PresentationReview';
@@ -34,19 +39,21 @@ import { moveItem, safeHttps } from "./engine";
 import { defaultLanding, type LandingDraft } from "./types";
 export { LandingPreview } from "./LandingPreview";
 export default function LandingBuilder(props: {wizard?:boolean}) {
- const {docs,reload}=useToolkit();
+ const {docs,reload,business}=useToolkit();
  if(docs.landing!==undefined&&!readableStudioDraft(docs.landing))return <section role="alert"><h2>Conservamos tu borrador</h2><p>Su formato necesita revisión. No lo sustituimos por una plantilla.</p><DSButtonSecondary onClick={()=>void reload()}>Reintentar lectura</DSButtonSecondary></section>;
+ try{if((docs.landing as LandingDraft|undefined)?.catalogSource==='module'&&business.moduleType&&docs['module-'+business.moduleType]!==undefined)nativeOffers(business.moduleType as ModuleType,docs['module-'+business.moduleType]);}catch{return <section role="alert"><h2>Tu catálogo necesita revisión</h2><p>Conservamos tu página. Revisa el catálogo de este proyecto antes de seguir.</p><DSButtonSecondary onClick={()=>void reload()}>Reintentar lectura</DSButtonSecondary></section>;}
  return <LandingBuilderSession {...props}/>;
 }
 function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
   const { business, docs, save, reload, userId, projectId, demo, track, documentRevision } = useToolkit();
   const [routeParams] = useSearchParams();
   const requestedStep = routeParams.get("step");
-  const [history, dispatchHistory] = useReducer(editorHistory<LandingDraft>, { past: [], present: (docs.landing as LandingDraft) ?? {...defaultLanding(business), headline:'',description:'',cta:'',blocks:[],fields:[],bookingEnabled:false,presentationVersion:2,color:'#7751B8'}, future: [] } as EditorHistory<LandingDraft>);
+  const [history, dispatchHistory] = useReducer(editorHistory<LandingDraft>, { past: [], present: editorCatalog((docs.landing as LandingDraft) ?? prepareRoutePage(business.name,(business.route||business.moduleType||'services') as BusinessRoute,{},emptyProposal()),business.moduleType as ModuleType|undefined,docs['module-'+business.moduleType]), future: [] } as EditorHistory<LandingDraft>);
   const draft = history.present;
   const setDraft = useCallback((value: LandingDraft | ((current: LandingDraft) => LandingDraft)) => dispatchHistory({ type: 'edit', value }), []);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [textSuggestion,setTextSuggestion]=useState<{headline:string;description:string}|null>(null);
   const [publishedUrl, setPublishedUrl] = useState("");
   const [publication, setPublication] = useState<LandingPublication | null>(null);
   const [publicationReady, setPublicationReady] = useState(false);
@@ -68,6 +75,7 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
   useUnsavedNavigation(!wizard && (dirty || busy));
   const drag = useRef(-1);
   const uploading = useRef(false);
+  const [selectionActive,setSelectionActive]=useState(Boolean(requestedStep));
   const [selectedId, setSelectedId] = useState(requestedStep === 'offer' ? ((docs.landing as LandingDraft)?.blocks?.[0]?.id ?? 'hero') : 'hero');
   const [sectionsOpen, setSectionsOpen] = useState(requestedStep === "offer");
   const [settingsOpen, setSettingsOpen] = useState(requestedStep === "identity" || requestedStep === "publish");
@@ -79,7 +87,7 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
   const moduleType = business.moduleType && business.moduleType in moduleLabels ? business.moduleType as ModuleType : null;
-  const industry = editorIndustry(business.moduleType || business.industry);
+  const industry = editorIndustry(business.route || business.moduleType || business.industry);
   const selectedBlock = draft.blocks.find(block => block.id === selectedId);
   const selectedPhoto = imageRole==='hero'?{url:draft.heroImage||'',alt:draft.heroImageAlt||''}:draft.gallery?.find(photo=>photo.role===imageRole.slice(8));
   const updatePhoto=(patch:{url?:string;alt?:string})=>{if(imageRole==='hero')update({...('url'in patch?{heroImage:patch.url}:{}),...('alt'in patch?{heroImageAlt:patch.alt}:{})});else update({gallery:draft.gallery?.map(photo=>photo.role===imageRole.slice(8)?{...photo,...patch}:photo)});};
@@ -133,6 +141,7 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
       }
       if (busy) return;
       if (event.data.type === 'foru:context') {
+        setSelectionActive(true);
         if (['image','cta'].includes(event.data.target)) { setImageRole('hero'); setSelectedId('hero'); setContext(event.data.target); setPropertiesOpen(true); }
         else if(event.data.target==='gallery'&&draftRef.current.gallery?.some(photo=>photo.role===event.data.role)){setImageRole('gallery:'+event.data.role);setContext('image');setPropertiesOpen(true);}
         else if (event.data.target === 'offer' && draftRef.current.offers?.some(offer => offer.id === event.data.id)) { setSelectedOfferId(event.data.id); setContext('offer'); setPropertiesOpen(true); }
@@ -145,14 +154,14 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
       }
       if (event.data.type === 'foru:image-drop' && event.data.target === 'hero' && event.data.file instanceof File) { void uploadPrivateCover(event.data.file); return; }
       if (event.data.type === 'foru:select' && typeof event.data.id === 'string') {
-        if (event.data.id === 'hero' || draftRef.current.blocks.some(block => block.id === event.data.id)) setSelectedId(event.data.id);
+        if (event.data.id === 'hero' || draftRef.current.blocks.some(block => block.id === event.data.id)) {setSelectedId(event.data.id);setSelectionActive(true);}
         return;
       }
       if (event.data.type === 'foru:move' && typeof event.data.from === 'string' && typeof event.data.to === 'string') {
         setDraft(current => ({ ...current, blocks: reorderEditorSections(current.blocks, event.data.from, event.data.to) })); setDirty(true); return;
       }
       if (event.data.type === 'foru:add' && typeof event.data.preset === 'string') {
-        const block = createEditorSection(business.moduleType || business.industry, event.data.preset);
+        const block = createEditorSection(business.route || business.moduleType || business.industry, event.data.preset);
         if (block && draftRef.current.blocks.length < 8 && (event.data.beforeId == null || draftRef.current.blocks.some(item => item.id === event.data.beforeId))) { setDraft(current => ({ ...current, blocks: insertEditorSection(current.blocks, block, event.data.beforeId ?? null) })); setSelectedId(block.id); setDirty(true); }
         return;
       }
@@ -342,7 +351,7 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
   const proposalChanged = draft.proposalSource &&
     (documentRevision('module-proposal') !== draft.proposalSource.proposalRevision || (draft.catalogSource === 'proposal' && documentRevision('module-' + moduleType) !== draft.proposalSource.catalogRevision));
   const sourcePanel = <>
-    <PresentationReview value={draft.presentationVersion} disabled={busy} onChange={presentationVersion=>update({presentationVersion})} render={presentationVersion=><DesignPreview draft={{...draft,presentationVersion}}/>}/>
+    <PresentationReview latest={3} value={draft.presentationVersion} disabled={busy} onChange={presentationVersion=>update({presentationVersion})} render={presentationVersion=><DesignPreview draft={{...draft,presentationVersion}}/>}/>
     {publicationError && <section role="alert" className="pe-proposal-notice"><p>{publicationError}</p><DSButtonSecondary disabled={busy} onClick={() => setPublicationAttempt(value => value + 1)}>Revisar estado de publicación</DSButtonSecondary></section>}
     {draft.proposalSource && <section className="pe-proposal-notice"><strong>{proposalChanged ? 'Tu página necesita revisión' : 'Ofertas vinculadas a Mi propuesta'}</strong><p>Los precios se editan en su fuente. Guardar la propuesta no actualiza la publicación.</p><Link to={'/dashboard/tools/proposal?project=' + projectId}>Revisar mi propuesta →</Link></section>}
     {offerReview && <section className="pe-proposal-notice" aria-label="Revisar ofertas para publicar"><h2>Ofertas guardadas que se publicarán</h2><p>Compara con la página en vivo. Actualizaremos solo las ofertas; conservaremos tus textos, imágenes de portada y dirección.</p><ul>{offerReview.offers.map(offer => <li key={offer.id}><strong>{offer.name}</strong> · {offerPrice(offer)}<p>{offer.description}</p>{offer.conditions && <p>{offer.conditions}</p>}</li>)}</ul><DSButtonPrimary disabled={busy} onClick={() => { update({ offers:offerReview.offers, menuItems:undefined, proposalSource:offerReview.source }); setOfferReview(null); setNotice('Ofertas revisadas en el borrador. Pulsa Publicar para actualizar la página pública.'); }}>Actualizar ofertas y conservar mis textos</DSButtonPrimary><DSButtonSecondary onClick={() => setOfferReview(null)}>Volver sin actualizar</DSButtonSecondary></section>}
@@ -362,22 +371,43 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
       {saveError&&<section className="pe-feedback" role="alert"><p>{saveError}</p><DSButtonSecondary disabled={busy||/otra pestaña|otra versión|otra ventana/i.test(saveError)} onClick={()=>void saveDraft()}>Reintentar guardado</DSButtonSecondary><DSButtonSecondary onClick={()=>setRecoverOpen(true)}>Recuperar versión guardada</DSButtonSecondary></section>}
       <EditorSheet open={recoverOpen} title="Recuperar borrador" onClose={()=>setRecoverOpen(false)}><p>Recuperar sustituirá las ediciones pendientes por el borrador guardado. Tu publicación no cambia.</p><DSButtonSecondary onClick={()=>setRecoverOpen(false)}>Conservar mis cambios</DSButtonSecondary><DSButtonPrimary onClick={()=>{pending.current=null;setDirty(false);setRecoverOpen(false);void reload();}}>Descartar pendientes y recuperar</DSButtonPrimary></EditorSheet>
       {(notice || previewImageError) && <p className="pe-feedback" role={previewImageError ? 'alert' : 'status'}>{previewImageError || notice}</p>}
-      <div className="pe-selection-strip"><span>Toca lo que quieres transformar</span><DSButtonSecondary onClick={()=>{setContext('text');setPropertiesOpen(true);}}>Editar selección</DSButtonSecondary><Link className="pe-action-link" to={`/creator-studio?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>✦ Crear pieza</Link></div>
+      {selectionActive?<div className="pe-selection-strip"><span>Toca lo que quieres transformar</span><DSButtonSecondary onClick={()=>{setContext('text');setPropertiesOpen(true);}}>Editar selección</DSButtonSecondary><Link className="pe-action-link" to={`/creator-studio?project=${encodeURIComponent(projectId)}&section=${encodeURIComponent(selectedId)}`}>✦ Crear pieza</Link></div>:<p className="pe-tap-hint">Toca un texto, una foto o un botón para transformarlo.</p>}
       <EditorSheet open={advancedOpen} title="Tu página · herramientas" onClose={()=>setAdvancedOpen(false)}>
         <div className="pe-tool-choices"><DSButtonSecondary onClick={()=>{setAdvancedOpen(false);setSectionsOpen(true);setInsertBefore(null);}}>Secciones y orden</DSButtonSecondary><DSButtonSecondary onClick={()=>{setAdvancedOpen(false);setSettingsOpen(true);}}>Configuración y contacto</DSButtonSecondary><DSButtonSecondary disabled={busy} onClick={saveDraft}>Guardar borrador ahora</DSButtonSecondary></div>
         {sourcePanel}
         <PageAI draft={draft} disabled={dirty||busy||demo} onApply={update}/>
+      {moduleType && draft.catalogSource !== 'proposal' && <details className="pe-catalog-panel"><summary>Oferta de tu negocio {draft.catalogSource === 'module' ? '· vinculada' : ''}</summary><p>{draft.catalogSource === 'module' ? 'Al publicar consultaremos los precios y la disponibilidad guardados. La página pública solo cambia cuando publicas.' : 'Puedes usar el catálogo de tu negocio en esta página. Primero revisa los cambios en la vista previa.'}</p><Link className="pe-action-link" to={`/modules/${moduleType}/editor?project=${encodeURIComponent(projectId)}`}>Editar mi oferta</Link><DSButtonSecondary type="button" onClick={() => {
+        try {
+          const items = nativeOffers(moduleType, docs[`module-${moduleType}`]);
+          if ((draft.menuItems?.length || draft.offers?.length) && draft.catalogSource !== 'module' && !window.confirm('¿Reemplazar los productos de esta landing por el catálogo guardado? Puedes deshacer antes de publicar.')) return;
+          update({ catalogSource: 'module', offers: items, menuItems: undefined, proposalSource: undefined });
+          setNotice(`${items.length} ofertas del catálogo en la vista previa. Guarda o publica cuando estén listas.`);
+        } catch (error) { setNotice((error as Error).message); }
+      }}>{draft.catalogSource === 'module' ? 'Actualizar vista previa del catálogo' : 'Usar mi catálogo guardado'}</DSButtonSecondary></details>}
+
         <WidgetEditor projectId={projectId} widgets={draft.widgets} onChange={widgets=>update({widgets})} disabled={busy||demo}/>
         <nav className="pe-tool-choices"><Link className="pe-action-link" to={`/dashboard/tools/proposal?project=${projectId}`}>Mi propuesta</Link><Link className="pe-action-link" to={`/dashboard/tools/teleprompter?project=${projectId}&section=${encodeURIComponent(selectedId)}`}>Teleprompter</Link></nav>
       </EditorSheet>
       <EditorSheet open={propertiesOpen} title={context==='image'?'Tu foto':context==='cta'?'Tu llamada a la acción':context==='offer'?'Tu oferta':'Editar selección'} onClose={()=>setPropertiesOpen(false)}>
-        {context==='image' ? <MediaScope.Provider value={{userId,projectId}}><ProjectImageField label="Foto de portada" value={selectedPhoto?.url||''} onChange={url=>updatePhoto({url})}/><DSInput label="Descripción de la foto" value={selectedPhoto?.alt||''} maxLength={160} onChange={e=>updatePhoto({alt:e.target.value})}/></MediaScope.Provider> : context==='offer' ? <><p>Los precios, presentaciones y extras se editan en el catálogo original. Después revisa la actualización de tu página antes de publicar.</p><Link className="pe-action-link" to={selectedOfferId.startsWith(`${moduleType}:`)?`/modules/${moduleType}/editor?project=${projectId}&offer=${encodeURIComponent(selectedOfferId.slice(selectedOfferId.indexOf(':')+1))}`:`/dashboard/tools/proposal?project=${projectId}&offer=${encodeURIComponent(selectedOfferId)}`}>Editar en su catálogo →</Link></> : context==='cta' ? <><DSInput label="Texto del botón" value={draft.cta} maxLength={50} onChange={e=>update({cta:e.target.value})}/><DSInput label="Destino HTTPS (opcional)" type="url" value={draft.ctaDesign?.url||''} onChange={e=>update({ctaDesign:{...draft.ctaDesign,version:1,url:e.target.value}})}/><small>Sin enlace propio, se conserva el formulario de contacto de tu página.</small><DSSelect label="Alineación" value={draft.ctaDesign?.align||'start'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,version:1,align:e.target.value as 'start'|'center'|'end'}})}><option value="start">Izquierda</option><option value="center">Centro</option><option value="end">Derecha</option></DSSelect><DSSelect label="Color del botón" value={draft.ctaDesign?.tone||'violet'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,version:1,tone:e.target.value as 'violet'|'mint'|'gold'}})}><option value="violet">Violeta</option><option value="mint">Mint</option><option value="gold">Dorado</option></DSSelect></> : <DSCard id="page-selection" className="pe-selection-panel">        {selectedBlock ? <div className="pe-properties"><h3>Sección seleccionada</h3><DSInput label="Título de sección" info="Este título se muestra en tu página pública al publicar los cambios." value={selectedBlock.title} maxLength={150} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, title: event.target.value } : block) })} /><Textarea label="Texto de sección" info="Describe esta parte de tu oferta con información real de tu negocio." value={selectedBlock.body} maxLength={2000} onChange={event => update({ blocks: draft.blocks.map(block => block.id === selectedBlock.id ? { ...block, body: event.target.value } : block) })} /></div> : <div className="pe-properties"><h3>Portada</h3><DSInput label="Título principal" info="La primera frase que verán tus visitantes." value={draft.headline} maxLength={180} onChange={event => update({ headline: event.target.value })} /><Textarea label="Historia de tu negocio" info="Explica qué ofreces y qué hace especial a tu negocio." value={draft.description} maxLength={1000} onChange={event => update({ description: event.target.value })} /><DSInput label="Texto del botón" info="Describe la acción que quieres que realice tu visitante." value={draft.cta} maxLength={50} onChange={event => update({ cta: event.target.value })} /></div>}
-</DSCard>}</EditorSheet>
-      <EditorSheet open={sectionsOpen} title="Añade y organiza" onClose={()=>setSectionsOpen(false)}><DSCard id="page-sections" as="section" hidden={!sectionsOpen} className="tk-card tk-stack tk-editor-sections">
-        <h2>Secciones <InfoIcon text="Arrastra una sección para reordenarla o usa Subir y Bajar. Selecciónala para editar sus propiedades." /></h2>
-        <DSButtonSecondary type="button" aria-pressed={selectedId === 'hero'} tooltip="Edita el título, la historia y el botón principal." onClick={() => setSelectedId('hero')}>Portada</DSButtonSecondary>
-        <p>Arrastra para ordenar o usa las flechas.</p>
-        {draft.blocks.map((block, i) => (
+        {context==='offer'?<><p>Esta oferta conserva sus precios, variantes y extras en su catálogo original.</p><Link className="pe-action-link" to={selectedOfferId.startsWith(`${moduleType}:`)?`/modules/${moduleType}/editor?project=${projectId}&offer=${encodeURIComponent(selectedOfferId.slice(selectedOfferId.indexOf(':')+1))}`:`/dashboard/tools/proposal?project=${projectId}&offer=${encodeURIComponent(selectedOfferId)}`}>Editar esta oferta →</Link></>:<EditorDecision key={`${context}:${selectedId}:${imageRole}`} choices={context==='image'?[
+          {id:'photo',title:'Elegir mi foto',hint:'Sube una imagen o elige una del proyecto. También puedes encuadrarla.',icon:'▧',content:<MediaScope.Provider value={{userId,projectId}}><ProjectImageField label="Foto de portada" value={selectedPhoto?.url||''} onChange={url=>updatePhoto({url})}/></MediaScope.Provider>},
+          {id:'alt',title:'Describir la foto',hint:'Ayuda a entender la imagen a quienes usan lectores de pantalla.',icon:'≋',content:<DSInput label="Descripción de la foto" value={selectedPhoto?.alt||''} maxLength={160} onChange={e=>updatePhoto({alt:e.target.value})}/>}
+        ]:context==='cta'?[
+          {id:'text',title:'Texto del botón',hint:'Una acción concreta: ver el menú, consultar o reservar.',icon:'✎',content:<DSInput label="Texto del botón" value={draft.cta} maxLength={50} onChange={e=>update({cta:e.target.value})}/>},
+          {id:'url',title:'Destino del botón',hint:'Sin enlace propio, abrirá el contacto de tu página.',icon:'↗',content:<DSInput label="Destino HTTPS (opcional)" type="url" value={draft.ctaDesign?.url||''} onChange={e=>update({ctaDesign:{...draft.ctaDesign,version:1,url:e.target.value}})}/>},
+          {id:'align',title:'Alineación del botón',hint:'Elige la posición que mejor acompaña a tu mensaje.',icon:'↔',content:<DSSelect label="Alineación" value={draft.ctaDesign?.align||'start'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,version:1,align:e.target.value as 'start'|'center'|'end'}})}><option value="start">Izquierda</option><option value="center">Centro</option><option value="end">Derecha</option></DSSelect>},
+          {id:'tone',title:'Elige su color',hint:'Tres acentos de FOR U, con texto legible.',icon:'◉',content:<DSSelect label="Color del botón" value={draft.ctaDesign?.tone||'violet'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,version:1,tone:e.target.value as 'violet'|'mint'|'gold'}})}><option value="violet">Violeta</option><option value="mint">Mint</option><option value="gold">Dorado</option></DSSelect>}
+        ]:selectedBlock?[
+          {id:'title',title:'El título de esta sección',hint:'También puedes escribir directamente sobre la página.',icon:'✎',content:<DSInput label="Título de sección" value={selectedBlock.title} maxLength={150} onChange={e=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,title:e.target.value}:block)})}/>},
+          {id:'body',title:'Cuenta esta parte',hint:'Usa tus palabras y datos confirmados de tu negocio.',icon:'≋',content:<Textarea label="Texto de sección" value={selectedBlock.body} maxLength={2000} onChange={e=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,body:e.target.value}:block)})}/>}
+        ]:[
+          {id:'headline',title:'Tu mensaje principal',hint:'¿Qué quieres que alguien entienda al llegar?',icon:'✦',content:<DSInput label="Título principal" value={draft.headline} maxLength={180} onChange={e=>update({headline:e.target.value})}/>},
+          {id:'description',title:'Cuéntalo con tus palabras',hint:'Una explicación breve de lo que ofreces.',icon:'≋',content:<Textarea label="Descripción" value={draft.description} maxLength={1000} onChange={e=>update({description:e.target.value})}/>},
+          {id:'cta',title:'La invitación para continuar',hint:'El texto de la acción principal de tu página.',icon:'↗',content:<DSInput label="Texto del botón" value={draft.cta} maxLength={50} onChange={e=>update({cta:e.target.value})}/>}
+        ]}/>}</EditorSheet>
+      <EditorSheet open={sectionsOpen} title="Secciones de tu página" onClose={()=>setSectionsOpen(false)}><EditorDecision key={sectionsOpen?'sections-open':'sections-closed'} choices={[
+        {id:'add',title:'Añadir una sección',hint:'Elige una composición. Se colocará donde pulsaste ＋ Sección.',icon:'＋',content:<div className="pe-section-options">{sectionPresets(business.route||business.moduleType||business.industry).map(preset=><button type="button" key={preset.key} disabled={busy||draft.blocks.length>=8} onClick={()=>{const block=createEditorSection(business.route||business.moduleType||business.industry,preset.key);if(block){update({blocks:insertEditorSection(draft.blocks,block,insertBefore)});setSelectedId(block.id);setSectionsOpen(false);}}}><span className={`pe-preset-sample pe-preset-${preset.key}`} aria-hidden="true"><i/><i/><i/></span><strong>{preset.title}</strong><small>{preset.description}</small></button>)}<DSButtonSecondary disabled={busy||draft.blocks.length>=8} onClick={()=>{const block={id:crypto.randomUUID(),title:'Nueva sección',body:''};update({blocks:insertEditorSection(draft.blocks,block,insertBefore)});setSelectedId(block.id);setSectionsOpen(false);}}>＋ Sección libre</DSButtonSecondary>{draft.blocks.length>=8&&<p>Tu página ya tiene ocho secciones. Puedes editar o quitar una antes de añadir otra.</p>}</div>},
+        {id:'order',title:'Ordenar mis secciones',hint:'Mueve una sección con las flechas o arrástrala. Quitarla del borrador se puede deshacer.',icon:'↕',content:<div className="pe-section-order">        {draft.blocks.map((block, i) => (
           <article
             className="tk-block-editor"
             key={block.id}
@@ -426,36 +456,9 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
             </div>
           </article>
         ))}
-        <h3>Bloques para {industry.name.toLowerCase()}</h3>
-        {sectionPresets(business.moduleType || business.industry).map(preset => <DSButtonSecondary key={preset.key} type="button" draggable={!busy && draft.blocks.length < 8} onDragStart={event => { event.dataTransfer.setData('application/foru-section', preset.key); event.dataTransfer.effectAllowed = 'copy'; }} disabled={busy || draft.blocks.length >= 8} tooltip={preset.description} onClick={() => { const block = createEditorSection(business.moduleType || business.industry, preset.key); if (block) { update({ blocks: insertEditorSection(draft.blocks, block, insertBefore) }); setSelectedId(block.id); setSectionsOpen(false); } }}><span className="pe-section-miniature" aria-hidden="true">▰<br/>━━<br/>━━━━</span>{preset.title}</DSButtonSecondary>)}
-        <DSButtonSecondary
-          disabled={busy || draft.blocks.length >= 8}
-          onClick={() =>
-            update({
-              blocks: [
-                ...draft.blocks,
-                {
-                  id: crypto.randomUUID(),
-                  title: "Nueva sección",
-                  body: "",
-                },
-              ],
-            })
-          }
-        >
-          Agregar sección
-        </DSButtonSecondary>
-      </DSCard>
-      </EditorSheet>
-      {settingsOpen && moduleType && draft.catalogSource !== 'proposal' && <details className="pe-catalog-panel"><summary>Oferta de tu negocio {draft.catalogSource === 'module' ? '· vinculada' : ''}</summary><p>{draft.catalogSource === 'module' ? 'Al publicar consultaremos los precios y la disponibilidad guardados. La página pública solo cambia cuando publicas.' : 'Puedes usar el catálogo de tu negocio en esta página. Primero revisa los cambios en la vista previa.'}</p><Link to={`/modules/${moduleType}/editor?project=${encodeURIComponent(projectId)}`}>Editar mi oferta</Link><DSButtonSecondary type="button" onClick={() => {
-        try {
-          const items = nativeOffers(moduleType, docs[`module-${moduleType}`]);
-          if ((draft.menuItems?.length || draft.offers?.length) && draft.catalogSource !== 'module' && !window.confirm('¿Reemplazar los productos de esta landing por el catálogo guardado? Puedes deshacer antes de publicar.')) return;
-          update({ catalogSource: 'module', offers: items, menuItems: undefined, proposalSource: undefined });
-          setNotice(`${items.length} ofertas del catálogo en la vista previa. Guarda o publica cuando estén listas.`);
-        } catch (error) { setNotice((error as Error).message); }
-      }}>{draft.catalogSource === 'module' ? 'Actualizar vista previa del catálogo' : 'Usar mi catálogo guardado'}</DSButtonSecondary></details>}
-      {!docs.landing&&!dirty&&<section className="pe-start-page"><h2>Tu página empieza contigo</h2><p>Trae lo que ya definiste o comienza sobre este lienzo vacío.</p><Link className="pe-action-link" to={`/dashboard/tools/proposal?project=${projectId}`}>Usar mi propuesta →</Link><DSButtonSecondary onClick={()=>void saveDraft()}>Empezar con esta estructura vacía</DSButtonSecondary></section>}
+</div>}
+      ]}/></EditorSheet>
+      {!docs.landing&&!dirty&&<section className="pe-start-page"><h2>Tu página de {industry.name.toLocaleLowerCase()}, lista para hacerla tuya</h2><p>Toca un texto para cambiarlo. Las fotos y el catálogo pueden venir después.</p><Link className="pe-action-link" to={`/dashboard/tools/proposal?project=${projectId}`}>Usar mi propuesta →</Link><DSButtonSecondary onClick={()=>void saveDraft()}>Guardar esta base</DSButtonSecondary></section>}
       <section className="tk-editor-preview pe-live-stage">
 
         {previewImageError && <p role="alert">{previewImageError}</p>}
@@ -470,124 +473,18 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
             (dirty ? "Cambios pendientes" : "Borrador guardado")}
         </p>
       </section>
-      <EditorSheet open={settingsOpen} title="Configuración de tu página" onClose={()=>setSettingsOpen(false)}><DSCard id="page-settings" as="section" hidden={!settingsOpen} className="tk-card tk-stack tk-editor-tools">
-        <h2>Configuración de la página</h2>
-        <h3>Datos de la página</h3>
-        <label><input type="checkbox" checked={draft.bookingEnabled === true || (draft.bookingEnabled === undefined && draft.offers === undefined)} disabled={busy} onChange={e => update({ bookingEnabled:e.target.checked })} /> Mostrar agenda de reservas (requiere disponibilidad configurada)</label>
-        <DSSelect label="Plantilla" info="Cambia el estilo de la página sin reemplazar tus textos ni cambiar el rubro del proyecto."
-            disabled={busy}
-            value={draft.template}
-            onChange={(e) => update({ template: e.target.value })}
-          >
-            <option value="restaurant">Restaurante</option>
-            <option value="shop">Tienda</option>
-            <option value="services">Servicios</option>
-            <option value="event">Evento</option>
-          </DSSelect>
-        <DSInput label="Nombre" info="Nombre que identifica a tu negocio en la página pública."
-            disabled={busy}
-            value={draft.name}
-            maxLength={100}
-            onChange={(e) => update({ name: e.target.value })}
-          />
-        <DSInput label="Dirección de tu página" info="Usa un nombre breve con letras, números y guiones. Cambiarlo afecta la URL al publicar."
-            disabled={busy}
-            value={draft.slug}
-            maxLength={60}
-            onChange={(e) => update({ slug: e.target.value.toLowerCase() })}
-          />
-        <MediaScope.Provider value={{userId,projectId}}><ProjectImageField label="Foto de portada" value={draft.heroImage||''} onChange={heroImage=>update({heroImage})}/></MediaScope.Provider>
-        <small>La foto se conserva en tu biblioteca privada. Publicar prepara su versión pública.</small>
-        {draft.heroImage && (
-          <>
-            <DSInput label="Descripción de la imagen" info="Describe la foto para quienes usan lectores de pantalla."
-                disabled={busy}
-                value={draft.heroImageAlt ?? ""}
-                maxLength={160}
-                onChange={(e) => update({ heroImageAlt: e.target.value })}
-              />
-            <DSButtonSecondary
-              disabled={busy}
-              onClick={() =>
-                update({ heroImage: undefined, heroImageAlt: undefined })
-              }
-            >
-              Quitar portada
-            </DSButtonSecondary>
-          </>
-        )}
-        <DSButtonSecondary
-          disabled={busy || demo}
-          tooltip="Genera una propuesta de título y descripción. Revisa el resultado antes de publicar."
-          onClick={async () => {
-            setBusy(true);
-            try {
-              const result = await askAI(
-                "landing",
-                "Propón título y descripción separados por un salto de línea.",
-                business,
-                {projectId},
-              );
-              const [headline, ...rest] = result.split("\n").filter(Boolean);
-              update({
-                headline: headline.slice(0, 180),
-                description: rest.join("\n").slice(0, 1000),
-              });
-            } catch (error) {
-              setNotice((error as Error).message);
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          Sugerir texto con IA
-        </DSButtonSecondary>
-        <DSInput label="WhatsApp" info="Número con código de país y solo dígitos, por ejemplo 51999999999."
-            disabled={busy}
-            value={draft.whatsapp}
-            maxLength={15}
-            placeholder="51999999999"
-            onChange={(e) => update({ whatsapp: e.target.value })}
-          />
-        <DSInput label="Calendly (opcional)" info="Enlace a tu página de reservas de Calendly. No activa una sincronización automática."
-            disabled={busy}
-            value={draft.calendly}
-            maxLength={400}
-            placeholder="https://calendly.com/tu-negocio/cita"
-            onChange={(e) => update({ calendly: e.target.value })}
-          />
-        <DSButtonSecondary disabled={busy} tooltip="Guarda el borrador de este proyecto sin actualizar la página pública." onClick={saveDraft}>
-          Guardar borrador
-        </DSButtonSecondary>
-        <DSButtonPrimary
-          className="tk-primary"
-          disabled={busy || demo}
-          tooltip="Publica los cambios del borrador para que tus visitantes puedan verlos." onClick={publish}
-        >
-          {busy ? "Guardando…" : "Publicar página"}
-        </DSButtonPrimary>
-        {draft.published && (
-          <DSButtonSecondary disabled={busy || demo} tooltip="Retira la página pública y conserva el borrador para seguir editándolo." onClick={unpublish}>
-            Retirar publicación
-          </DSButtonSecondary>
-        )}
-        {demo && (
-          <small>
-            El borrador de prueba dura esta sesión. Inicia sesión para subir
-            imágenes y publicar.
-          </small>
-        )}
-        {publishedUrl && (
-          <a href={publishedUrl} target="_blank" rel="noreferrer">
-            Ver página publicada ↗
-          </a>
-        )}
-        {notice && (
-          <p className="tk-notice" role="status">
-            {notice}
-          </p>
-        )}
-      </DSCard></EditorSheet>
+      <EditorSheet open={settingsOpen} title="Tu página, a tu manera" onClose={()=>setSettingsOpen(false)}><EditorDecision key={settingsOpen?'settings-open':'settings-closed'} groups={[{id:'identity',title:'Identidad y estilo',hint:'Nombre, portada y estructura de tu página.',icon:'✦',ids:['name','template','photo','image-description']},{id:'contact',title:'Contacto y reservas',hint:'Cómo podrán encontrarte y coordinar contigo.',icon:'◌',ids:['whatsapp','booking','calendly']},{id:'publication',title:'Dirección y publicación',hint:'Tu enlace, guardado y página pública.',icon:'↗',ids:['address','publication']},{id:'message',title:'Ayuda para tu mensaje',hint:'Una sugerencia de IA que podrás revisar.',icon:'✧',ids:['ai']}]} choices={[
+        {id:'name',title:'El nombre de tu negocio',hint:'Así aparecerá en la página.',icon:'✎',content:<DSInput label="Nombre" disabled={busy} value={draft.name} maxLength={100} onChange={e=>update({name:e.target.value})}/>},
+        {id:'address',title:'La dirección de tu página',hint:'Cambiarla afectará la URL únicamente cuando publiques.',icon:'↗',content:<DSInput label="Dirección de tu página" disabled={busy} value={draft.slug} maxLength={60} onChange={e=>update({slug:e.target.value.toLowerCase()})}/>},
+        {id:'template',title:'La estructura de tu página',hint:'Conserva tus textos. El rubro de tu proyecto no cambia.',icon:'▦',content:<DSSelect label="Plantilla" disabled={busy} value={draft.template} onChange={e=>update({template:e.target.value})}>{[...new Set([draft.template,'restaurant','shop','tourism','hospitality','courses','services','event'])].map(value=><option key={value} value={value}>{({restaurant:'Restaurante',shop:'Tienda',tourism:'Turismo',hospitality:'Hospedaje',courses:'Cursos',services:'Servicios',event:'Evento'} as Record<string,string>)[value]||value}</option>)}</DSSelect>},
+        {id:'photo',title:'Tu foto de portada',hint:'Es opcional. Puedes subirla, elegirla o cambiar el encuadre.',icon:'▧',content:<MediaScope.Provider value={{userId,projectId}}><ProjectImageField label="Foto de portada" value={draft.heroImage||''} onChange={heroImage=>update({heroImage})}/></MediaScope.Provider>},
+        {id:'image-description',title:'Descripción accesible de la foto',hint:'Ayuda a quienes usan lectores de pantalla.',icon:'≋',content:<DSInput label="Descripción de la imagen" disabled={busy} value={draft.heroImageAlt||''} maxLength={160} onChange={e=>update({heroImageAlt:e.target.value})}/>},
+        {id:'whatsapp',title:'Tu contacto por WhatsApp',hint:'Usa código de país y solo números. Puedes dejarlo vacío.',icon:'◌',content:<DSInput label="WhatsApp" disabled={busy} value={draft.whatsapp} maxLength={15} placeholder="51999999999" onChange={e=>update({whatsapp:e.target.value})}/>},
+        {id:'booking',title:'¿Mostrar reservas?',hint:'La agenda requiere disponibilidad configurada. Activarla aquí no crea horarios.',icon:'◷',content:<label><input type="checkbox" checked={draft.bookingEnabled===true||(draft.bookingEnabled===undefined&&draft.offers===undefined)} disabled={busy} onChange={e=>update({bookingEnabled:e.target.checked})}/> Mostrar agenda de reservas</label>},
+        {id:'calendly',title:'Tu enlace de Calendly',hint:'Opcional. Añadirlo no activa una sincronización.',icon:'↗',content:<DSInput label="Calendly (opcional)" disabled={busy} value={draft.calendly} maxLength={400} placeholder="https://calendly.com/tu-negocio/cita" onChange={e=>update({calendly:e.target.value})}/>},
+        {id:'ai',title:'Una propuesta para tu mensaje',hint:'La IA solo se utiliza al pulsar el botón. Revisa el texto antes de incorporarlo.',icon:'✦',content:<><DSButtonSecondary disabled={busy||demo} onClick={async()=>{setBusy(true);try{const result=await askAI('landing','Propón título y descripción separados por un salto de línea.',business,{projectId});const [headline,...rest]=result.split('\n').filter(Boolean);if(!headline||!rest.length)throw new Error('La respuesta no contiene un título y una descripción completos. Tu página no cambió.');setTextSuggestion({headline:headline.slice(0,180),description:rest.join('\n').slice(0,1000)});}catch(e){setNotice((e as Error).message);}finally{setBusy(false);}}}>Sugerir texto con IA</DSButtonSecondary>{textSuggestion&&<section><h4>Propuesta para revisar</h4><strong>{textSuggestion.headline}</strong><p>{textSuggestion.description}</p><DSButtonPrimary onClick={()=>{update(textSuggestion);setTextSuggestion(null);}}>Usar esta propuesta</DSButtonPrimary><DSButtonSecondary onClick={()=>setTextSuggestion(null)}>Descartar propuesta</DSButtonSecondary></section>}</>},
+        {id:'publication',title:'Guardado y publicación',hint:'El borrador y tu página pública son independientes.',icon:'✓',content:<><DSButtonSecondary disabled={busy} onClick={saveDraft}>Guardar borrador</DSButtonSecondary><DSButtonPrimary disabled={busy||demo} onClick={publish}>Publicar página</DSButtonPrimary>{draft.published&&<DSButtonSecondary disabled={busy||demo} onClick={unpublish}>Retirar publicación</DSButtonSecondary>}{publishedUrl&&<a className="pe-action-link" href={publishedUrl} target="_blank" rel="noreferrer">Ver página publicada ↗</a>}{notice&&<p role="status">{notice}</p>}</>}
+      ]}/></EditorSheet>
     </div>
   );
 }

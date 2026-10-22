@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import type { LandingDraft } from "./types";
 import { parseSiteData } from "./publicData";
 import "./toolkit.css";
+import "./pagePresentation.css";
 function Editable({
   value,
   field,
@@ -31,6 +32,7 @@ function Editable({
       ref={element as React.Ref<HTMLHeadingElement>}
       contentEditable
       suppressContentEditableWarning
+      data-empty-hint={field==='body'?'Toca aquí para contar esta parte a tu manera':field==='description'?'Unas palabras sobre lo que ofreces':'Toca para escribir'}
       role="textbox"
       aria-label={
         field === "body"
@@ -111,9 +113,9 @@ export default function SiteEditorFrame() {
         <strong>{draft.name}</strong>
         <span>Haz clic en un texto para editarlo</span>
       </header>
-      <Card as="section" className={`tk-site-hero pe-editable-section ${selected === 'hero' ? 'pe-selected' : ''}`} onClick={() => { setSelected('hero'); send('foru:select', { id: 'hero' }); }} onFocus={() => { setSelected('hero'); send('foru:select', { id: 'hero' }); }}>
+      <Card as="section" className={`tk-site-hero pe-editable-section ${selected === 'hero' ? 'pe-selected' : ''} ${!draft.heroImage?'pe-without-cover':''}`} onClick={() => { setSelected('hero'); send('foru:select', { id: 'hero' }); }} onFocus={() => { setSelected('hero'); send('foru:select', { id: 'hero' }); }}>
         <button type="button" className={`pe-image-target ${imageDrop?'pe-drop-target':''}`} onClick={event=>{event.stopPropagation();send('foru:context',{target:'image'});}} onDragOver={event=>{event.preventDefault();event.stopPropagation();setImageDrop(true);}} onDragLeave={()=>setImageDrop(false)} onDrop={event=>{event.preventDefault();event.stopPropagation();setImageDrop(false);const file=event.dataTransfer.files[0];if(file)send('foru:image-drop',{target:'hero',file});}} aria-label="Cambiar foto de portada">
-          {draft.heroImage?<img src={draft.heroImage} alt={draft.heroImageAlt||''} className="tk-site-image"/>:<span>＋ Tu foto aquí<br/><small>Toca para elegir · arrastra para reemplazar</small></span>}
+          {draft.heroImage?<img src={draft.heroImage} alt={draft.heroImageAlt||''} className="tk-site-image"/>:<span>{draft.presentationVersion===3?'＋ Añadir una foto · opcional':<>＋ Tu foto aquí<br/><small>Toca para elegir · arrastra para reemplazar</small></>}</span>}
           {draft.heroImage&&<span className="pe-image-caption">Cambiar foto</span>}
         </button>
         <Editable

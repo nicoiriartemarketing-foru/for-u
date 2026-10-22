@@ -46,6 +46,9 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     const destination = locationDestination(location.pathname, location.search, project.id);
     if (destination && JSON.stringify(projectDestination(focusState.data,project.id).destination)!==JSON.stringify(destination)) remember({projectId:project.id,destination});
   }, [user?.id,location.pathname,location.search,project?.id,focusState.loaded]);
+  const isToolSurface=location.pathname!=='/dashboard'&&location.pathname!=='/dashboard/world';
+ const isPageEditor=location.pathname==='/dashboard/tools/landing';
+ const isProjectSurface=location.pathname!=='/dashboard'||Boolean(requested);
   const query = project ? `?project=${encodeURIComponent(project.id)}` : '';
   const type = project ? projectModuleType(project)! : 'restaurant';
   const pageAccess = {
@@ -87,7 +90,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
             </Link>
           </Tooltip>;
   };
-  return <div className="workspace-shell workspace-shell-immersive">
+  return <div className={`workspace-shell workspace-shell-immersive ${isToolSurface?'is-tool-focused':''} ${isPageEditor?'is-page-editor':''} ${params.get('setup')==='1'?'is-guiding':''}`}>
     <aside className={`workspace-sidebar ${menuOpen ? 'menu-open' : ''}`}>
       <Link className="workspace-brand" to="/dashboard" aria-label="FOR U · Mis proyectos"><Logo /></Link>
 
@@ -105,15 +108,15 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     </aside>
 
     <div className="workspace-main">
-      <header className="workspace-top"><div className="workspace-mobile-tools"><WorkspaceTools links={links} projectId={project?.id} type={type} onNavigate={rememberNavigation}/></div>
+      {isToolSurface?<header className="workspace-focus-bar"><Link to={project?projectViewPath(project.id,'map'):'/dashboard'}>← Mapa</Link><span>{project?.name||'Mis proyectos'}</span><details key={location.pathname+location.search} className="workspace-focus-menu"><summary aria-label="Más opciones del proyecto">•••</summary><nav aria-label="Cambiar espacio">{project&&workspaceSpaces(project.id,type).filter(space=>space.path.split('?')[0]!==location.pathname).map(space=><Link key={space.id} to={space.path}>{space.title}</Link>)}{project&&projectViews.map(view=><Link key={view} to={projectViewPath(project.id,view)}>{({map:'Mapa',kanban:'Kanban',calendar:'Calendario',world:'Mi mundo'})[view]}</Link>)}<label>Proyecto activo<select value={project?.id??''} onChange={event=>{if(!confirmWorkspaceNavigation())return;store.switchProject(event.target.value);const next=projects.find(p=>p.id===event.target.value);if(next)navigate(resumePath(projectDestination(focusState.data,next.id),projectModuleType(next)!));}}>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><WorkspaceTools links={links} projectId={project?.id} type={type} onNavigate={rememberNavigation}/><Link to="/dashboard">Mis proyectos y Hoy</Link><Link to="/dashboard?create=1">Crear otro proyecto</Link></nav></details></header>:isProjectSurface&&<header className="workspace-top"><div className="workspace-mobile-tools"><WorkspaceTools links={links} projectId={project?.id} type={type} onNavigate={rememberNavigation}/></div>
         <nav className="workspace-breadcrumbs" aria-label="Ubicación"><Link to="/dashboard">Mi espacio</Link><span aria-hidden="true">/</span><span aria-current="page">{currentTitle}</span></nav>
         <nav className="workspace-view-switch" aria-label="Vistas del proyecto">{project ? projectViews.map(view=><Link key={view} aria-current={(view==='world'?location.pathname==='/dashboard/world':location.pathname==='/dashboard'&&(params.get('view')==='management'?'map':params.get('view')||'map')===view)?'page':undefined} to={projectViewPath(project.id,view)}>{({map:'Mapa',kanban:'Kanban',calendar:'Calendario',world:'Mi mundo'})[view]}</Link>) : <span>Elige un proyecto para continuar</span>}
         </nav>
         <label>Proyecto activo<select value={project?.id ?? ''} onChange={event => { if (!confirmWorkspaceNavigation()) return; store.switchProject(event.target.value); const next = projects.find(p => p.id === event.target.value); if(next) navigate(resumePath(projectDestination(focusState.data,next.id),projectModuleType(next)!)); }}><option value="" disabled>Elige un proyecto</option>{projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-      </header>
-      {project&&<nav className="workspace-spaces" aria-label="Espacios del proyecto">{workspaceSpaces(project.id,type).map(space=><Link key={space.id} to={space.path} aria-current={location.pathname===space.path.split('?')[0]?'page':undefined}>{space.title}</Link>)}</nav>}
+      </header>}
+      {project&&isProjectSurface&&!isToolSurface&&<nav className="workspace-spaces" aria-label="Espacios del proyecto">{workspaceSpaces(project.id,type).map(space=><Link key={space.id} to={space.path} aria-current={location.pathname===space.path.split('?')[0]?'page':undefined}>{space.title}</Link>)}</nav>}
       <div className="workspace-body">
-        {project&&location.pathname!=='/dashboard'&&<Link className="workspace-map-return" to={projectViewPath(project.id,'map')}>← Volver a mi mapa</Link>}
+        {project&&!isToolSurface&&location.pathname!=='/dashboard'&&<Link className="workspace-map-return" to={projectViewPath(project.id,'map')}>← Volver a mi mapa</Link>}
         <FocusStatus />
         {requested && !project ? <section className="magic-card" role={store.isCloudSyncing ? 'status' : 'alert'}><h1>{store.isCloudSyncing || store.cloudUserId !== user?.id ? 'Cargando proyecto…' : 'Este proyecto no está disponible'}</h1><p>{store.projectLoadError || 'No se abrirá otro proyecto en su lugar.'}</p>{store.projectLoadError && <DSButtonSecondary onClick={() => { if (user) void store.hydrateFromSupabase(user.id); }}>Reintentar</DSButtonSecondary>}<Link to="/dashboard">Volver a mis proyectos</Link></section> : children}
       </div>

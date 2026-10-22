@@ -15,6 +15,7 @@ export type ToolId =
   | "bookings"
   | "automation";
 export type Business = {
+  route?: import('../workspace/contracts').BusinessRoute;
   moduleType?: string;
   name: string;
   industry: string;
@@ -27,6 +28,7 @@ export function businessFromProject(project: ForUActiveProject): Business {
   const p = project.strategyProfile ?? {};
   return {
     name: project.name,
+    route: p.businessRoute as import('../workspace/contracts').BusinessRoute|undefined,
     industry: project.industryKey ?? "servicios",
     moduleType: typeof p.moduleType === "string" ? p.moduleType : undefined,
     objective: String(p.objective ?? project.tangibleGoal ?? "ventas"),
