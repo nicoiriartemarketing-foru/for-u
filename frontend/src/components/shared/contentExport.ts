@@ -1,9 +1,22 @@
+import {artworkLayout} from '../../studio/artworkLayout';
 import { contentSizes, type ContentDraft } from './contentModel';
 export async function exportContentImage(draft: ContentDraft, imageUrl: string,logoUrl=''): Promise<Blob> {
   const { width, height } = contentSizes[draft.format];
   const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
   const ctx = canvas.getContext('2d'); if (!ctx) throw new Error('El navegador no pudo crear la imagen.');
   ctx.fillStyle = draft.background; ctx.fillRect(0, 0, width, height);
+  if(draft.layout){
+    await document.fonts?.ready;
+    const geometry=artworkLayout(draft,Boolean(imageUrl),(text,size,weight)=>{ctx.font=`${weight} ${size}px Inter, sans-serif`;return ctx.measureText(text).width;});
+    if(geometry.overflow)throw new Error('El texto no cabe completo. Acórtalo antes de exportar.');
+    async function load(url:string){const image=new Image();image.crossOrigin='anonymous';await new Promise<void>((resolve,reject)=>{image.onload=()=>resolve();image.onerror=()=>reject(new Error('No pudimos leer la imagen para exportar. Revisa su archivo.'));image.src=url;});return image;}
+    if(draft.layout==='split'){ctx.fillStyle='#ffffff40';ctx.fillRect(0,0,width*.5,height);}
+    if(geometry.image){const box=geometry.image,image=await load(imageUrl),scale=Math.max(box.w/image.width,box.h/image.height);ctx.save();ctx.beginPath();if(draft.layout==='poster')ctx.roundRect(box.x,box.y,box.w,box.h,32);else ctx.rect(box.x,box.y,box.w,box.h);ctx.clip();ctx.drawImage(image,box.x+(box.w-image.width*scale)/2,box.y+(box.h-image.height*scale)/2,image.width*scale,image.height*scale);ctx.restore();}
+    ctx.fillStyle=draft.foreground;ctx.textBaseline='top';
+    for(const box of [geometry.brand,geometry.title,geometry.body,geometry.cta]){ctx.font=`${box.weight} ${box.size}px Inter, sans-serif`;box.lines.forEach((line,index)=>ctx.fillText(line,box.x,box.y+index*box.size*1.2));}
+    if(logoUrl){const image=await load(logoUrl),scale=Math.min(160/image.width,64/image.height);ctx.drawImage(image,width-72-image.width*scale,height-80,image.width*scale,image.height*scale);}
+    return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('No se pudo exportar la imagen.')),'image/png'));
+  }
   if (imageUrl) {
     const image = new Image(); image.crossOrigin = 'anonymous';
     await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error('No se pudo exportar la imagen seleccionada. Abre la biblioteca y selecciónala otra vez.')); image.src = imageUrl; });

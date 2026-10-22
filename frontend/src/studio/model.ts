@@ -1,0 +1,40 @@
+import {nativeOffers,offerPrice,parseProposal,type Proposal} from '../proposal/model';
+import {pageSections} from '../experience/pageComposition';
+import {privateMediaPath,externalImageUrl} from '../components/shared/mediaReference';
+import {blankContent,type ContentDraft} from '../components/shared/contentModel';
+import type {LandingDraft,Business} from '../toolkit/types';
+import type {ModuleType} from '../modules/moduleProjects';
+import type {Campaign,SourceReference} from '../workspace/contracts';
+export const intentions=[
+ {id:'awareness',title:'Dar a conocer',hint:'Presenta quién eres y qué estás construyendo.',icon:'✦',category:'reconocimiento'},
+ {id:'conversation',title:'Conversar y conectar',hint:'Abre una conversación con tus personas.',icon:'◌',category:'interaccion'},
+ {id:'trust',title:'Construir confianza',hint:'Explica tu proceso con información real.',icon:'◇',category:'conversion'},
+ {id:'offer',title:'Presentar una oferta',hint:'Haz visible lo que ya puedes ofrecer.',icon:'↗',category:'venta'},
+ {id:'followup',title:'Retomar el contacto',hint:'Invita a volver a quienes ya te conocen.',icon:'↻',category:'retargeting'},
+ {id:'loyalty',title:'Cuidar a mis clientes',hint:'Mantén la relación después de una compra.',icon:'♡',category:'fidelizacion'},
+] as const;
+export type Intent=Campaign['intent'];
+export type CreativeSource={key:string;title:string;body:string;image:string;cta:string;reference:SourceReference|null;group:'offer'|'page'|'proposal'|'idea'};
+export function studioSources({project,type,proposal,page,catalog,revisions}:{project:string;type:ModuleType;proposal:Proposal;page:LandingDraft|null;catalog:unknown;revisions:{proposal:string|null;page:string|null;catalog:string|null}}):CreativeSource[]{
+ const rows:CreativeSource[]=[];parseProposal(proposal);
+ if(revisions.catalog)for(const offer of nativeOffers(type,catalog))rows.push({key:'catalog:'+offer.id,title:offer.name,body:[offer.description,offerPrice(offer),offer.conditions].filter(Boolean).join('\n'),image:offer.image,cta:proposal.cta||'Conoce esta oferta',reference:{projectId:project,kind:'catalog',id:offer.id,revision:revisions.catalog},group:'offer'});
+ if(revisions.proposal){
+  for(const offer of proposal.offers)rows.push({key:'proposal:'+offer.id,title:offer.name,body:[offer.description,offerPrice(offer),offer.conditions].filter(Boolean).join('\n'),image:offer.image,cta:proposal.cta||'Conoce esta oferta',reference:{projectId:project,kind:'proposal',id:offer.id,revision:revisions.proposal},group:'offer'});
+  if(proposal.offering.trim())rows.push({key:'proposal',title:proposal.message||proposal.offering,body:[proposal.value,proposal.conditions].filter(Boolean).join('\n'),image:'',cta:proposal.cta||'Conversemos',reference:{projectId:project,kind:'proposal',id:'proposal',revision:revisions.proposal},group:'proposal'});
+ }
+ if(page&&revisions.page)for(const section of pageSections(page).filter(section=>section.id==='hero'||section.body.trim()))rows.push({key:'page:'+section.id,title:section.title,body:section.body,image:section.image,cta:page.cta,reference:{projectId:project,kind:'page',id:section.id,revision:revisions.page},group:'page'});
+ return rows;
+}
+export function compositionOptions(source:CreativeSource,intent:Intent,format:ContentDraft['format'],project:string,user:string,brand:string,campaign?:Campaign):ContentDraft[]{
+ if(!source.title.trim())throw new Error('Cuéntanos una idea o elige información guardada.');
+ if(source.reference?.projectId&&source.reference.projectId!==project)throw new Error('Esta información pertenece a otro proyecto.');
+ if(campaign&&campaign.intent!==intent)throw new Error('Revisa el objetivo de la campaña antes de crear.');
+ const path=privateMediaPath(source.image,user,project);const external=!path?externalImageUrl(source.image):'';
+ if(source.image&&!path&&!external)throw new Error('La imagen necesita revisión. Elige un archivo de este proyecto.');
+ if(external&&(/\/object\/sign\//.test(external)||/[?&](token|signature|expires|x-amz-credential)=/i.test(external)))throw new Error('Elige la imagen desde tu biblioteca; no guardamos enlaces temporales.');
+ return (['editorial','poster','split'] as const).map((layout,i)=>({...blankContent(project),layout,format,title:source.title.slice(0,160),subtitle:source.body,caption:[source.title,source.body,source.cta].filter(Boolean).join('\n\n'),cta:source.cta,brandName:brand,imagePath:path||'',sourceImageUrl:external||'',background:['#F4F0EA','#EDE7F7','#A9E8D7'][i],foreground:'#24232A',creative:{intent,...(campaign?{campaignId:campaign.id}:{}),...(source.reference?{reference:source.reference}:{}),sourceKey:source.key},...(source.reference?.kind==='page'?{source:{kind:'landing' as const,mode:'draft' as const,sectionId:source.reference.id,revision:source.reference.revision}}:{})}));
+}
+export function campaignWithPiece(campaigns:{campaigns:Campaign[]},id:string,pieceId:string):Campaign[]{
+ if(!campaigns.campaigns.some(c=>c.id===id))throw new Error('Esta campaña ya no está disponible. Tu diseño se conserva.');
+ return campaigns.campaigns.map(c=>c.id===id?{...c,pieceIds:[...new Set([...c.pieceIds,pieceId])]}:c);
+}

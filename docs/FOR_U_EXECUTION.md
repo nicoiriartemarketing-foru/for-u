@@ -1,6 +1,6 @@
 # FOR U — Registro de ejecución de los 16 objetivos
 
-Actualizado: 21 de octubre de 2026. **Autorización vigente: ejecutar tres entregas completas; una pregunta a la vez. Entrega 1 en curso.** La existencia de este registro no autoriza comenzar objetivos posteriores. Especificación: [maestra](FOR_U_MASTER_SPEC.md); detalle de aceptación: [155 requisitos](FOR_U_REQUIREMENTS.csv); diagnóstico: [base](FOR_U_BASELINE.md).
+Actualizado: 22 de octubre de 2026. **Autorización vigente: ejecutar tres entregas completas; una pregunta a la vez. Entrega 1 en curso.** La autorización vigente permite continuar las tres entregas; los 16 objetivos son la lista interna, sin nuevos permisos entre avances. Especificación: [maestra](FOR_U_MASTER_SPEC.md); detalle de aceptación: [155 requisitos](FOR_U_REQUIREMENTS.csv); diagnóstico: [base](FOR_U_BASELINE.md).
 
 ## Estados y criterio de cierre
 
@@ -25,7 +25,7 @@ Registrar además evidencia de código, prueba local, transporte controlado, SQL
 | 06 | Ruta y resultados derivados | 05 y contratos03 | pendiente | Síntesis, diferencias, idempotencia y vistas compartidas |
 | 07 | Páginas/editores de seis rubros | 03,06; diseño02 | pendiente | Edición directa, recursos, guardado/publicación separada |
 | 08 | Ofertas y landings específicas | 07,contratos03 | pendiente | Oferta→landing propia sin duplicar catálogo |
-| 09 | Campañas, plantillas, piezas | 08 | pendiente | Tres composiciones, variantes, exportación real |
+| 09 | Campañas, plantillas, piezas | 08 | en curso | Tres composiciones, variantes, exportación real |
 | 10 | Perfil, destacados, organización | 09 | pendiente | Referencias/grid/calendario/biblioteca sin duplicación |
 | 11 | Guion, grabación y portada | 09,10 | pendiente | Medios reales vinculados a pieza; físico pendiente separado |
 | 12 | Gemini real y material interpretado | Contratos03,flujos04/09/11; X01 para proveedor | pendiente | Respuesta real y aceptación sin mutación automática |
@@ -223,3 +223,27 @@ Añadida lectura del catálogo confirmado en un borrador vinculado al módulo pa
 Pendientes conservados: prueba de reemplazo/subida/encuadre real de foto, recorrido de CTA/secciones completo y recuperación bajo conflicto, QA móvil integral de cada rubro, proveedor real/audio e iPhone físico, contenido y operación de las entregas 2–3. Este registro no declara completa la entrega 1 por tener checks técnicos.
 
 Cierre de este avance parcial: verificado producto QA visible en la landing vinculada, FAQ insertada antes de Historia, subida con flecha, deshacer, texto de dos párrafos, guardado y recarga conservando orden/contenido. La barra de tablet desbordaba30px; corregida y medidos documento/viewport iguales en360/768/1440. La barra de edición contextual se recoge hasta seleccionar. Evidencia persistente en `docs/evidence/2026-10-22/`, en especial `ofertas-sin-navegacion-duplicada-360.png`. No se trata de una prueba física de Safari ni de aprobación final del diseño.
+
+
+## Entrega 2 — Studio por intención y piezas conectadas (22 octubre)
+
+**Avance parcial, sin cierre técnico integral ni aprobación visual.** Se continúa el objetivo global; no se han dado por terminadas las entregas 1–3.
+
+Studio ahora comienza por intención → información confirmada/idea → formato → tres composiciones revisables → editar. Las seis intenciones son opciones de una pregunta; no seis formularios. Campañas, Crear, Mi perfil y Biblioteca se reúnen en un selector. Las capacidades anteriores siguen disponibles en controles secundarios. No se exige foto, página ni campaña para crear.
+
+Tres composiciones tienen geometría propia y comparten el renderer del editor, miniatura, pieza y exportador. Sin fotografías usan texto confirmado. El editor muestra Guardar como acción principal, edición directa y ajustes de un campo por momento. Exportación, variantes, historial y guion quedan en el menú. La planificación de una pieza también abre un ajuste por momento.
+
+Fuentes con proyecto/revisión y comprobación de existencia al guardar; rechaza origen ajeno, enlaces temporales y rutas inválidas. Guardado ordenado diseño → pieza → campaña, identifica guardado parcial y conserva UUID al reintentar. Pruebas cubren fallo intermedio, duplicados, fuente retirada/cambiada y contexto inválido. Ideas escritas se conservan en sessionStorage por cuenta/proyecto durante la sesión. Sin IA ni cambios comerciales automáticos.
+
+QA real autenticado en `aa420f8a-2267-4fbf-b1bb-e756278fd352`:
+- Oferta S/6 existente → propuesta → diseño `73e11fd0-7f96-4411-b123-c745728757bb` → título directo «Café para conversar · QA» → guardar y recargar conserva edición.
+- Exportación produjo PNG real 1080×1350, inspeccionado. Archivo recibido en Downloads, sin publicación.
+- Abrir guion conserva el UUID. Guion manual QA guardado y presente en teleprompter. No se activaron cámara ni micrófono.
+- Campaña `275fd383-a338-4e29-9097-685c3a759ce6`, «Café y conversación · prueba QA», con objetivo/oferta; crear diseño `e129e1bd-a6f3-4f81-80d5-d624792bf6cb`; recarga muestra una pieza y su miniatura enlazada. Biblioteca recupera ambos diseños.
+- Viewport/documento iguales en CSS360/768/1440 para superficies comprobadas de Studio. Se corrigieron miniaturas móviles inicialmente demasiado pequeñas y cabecera del editor que estrechaba el estado. No equivale a prueba física Safari/iPhone ni a comprobación de todas las pantallas.
+
+Verificación local con dependencias del lockfile en snapshot temporal: 209 pruebas aprobadas (8 nuevas de composición/guardado), TypeScript y build aprobados. Sin cambios de dependencias ni Vite/Tailwind/Node soportados. Vista4175 actualizada conservando chunks anteriores.
+
+Evidencia persistente en `docs/evidence/2026-10-22/`: `studio-editor-360.png`, `studio-campana-360.png`, `studio-intencion-360.png`, `studio-intencion-1440.png`.
+
+**Pendientes explícitos de Studio:** adaptar composiciones/plantillas por rubro y momento comercial, filtros completos de comodidad y ofertas específicas, fuente publicada y aviso integral de revisión, carrusel progresivo, organización del perfil/grid/destacados/calendario, biblioteca unificada de todos los tipos de material, grabación/portada/exportación real y Safari físico. La biblioteca integrada de este avance muestra diseños y la biblioteca de fotos existente; no se declara completa la biblioteca multimedia. Continuar además las entregas 1 y 3 y la matriz de todas las herramientas. Gemini real/audio, aislamiento remoto con segunda cuenta e integraciones externas siguen sin prueba de cierre.
