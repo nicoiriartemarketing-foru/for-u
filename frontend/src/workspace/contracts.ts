@@ -7,7 +7,8 @@ export type BusinessRoute=typeof businessRoutes[number];
 export type ProjectReference={projectId:string;id:string};
 export type SourceReference=ProjectReference&{kind:'proposal'|'catalog'|'page'|'offer';revision:string};
 export type Material={id:string;path:string;name:string;mime:string;kind:'image'|'audio'|'video'|'document'};
-export type Diagnostic={version:2;projectId:string;route:BusinessRoute;answers:Record<string,string|string[]>;cursor:string|null};
+export type InspirationReference={id:string;label:string;likes:string[];notes:string;different:string;files:{path:string;name:string}[]};
+export type Diagnostic={version:2;projectId:string;route:BusinessRoute;answers:Record<string,string|string[]>;cursor:string|null;inspiration?:InspirationReference[]};
 export type ProjectRoute={version:1;projectId:string;stage:'explore'|'shape'|'prepare'|'operate'|'improve';diagnosticRevision:string|null;taskIds:string[];reasons:Record<string,string>};
 export type Campaign={id:string;title:string;intent:'awareness'|'conversation'|'trust'|'offer'|'followup'|'loyalty';offer:SourceReference|null;start:string|null;end:string|null;pieceIds:string[]};
 export type Campaigns={version:1;projectId:string;campaigns:Campaign[]};
@@ -16,7 +17,7 @@ export type SpecificOffer={id:string;title:string;source:SourceReference|null;be
 export type SpecificOffers={version:1;projectId:string;offers:SpecificOffer[]};
 export type Materials={version:1;projectId:string;materials:Material[]};
 const areas=['marketing','finance','logistics','operations'];
-const questions=new Set(['projectName','route','age','team','teamSize','stage','origin','purpose','vision','audience','offering','need','needs','goal','web','sales','salesPeriod','marketingStart','intent','comfort','avoid','resources','tools','time','friction','channel','diffusion','budget','reminders','sections','otherAreas','prices','cost','moneyTracking','delivery','control','logisticsFriction','requests','tracking','responsible','operationGoal']);
+const questions=new Set(['projectName','route','age','team','teamSize','stage','origin','purpose','vision','audience','offering','need','needs','goal','web','sales','salesPeriod','brandFeeling','difference','voice','brandAvoid','pillars','inspiration','inspirationStep','inspirationEditing','marketingStart','intent','comfort','avoid','resources','tools','time','friction','channel','diffusion','budget','reminders','sections','otherAreas','prices','cost','moneyTracking','delivery','control','logisticsFriction','requests','tracking','responsible','operationGoal']);
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const text=(v:unknown,n=3000):v is string=>typeof v==='string'&&v.length<=n;
 const unique=(ids:unknown,n=200):ids is string[]=>Array.isArray(ids)&&ids.length<=n&&ids.every(x=>text(x,200)&&!!x)&&new Set(ids).size===ids.length;
@@ -32,6 +33,9 @@ export function parseDiagnostic(v:unknown,project:string):Diagnostic|Journey {
  for(const [key,value] of Object.entries(d.answers as Record<string,unknown>)){
   const base=key.endsWith('Custom')?key.slice(0,-6):key;
   if(!questions.has(base)||!(text(value)||Array.isArray(value)&&value.length<=30&&value.every(x=>text(x,200))))fail();
+ }
+ if(d.inspiration!==undefined){
+  if(!Array.isArray(d.inspiration)||d.inspiration.length>10||new Set(d.inspiration.map(r=>r?.id)).size!==d.inspiration.length||!d.inspiration.every(r=>record(r)&&uuid(r.id)&&text(r.label,500)&&unique(r.likes,12)&&text(r.notes,2000)&&text(r.different,2000)&&Array.isArray(r.files)&&r.files.length<=20&&r.files.every(f=>record(f)&&text(f.name,200)&&text(f.path,2000)&&new RegExp('^[\\w-]+/'+project+'/[\\w.-]+$').test(f.path)&&!f.path.includes('..'))))fail();
  }
  return v as Diagnostic;
 }

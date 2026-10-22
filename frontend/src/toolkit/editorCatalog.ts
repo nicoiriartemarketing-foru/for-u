@@ -4,7 +4,7 @@ import type {ModuleType} from '../modules/moduleProjects';
 import type {LandingDraft} from './types';
 /** A module-bound draft previews its confirmed catalog. Public snapshots are untouched. */
 export function editorCatalog(draft:LandingDraft,type:ModuleType|undefined,payload:unknown,proposalPayload?:unknown):LandingDraft{
- if(!type&&draft.catalogSource==='proposal'&&proposalPayload!==undefined)return {...draft,offers:proposalOffers(parseProposal(proposalPayload),undefined,undefined),menuItems:undefined};
+ if(draft.catalogSource==='proposal'&&proposalPayload!==undefined)return {...draft,offers:proposalOffers(parseProposal(proposalPayload),type,payload),menuItems:undefined};
  if(draft.catalogSource!=='module'||!type||payload===undefined)return draft;
  const offers=nativeOffers(type,payload);
  const settings=(payload as {settings?:Record<string,unknown>})?.settings||{};

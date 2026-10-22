@@ -1,12 +1,13 @@
+import {pillarSuggestions} from './brandProfile';
 import type {BusinessRoute,Diagnostic} from '../workspace/contracts';
 export type Answer=string|string[];
 export type Answers=Diagnostic['answers'];
-export type Question={key:string;group:string;title:string;why:string;icon:string;options?:string[];text?:string;custom?:string;customKey?:string;multi?:boolean;when?:boolean;sectionCards?:boolean};
+export type Question={key:string;group:string;title:string;why:string;icon:string;options?:string[];text?:string;custom?:string;customKey?:string;multi?:boolean;maxSelections?:number;when?:boolean;sectionCards?:boolean};
 export const startingNeeds=['Mostrar lo que ofrezco','Preparar contenido para darme a conocer','Organizar mis pendientes','Gestionar pedidos o reservas','Explorar antes de decidir'];
 export const phases=['Dar a conocer','Conversar y conectar','Construir confianza','Presentar una oferta','Retomar el contacto','Fidelizar'];
 export const routeLabels:Record<BusinessRoute,string>={restaurant:'Restaurante',ecommerce:'Tienda',tourism:'Turismo',hospitality:'Hospedaje',courses:'Cursos',services:'Servicios y ofertas mixtas'};
 export const routeIcons:Record<BusinessRoute,string>={restaurant:'☕',ecommerce:'◈',tourism:'⌁',hospitality:'⌂',courses:'✎',services:'✦'};
-export const groupNames:Record<string,string>={person:'Tú al mando',project:'Tu barco',marketing:'Tu forma de crear',page:'Tu página',other:'A tu ritmo'};
+export const groupNames:Record<string,string>={person:'Tú al mando',project:'Tu barco',marketing:'Tu forma de crear',page:'Tu página',brand:'La esencia de tu negocio',other:'A tu ritmo'};
 export const list=(value:Answer|undefined):string[]=>Array.isArray(value)?value:value?[value]:[];
 export const meaningful=(value:unknown):value is string=>typeof value==='string'&&!!value.trim()&&!['Lo definiré después','Todavía no lo sé','Prefiero omitirlo'].includes(value);
 export const routeOptions = {
@@ -39,6 +40,12 @@ export function buildQuestions(route:BusinessRoute,a:Answers):Question[]{
     { key: 'web', group: 'project', title: '¿Ya tienes un espacio digital?', why: 'Lo que ya existe cuenta. Declararlo aquí no conecta ni importa tus cuentas.', options: ['Todavía no', 'Tengo redes sociales', 'Tengo página o catálogo'], icon: 'panels-top-left' },
     { key: 'sales', group: 'project', title: '¿Cómo van tus ventas?', why: 'Solo orienta tu ruta. No decide tu nivel, tu valor ni el acceso a herramientas.', options: ['Todavía no vendo', 'Vendo de vez en cuando', 'Vendo habitualmente', 'Prefiero omitirlo'], when: a.stage === 'Ya tengo un negocio', icon: 'chart-no-axes-combined' },
     { key: 'salesPeriod', group: 'project', title: '¿En qué periodo estás pensando?', why: 'No necesitamos tu facturación para ayudarte. Puedes omitir esta referencia.', options: ['Esta semana', 'Este mes', 'Un mes habitual', 'Prefiero omitirlo'], when: a.stage === 'Ya tengo un negocio' && meaningful(a.sales) && a.sales !== 'Todavía no vendo', icon: 'calendar-days' },
+    { key:'brandFeeling',group:'brand',title:'¿Qué te gustaría que las personas sientan contigo?',why:'Elige la experiencia que quieres cuidar. No afirmamos que tus clientes ya se sienten así.',options:['Cercanía','Tranquilidad','Inspiración','Diversión','Confianza','Lo definiré después'],multi:true,custom:'Otra sensación, con tus palabras',icon:'heart'},
+    { key:'difference',group:'brand',title:'¿Qué hace diferente tu forma de hacerlo?',why:'Elige solo lo que representa a tu negocio. Esto se guarda en la diferencia de tu propuesta.',options:['Atención personal','Elaboración propia','Especialización','Una experiencia cuidada','Comunidad','Lo definiré después'],multi:true,custom:'Mi diferencia, con mis palabras',icon:'sparkles'},
+    { key:'voice',group:'brand',title:'¿Cómo quieres que suene tu marca?',why:'Puedes combinar estilos. Nos orientan al crear; no cambian automáticamente tus textos.',options:['Cálida','Directa','Divertida','Educativa','Elegante','Lo definiré después'],multi:true,icon:'message-circle'},
+    { key:'brandAvoid',group:'brand',title:'¿Qué no representa a tu marca?',why:'También importa saber qué evitar. Ninguna respuesta limita tus herramientas.',options:['Presionar para vender','Jerga técnica','Exagerar promesas','Humor forzado','Un tono distante','Lo definiré después'],multi:true,custom:'Algo más que prefiero evitar',icon:'shield'},
+    { key:'pillars',group:'brand',title:'¿De qué temas te gustaría hablar?',why:'Estos serán tus pilares de contenido. Elige hasta cinco o añade los tuyos, uno por línea. Puedes empezar con uno o dejarlos para después.',options:[...pillarSuggestions[route],'Lo definiré después'],multi:true,maxSelections:5,custom:'Añadir mis propios temas',icon:'layers'},
+    {key:'inspiration',group:'brand',title:'Tu radar de inspiración',why:'Perfiles, marcas o ideas que te gustan. Descubramos qué rescatar y qué harías a tu manera, sin copiar su identidad.',icon:'compass'},
     { key: 'marketingStart', group: 'marketing', title: 'Ahora, tu manera de comunicar.', why: 'Unas pocas elecciones nos ayudan a crear contigo. También puedes dejar esta parte para después.', options: ['Quiero prepararla ahora', 'Más adelante'], icon: 'megaphone' },
     { key: 'intent', group: 'marketing', title: '¿Qué quieres conseguir con tu contenido?', why: 'Puedes trabajar varias intenciones. El formato viene después.', options: phases, when: a.marketingStart !== 'Más adelante', icon: 'megaphone' },
     { key: 'comfort', group: 'marketing', title: '¿Cómo te sientes a gusto creando?', why: 'Puedes elegir varias formas. No necesitas aparecer frente a una cámara.', options: ['Hablando a cámara', 'Usando mi voz', 'Escribiendo', 'Mostrando productos', 'Mostrando el proceso', 'Todavía no lo sé'], multi: true, when: a.marketingStart !== 'Más adelante', icon: 'wand-sparkles' },
@@ -69,11 +76,13 @@ export function buildQuestions(route:BusinessRoute,a:Answers):Question[]{
 }
 
 const exclusiveChoices=new Set(['Todavía no lo sé','Ninguno todavía','Ninguna todavía','Nada en particular','Por ahora, seguir con lo elegido','Lo definiré después','Todavía no','Todavía no registro']);
-export function selectChoice(question:Pick<Question,'multi'>,current:string[],value:string):Answer{
+export function selectChoice(question:Pick<Question,'multi'|'maxSelections'>,current:string[],value:string):Answer{
  if(!question.multi)return value;
  if(current.includes(value))return current.filter(item=>item!==value);
  if(exclusiveChoices.has(value))return [value];
- return [...current.filter(item=>!exclusiveChoices.has(item)),value];
+ const selected=current.filter(item=>!exclusiveChoices.has(item));
+ if(question.maxSelections&&selected.length>=question.maxSelections)return current;
+ return [...selected,value];
 }
 
 /** Commercial text remains canonical. The separator restores selected options without a second editable copy. */

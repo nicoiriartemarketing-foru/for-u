@@ -7,3 +7,4 @@
 
 .studio-campaign-pieces:has(>a:only-child){grid-template-columns:minmax(0,180px)}
 .studio-flow h2[tabindex="-1"]:focus{outline:none!important}
+.studio-brand-context{margin:0 0 20px;padding:12px 16px;border:1px solid #ded4e8;border-radius:18px;background:#fffdfb}.studio-brand-context summary{min-height:44px;align-content:center;cursor:pointer;font-weight:600;color:#60408f}.studio-brand-context p{font-size:14px;line-height:1.6;color:#5f556b}.studio-brand-context summary:focus-visible{outline:3px solid #7751b8;outline-offset:3px}

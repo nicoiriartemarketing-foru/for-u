@@ -243,3 +243,23 @@ Recorrido final: bienvenida → diagnóstico corregible → espacio personalizad
 **Prohibiciones vigentes:** no modificar INTI CHURIN; no publicar negocios reales; no desplegar Hostinger ni activar cobros productivos/facturación durante estas pruebas. Hostinger tendrá comprobación separada después de preparar versión y autorización correspondiente. No pedir secretos en chat. No dejar de registrar correo, Meta, cuotas de almacenamiento, segunda cuenta, aula y otros proveedores pendientes.
 
 **Fuera de esta versión, conservado como futuro:** imágenes generativas con presupuesto, montajes/video generativo, dirección avanzada de transiciones, cuotas comerciales nuevas y publicación Meta. Las conexiones externas que ya tengan código requieren sus pruebas propias antes de anunciarlas funcionales.
+
+## 20. Addendum confirmado: esencia y pilares de contenido
+
+Solicitud de Nicole del 22 de octubre: captar la esencia del negocio y lo que lo diferencia, incorporando pilares de contenido. Se suma a las secciones 1–19 y a los ajustes de prueba, sin reemplazarlos.
+
+Una pregunta por pantalla, ejemplos seleccionables por rubro, respuestas múltiples compatibles, texto propio y omisión: sensaciones que se quiere cuidar, diferencia confirmada, voz de marca y límites de comunicación. La diferencia usa el campo canónico de la propuesta, sin duplicarlo. Las opciones son aspiraciones declaradas; no prueban calidad, emociones del cliente ni testimonios.
+
+Hasta cinco pilares elegidos o escritos por la persona, sin obligarla a tener tres ni a completar la identidad para crear. Diferenciar pilar (tema), intención comercial (para qué) y oferta confirmada (qué se presenta). Creator Studio debe reutilizarlos, permitir crear sin pilar, guardar contexto/revisión con la pieza y organizar el contenido por tema sin duplicar documentos ni alterar fechas. Cambiar identidad futura no sobrescribe piezas existentes.
+
+Interpretar audio o generar textos con IA requiere acción explícita y pruebas reales separadas. Las composiciones iniciales siguen usando reglas y recursos confirmados. No cerrar este addendum por aprobar tests: comprobar selección, guardado/recarga, retorno a Studio, contexto de pieza y filtros, escritorio/móvil/teclado, aislamiento por proyecto y aprobación visual de Nicole. La auditoría documental histórica no acredita este addendum.
+
+## 21. Radar de inspiración — ampliación solicitada
+
+- Referencias opcionales por proyecto: nombre, @usuario o enlace; capturas privadas opcionales. No se exige material para explorar.
+- Una pregunta por pantalla: identificar → elegir varios aspectos que gustan → indicar qué adaptar o evitar. Atrás, guardado de cada paso y recuperación tras recarga. Varias referencias independientes, editables posteriormente desde Studio.
+- Aspectos: colores/estilo, fotografías, escritura, videos, explicaciones, organización del perfil y presentación de ofertas; notas propias opcionales.
+- Mantener separado referencia, esencia, diferencia, pilares y objetivo comercial. Las referencias orientan; no sustituyen la identidad ni son afirmaciones comerciales.
+- No visitar perfiles ni invocar IA al adjuntar o guardar. Cualquier interpretación futura será explícita y revisable. No copiar automáticamente textos, fotos ni identidad de terceros.
+- Las composiciones conservan una instantánea privada de las notas confirmadas, sin introducir perfiles o notas como texto público ni copiar capturas a diseños. No anunciar análisis de perfiles no realizado.
+- Guardado compatible en diagnóstico versionado y por proyecto; conservar documentos anteriores, publicaciones y catálogo. No activar facturación ni publicar negocios reales.

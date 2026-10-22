@@ -1,3 +1,4 @@
+import {useSavedNavigation} from '../lib/useSavedNavigation';
 import {Monitor,Smartphone,Undo2,Redo2,MoreHorizontal} from 'lucide-react';
 import {parseLandingWorkspace,workspaceKey} from './landingWorkspace';
 import {prepareRoutePage} from '../experience/routePreparation';
@@ -22,7 +23,7 @@ import { readLandingPublication, writeLandingPublication, landingPublicSnapshot,
 import { privateMediaPath, isPrivateMedia } from '../components/shared/mediaReference';
 import { resolveMediaPath } from '../components/shared/mediaStorage';
 import { moduleLabels, type ModuleType } from '../modules/moduleProjects';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Select as DSSelect } from '../components/ui/DesignSystem';
 import { useUnsavedNavigation } from "../lib/useUnsavedNavigation";
 import { Textarea, InfoIcon } from "../components/ui/DesignSystem";
@@ -49,10 +50,9 @@ export default function LandingBuilder(props: {wizard?:boolean}) {
 function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
   const { business, docs, save, reload, userId, projectId, demo, track, documentRevision } = useToolkit();
   const [routeParams] = useSearchParams();
-  const navigate=useNavigate();
   const [nextStep,setNextStep]=useState<'intro'|'intent'|null>(()=>{try{return routeParams.get('tour')==='1'&&sessionStorage.getItem(`foru:landing-tour:${userId}:${projectId}`)!=='done'?'intro':null;}catch{return null;}});
   function dismissNext(){setNextStep(null);try{sessionStorage.setItem(`foru:landing-tour:${userId}:${projectId}`,'done');}catch{}}
-  async function createFromPage(intent?:string){if(busy)return;if(dirty||!docs.landing){if(!await saveDraft())return;}dismissNext();navigate(`/creator-studio?project=${encodeURIComponent(projectId)}&from=landing&section=${encodeURIComponent(selectedId)}&viewport=${viewport}${intent?'&intent='+intent:''}`);}
+  async function createFromPage(intent?:string){if(busy)return;if(dirty||!docs.landing){if(!await saveDraft())return;}dismissNext();navigateAfterSave(`/creator-studio?project=${encodeURIComponent(projectId)}&from=landing&section=${encodeURIComponent(selectedId)}&viewport=${viewport}${intent?'&intent='+intent:''}`);}
   const requestedStep = routeParams.get("step");
   const [history, dispatchHistory] = useReducer(editorHistory<LandingDraft>, { past: [], present: editorCatalog((docs.landing as LandingDraft) ?? prepareRoutePage(business.name,(business.route||business.moduleType||'services') as BusinessRoute,{},emptyProposal()),business.moduleType as ModuleType|undefined,docs['module-'+business.moduleType],docs['module-proposal']), future: [] } as EditorHistory<LandingDraft>);
   const draft = history.present;
@@ -80,6 +80,7 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
   }, [userId, projectId, demo, publicationAttempt]);
   const [dirty, setDirty] = useState(false);
   useUnsavedNavigation(!wizard && (dirty || busy));
+  const navigateAfterSave=useSavedNavigation(!dirty&&!busy);
   const drag = useRef(-1);
   const uploading = useRef(false);
   const [selectionActive,setSelectionActive]=useState(Boolean(requestedStep||routeParams.get('section')||initialWorkspace.sectionId!=='hero'));

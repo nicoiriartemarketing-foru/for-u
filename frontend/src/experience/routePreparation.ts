@@ -45,6 +45,7 @@ export function prepareRoutePage(name:string,route:BusinessRoute,a:Answers,propo
  return {...defaultLanding({name,industry:route,moduleType:route,objective:'',audience:'',offer:'',location:''}),template:route,presentationVersion:3,color:'#7751B8',headline:proposal.message.trim()||name,description:proposal.offering.trim(),cta:proposal.cta.trim()||'Conocer más',whatsapp:proposal.whatsapp,fields:[],bookingEnabled:false,catalogSource:route==='services'?'proposal':'module',blocks:sections.slice(0,8).map((title,index)=>({id:`route-section-${index}`,title,useModuleDetails:true,kind:sectionKind({id:'',title,body:''})||'details',body:title==='Nuestra historia'?story:''}))};
 }
 export function canonicalAnswer(diagnostic:Diagnostic,proposal:Proposal,key:string):string|string[]|undefined{
+ if(key==='difference')return proposal.value||diagnostic.answers[key];
  if(key==='offering')return proposal.offering||diagnostic.answers[key];
  if(key==='audience')return proposal.audience||diagnostic.answers[key];
  if(key==='need')return proposal.need||diagnostic.answers[key];

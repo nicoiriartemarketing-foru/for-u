@@ -1,9 +1,10 @@
+import NavigationGuard from './lib/NavigationGuard';
 import ForUCompanion from './experience/ForUCompanion';
 import BrandWelcome from './experience/BrandWelcome';
 import { Card as DSCard } from './components/ui/DesignSystem';
 import { Toaster } from 'react-hot-toast';
 import { Component, lazy, Suspense, useEffect, type ErrorInfo, type ReactNode } from 'react';
-import { BrowserRouter as Router, Navigate, Routes, Route, useLocation } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import WorkspaceShell from './pages/dashboard/WorkspaceShell';
 import { useActiveProjectsStore } from './stores/useActiveProjectsStore';
 import { projectModuleType } from './modules/moduleProjects';
@@ -113,11 +114,11 @@ function ExperienceSurface({children}:{children:ReactNode}) {
   const customer=/^\/(s|negocio|experiencias|p)\//.test(pathname)||pathname==='/site-preview'||(!['/','/login','/register','/pricing','/ia','/metodologia','/mundo-digital','/aventura','/studio','/onboarding','/workspace','/whatsapp','/content-creator','/creator-studio','/estudio','/registro','/preparacion','/reserva','/exito','/herramientas/demo','/mapa/demo'].includes(pathname)&&!/^\/(dashboard|modules|pedidos|compras|cobros|editor)(\/|$)/.test(pathname));
   return <div className={customer?'foru-customer-surface':'foru-experience'}>{children}{!customer&&<BrandWelcome/>}</div>;
 }
-function App() {
+const appRouter=createBrowserRouter([{path:'*',element:<ApplicationRoutes/>,errorElement:<RouteFailure/>}]);
+function App(){return <AppErrorBoundary><RouterProvider router={appRouter}/></AppErrorBoundary>;}
+function ApplicationRoutes() {
   return (
-    <AppErrorBoundary>
-      <Router>
-        <ExperienceSurface><Toaster position="top-right" toastOptions={{ duration: 3500, success: { style: { background: '#f0fdf4', color: '#14532d', border: '1px solid #86efac' } } }} />
+        <ExperienceSurface><NavigationGuard/><Toaster position="top-right" toastOptions={{ duration: 3500, success: { style: { background: '#f0fdf4', color: '#14532d', border: '1px solid #86efac' } } }} />
         <AreaDocumentsProvider><WorkspaceFocusProvider><PersonalPomodoro><Suspense fallback={<RouteLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
@@ -177,10 +178,11 @@ function App() {
             <Route path="/:slug" element={<PublicRestaurant />} />
           </Routes>
         </Suspense></PersonalPomodoro></WorkspaceFocusProvider></AreaDocumentsProvider>
-      </ExperienceSurface></Router>
-    </AppErrorBoundary>
+      </ExperienceSurface>
   );
 }
+
+function RouteFailure(){return <main className="foru-auth-page"><DSCard as="section" className="foru-auth-card"><span className="foru-auth-kicker">FOR U</span><h1>No pudimos abrir esta pantalla.</h1><p>Tu información guardada se conserva. Puedes recargar o volver al inicio.</p><a className="pe-action-link" href="/dashboard">Volver a mis proyectos</a></DSCard></main>;}
 
 class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; message?: string }> {
   state = { hasError: false, message: undefined };

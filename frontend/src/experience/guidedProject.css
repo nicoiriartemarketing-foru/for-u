@@ -13,3 +13,5 @@
 
 /* Focus announces the new question without drawing an input-like border around it. */
 .guided-session #guide-question-title:focus{outline:none!important}
+
+@media(max-width:650px){.guided-session .reference-journey{margin-top:18px}.reference-journey .guide-question-symbol{width:48px;height:48px;border-radius:18px;font-size:24px;margin-bottom:16px}.reference-journey h1{font-size:27px}.reference-journey>p{font-size:13px;margin-bottom:20px}.reference-journey .guide-options>button{min-height:64px;padding:10px;gap:8px;font-size:12px}.reference-journey .guide-options>button>span{width:26px;height:26px;font-size:17px}.reference-journey .guide-question-actions{margin-top:18px}}

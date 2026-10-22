@@ -1,3 +1,4 @@
+import {validBrandProfile,type BrandProfile} from '../experience/brandProfile';
 import {nativeOffers,offerPrice,parseProposal,type Proposal} from '../proposal/model';
 import {pageSections} from '../experience/pageComposition';
 import {privateMediaPath,externalImageUrl} from '../components/shared/mediaReference';
@@ -25,14 +26,17 @@ export function studioSources({project,type,proposal,page,catalog,revisions}:{pr
  if(page&&revisions.page)for(const section of pageSections(page).filter(section=>section.id==='hero'||section.body.trim()))rows.push({key:'page:'+section.id,title:section.title,body:section.body,image:section.image,cta:page.cta,reference:{projectId:project,kind:'page',id:section.id,revision:revisions.page},group:'page'});
  return rows;
 }
-export function compositionOptions(source:CreativeSource,intent:Intent,format:ContentDraft['format'],project:string,user:string,brand:string,campaign?:Campaign):ContentDraft[]{
+export function compositionOptions(source:CreativeSource,intent:Intent,format:ContentDraft['format'],project:string,user:string,brand:string,campaign?:Campaign,identity?:BrandProfile,pillar?:string):ContentDraft[]{
  if(!source.title.trim())throw new Error('Cuéntanos una idea o elige información guardada.');
  if(source.reference?.projectId&&source.reference.projectId!==project)throw new Error('Esta información pertenece a otro proyecto.');
  if(campaign&&campaign.intent!==intent)throw new Error('Revisa el objetivo de la campaña antes de crear.');
+ if(identity&&!validBrandProfile(identity,project))throw new Error('La identidad no pertenece a este proyecto.');
+ if(pillar&&!identity?.pillars.includes(pillar))throw new Error('Revisa el pilar de este contenido.');
+ const layouts:NonNullable<ContentDraft['layout']>[]=identity?.voice.includes('Divertida')?['poster','split','editorial']:identity?.voice.includes('Educativa')?['split','editorial','poster']:['editorial','poster','split'];
  const path=privateMediaPath(source.image,user,project);const external=!path?externalImageUrl(source.image):'';
  if(source.image&&!path&&!external)throw new Error('La imagen necesita revisión. Elige un archivo de este proyecto.');
  if(external&&(/\/object\/sign\//.test(external)||/[?&](token|signature|expires|x-amz-credential)=/i.test(external)))throw new Error('Elige la imagen desde tu biblioteca; no guardamos enlaces temporales.');
- return (['editorial','poster','split'] as const).map((layout,i)=>({...blankContent(project),layout,format,title:source.title.slice(0,160),subtitle:source.body,caption:[source.title,source.body,source.cta].filter(Boolean).join('\n\n'),cta:source.cta,brandName:brand,imagePath:path||'',sourceImageUrl:external||'',background:['#F4F0EA','#EDE7F7','#A9E8D7'][i],foreground:'#24232A',creative:{intent,...(campaign?{campaignId:campaign.id}:{}),...(source.reference?{reference:source.reference}:{}),sourceKey:source.key},...(source.reference?.kind==='page'?{source:{kind:'landing' as const,mode:'draft' as const,sectionId:source.reference.id,revision:source.reference.revision}}:{})}));
+ return layouts.map((layout,i)=>({...blankContent(project),layout,format,title:source.title.slice(0,160),subtitle:source.body,caption:[source.title,source.body,source.cta].filter(Boolean).join('\n\n'),cta:source.cta,brandName:brand,imagePath:path||'',sourceImageUrl:external||'',background:['#F4F0EA','#EDE7F7','#A9E8D7'][i],foreground:'#24232A',creative:{intent,...(identity?{brand:{...identity,feelings:[...identity.feelings],voice:[...identity.voice],avoid:[...identity.avoid],pillars:[...identity.pillars],...(identity.inspiration?{inspiration:identity.inspiration.map(r=>({...r,likes:[...r.likes]}))}:{})}}:{}),...(pillar?{pillar}:{}),...(campaign?{campaignId:campaign.id}:{}),...(source.reference?{reference:source.reference}:{}),sourceKey:source.key},...(source.reference?.kind==='page'?{source:{kind:'landing' as const,mode:'draft' as const,sectionId:source.reference.id,revision:source.reference.revision}}:{})}));
 }
 export function campaignWithPiece(campaigns:{campaigns:Campaign[]},id:string,pieceId:string):Campaign[]{
  if(!campaigns.campaigns.some(c=>c.id===id))throw new Error('Esta campaña ya no está disponible. Tu diseño se conserva.');

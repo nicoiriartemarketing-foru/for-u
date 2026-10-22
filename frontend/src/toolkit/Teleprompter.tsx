@@ -219,10 +219,10 @@ export default function Teleprompter({
       setError((e as Error).message);
     } finally {setBusy(false);}
   }
-  if(pieceError)return <section role="alert">{pieceError}<Link to={'/dashboard/tools/profile?project='+projectId}>Volver al perfil</Link></section>;
+  if(pieceError)return <section role="alert">{pieceError}<Link to={'/creator-studio?tab=profile&project='+projectId}>Volver al perfil</Link></section>;
   return (
     <div className="tk-two-columns foru-prompter">
-      {pieceId&&<Link to={'/dashboard/tools/profile'+pieceQuery(projectId,pieceId)}>← Volver a esta pieza</Link>}
+      {pieceId&&<Link to={'/creator-studio'+pieceQuery(projectId,pieceId)+'&tab=profile'}>← Volver a esta pieza</Link>}
       <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-eyebrow">TU VOZ, TU NEGOCIO</div>
         <h2>Habla con confianza</h2>

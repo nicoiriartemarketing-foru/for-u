@@ -13,7 +13,7 @@ import {filteredPieces,highlightTopics,mainIntentions,mainSlots,moveGridPiece,se
 import ContentCalendar from './ContentCalendar';
 import './profileOverview.css';
 type Props={data:SocialDocument;designs:ContentDocument;project:string;user:string;business:string;route:string;campaigns:unknown;busy:boolean;dirty:boolean;error:string;status:string;onPatch:(value:Partial<SocialDocument>)=>void;onOpen:(id:string)=>void;onSave:()=>void;onRecover:()=>void};
-const emptyFilters:PieceFilters={query:'',intent:'',campaign:'',status:''};
+const emptyFilters:PieceFilters={pillar:'',query:'',intent:'',campaign:'',status:''};
 export default function ProfileOverview(props:Props){
  const {data,designs,project,user,business,route,busy,dirty,error,status,onPatch,onOpen,onSave,onRecover}=props;
  const cacheKey=`foru:profile-view:${user}:${project}`;
@@ -72,6 +72,7 @@ export default function ProfileOverview(props:Props){
    {panel==='filter'&&<><EditorDecision choices={[
     {id:'query',title:'Buscar una idea',hint:'Busca en el título y texto de tus piezas.',icon:'⌕',content:<Input label="Buscar contenido" value={filters.query} onChange={e=>setFilters({...filters,query:e.target.value})}/>},
     {id:'intent',title:'Momento de venta',hint:'La intención elegida al crear.',icon:'↗',content:<Select label="Momento de venta" value={filters.intent} onChange={e=>setFilters({...filters,intent:e.target.value})}><option value="">Todos</option>{[{id:'awareness',label:'Dar a conocer'},{id:'conversation',label:'Conversar'},{id:'trust',label:'Construir confianza'},{id:'offer',label:'Presentar oferta'},{id:'followup',label:'Retomar contacto'},{id:'loyalty',label:'Fidelizar'}].map(i=><option key={i.id} value={i.id}>{i.label}</option>)}</Select>},
+    {id:'pillar',title:'Pilar de contenido',hint:'El tema elegido, separado del objetivo de la publicación.',icon:'◇',content:<Select label="Pilar de contenido" value={filters.pillar||''} onChange={e=>setFilters({...filters,pillar:e.target.value})}><option value="">Todos los temas</option>{[...new Set(source.flatMap(d=>d.creative?.pillar?[d.creative.pillar]:[]))].map(label=><option key={label} value={label}>{label}</option>)}</Select>},
     {id:'campaign',title:'Campaña',hint:'También puedes ver contenido sin campaña.',icon:'⌁',content:<Select label="Campaña" disabled={!!campaignError} value={filters.campaign} onChange={e=>setFilters({...filters,campaign:e.target.value})}><option value="">Todas</option><option value="none">Sin campaña</option>{campaigns.campaigns.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</Select>},
     {id:'status',title:'Mi avance',hint:'Encuentra ideas, piezas en preparación o listas.',icon:'✓',content:<Select label="Estado de las piezas" value={filters.status} onChange={e=>setFilters({...filters,status:e.target.value})}><option value="">Todos</option><option value="idea">Idea</option><option value="draft">En preparación</option><option value="ready">Lista</option><option value="published-manual">Publicada por mí · sin verificación</option></Select>}
    ]}/>{activeFilter&&<ButtonSecondary onClick={()=>setFilters(emptyFilters)}>Quitar filtros</ButtonSecondary>}</>}

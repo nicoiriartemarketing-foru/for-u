@@ -1,10 +1,11 @@
+import {useSavedNavigation} from '../../lib/useSavedNavigation';
 import {landingReturn} from '../../studio/navigation';
 import EditorSheet from '../../toolkit/EditorSheet';
 import EditorDecision from '../../toolkit/EditorDecision';
 import DesignArtwork from '../../studio/DesignArtwork';
 import InlineText from './InlineText';
 import {connectDesignPiece} from '../../experience/designPiece';
-import {useUnsavedNavigation} from '../../lib/useUnsavedNavigation';
+import {useUnsavedNavigation,confirmWorkspaceNavigation} from '../../lib/useUnsavedNavigation';
 import DesignSource from '../../experience/DesignSource';
 import {externalImageUrl} from './mediaReference';
 import { getPiece, pieceQuery, type Piece } from '../../social/model';
@@ -61,6 +62,7 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
   const [gallery, setGallery] = useState(false);const [galleryTarget,setGalleryTarget]=useState<'image'|'logo'>('image');const [logo,setLogo]=useState({path:'',url:''});
   const [image, setImage] = useState({ path: '', url: '' });
   useUnsavedNavigation(dirty||busy);
+  const navigateAfterSave=useSavedNavigation(!dirty&&!busy);
   const previewRef=useRef<HTMLElement>(null);const [overflow,setOverflow]=useState(false);
 
   const alive=useRef(true);useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
@@ -107,12 +109,7 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
     return () => { active = false; };
   }, [draft?.imagePath]);
   useEffect(()=>{let active=true;if(draft?.logoPath)void resolveMediaPath(draft.logoPath).then(url=>{if(active)setLogo({path:draft.logoPath!,url});}).catch(e=>{if(active)setNotice(e.message);});return()=>{active=false;};},[draft?.logoPath]);
-  useEffect(() => {
-    if (!dirty) return;
-    const guard = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
-    window.addEventListener('beforeunload', guard); return () => window.removeEventListener('beforeunload', guard);
-  }, [dirty]);
-  function mayDiscard() { return !dirty || window.confirm('Tienes contenido sin guardar. ¿Descartarlo y continuar?'); }
+  function mayDiscard() { return !dirty || confirmWorkspaceNavigation(); }
   function open(value: ContentDraft, changed: boolean) { if (!mayDiscard()) return; undoStack.current=[];redoStack.current=[];setDraft(linkedPiece ? { ...value,id:linkedPiece.id,caption:linkedPiece.text } : value); setDirty(changed); setGallery(false); setNotice(''); }
   function update(patch: Partial<ContentDraft>) { if (draft) {if(JSON.stringify({...draft,...patch})===JSON.stringify(draft))return;undoStack.current=[...undoStack.current,draft].slice(-30);redoStack.current=[];setDraft({ ...draft, ...patch }); setDirty(true); } }
   function undo(){if(!draft)return;const previous=undoStack.current.pop();if(previous){redoStack.current.push(draft);setDraft(previous);setDirty(true);}}
@@ -136,7 +133,7 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
       const saved=await storage.load(userId,project.id,'social-profile');
       const next=connectDesignPiece(saved?.payload,project.id,userId,draft);
       if(next!==saved?.payload)await storage.save(userId,project.id,'social-profile',next,saved?.revision??null);
-      if(alive.current)navigate('/dashboard/tools/profile'+pieceQuery(project.id,draft.id));
+      if(alive.current)navigateAfterSave('/creator-studio'+pieceQuery(project.id,draft.id)+'&tab=profile');
     }catch(error){setNotice((error as Error).message);}
     finally{saving.current=false;setBusy(false);}
   }
@@ -168,12 +165,12 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
     `}</style>
     <main className="content-creator magic-card">
       <header className="studio-design-toolbar">
-        <DSButtonSecondary disabled={busy} onClick={()=>{if(mayDiscard())navigate(landingReturn(draft.creative?.origin,project.id)||`/creator-studio?project=${project.id}&tab=${pieceParams.get('return')==='profile'?'profile':'library'}`);}}>{landingReturn(draft.creative?.origin,project.id)?'← Volver a mi página':'← Studio'}</DSButtonSecondary>
+        <DSButtonSecondary disabled={busy} onClick={()=>{if(mayDiscard())navigate(landingReturn(draft?.creative?.origin,project.id)||`/creator-studio?project=${project.id}&tab=${pieceParams.get('return')==='profile'?'profile':'library'}`);}}>{landingReturn(draft?.creative?.origin,project.id)?'← Volver a mi página':'← Studio'}</DSButtonSecondary>
         <div><small>{project.name}</small><strong>{dirty?'Cambios sin guardar':'Tu diseño'}</strong></div>
         {draft&&<DSButtonPrimary disabled={busy||!dirty} onClick={save}>{busy?'Guardando…':'Guardar'}</DSButtonPrimary>}
       </header>
       {linkedPiece&&<p>Diseño de {linkedPiece.title||'esta pieza'} · guarda antes de volver al perfil.</p>}<p role="status">{notice}</p><details><summary>Cambiar proyecto</summary><ProjectSelector projects={projects} value={project.id} disabled={busy} onChange={id => { if (mayDiscard()) onProjectChange(id); }} /></details>
-      {draft?.source&&<DesignSource user={userId} project={project.id} revision={draft.source.revision} section={draft.source.sectionId} mode={draft.source.mode}/>}<fieldset className="creator-controls" disabled={busy}>
+      {draft?.creative?.pillar&&<p className="creator-pillar-context">Tu tema: <strong>{draft.creative.pillar}</strong></p>}{draft?.source&&<DesignSource user={userId} project={project.id} revision={draft.source.revision} section={draft.source.sectionId} mode={draft.source.mode}/>}<fieldset className="creator-controls" disabled={busy}>
       {draft ? <>
         <div className="studio-design-context"><small>Toca el texto para hacerlo tuyo.</small><DSButtonSecondary onClick={()=>setAdjusting(true)}>Ajustar diseño</DSButtonSecondary><details><summary>••• <span className="sr-only">Más acciones del diseño</span></summary><div className="studio-design-menu"><DSButtonSecondary onClick={undo} disabled={!undoStack.current.length}>Deshacer</DSButtonSecondary><DSButtonSecondary onClick={redo} disabled={!redoStack.current.length}>Rehacer</DSButtonSecondary><DSButtonSecondary onClick={download}>Exportar imagen</DSButtonSecondary><DSButtonSecondary onClick={openScript}>Crear video · guion y tomas</DSButtonSecondary><DSButtonSecondary disabled={Boolean(linkedPiece)} onClick={variant}>Crear variante</DSButtonSecondary><DSButtonSecondary onClick={()=>{if(mayDiscard()){setDraft(null);setDirty(false);}}}>Cambiar plantilla</DSButtonSecondary></div></details></div>
         <EditorSheet open={adjusting} title="¿Qué quieres transformar?" onClose={()=>setAdjusting(false)}><EditorDecision choices={[
