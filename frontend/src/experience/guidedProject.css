@@ -10,3 +10,6 @@
 .foru-experience .workspace-shell.is-guiding>.workspace-sidebar,.foru-experience .workspace-shell.is-guiding .workspace-top,.foru-experience .workspace-shell.is-guiding .workspace-spaces{display:none!important}.foru-experience .workspace-shell.is-guiding .workspace-body{max-width:980px;padding-top:12px}.dashboard-guided{min-height:90dvh}
 
 .guided-create .ds-button-primary{background:#7751b8!important;border:1px solid #7751b8!important;color:#fff!important;box-shadow:0 8px 25px #7751b818!important}.guided-create .ds-button-secondary{background:#ffffff88;border:1px solid #d9cce8;color:#513477}.guided-create button:disabled{opacity:.5;cursor:default}.guided-create{font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
+
+/* Focus announces the new question without drawing an input-like border around it. */
+.guided-session #guide-question-title:focus{outline:none!important}
