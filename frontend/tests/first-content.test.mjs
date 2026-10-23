@@ -20,7 +20,7 @@ test('first content uses confirmed sources and preserves their revision without 
  const story={...hero,key:'page:story',title:'Como empezamos',body:'Una idea familiar.',reference:ref('story')};
  const offer={...hero,key:'proposal:offer-1',title:'Cafe confirmado',body:'S/ 6.00',reference:{kind:'proposal',projectId:project,id:'offer-1',revision:'proposal-r2'},group:'offer'};
  const sources=[offer,hero,story];const before=JSON.stringify(sources);
- assert.equal(firstContentSource(sources,'awareness'),hero);assert.equal(firstContentSource(sources,'conversation'),story);assert.equal(firstContentSource(sources,'offer'),offer);
+ assert.equal(firstContentSource(sources,'awareness'),hero);assert.equal(firstContentSource(sources,'conversation'),story);assert.equal(firstContentSource(sources,'offer'),offer);assert.equal(firstContentSource(sources,'awareness','story'),story);assert.equal(firstContentSource(sources,'awareness','removed-section'),undefined);
  assert.equal(firstContentSource([hero,story],'offer'),undefined);assert.equal(firstContentSource([],'awareness'),undefined);
  const drafts=compositionOptions(firstContentSource(sources,'awareness'),'awareness','portrait',project,'user-qa','QA');
  assert.equal(drafts.length,3);assert(drafts.every(d=>d.title===hero.title&&d.subtitle===hero.body&&d.source.revision==='page-r1'&&d.imagePath===''));

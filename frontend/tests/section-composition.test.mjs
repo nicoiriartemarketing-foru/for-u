@@ -65,3 +65,19 @@ test('guided FAQ editing preserves unfinished questions and only publishes compl
 });
 
 test('FAQ typing keeps trailing spaces between keystrokes until public rendering',async()=>{const {draftFaqRows,serializeFaqRows}=await import('../src/toolkit/sectionComposition.ts');let rows=[{question:'Cómo ',answer:''}];rows=draftFaqRows(serializeFaqRows(rows));assert.equal(rows[0].question,'Cómo ');rows[0].question+='pedir';rows[0].answer='Con ';rows=draftFaqRows(serializeFaqRows(rows));assert.equal(rows[0].answer,'Con ');rows[0].answer+='calma';assert.deepEqual(faqRows(serializeFaqRows(rows)),[{question:'Cómo pedir',answer:'Con calma'}]);});
+
+test('route-specific structured sections keep confirmed text and distinguish amenities from room catalogs',async()=>{
+ const {sectionLayout,compositionRows,routeSectionKind}=await import('../src/toolkit/sectionComposition.ts');
+ const page=prepareRoutePage('QA','hospitality',{sections:['Habitaciones','Servicios']},emptyProposal());
+ assert.equal(page.blocks[0].kind,'catalog');assert.equal(page.blocks[1].kind,'details');assert.equal(sectionLayout(page.blocks[1]),'features');
+ assert.equal(sectionLayout(createEditorSection('courses','syllabus')),'steps');
+ assert.equal(sectionLayout(createEditorSection('tourism','included')),'features');
+ assert.equal(sectionLayout(createEditorSection('restaurant','delivery')),'steps');
+ assert.equal(sectionLayout(createEditorSection('services','testimonials')),'quotes');
+ assert.equal(routeSectionKind({id:'legacy',title:'Servicios',body:'',kind:'catalog'},'hospitality'),'catalog');
+ const body=' Primera indicacion confirmada.\n\nSegunda indicacion. ';
+ assert.deepEqual(compositionRows(body),['Primera indicacion confirmada.','Segunda indicacion.']);
+ assert.deepEqual(compositionRows('   '),[]);
+ assert.equal(body,' Primera indicacion confirmada.\n\nSegunda indicacion. ');
+ const parsed=parseSiteData({...page,blocks:[{...page.blocks[1],body}]});assert.equal(parsed.blocks[0].body,body);
+});

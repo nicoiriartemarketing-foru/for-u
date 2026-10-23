@@ -1,9 +1,11 @@
-import {sectionKind} from './sectionComposition';
+import {routeSectionKind} from './sectionComposition';
 import type { LandingBlock } from './types';
 export type SectionPreset = { key: string; title: string; description: string; body: string };
 const common: SectionPreset[] = [
  { key: 'story', title: 'Nuestra historia', description: 'Presenta a las personas detrás del negocio.', body: 'Cuenta cómo empezó tu negocio y qué te inspira.' },
  { key: 'faq', title: 'Preguntas frecuentes', description: 'Aclara las dudas antes de recibir una solicitud.', body: 'Escribe una pregunta frecuente y su respuesta.' },
+ { key: 'location', title: 'Ubicación y contacto', description: 'Reúne dirección, horarios y cómo encontrarte.', body: '' },
+ { key: 'testimonials', title: 'Testimonios', description: 'Comparte palabras reales de tus clientes.', body: '' },
 ];
 const byIndustry: Record<string, { name: string; sections: SectionPreset[] }> = {
  restaurant: { name: 'Restaurante', sections: [{ key: 'menu', title: 'Nuestro menú', description: 'Destaca platos, ingredientes y opciones.', body: 'Presenta tus especialidades e indica los ingredientes que tus clientes deben conocer.' }, { key: 'delivery', title: 'Pedidos y entregas', description: 'Explica cómo pedir y dónde entregas.', body: 'Indica horarios, zonas de entrega y opciones de recojo.' }] },
@@ -19,7 +21,7 @@ export function editorIndustry(industry: string) {
 export function sectionPresets(industry: string): SectionPreset[] { return [...editorIndustry(industry).sections, ...common]; }
 export function createEditorSection(industry: string, key: string): LandingBlock | null {
  const preset = sectionPresets(industry).find(item => item.key === key);
- return preset ? { id: crypto.randomUUID(), title: preset.title, body: '',kind:sectionKind({id:'',title:preset.title,body:''})||'details' } : null;
+ return preset ? { id: crypto.randomUUID(), title: preset.title, body: '',kind:routeSectionKind({id:'',title:preset.title,body:''},industry)||'details' } : null;
 }
 export function reorderEditorSections(blocks: LandingBlock[], fromId: string, toId: string): LandingBlock[] {
  const from = blocks.findIndex(block => block.id === fromId), to = blocks.findIndex(block => block.id === toId);

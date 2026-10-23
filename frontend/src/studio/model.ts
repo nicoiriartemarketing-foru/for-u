@@ -21,8 +21,9 @@ export const firstContentIntentions=[
  {id:'conversation',title:'Conversar con mis clientes',hint:'Comparte una idea y abre una conversación.',label:'Conversemos'},
  {id:'offer',title:'Mostrar mi oferta',hint:'Presenta lo que pueden comprar o reservar.',label:'Mi oferta'},
 ] as const;
-export function firstContentSource(sources:CreativeSource[],intent:Intent):CreativeSource|undefined {
+export function firstContentSource(sources:CreativeSource[],intent:Intent,sectionId?:string):CreativeSource|undefined {
  if(intent==='offer')return sources.find(source=>source.group==='offer');
+ if(sectionId)return sources.find(source=>source.reference?.kind==='page'&&source.reference.id===sectionId);
  if(intent==='conversation')return sources.find(source=>source.group==='page'&&source.reference?.id!=='hero'&&source.body.trim())||sources.find(source=>source.key==='proposal')||sources.find(source=>source.key==='page:hero');
  return sources.find(source=>source.key==='page:hero')||sources.find(source=>source.group==='proposal');
 }

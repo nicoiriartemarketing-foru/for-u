@@ -2,7 +2,7 @@ import EmptyPageSection from './EmptyPageSection';
 import {HeroCopy,HeroMark} from './PageIdentity';
 import {GripVertical,ArrowUp,ArrowDown} from 'lucide-react';
 import SectionComposition from './PageSectionBody';
-import {sectionKind,sectionHint,sectionConfigured} from './sectionComposition';
+import {sectionKind,sectionLayout,sectionHint,sectionConfigured} from './sectionComposition';
 import {presentationClass} from '../presentation/model';
 import ProjectWidgets from '../widgets/ProjectWidgets';
 import { LandingExtras } from "./LandingPreview";
@@ -156,11 +156,11 @@ export default function SiteEditorFrame() {
             tag="h2"
             onEdit={edit}
           />
-          {draft.presentationVersion===4&&!sectionConfigured(block,draft)?<EmptyPageSection kind={sectionKind(block)} route={draft.template} onConfigure={()=>send('foru:configure',{id:block.id,kind:sectionKind(block)==='catalog'?'catalog':'text'})}/>: [3,4].includes(draft.presentationVersion||1)&&sectionKind(block)==='catalog'?<>
+          {draft.presentationVersion===4&&!sectionConfigured(block,draft)?<EmptyPageSection kind={sectionKind(block)} layout={sectionLayout(block)} route={draft.template} onConfigure={()=>send('foru:configure',{id:block.id,kind:sectionKind(block)==='catalog'?'catalog':'text'})}/>: [3,4].includes(draft.presentationVersion||1)&&sectionKind(block)==='catalog'?<>
             <SectionComposition block={block} draft={draft} onEditOffer={id=>send('foru:context',{target:'offer',id})}/>
             {!draft.offers?.length&&<div className="page-section-setup"><span aria-hidden="true">＋</span><p>{sectionHint('catalog',draft.template)}</p><button type="button" onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'catalog'});}}>Preparar mi catálogo →</button></div>}
           </>:<>
-            {[3,4].includes(draft.presentationVersion||1)&&sectionKind(block)==='faq'&&block.body.trim()?<><SectionComposition block={block} draft={draft}/><button className="pe-action-link" type="button" onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'text'});}}>Editar preguntas y respuestas</button></>:<Editable value={block.body} field="body" blockId={block.id} tag="p" onEdit={edit}/>}
+            {([3,4].includes(draft.presentationVersion||1)&&sectionKind(block)==='faq'||draft.presentationVersion===4&&sectionLayout(block)!=='prose')&&block.body.trim()?<><div onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'text'});}}><SectionComposition block={block} draft={draft}/></div><button className="pe-action-link" type="button" onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'text'});}}>{sectionKind(block)==='faq'?'Editar preguntas y respuestas':sectionLayout(block)==='steps'?'Editar pasos':sectionLayout(block)==='quotes'?'Editar testimonios':'Editar elementos'}</button></>:<Editable value={block.body} field="body" blockId={block.id} tag="p" onEdit={edit}/>}
             {[3,4].includes(draft.presentationVersion||1)&&!block.body.trim()&&<p className="page-section-hint">{sectionHint(sectionKind(block),draft.template)}</p>}
           </>}
         </Card></div>

@@ -2,8 +2,8 @@ import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {ButtonSecondary} from '../components/ui/DesignSystem';
 export type EditorChoice={id:string;title:string;hint:string;icon:string;content:ReactNode};
 /** A choice opens one editing decision; sibling fields are not rendered behind it. */
-export default function EditorDecision({choices,groups}:{choices:EditorChoice[];groups?:{id:string;title:string;hint:string;icon:string;ids:string[]}[]}){
- const [selected,setSelected]=useState<string|null>(null),[group,setGroup]=useState<string|null>(null);
+export default function EditorDecision({choices,groups,initialChoice}:{choices:EditorChoice[];groups?:{id:string;title:string;hint:string;icon:string;ids:string[]}[];initialChoice?:string}){
+ const [selected,setSelected]=useState<string|null>(()=>choices.some(choice=>choice.id===initialChoice)?initialChoice!:null),[group,setGroup]=useState<string|null>(null);
  const title=useRef<HTMLHeadingElement>(null);
  const current=choices.find(choice=>choice.id===selected);
  useEffect(()=>{if(current)title.current?.focus();},[selected]);

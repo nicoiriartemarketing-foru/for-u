@@ -23,11 +23,13 @@ export default function StudioComposer({sources,onBusy,brand}:{brand?:BrandProfi
  useEffect(()=>{live.current=true;return()=>{live.current=false;};},[]);
  useEffect(()=>{heading.current?.focus();setError('');},[step]);
  useEffect(()=>{onBusy(busy);return()=>onBusy(false);},[busy]);
+ useEffect(()=>{setStep('intent');},[first]);
  useEffect(()=>{if(campaign){setIntent(campaign.intent);setStep(brand?.pillars.length?'pillar':'source');}},[campaign?.id]);
  const fromSection=params.get('section')?sources.find(s=>s.reference?.kind==='page'&&s.reference.id===params.get('section')):undefined;
+ const sectionSource=params.get('from')==='landing'?params.get('section')||undefined:undefined;
  function afterPillar(value:Intent){if(fromSection&&(value!=='offer'||fromSection.reference?.id.startsWith('offer:'))){setSource(fromSection);setStep('format');}else setStep('source');}
- useEffect(()=>{const requested=params.get('intent');if(!campaign&&intentions.some(i=>i.id===requested)){setIntent(requested as Intent);if(brand?.pillars.length)setStep('pillar');else afterPillar(requested as Intent);}},[params.get('intent'),fromSection?.key]);
- function chooseIntent(value:Intent){setIntent(value);setPillar('');if(first){const chosen=firstContentSource(sources,value);if(value==='offer'&&sources.filter(s=>s.group==='offer').length>1){setStep('source');return;}if(chosen){setSource(chosen);preview(chosen,value,'portrait');}else setStep('idea');return;}if(brand?.pillars.length)setStep('pillar');else afterPillar(value);}
+ useEffect(()=>{const requested=params.get('intent');if(!campaign&&intentions.some(i=>i.id===requested)){if(first){chooseIntent(requested as Intent);return;}setIntent(requested as Intent);if(brand?.pillars.length)setStep('pillar');else afterPillar(requested as Intent);}},[params.get('intent'),fromSection?.key,first]);
+ function chooseIntent(value:Intent){setIntent(value);setPillar('');if(first){const chosen=firstContentSource(sources,value,sectionSource);if(value==='offer'&&sources.filter(s=>s.group==='offer').length>1){setStep('source');return;}if(chosen){setSource(chosen);preview(chosen,value,'portrait');}else setStep('idea');return;}if(brand?.pillars.length)setStep('pillar');else afterPillar(value);}
 
  function preview(chosen:CreativeSource,value:Intent,format:ContentDraft['format']){try{setResults(compositionOptions(chosen,value,format,projectId,userId,business.name,campaign,brand,pillar||undefined).map(d=>({...d,creative:d.creative?{...d.creative,origin:landingOrigin(params,projectId)}:undefined})));setSelected(0);setStep('result');}catch(e){setError((e as Error).message);}}
  function prepare(format:ContentDraft['format']){if(source)preview(source,intent,format);}
@@ -37,7 +39,7 @@ export default function StudioComposer({sources,onBusy,brand}:{brand?:BrandProfi
  if(!campaigns.loaded)return <p role="status">Abriendo tu espacio creativo…</p>;
  if(campaigns.error)return <section role="alert"><p>{campaigns.error}</p><ButtonSecondary onClick={()=>void campaigns.reload()}>Reintentar</ButtonSecondary></section>;
  if(params.get('campaign')&&!campaign)return <section role="alert"><p>Esta campaña no está disponible en este proyecto.</p><ButtonSecondary onClick={()=>navigate(`/creator-studio?project=${projectId}&tab=campaigns`)}>Volver a mis campañas</ButtonSecondary></section>;
- function sampleFor(value:Intent,index:number){const confirmed=firstContentSource(sources,value);if(!confirmed)return undefined;try{return compositionOptions(confirmed,value,'portrait',projectId,userId,business.name,undefined,brand)[index];}catch{return undefined;}}
+ function sampleFor(value:Intent,index:number){const confirmed=firstContentSource(sources,value,sectionSource);if(!confirmed)return undefined;try{return compositionOptions(confirmed,value,'portrait',projectId,userId,business.name,undefined,brand)[index];}catch{return undefined;}}
  const Heading=first?'h1':'h2';
  return <section className={`studio-flow${first?' first-content-flow':''}`} aria-busy={busy}>
  <header className="studio-flow-trail">{step!=='intent'&&<ButtonSecondary disabled={busy} onClick={()=>{if(first){setStep('intent');return;}if(campaign&&step==='source')navigate(`/creator-studio?project=${projectId}&tab=campaigns`);else setStep(step==='result'?'format':step==='format'?fromSection?(brand?.pillars.length?'pillar':'intent'):'source':step==='source'&&brand?.pillars.length?'pillar':campaign?'source':'intent');}}>← Atrás</ButtonSecondary>}<small>{campaign?campaign.title:step==='intent'?(first?'TU PRIMER CONTENIDO':'UNA IDEA, UN PASO'):activeIntent.title}{pillar&&step!=='pillar'?' · '+pillar:''}</small></header>

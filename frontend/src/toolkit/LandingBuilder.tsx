@@ -1,4 +1,4 @@
-import FaqSectionEditor from './FaqSectionEditor';
+import SectionContentEditor from './SectionContentEditor';
 import {sectionKind} from './sectionComposition';
 import {useSavedNavigation} from '../lib/useSavedNavigation';
 import {Monitor,Smartphone,Undo2,Redo2,MoreHorizontal} from 'lucide-react';
@@ -52,13 +52,13 @@ export default function LandingBuilder(props: {wizard?:boolean}) {
 function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
   const { business, docs, save, reload, userId, projectId, demo, track, documentRevision } = useToolkit();
   const [routeParams] = useSearchParams();
-  const [nextStep,setNextStep]=useState<'intro'|'intent'|null>(()=>{try{return routeParams.get('tour')==='1'&&sessionStorage.getItem(`foru:landing-tour:${userId}:${projectId}`)!=='done'?'intro':null;}catch{return null;}});
+  const [nextStep,setNextStep]=useState<'intro'|null>(()=>{try{return routeParams.get('tour')==='1'&&sessionStorage.getItem(`foru:landing-tour:${userId}:${projectId}`)!=='done'?'intro':null;}catch{return null;}});
   function dismissNext(){setNextStep(null);try{sessionStorage.setItem(`foru:landing-tour:${userId}:${projectId}`,'done');}catch{}}
-  async function createFromPage(intent?:string){if(busy)return;if(dirty||!docs.landing){if(!await saveDraft())return;}dismissNext();navigateAfterSave(`/creator-studio?project=${encodeURIComponent(projectId)}&from=landing&section=${encodeURIComponent(selectedId)}&viewport=${viewport}${intent?'&intent='+intent:''}`);}
+  async function createFromPage(){if(busy)return;if(dirty||!docs.landing){if(!await saveDraft())return;}dismissNext();navigateAfterSave(`/creator-studio?project=${encodeURIComponent(projectId)}&start=first-content&from=landing&section=${encodeURIComponent(selectedId)}&viewport=${viewport}`);}
   const requestedStep = routeParams.get("step");
   const [history, dispatchHistory] = useReducer(editorHistory<LandingDraft>, { past: [], present: editorCatalog((docs.landing as LandingDraft) ?? prepareRoutePage(business.name,(business.route||business.moduleType||'services') as BusinessRoute,{},emptyProposal()),business.moduleType as ModuleType|undefined,docs['module-'+business.moduleType],docs['module-proposal']), future: [] } as EditorHistory<LandingDraft>);
   const draft = history.present;
-  const [initialWorkspace]=useState(()=>{try{return parseLandingWorkspace(sessionStorage.getItem(workspaceKey(userId,projectId)),draft.blocks);}catch{return parseLandingWorkspace(null,draft.blocks);}});
+  const [initialWorkspace]=useState(()=>{try{const raw=sessionStorage.getItem(workspaceKey(userId,projectId)),parsed=parseLandingWorkspace(raw,draft.blocks);return !raw&&window.matchMedia('(max-width:600px)').matches?{...parsed,viewport:'mobile' as const}:parsed;}catch{return parseLandingWorkspace(null,draft.blocks);}});
   const setDraft = useCallback((value: LandingDraft | ((current: LandingDraft) => LandingDraft)) => dispatchHistory({ type: 'edit', value }), []);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -88,11 +88,12 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
   const [selectionActive,setSelectionActive]=useState(Boolean(requestedStep||routeParams.get('section')||initialWorkspace.sectionId!=='hero'));
   const [selectedId, setSelectedId] = useState(routeParams.get('section') || (requestedStep === 'offer' ? ((docs.landing as LandingDraft)?.blocks?.[0]?.id ?? 'hero') : initialWorkspace.sectionId));
   const [sectionsOpen, setSectionsOpen] = useState(requestedStep === "offer");
+  const [sectionInitial,setSectionInitial]=useState<string|undefined>(requestedStep==='offer'?'add':undefined);
   const [settingsOpen, setSettingsOpen] = useState(requestedStep === "identity" || requestedStep === "publish");
   const [propertiesOpen, setPropertiesOpen] = useState(requestedStep === "identity" || requestedStep === "offer");
   const [imageRole, setImageRole] = useState('hero');
   const [selectedOfferId, setSelectedOfferId] = useState('');
-  const [context, setContext] = useState<'text'|'image'|'cta'|'offer'|'catalog'>('text');
+  const [context, setContext] = useState<'text'|'section-content'|'image'|'cta'|'offer'|'catalog'>('text');
   const [insertBefore, setInsertBefore] = useState<string | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>(routeParams.get('viewport')==='mobile'?'mobile':routeParams.get('viewport')==='desktop'?'desktop':initialWorkspace.viewport);
@@ -152,7 +153,7 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
       }
       if (busy) return;
       if(event.data.type==='foru:configure'&&['catalog','text'].includes(event.data.kind)&&draftRef.current.blocks.some(b=>b.id===event.data.id)){
-        setSelectedId(event.data.id);setSelectionActive(true);setContext(event.data.kind);setPropertiesOpen(true);return;
+        setSelectedId(event.data.id);setSelectionActive(true);setContext(event.data.kind==='text'?'section-content':'catalog');setPropertiesOpen(true);return;
       }
       if (event.data.type === 'foru:context') {
         setSelectionActive(true);
@@ -164,7 +165,7 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
       if (event.data.type === 'foru:sections') {
         const before = event.data.beforeId;
         if (before !== null && !draftRef.current.blocks.some(block => block.id === before)) return;
-        setInsertBefore(before); setSectionsOpen(true); return;
+        setInsertBefore(before); setSectionInitial('add'); setSectionsOpen(true); return;
       }
       if (event.data.type === 'foru:image-drop' && event.data.target === 'hero' && event.data.file instanceof File) { void uploadPrivateCover(event.data.file); return; }
       if (event.data.type === 'foru:select' && typeof event.data.id === 'string') {
@@ -375,23 +376,26 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
   return (
     <div className={`foru-professional-editor pe-wide-editor tk-visual-editor ${sectionsOpen ? 'pe-sections-open' : ''}`} inert={busy} aria-busy={busy}>
       <header className="pe-studio-bar">
-        <Link className="pe-action-link" to={`/creator-studio?project=${encodeURIComponent(projectId)}`} aria-label="Regresar a Creator Studio">← <span>Studio</span></Link>
+        <Link className="pe-action-link" to={`/dashboard?project=${encodeURIComponent(projectId)}&view=map`} aria-label="Volver a mi mapa">← <span>Mapa</span></Link>
         <div className="pe-studio-title"><strong>{draft.name || 'Tu página'}</strong><small role="status">{busy ? 'Guardando…' : autosaveStatus || (dirty ? 'Cambios pendientes' : 'Borrador cargado')}</small></div>
         <div className="pe-device-switch" aria-label="Tamaño de vista previa"><DSButtonSecondary aria-label="Vista escritorio" aria-pressed={viewport==='desktop'} onClick={()=>setViewport('desktop')}><Monitor size={18} aria-hidden="true"/></DSButtonSecondary><DSButtonSecondary aria-label="Vista móvil" aria-pressed={viewport==='mobile'} onClick={()=>setViewport('mobile')}><Smartphone size={18} aria-hidden="true"/></DSButtonSecondary></div>
-        <DSButtonSecondary aria-label="Deshacer" disabled={busy||!history.past.length} onClick={()=>{dispatchHistory({type:'undo'});setDirty(true);}}><Undo2 size={18} aria-hidden="true"/></DSButtonSecondary>
-        <DSButtonSecondary aria-label="Rehacer" disabled={busy||!history.future.length} onClick={()=>{dispatchHistory({type:'redo'});setDirty(true);}}><Redo2 size={18} aria-hidden="true"/></DSButtonSecondary>
+        <DSButtonSecondary className="pe-history-button" aria-label="Deshacer" disabled={busy||!history.past.length} onClick={()=>{dispatchHistory({type:'undo'});setDirty(true);}}><Undo2 size={18} aria-hidden="true"/></DSButtonSecondary>
+        <DSButtonSecondary className="pe-history-button" aria-label="Rehacer" disabled={busy||!history.future.length} onClick={()=>{dispatchHistory({type:'redo'});setDirty(true);}}><Redo2 size={18} aria-hidden="true"/></DSButtonSecondary>
         <DSButtonSecondary aria-label="Herramientas de página" aria-expanded={advancedOpen} onClick={()=>setAdvancedOpen(true)}><MoreHorizontal size={20} aria-hidden="true"/></DSButtonSecondary>
         <DSButtonPrimary disabled={busy||demo} onClick={publish}>Publicar</DSButtonPrimary>
       </header>
-      <EditorSheet open={nextStep!==null} title={nextStep==='intent'?'¿Con qué contenido quieres empezar?':'Tu página es el comienzo.'} onClose={dismissNext}>
-        {nextStep==='intro'?<><p>Lo que acabas de definir también puede convertirse en tus primeros contenidos. Podrás elegir un diseño y cambiarlo antes de guardar.</p><DSButtonPrimary onClick={()=>setNextStep('intent')}>Crear mis primeros contenidos →</DSButtonPrimary><DSButtonSecondary onClick={dismissNext}>Seguir editando mi página</DSButtonSecondary></>:<><p>Elige un propósito. Usaremos información confirmada de tu página; no necesitas fotos ni consumir IA.</p>{([{id:'awareness',title:'Conóceme',hint:'Presenta quién eres y qué haces.'},{id:'conversation',title:'Conversemos',hint:'Invita a conocer mejor tu propuesta.'},{id:'offer',title:'Mi oferta',hint:'Comparte una oferta que ya definiste.'}] as const).map(item=><DSButtonSecondary key={item.id} disabled={busy} onClick={()=>void createFromPage(item.id)}>{item.title} · {item.hint}</DSButtonSecondary>)}</>}
+      <EditorSheet open={nextStep!==null} title="Tu página es el comienzo." onClose={dismissNext}>
+        <p>Lo que acabas de definir también puede convertirse en tus primeros contenidos. Verás propuestas con tu información y podrás editarlas.</p><DSButtonPrimary disabled={busy} onClick={()=>void createFromPage()}>Crear mis primeros contenidos →</DSButtonPrimary><DSButtonSecondary disabled={busy} onClick={dismissNext}>Seguir editando mi página</DSButtonSecondary>
       </EditorSheet>
       {saveError&&<section className="pe-feedback" role="alert"><p>{saveError}</p><DSButtonSecondary disabled={busy||/otra pestaña|otra versión|otra ventana/i.test(saveError)} onClick={()=>void saveDraft()}>Reintentar guardado</DSButtonSecondary><DSButtonSecondary onClick={()=>setRecoverOpen(true)}>Recuperar versión guardada</DSButtonSecondary></section>}
       <EditorSheet open={recoverOpen} title="Recuperar borrador" onClose={()=>setRecoverOpen(false)}><p>Recuperar sustituirá las ediciones pendientes por el borrador guardado. Tu publicación no cambia.</p><DSButtonSecondary onClick={()=>setRecoverOpen(false)}>Conservar mis cambios</DSButtonSecondary><DSButtonPrimary onClick={()=>{pending.current=null;setDirty(false);setRecoverOpen(false);void reload();}}>Descartar pendientes y recuperar</DSButtonPrimary></EditorSheet>
       {(notice || previewImageError) && <p className="pe-feedback" role={previewImageError ? 'alert' : 'status'}>{previewImageError || notice}</p>}
-      {selectionActive?<div className="pe-selection-strip"><span>Toca lo que quieres transformar</span><DSButtonSecondary onClick={()=>{setContext('text');setPropertiesOpen(true);}}>Editar selección</DSButtonSecondary><DSButtonSecondary disabled={busy} onClick={()=>void createFromPage()}>✦ Crear contenido de esta sección</DSButtonSecondary></div>:<p className="pe-tap-hint">Toca un texto, una foto o un botón para transformarlo.</p>}
+      {selectionActive?<div className="pe-selection-strip"><span>Toca lo que quieres transformar</span><DSButtonSecondary className="pe-selection-edit" onClick={()=>{setContext('text');setPropertiesOpen(true);}}>Editar selección</DSButtonSecondary><DSButtonSecondary disabled={busy} onClick={()=>void createFromPage()}>✦ Crear contenido</DSButtonSecondary></div>:<p className="pe-tap-hint">Toca un texto, una foto o un botón para transformarlo.</p>}
       <EditorSheet open={advancedOpen} title="Tu página · herramientas" onClose={()=>setAdvancedOpen(false)}>
-        <div className="pe-tool-choices"><DSButtonSecondary onClick={()=>{setAdvancedOpen(false);setSectionsOpen(true);setInsertBefore(null);}}>Secciones y orden</DSButtonSecondary><DSButtonSecondary onClick={()=>{setAdvancedOpen(false);setSettingsOpen(true);}}>Configuración y contacto</DSButtonSecondary><DSButtonSecondary disabled={busy} onClick={saveDraft}>Guardar borrador ahora</DSButtonSecondary></div>
+        <details className="pe-mobile-view-tools"><summary>Vista e historial</summary><div className="pe-tool-choices"><DSButtonSecondary aria-pressed={viewport==='desktop'} onClick={()=>setViewport('desktop')}>Escritorio</DSButtonSecondary><DSButtonSecondary aria-pressed={viewport==='mobile'} onClick={()=>setViewport('mobile')}>Celular</DSButtonSecondary><DSButtonSecondary disabled={busy||!history.past.length} onClick={()=>{dispatchHistory({type:'undo'});setDirty(true);}}>Deshacer</DSButtonSecondary><DSButtonSecondary disabled={busy||!history.future.length} onClick={()=>{dispatchHistory({type:'redo'});setDirty(true);}}>Rehacer</DSButtonSecondary></div></details>
+        {selectionActive&&<DSButtonSecondary className="pe-mobile-selection-edit" onClick={()=>{setAdvancedOpen(false);setContext('text');setPropertiesOpen(true);}}>Editar esta sección</DSButtonSecondary>}
+
+        <div className="pe-tool-choices"><DSButtonSecondary onClick={()=>{setAdvancedOpen(false);setSectionInitial(undefined);setSectionsOpen(true);setInsertBefore(null);}}>Secciones y orden</DSButtonSecondary><DSButtonSecondary onClick={()=>{setAdvancedOpen(false);setSettingsOpen(true);}}>Configuración y contacto</DSButtonSecondary><DSButtonSecondary disabled={busy} onClick={saveDraft}>Guardar borrador ahora</DSButtonSecondary></div>
         {sourcePanel}
         <PageAI draft={draft} disabled={dirty||busy||demo} onApply={update}/>
       {moduleType && draft.catalogSource !== 'proposal' && <details className="pe-catalog-panel"><summary>Oferta de tu negocio {draft.catalogSource === 'module' ? '· vinculada' : ''}</summary><p>{draft.catalogSource === 'module' ? 'Al publicar consultaremos los precios y la disponibilidad guardados. La página pública solo cambia cuando publicas.' : 'Puedes usar el catálogo de tu negocio en esta página. Primero revisa los cambios en la vista previa.'}</p><Link className="pe-action-link" to={`/modules/${moduleType}/editor?project=${encodeURIComponent(projectId)}`}>Editar mi oferta</Link><DSButtonSecondary type="button" onClick={() => {
@@ -406,8 +410,8 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
         <WidgetEditor projectId={projectId} widgets={draft.widgets} onChange={widgets=>update({widgets})} disabled={busy||demo}/>
         <nav className="pe-tool-choices"><Link className="pe-action-link" to={`/dashboard/tools/proposal?project=${projectId}`}>Mi propuesta</Link><Link className="pe-action-link" to={`/dashboard/tools/teleprompter?project=${projectId}&section=${encodeURIComponent(selectedId)}`}>Teleprompter</Link></nav>
       </EditorSheet>
-      <EditorSheet open={propertiesOpen} title={context==='catalog'?'Tu catálogo conectado':context==='image'?'Tu foto':context==='cta'?'Tu llamada a la acción':context==='offer'?'Tu oferta':'Editar selección'} onClose={()=>setPropertiesOpen(false)}>
-        {context==='catalog'?<><p>Los productos y sus precios se editan en su catálogo original. Esta sección mostrará los que hayas guardado.</p><Link className="pe-action-link" to={moduleType?`/modules/${moduleType}/editor?project=${projectId}`:`/dashboard/tools/proposal?project=${projectId}`}>Preparar {moduleType==='restaurant'?'mi menú':'mis ofertas'} →</Link></>:context==='offer'?<><p>Esta oferta conserva sus precios, variantes y extras en su catálogo original.</p><Link className="pe-action-link" to={selectedOfferId.startsWith(`${moduleType}:`)?`/modules/${moduleType}/editor?project=${projectId}&offer=${encodeURIComponent(selectedOfferId.slice(selectedOfferId.indexOf(':')+1))}`:`/dashboard/tools/proposal?project=${projectId}&offer=${encodeURIComponent(selectedOfferId)}`}>Editar esta oferta →</Link></>:<EditorDecision key={`${context}:${selectedId}:${imageRole}`} choices={context==='image'?[
+      <EditorSheet open={propertiesOpen} title={context==='section-content'&&selectedBlock?selectedBlock.title:context==='catalog'?'Tu catálogo conectado':context==='image'?'Tu foto':context==='cta'?'Tu llamada a la acción':context==='offer'?'Tu oferta':'Editar selección'} onClose={()=>setPropertiesOpen(false)}>
+        {context==='section-content'&&selectedBlock?<SectionContentEditor key={selectedBlock.id} block={selectedBlock} disabled={busy} onChange={body=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,useModuleDetails:false,body}:block)})}/>:context==='catalog'?<><p>Los productos y sus precios se editan en su catálogo original. Esta sección mostrará los que hayas guardado.</p><Link className="pe-action-link" to={moduleType?`/modules/${moduleType}/editor?project=${projectId}`:`/dashboard/tools/proposal?project=${projectId}`}>Preparar {moduleType==='restaurant'?'mi menú':'mis ofertas'} →</Link></>:context==='offer'?<><p>Esta oferta conserva sus precios, variantes y extras en su catálogo original.</p><Link className="pe-action-link" to={selectedOfferId.startsWith(`${moduleType}:`)?`/modules/${moduleType}/editor?project=${projectId}&offer=${encodeURIComponent(selectedOfferId.slice(selectedOfferId.indexOf(':')+1))}`:`/dashboard/tools/proposal?project=${projectId}&offer=${encodeURIComponent(selectedOfferId)}`}>Editar esta oferta →</Link></>:<EditorDecision key={`${context}:${selectedId}:${imageRole}`} choices={context==='image'?[
           {id:'photo',title:'Elegir mi foto',hint:'Sube una imagen o elige una del proyecto. También puedes encuadrarla.',icon:'▧',content:<MediaScope.Provider value={{userId,projectId}}><ProjectImageField label="Foto de portada" value={selectedPhoto?.url||''} onChange={url=>updatePhoto({url})}/></MediaScope.Provider>},
           {id:'alt',title:'Describir la foto',hint:'Ayuda a entender la imagen a quienes usan lectores de pantalla.',icon:'≋',content:<DSInput label="Descripción de la foto" value={selectedPhoto?.alt||''} maxLength={160} onChange={e=>updatePhoto({alt:e.target.value})}/>}
         ]:context==='cta'?[
@@ -417,14 +421,15 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
           {id:'tone',title:'Elige su color',hint:'Tres acentos de FOR U, con texto legible.',icon:'◉',content:<DSSelect label="Color del botón" value={draft.ctaDesign?.tone||'violet'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,version:1,tone:e.target.value as 'violet'|'mint'|'gold'}})}><option value="violet">Violeta</option><option value="mint">Mint</option><option value="gold">Dorado</option></DSSelect>}
         ]:selectedBlock?[
           {id:'title',title:'El título de esta sección',hint:'También puedes escribir directamente sobre la página.',icon:'✎',content:<DSInput label="Título de sección" value={selectedBlock.title} maxLength={150} onChange={e=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,title:e.target.value}:block)})}/>},
-          {id:'body',title:sectionKind(selectedBlock)==='faq'?'Preguntas y respuestas':'Cuenta esta parte',hint:sectionKind(selectedBlock)==='faq'?'Resuelve una duda por vez. Verás el resultado desplegable en tu página.':'Usa tus palabras y datos confirmados de tu negocio.',icon:'≋',content:sectionKind(selectedBlock)==='faq'?<FaqSectionEditor body={selectedBlock.body} disabled={busy} onChange={body=>{if(body.length>2000){setNotice('Esta sección admite hasta 2000 caracteres. Conservamos el texto anterior; acorta una respuesta antes de continuar.');return;}update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,useModuleDetails:false,body}:block)});}}/>:<Textarea label="Texto de sección" value={selectedBlock.body} maxLength={2000} onChange={e=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,useModuleDetails:false,body:e.target.value}:block)})}/>}
+          {id:'body',title:sectionKind(selectedBlock)==='faq'?'Preguntas y respuestas':'Cuenta esta parte',hint:sectionKind(selectedBlock)==='faq'?'Resuelve una duda por vez. Verás el resultado desplegable en tu página.':'Usa tus palabras y datos confirmados de tu negocio.',icon:'≋',content:<SectionContentEditor key={selectedBlock.id} block={selectedBlock} disabled={busy} onChange={body=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,useModuleDetails:false,body}:block)})}/>}
+
 
         ]:[
           {id:'headline',title:'Tu mensaje principal',hint:'¿Qué quieres que alguien entienda al llegar?',icon:'✦',content:<DSInput label="Título principal" value={draft.headline} maxLength={180} onChange={e=>update({headline:e.target.value})}/>},
           {id:'description',title:'Cuéntalo con tus palabras',hint:'Una explicación breve de lo que ofreces.',icon:'≋',content:<Textarea label="Descripción" value={draft.description} maxLength={1000} onChange={e=>update({description:e.target.value})}/>},
           {id:'cta',title:'La invitación para continuar',hint:'El texto de la acción principal de tu página.',icon:'↗',content:<DSInput label="Texto del botón" value={draft.cta} maxLength={50} onChange={e=>update({cta:e.target.value})}/>}
         ]}/>}</EditorSheet>
-      <EditorSheet open={sectionsOpen} title="Secciones de tu página" onClose={()=>setSectionsOpen(false)}><EditorDecision key={sectionsOpen?'sections-open':'sections-closed'} choices={[
+      <EditorSheet open={sectionsOpen} title="Secciones de tu página" onClose={()=>setSectionsOpen(false)}><EditorDecision key={sectionsOpen?'sections-open':'sections-closed'} initialChoice={sectionInitial} choices={[
         {id:'add',title:'Añadir una sección',hint:'Elige una composición. Se colocará donde pulsaste ＋ Sección.',icon:'＋',content:<div className="pe-section-options">{sectionPresets(business.route||business.moduleType||business.industry).map(preset=><button type="button" key={preset.key} disabled={busy||draft.blocks.length>=8} onClick={()=>{const block=createEditorSection(business.route||business.moduleType||business.industry,preset.key);if(block){update({blocks:insertEditorSection(draft.blocks,block,insertBefore)});setSelectedId(block.id);setSectionsOpen(false);}}}><span className={`pe-preset-sample pe-preset-${preset.key}`} aria-hidden="true"><i/><i/><i/></span><strong>{preset.title}</strong><small>{preset.description}</small></button>)}<DSButtonSecondary disabled={busy||draft.blocks.length>=8} onClick={()=>{const block={id:crypto.randomUUID(),title:'Nueva sección',body:''};update({blocks:insertEditorSection(draft.blocks,block,insertBefore)});setSelectedId(block.id);setSectionsOpen(false);}}>＋ Sección libre</DSButtonSecondary>{draft.blocks.length>=8&&<p>Tu página ya tiene ocho secciones. Puedes editar o quitar una antes de añadir otra.</p>}</div>},
         {id:'order',title:'Ordenar mis secciones',hint:'Mueve una sección con las flechas o arrástrala. Quitarla del borrador se puede deshacer.',icon:'↕',content:<div className="pe-section-order">        {draft.blocks.map((block, i) => (
           <article

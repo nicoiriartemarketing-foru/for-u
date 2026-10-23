@@ -11,6 +11,21 @@ export function sectionKind(block:LandingBlock):SectionKind|undefined{
  if(/ubicación|visítanos|contacto/.test(title))return 'location';
  return undefined;
 }
+/** New structures know the route; a hotel's amenities are not a second room catalog. */
+export function routeSectionKind(block:LandingBlock,route:string):SectionKind|undefined {
+ if(!block.kind&&route==='hospitality'&&/^servicios$/i.test(block.title.trim()))return 'details';
+ return sectionKind(block);
+}
+export type SectionLayout='steps'|'features'|'quotes'|'prose';
+export function sectionLayout(block:LandingBlock):SectionLayout {
+ if(sectionKind(block)&&sectionKind(block)!=='details')return 'prose';
+ const title=block.title.toLocaleLowerCase();
+ if(/testimonios|reseñas/.test(title))return 'quotes';
+ if(/paso|cómo pedir|cómo comprar|cómo trabajamos|pedidos y entregas|itinerario|temario|aprender|proceso/.test(title))return 'steps';
+ if(/incluye|qué llevar|comodidades|^servicios$|materiales|beneficios/.test(title))return 'features';
+ return 'prose';
+}
+export function compositionRows(body:string):string[]{return body.split(/\r?\n/).map(row=>row.trim()).filter(Boolean);}
 export function draftFaqRows(body:string):{question:string;answer:string}[]{
  return body.split(/\n[ \t]*\n/).filter(group=>group.trim()).map(group=>{const [question,...answer]=group.split('\n');return {question,answer:answer.join('\n')};});
 }

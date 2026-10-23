@@ -1,4 +1,4 @@
-import {sectionKind} from '../toolkit/sectionComposition';
+import {routeSectionKind} from '../toolkit/sectionComposition';
 import type {BusinessRoute,Diagnostic,ProjectRoute} from '../workspace/contracts';
 import type {AreaId,AreaTask,AreaTasks} from '../pages/dashboard/areaModel';
 import type {Proposal} from '../proposal/model';
@@ -42,7 +42,7 @@ export function prepareRoutePage(name:string,route:BusinessRoute,a:Answers,propo
  const sectionNames=list(a.sections).filter(x=>routeOptions[route].sections.includes(x));
  const sections=sectionNames.length?sectionNames:[routeOptions[route].sections[0],'Nuestra historia','Contacto'];
  const story=meaningful(a.originCustom)?a.originCustom:'';
- return {...defaultLanding({name,industry:route,moduleType:route,objective:'',audience:'',offer:'',location:''}),template:route,presentationVersion:4,color:'#7751B8',headline:proposal.message.trim()||name,description:proposal.offering.trim(),cta:proposal.cta.trim()||'Conocer más',whatsapp:proposal.whatsapp,fields:[],bookingEnabled:false,catalogSource:route==='services'?'proposal':'module',blocks:sections.slice(0,8).map((title,index)=>({id:`route-section-${index}`,title,useModuleDetails:true,kind:sectionKind({id:'',title,body:''})||'details',body:title==='Nuestra historia'?story:''}))};
+ return {...defaultLanding({name,industry:route,moduleType:route,objective:'',audience:'',offer:'',location:''}),template:route,presentationVersion:4,color:'#7751B8',headline:proposal.message.trim()||name,description:proposal.offering.trim(),cta:proposal.cta.trim()||'Conocer más',whatsapp:proposal.whatsapp,fields:[],bookingEnabled:false,catalogSource:route==='services'?'proposal':'module',blocks:sections.slice(0,8).map((title,index)=>({id:`route-section-${index}`,title,useModuleDetails:true,kind:routeSectionKind({id:'',title,body:''},route)||'details',body:title==='Nuestra historia'?story:''}))};
 }
 export function canonicalAnswer(diagnostic:Diagnostic,proposal:Proposal,key:string):string|string[]|undefined{
  if(key==='difference')return proposal.value||diagnostic.answers[key];
