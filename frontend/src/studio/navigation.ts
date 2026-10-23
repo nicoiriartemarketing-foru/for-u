@@ -11,3 +11,9 @@ export function landingOrigin(params:URLSearchParams,project:string):LandingOrig
 export function landingReturn(origin:unknown,project:string):string|undefined {
  return validLandingOrigin(origin,project)?`/dashboard/tools/landing?project=${encodeURIComponent(project)}&section=${encodeURIComponent(origin.sectionId)}&resume=1${origin.viewport?'&viewport='+origin.viewport:''}`:undefined;
 }
+export function firstContentReturn(params:URLSearchParams,project:string):string|undefined {
+ if(params.get('return')!=='first-content')return undefined;
+ const query=new URLSearchParams({project,tab:'create',start:'first-content'});
+ const task=params.get('task');if(task&&task.length<=200&&!/[\x00-\x1f]/.test(task))query.set('task',task);
+ return '/creator-studio?'+query.toString();
+}

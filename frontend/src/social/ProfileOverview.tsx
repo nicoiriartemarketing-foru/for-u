@@ -1,3 +1,4 @@
+import {useUnsavedNavigation} from '../lib/useUnsavedNavigation';
 import {useEffect,useRef,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {ButtonPrimary,ButtonSecondary,Input,Textarea,Select} from '../components/ui/DesignSystem';
@@ -9,7 +10,7 @@ import EditorDecision from '../toolkit/EditorDecision';
 import {emptyCampaigns,parseCampaigns} from '../workspace/contracts';
 import {blankContent,type ContentDocument} from '../components/shared/contentModel';
 import {type Piece,type SocialDocument} from './model';
-import {filteredPieces,highlightTopics,mainIntentions,mainSlots,moveGridPiece,setMainSlot,type PieceFilters} from './organization';
+import {addGridIdea,filteredPieces,highlightTopics,mainIntentions,mainSlots,moveGridPiece,setMainSlot,type PieceFilters} from './organization';
 import ContentCalendar from './ContentCalendar';
 import './profileOverview.css';
 type Props={data:SocialDocument;designs:ContentDocument;project:string;user:string;business:string;route:string;campaigns:unknown;busy:boolean;dirty:boolean;error:string;status:string;onPatch:(value:Partial<SocialDocument>)=>void;onOpen:(id:string)=>void;onSave:()=>void;onRecover:()=>void};
@@ -18,8 +19,10 @@ export default function ProfileOverview(props:Props){
  const {data,designs,project,user,business,route,busy,dirty,error,status,onPatch,onOpen,onSave,onRecover}=props;
  const cacheKey=`foru:profile-view:${user}:${project}`;
  const [cached]=useState(()=>{try{const value=JSON.parse(sessionStorage.getItem(cacheKey)||'{}');return {view:['profile','grid','list','calendar'].includes(value.view)?value.view:'profile',filters:Object.fromEntries(Object.keys(emptyFilters).map(key=>[key,typeof value.filters?.[key]==='string'?value.filters[key].slice(0,240):''])) as PieceFilters};}catch{return {view:'profile',filters:emptyFilters};}});
- const [view,setView]=useState(cached.view),[panel,setPanel]=useState<'identity'|'photo'|'highlight-topic'|'highlight'|'main'|'grid'|'filter'|null>(null),[highlightId,setHighlightId]=useState(''),[slot,setSlot]=useState(0),[gridId,setGridId]=useState(''),[filters,setFilters]=useState<PieceFilters>(cached.filters),[customTopic,setCustomTopic]=useState('');
+ const [view,setView]=useState(cached.view),[panel,setPanel]=useState<'idea'|'identity'|'photo'|'highlight-topic'|'highlight'|'main'|'grid'|'filter'|null>(null),[highlightId,setHighlightId]=useState(''),[slot,setSlot]=useState(0),[gridId,setGridId]=useState(''),[filters,setFilters]=useState<PieceFilters>(cached.filters),[customTopic,setCustomTopic]=useState('');
  useEffect(()=>{try{sessionStorage.setItem(cacheKey,JSON.stringify({view,filters}));}catch{}},[view,filters,cacheKey]);
+ const [ideaTitle,setIdeaTitle]=useState(''),[ideaError,setIdeaError]=useState('');
+ useUnsavedNavigation(panel==='idea'&&!!ideaTitle.trim());
  const dragging=useRef<string|null>(null);
  let campaigns=emptyCampaigns(project),campaignError='';try{campaigns=props.campaigns===undefined?campaigns:parseCampaigns(props.campaigns,project);}catch(e){campaignError=(e as Error).message;}
  const activeFilter=view!=='profile'&&Object.values(filters).some(Boolean);
@@ -32,7 +35,7 @@ export default function ProfileOverview(props:Props){
  function move(id:string,before:string|null){if(!busy)onPatch(moveGridPiece(data,id,before,user));}
  function addHighlight(title:string){if(busy||data.highlights.length>=20)return;const id=crypto.randomUUID();onPatch({highlights:[...data.highlights,{id,title,cover:''}]});setHighlightId(id);setPanel('highlight');setCustomTopic('');}
  function patchHighlight(patch:{title?:string;cover?:string}){if(currentHighlight&&!busy)onPatch({highlights:data.highlights.map(h=>h.id===currentHighlight.id?{...h,...patch}:h)});}
- const title=panel==='photo'?'Tu foto':panel==='identity'?'Tu identidad':panel==='main'?mainIntentions[slot].title:panel==='grid'?'Esta pieza, en tu cuadrícula':panel==='filter'?'Encuentra lo que necesitas':panel==='highlight-topic'?'¿Qué quieres reunir en este destacado?':'Tu historia destacada';
+ const title=panel==='idea'?'¿Qué idea quieres guardar?':panel==='photo'?'Tu foto':panel==='identity'?'Tu identidad':panel==='main'?mainIntentions[slot].title:panel==='grid'?'Esta pieza, en tu cuadrícula':panel==='filter'?'Encuentra lo que necesitas':panel==='highlight-topic'?'¿Qué quieres reunir en este destacado?':'Tu historia destacada';
  return <section className="profile-overview">
   <header className="profile-save-bar"><span role={error?'alert':'status'}>{busy?'Guardando…':error?'Hay cambios sin guardar':dirty?'Cambios pendientes':status||'Tu planificación privada'}</span><ButtonPrimary disabled={busy||!dirty} onClick={onSave}>Guardar</ButtonPrimary></header>
   <div className="profile-view-bar"><label><span className="sr-only">Cómo ver mi contenido</span><select aria-label="Cómo ver mi contenido" value={view} onChange={e=>setView(e.target.value)}><option value="profile">Mi perfil</option><option value="grid">Cuadrícula</option><option value="list">Lista</option><option value="calendar">Calendario</option></select></label><ButtonSecondary disabled={busy} onClick={()=>{if(view==='profile')setView('list');setPanel('filter');}}>Filtrar{activeFilter?' · Activo':''}</ButtonSecondary></div>
@@ -46,11 +49,12 @@ export default function ProfileOverview(props:Props){
   {view==='list'&&<div className="profile-piece-list">{visible.map(piece=><button key={piece.id} disabled={busy} onClick={()=>onOpen(piece.id)}>{thumb(piece)}<span><strong>{pieceTitle(piece)}</strong><small>{({idea:'Idea',draft:'En preparación',ready:'Lista','published-manual':'Publicada por ti'})[piece.status]} · {piece.date||'Sin fecha'}</small><small>{piece.campaignId?(campaigns.campaigns.find(c=>c.id===piece.campaignId)?.title||'Campaña no disponible'):'Sin campaña'}</small></span><span aria-hidden="true">→</span></button>)}</div>}
   {view==='calendar'&&<ContentCalendar storageKey={`${user}:${project}`} pieces={visible.map(piece=>({...piece,title:pieceTitle(piece)}))} onOpen={onOpen}/>}
   {view!=='calendar'&&activeFilter&&visible.length===0&&<div className="profile-empty"><p>No hay piezas con esta selección.</p><ButtonSecondary onClick={()=>setFilters(emptyFilters)}>Ver todo mi contenido</ButtonSecondary></div>}
-  <Link className="profile-create-link" to={`/creator-studio?project=${project}&tab=create`}>＋ Crear contenido</Link>
+  <ButtonPrimary disabled={busy} onClick={()=>{setIdeaError('');setPanel('idea');}}>＋ Añadir una idea a mi cuadrícula</ButtonPrimary><Link className="profile-create-link" to={`/creator-studio?project=${project}&tab=create`}>Crear desde mi página →</Link>
   <small className="profile-planning-note">Guardar aquí conserva tu trabajo en FOR U. No modifica tu cuenta de Instagram.</small>
   {campaignError&&<p role="alert">{campaignError} Las campañas no se reemplazaron.</p>}
   {error&&<p role="alert">{error}<ButtonSecondary disabled={busy} onClick={onRecover}>Revisar recuperación</ButtonSecondary></p>}
   <EditorSheet open={panel!==null} title={title} onClose={()=>setPanel(null)}>
+   {panel==='idea'&&<><p>Solo un título para empezar. Después podrás convertir esta misma pieza en diseño, portada o video.</p><Input label="Título de mi idea" maxLength={160} value={ideaTitle} disabled={busy} onChange={e=>setIdeaTitle(e.target.value)}/>{ideaError&&<p role="alert">{ideaError}</p>}<ButtonPrimary disabled={busy||!ideaTitle.trim()} onClick={()=>{try{onPatch(addGridIdea(data,ideaTitle,crypto.randomUUID(),user));setIdeaTitle('');setIdeaError('');setFilters(emptyFilters);setView('grid');setPanel(null);}catch(e){setIdeaError((e as Error).message);}}}>Añadir a mi cuadrícula</ButtonPrimary></>}
    {panel==='photo'&&<ProjectImageField label="Foto del perfil" value={data.photo} onChange={photo=>{if(!busy)onPatch({photo});}}/>}
    {panel==='identity'&&<EditorDecision choices={[
     {id:'name',title:'Tu nombre',hint:'Cómo quieres aparecer en el perfil.',icon:'✎',content:<Input label="Nombre del perfil" maxLength={120} disabled={busy} value={data.name} onChange={e=>onPatch({name:e.target.value})}/>},

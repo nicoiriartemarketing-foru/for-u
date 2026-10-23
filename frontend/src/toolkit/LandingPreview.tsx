@@ -1,3 +1,4 @@
+import {HeroCopy,HeroMark} from './PageIdentity';
 import SectionComposition from './PageSectionBody';
 import {sectionKind,sectionConfigured} from './sectionComposition';
 import './pagePresentation.css';
@@ -32,7 +33,7 @@ export function LandingPreview({
         <strong>{draft.name}</strong>
         <span>Hecho con dedicación</span>
       </header>
-      <section className="tk-site-hero">
+      <section className={`tk-site-hero ${draft.heroImage?'pe-with-cover':'pe-without-cover'}`}>
         {draft.heroImage && (
           <img
             src={draft.heroImage}
@@ -40,20 +41,23 @@ export function LandingPreview({
             className="tk-site-image"
           />
         )}
+        {draft.presentationVersion===4&&!draft.heroImage&&<HeroMark name={draft.name}/>}
+        <HeroCopy modern={draft.presentationVersion===4}>
         <span className="tk-eyebrow">
           BIENVENIDA A {draft.name.toUpperCase()}
         </span>
         <h1>{draft.headline}</h1>
         <p>{draft.description}</p>
         {draft.ctaDesign?<div className={`pe-site-cta pe-cta-${draft.ctaDesign.tone||'violet'}`} style={{textAlign:draft.ctaDesign.align}}>{draft.ctaDesign?.url ? <a href={draft.ctaDesign.url} onClick={onCTA}>{draft.cta}</a> : <DSButtonSecondary onClick={onCTA}>{draft.cta}</DSButtonSecondary>}</div>:<DSButtonSecondary onClick={onCTA}>{draft.cta}</DSButtonSecondary>}
+        </HeroCopy>
       </section>
-      {draft.blocks.filter(block=>draft.presentationVersion!==3||sectionConfigured(block,draft)).map((block) => (
-        <section key={block.id} className="tk-site-block">
+      {draft.blocks.filter(block=>![3,4].includes(draft.presentationVersion||1)||sectionConfigured(block,draft)).map((block) => (
+        <section id={`section-${block.id}`} key={block.id} className={`tk-site-block page-section-${sectionKind(block)||'details'}`}>
           <h2>{block.title}</h2>
-          {draft.presentationVersion===3?<SectionComposition block={block} draft={draft}/>:<p>{block.body}</p>}
+          {[3,4].includes(draft.presentationVersion||1)?<SectionComposition block={block} draft={draft}/>:<p>{block.body}</p>}
         </section>
       ))}
-      <LandingExtras draft={draft} hideCatalog={draft.presentationVersion===3&&draft.blocks.some(b=>sectionKind(b)==='catalog')}/>
+      <LandingExtras draft={draft} hideCatalog={[3,4].includes(draft.presentationVersion||1)&&draft.blocks.some(b=>sectionKind(b)==='catalog')}/>
       {hostSlug&&<ProjectWidgets widgets={draft.widgets??[]} hostSlug={hostSlug}/>}
       {children}
       <footer>{draft.name} · Creado con FOR U</footer>

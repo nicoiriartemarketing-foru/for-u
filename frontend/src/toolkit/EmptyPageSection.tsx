@@ -1,0 +1,6 @@
+import {sectionHint,type SectionKind} from './sectionComposition';
+const labels:Record<string,{icon:string;title:string;action:string}>={catalog:{icon:'◒',title:'Tu oferta, en primer plano',action:'Añadir mi primera oferta'},story:{icon:'✧',title:'Aquí empieza tu historia',action:'Contar mi historia'},faq:{icon:'?',title:'Una respuesta puede dar confianza',action:'Añadir mi primera pregunta'},location:{icon:'⌖',title:'Haz que sea fácil encontrarte',action:'Completar mi contacto'},details:{icon:'↗',title:'Dale forma a esta parte',action:'Configurar esta sección'}};
+export default function EmptyPageSection({kind,route,onConfigure}:{kind:SectionKind|undefined;route:string;onConfigure:()=>void}){
+ const item=labels[kind||'details'],restaurant=kind==='catalog'&&route==='restaurant';
+ return <div className={`page-empty-composition page-empty-${kind||'details'}`}><div className="page-empty-art" aria-hidden="true"><span>{item.icon}</span><i/><i/></div><div><strong>{restaurant?'Tu menú empieza con un plato':item.title}</strong><p>{sectionHint(kind,route)}</p><button type="button" onClick={event=>{event.stopPropagation();onConfigure();}}>{restaurant?'Añadir mi primer plato':item.action} <span aria-hidden="true">↗</span></button></div></div>;
+}

@@ -52,6 +52,12 @@ export function rememberDestination(doc: WorkspaceFocus, work: LastWork): Worksp
 export function taskDestination(projectId: string, task: { id: string; area: AreaId; tool?: string }): LastWork {
   return { projectId, area: task.area, taskId: task.id, ...(knownTaskTool(task.tool) ? { tool: task.tool } : {}) };
 }
+// A task starts its work directly. The area panel remains for organizing tasks.
+export function taskWorkPath(projectId:string,task:{id:string;tool?:string},type:ModuleType):string|null {
+  if(!knownTaskTool(task.tool))return null;
+  if(task.tool==='studio')return `/creator-studio?${new URLSearchParams({project:projectId,tab:'create',start:'first-content',task:task.id})}`;
+  return areaToolPath(task.tool,type,projectId);
+}
 export function toggleToday(doc: WorkspaceFocus, ref: TaskReference): WorkspaceFocus {
   doc = editableFocus(doc);
   if (doc.today.some(other => sameTask(ref, other))) return { ...doc, today: doc.today.filter(other => !sameTask(ref, other)) };
@@ -60,7 +66,7 @@ export function toggleToday(doc: WorkspaceFocus, ref: TaskReference): WorkspaceF
 }
 export function resumePath(work: LastWork, type: ModuleType) {
   if(work.destination)return destinationMatchesRoute(work.destination,type)?destinationPath(work.projectId,work.destination):destinationPath(work.projectId,{path:'/dashboard',params:{view:'map'}});
-  if (work.tool === 'studio') return `/creator-studio?project=${encodeURIComponent(work.projectId)}`;
+  if (work.tool === 'studio') return work.taskId?taskWorkPath(work.projectId,{id:work.taskId,tool:work.tool},type)!:`/creator-studio?project=${encodeURIComponent(work.projectId)}`;
   if (knownTaskTool(work.tool)) return areaToolPath(work.tool, type, work.projectId);
   const query = new URLSearchParams({ project: work.projectId });
   if (work.area) query.set('area', work.area);

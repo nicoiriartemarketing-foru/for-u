@@ -16,6 +16,16 @@ export const intentions=[
 ] as const;
 export type Intent=Campaign['intent'];
 export type CreativeSource={key:string;title:string;body:string;image:string;cta:string;reference:SourceReference|null;group:'offer'|'page'|'proposal'|'idea'};
+export const firstContentIntentions=[
+ {id:'awareness',title:'Que me conozcan',hint:'Cuenta quién eres y por qué existe tu negocio.',label:'Conóceme'},
+ {id:'conversation',title:'Conversar con mis clientes',hint:'Comparte una idea y abre una conversación.',label:'Conversemos'},
+ {id:'offer',title:'Mostrar mi oferta',hint:'Presenta lo que pueden comprar o reservar.',label:'Mi oferta'},
+] as const;
+export function firstContentSource(sources:CreativeSource[],intent:Intent):CreativeSource|undefined {
+ if(intent==='offer')return sources.find(source=>source.group==='offer');
+ if(intent==='conversation')return sources.find(source=>source.group==='page'&&source.reference?.id!=='hero'&&source.body.trim())||sources.find(source=>source.key==='proposal')||sources.find(source=>source.key==='page:hero');
+ return sources.find(source=>source.key==='page:hero')||sources.find(source=>source.group==='proposal');
+}
 export function studioSources({project,type,proposal,page,catalog,revisions}:{project:string;type:ModuleType;proposal:Proposal;page:LandingDraft|null;catalog:unknown;revisions:{proposal:string|null;page:string|null;catalog:string|null}}):CreativeSource[]{
  const rows:CreativeSource[]=[];parseProposal(proposal);
  if(revisions.catalog)for(const offer of nativeOffers(type,catalog))rows.push({key:'catalog:'+offer.id,title:offer.name,body:[offer.description,offerPrice(offer),offer.conditions].filter(Boolean).join('\n'),image:offer.image,cta:proposal.cta||'Conoce esta oferta',reference:{projectId:project,kind:'catalog',id:offer.id,revision:revisions.catalog},group:'offer'});

@@ -9,7 +9,7 @@ export function editorCatalog(draft:LandingDraft,type:ModuleType|undefined,paylo
  const offers=nativeOffers(type,payload);
  const settings=(payload as {settings?:Record<string,unknown>})?.settings||{};
  const text=(key:string)=>typeof settings[key]==='string'?settings[key] as string:'';
- const blocks=draft.presentationVersion===3?draft.blocks.map(block=>{
+ const blocks=[3,4].includes(draft.presentationVersion||1)?draft.blocks.map(block=>{
   if(block.body.trim()||!block.useModuleDetails)return block;
   const kind=sectionKind(block);
   const body=kind==='story'?text('about'):kind==='location'?[text('address'),text('hours')].filter(Boolean).join('\n'):'';

@@ -1,5 +1,5 @@
 import {useSavedNavigation} from '../../lib/useSavedNavigation';
-import {landingReturn} from '../../studio/navigation';
+import {landingReturn,firstContentReturn} from '../../studio/navigation';
 import EditorSheet from '../../toolkit/EditorSheet';
 import EditorDecision from '../../toolkit/EditorDecision';
 import DesignArtwork from '../../studio/DesignArtwork';
@@ -165,7 +165,7 @@ export function ContentSession({ userId, project, projects, onProjectChange, sto
     `}</style>
     <main className="content-creator magic-card">
       <header className="studio-design-toolbar">
-        <DSButtonSecondary disabled={busy} onClick={()=>{if(mayDiscard())navigate(landingReturn(draft?.creative?.origin,project.id)||`/creator-studio?project=${project.id}&tab=${pieceParams.get('return')==='profile'?'profile':'library'}`);}}>{landingReturn(draft?.creative?.origin,project.id)?'← Volver a mi página':'← Studio'}</DSButtonSecondary>
+        <DSButtonSecondary disabled={busy} onClick={()=>{if(mayDiscard())navigate(landingReturn(draft?.creative?.origin,project.id)||firstContentReturn(pieceParams,project.id)||`/creator-studio?project=${project.id}&tab=${pieceParams.get('return')==='profile'?'profile':'library'}`);}}>{landingReturn(draft?.creative?.origin,project.id)?'← Volver a mi página':firstContentReturn(pieceParams,project.id)?'← Elegir contenido':'← Studio'}</DSButtonSecondary>
         <div><small>{project.name}</small><strong>{dirty?'Cambios sin guardar':'Tu diseño'}</strong></div>
         {draft&&<DSButtonPrimary disabled={busy||!dirty} onClick={save}>{busy?'Guardando…':'Guardar'}</DSButtonPrimary>}
       </header>

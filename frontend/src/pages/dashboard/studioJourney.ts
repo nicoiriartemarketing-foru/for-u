@@ -8,7 +8,7 @@ export const studioOfferLabels: Record<ModuleType, string> = {
 export function readableStudioDraft(value: unknown): value is LandingDraft {
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
  const d=value as LandingDraft;
- return ['name','slug','template','headline','description','cta','whatsapp','calendly','color'].every(key=>typeof (d as unknown as Record<string,unknown>)[key]==='string')&&[undefined,1,2,3].includes(d.presentationVersion)&&(!d.ctaDesign||[undefined,1].includes(d.ctaDesign.version))&&Array.isArray(d.fields)&&Array.isArray(d.blocks)&&new Set(d.blocks.map(b=>b?.id)).size===d.blocks.length&&d.blocks.every(b=>b&&typeof b.id==='string'&&typeof b.title==='string'&&typeof b.body==='string');
+ return ['name','slug','template','headline','description','cta','whatsapp','calendly','color'].every(key=>typeof (d as unknown as Record<string,unknown>)[key]==='string')&&[undefined,1,2,3,4].includes(d.presentationVersion)&&(!d.ctaDesign||[undefined,1].includes(d.ctaDesign.version))&&Array.isArray(d.fields)&&Array.isArray(d.blocks)&&new Set(d.blocks.map(b=>b?.id)).size===d.blocks.length&&d.blocks.every(b=>b&&typeof b.id==='string'&&typeof b.title==='string'&&typeof b.body==='string');
 }
 export function validStudioDraft(value: unknown): value is LandingDraft {
  const d=value as Partial<LandingDraft>|null;return Boolean(d&&typeof d==='object'&&typeof d.headline==='string'&&d.headline.trim()&&typeof d.slug==='string'&&/^[a-z0-9][a-z0-9-]{2,59}$/.test(d.slug)&&Array.isArray(d.blocks)&&d.blocks.every(b=>b&&typeof b.id==='string'&&typeof b.title==='string'&&typeof b.body==='string'));

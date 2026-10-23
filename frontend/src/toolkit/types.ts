@@ -49,6 +49,7 @@ export type CalendarEntry = {
 };
 export type LandingBlock = { useModuleDetails?:boolean; kind?:import('./sectionComposition').SectionKind; id: string; title: string; body: string };
 export type LandingDraft = {
+  aiProvenance?: import('../ai/sourceContext').AIProvenance;
   presentationVersion?: import('../presentation/model').PresentationVersion;
   widgets?: ProjectWidget[];
   bookingEnabled?: boolean;

@@ -45,7 +45,7 @@ test('six route drafts have real structures without fabricated commercial facts'
  for(const route of ['restaurant','ecommerce','tourism','hospitality','courses','services']){
   const page=prepareRoutePage('Proyecto QA',route,{},emptyProposal());
   assert.equal(page.template,route);assert.equal(page.headline,'Proyecto QA');
-  assert.equal(page.description,'');assert.equal(page.bookingEnabled,false);assert.equal(page.presentationVersion,3);
+  assert.equal(page.description,'');assert.equal(page.bookingEnabled,false);assert.equal(page.presentationVersion,4);
   assert(page.blocks.length>=2);assert(page.blocks.every(b=>b.body===''));
   assert.equal(page.offers,undefined);assert.equal(page.heroImage,undefined);assert.equal(page.published,undefined);
   assert(parseSiteData(page));

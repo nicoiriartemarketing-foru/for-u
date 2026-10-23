@@ -24,3 +24,11 @@ export function filteredPieces(document:SocialDocument,designs:ContentDraft[],fi
  return (!filters.pillar||filters.pillar===design?.creative?.pillar)&&(!filters.query||`${p.title} ${design?.title||''} ${p.text}`.toLocaleLowerCase().includes(filters.query.toLocaleLowerCase()))&&(!filters.intent||filters.intent===intent)&&(!filters.campaign||(filters.campaign==='none'?!campaign:filters.campaign===campaign))&&(!filters.status||filters.status===p.status);
 });}
 export function highlightTopics(route:string){route=({restaurante:'restaurant',tienda:'ecommerce',turismo:'tourism',hospedaje:'hospitality',cursos:'courses',servicios:'services'} as Record<string,string>)[route.toLocaleLowerCase()]||route;return ({restaurant:['Nuestra historia','Menú','Cómo pedir','Ubicación','Preguntas frecuentes'],ecommerce:['Nuestra historia','Productos','Cómo comprar','Entregas','Preguntas frecuentes'],hospitality:['El lugar','Habitaciones','Servicios','Cómo llegar','Reservas'],tourism:['Nuestra historia','Experiencias','Qué llevar','Punto de encuentro','Reservas'],courses:['Sobre mí','Cursos','Cómo aprender','Materiales','Preguntas frecuentes'],services:['Sobre mí','Servicios','Cómo trabajamos','Consultas','Preguntas frecuentes']} as Record<string,string[]>)[route]??['Sobre mí','Qué ofrecemos','Cómo trabajamos','Contacto','Preguntas frecuentes'];}
+
+/** An idea is the same piece that later receives a design, script and video. */
+export function addGridIdea(document:SocialDocument,title:string,id:string,user?:string):SocialDocument{
+ const value=title.trim();if(!value||value.length>160)throw new Error('Escribe un título de hasta 160 caracteres.');
+ if(document.pieces.length>=100||document.pieces.some(p=>p.id===id))throw new Error('No se pudo añadir otra idea. Conservamos las anteriores.');
+ const piece:Piece={id,title:value,objective:'',text:'',script:'',shots:'',date:'',status:'idea',files:[]};
+ return parseSocial({...document,version:2,pieces:[...document.pieces,piece],gridOrder:[...document.gridOrder??document.pieces.map(p=>p.id),id]},document.projectId,user);
+}
