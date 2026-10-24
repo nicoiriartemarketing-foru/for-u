@@ -1,5 +1,6 @@
 import type { ModuleType } from '../../modules/moduleProjects';
 import type { LandingDraft } from '../../toolkit/types';
+import {locationDetails} from '../../toolkit/locationSection';
 
 export const studioOfferLabels: Record<ModuleType, string> = {
   restaurant: 'Presenta tu menú', ecommerce: 'Presenta tus productos',
@@ -8,6 +9,7 @@ export const studioOfferLabels: Record<ModuleType, string> = {
 export function readableStudioDraft(value: unknown): value is LandingDraft {
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
  const d=value as LandingDraft;
+ try{if(Array.isArray(d.blocks))for(const block of d.blocks)if(block&&typeof block==='object')locationDetails(block.contact);}catch{return false;}
  return ['name','slug','template','headline','description','cta','whatsapp','calendly','color'].every(key=>typeof (d as unknown as Record<string,unknown>)[key]==='string')&&[undefined,1,2,3,4].includes(d.presentationVersion)&&(!d.ctaDesign||[undefined,1].includes(d.ctaDesign.version))&&Array.isArray(d.fields)&&Array.isArray(d.blocks)&&new Set(d.blocks.map(b=>b?.id)).size===d.blocks.length&&d.blocks.every(b=>b&&typeof b.id==='string'&&typeof b.title==='string'&&typeof b.body==='string');
 }
 export function validStudioDraft(value: unknown): value is LandingDraft {

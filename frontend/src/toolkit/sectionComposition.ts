@@ -34,6 +34,7 @@ export function serializeFaqRows(rows:{question:string;answer:string}[]):string{
 }
 export function faqRows(body:string):{question:string;answer:string}[]{return draftFaqRows(body).map(row=>({question:row.question.trim(),answer:row.answer.trim()})).filter(row=>row.question&&row.answer);}
 export function sectionConfigured(block:LandingBlock,draft:LandingDraft):boolean{
+ if(sectionKind(block)==='location'&&block.contact)return Boolean(block.contact.address||block.contact.hours||block.contact.note||block.contact.mapUrl);
  return sectionKind(block)==='catalog'?Boolean(draft.offers?.length):sectionKind(block)==='faq'?faqRows(block.body).length>0:Boolean(block.body.trim());
 }
 export function sectionHint(kind:SectionKind|undefined,route:string):string{

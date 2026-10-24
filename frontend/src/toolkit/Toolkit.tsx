@@ -56,7 +56,7 @@ const tools = [
   { id: "proposal", name: "Mi propuesta", description: "Tu idea, tus ofertas y el mensaje de tu página.", Icon: Sparkles, color: "lilac", label: "DEFINE", minutes: 5 },
   {
     id: "content",
-    name: "Contenido con IA",
+    name: "Crear contenido",
     description: "Dale palabras a tus ideas. Captions, guiones y hashtags.",
     Icon: WandSparkles,
     color: "lilac",
@@ -308,13 +308,13 @@ function ToolkitShell({
           </Suspense>
         ) : (
           <>
-            <header className="hoy-tool-heading" hidden={tool === "proposal" || tool === "landing" || (tool === "profile" && new URLSearchParams(window.location.search).has("piece"))}>
+            <header className="hoy-tool-heading" hidden={tool === "content" || tool === "proposal" || tool === "landing" || (tool === "profile" && new URLSearchParams(window.location.search).has("piece"))}>
               <h1>{current?.name}</h1>
               <p>{current?.description}</p>
             </header>
             <Suspense fallback={<p role="status">Abriendo tu herramienta…</p>}>
               {tool === "content" && (
-                <ContentStudio
+                <ContentStudio key={new URLSearchParams(window.location.search).get('section')||'content'}
                   onScript={(text) => {
                     setScript(text);
                     open("teleprompter");

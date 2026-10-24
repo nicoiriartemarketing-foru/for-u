@@ -52,3 +52,9 @@ La base toolkit-ai ya autentica, resuelve una fuente guardada, valida revisión,
 Para cerrar: seleccionar fuente real → vista de datos enviados → proveedor real → procedencia verificada → aceptar al borrador → guardar/recargar. Repetir sin identidad, con cuota agotada, fuente cambiada, referencia ajena/inyección y dos proyectos. Comprobar celular y no multiplicar botones visibles. No se acredita esta aceptación solo con mocks ni documentación.
 
 Actualización de implementación local: el rechazo de perfiles v2 se corrigió con creativePieceSource, que solo extrae la pieza autorizada seleccionada. Pruebas del helper y del handler aprobadas. No se desplegó el backend ni se acreditó una respuesta de Gemini con este cambio.
+
+
+Estado 23 octubre: selección de identidad/pilares/notas de referencia implementada en cliente y desplegada en toolkit-ai; servidor valida revisiones y propiedad. Prueba real de solicitud QA respondió falta de GEMINI_API_KEY en el entorno de ejecución. No se acredita generación real ni se presenta como funcional hasta resolver configuración y obtener respuesta válida.
+
+
+23 octubre — Gemini real comprobado después de que la usuaria guardara GEMINI_API_KEY: una solicitud Proponer texto desde pieza QA Servicios 9ad56365 obtuvo contenido estructurado aceptado por el cliente. Fuentes verificadas: pieza guardada revisión 2026-10-23T18:26:33.567242+00:00, diagnóstico revisión 2026-10-23T19:30:13.833917+00:00; identidad desmarcada, pilar Proceso y método, una referencia ficticia elegida. No se enviaron perfiles externos ni se visitaron referencias. Se acepta en borrador QA, guarda, recarga y recupera tanto texto como procedencia. No hubo llamada al abrir, recargar ni consultar procedencia. Evidencia gemini-real-fuentes-qa.png. Esto prueba contenido contextual con Gemini real; no acredita todavía todas las operaciones, transcripción/audio o aislamiento con segunda cuenta.

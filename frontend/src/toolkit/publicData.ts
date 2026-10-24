@@ -1,3 +1,4 @@
+import {locationDetails,locationText} from './locationSection';
 import {sectionKinds,type SectionKind} from './sectionComposition';
 import {presentationVersion} from '../presentation/model';
 import { parseWidgets } from '../widgets/model';
@@ -32,6 +33,7 @@ export function parseSiteData(value: unknown): LandingDraft | null {
   }
   if(data.blocks.some(block=>block&&typeof block==='object'&&'kind' in block&&!sectionKinds.includes(block.kind as SectionKind)))return null;
   let design;try{design=presentationVersion(data.presentationVersion);}catch{return null;}
+  try{for(const block of data.blocks){if(block&&typeof block==='object')locationDetails((block as Record<string,unknown>).contact);}}catch{return null;}
   let widgets; try {widgets=parseWidgets(data.widgets);}catch{return null;}
   return {
     ...(data.presentationVersion!==undefined?{presentationVersion:design}:{}),
@@ -56,7 +58,7 @@ export function parseSiteData(value: unknown): LandingDraft | null {
     calendly: safeHttps(text("calendly", 400), "calendly.com"),
     blocks: data.blocks
       .slice(0, 8)
-      .filter((block): block is { kind?:SectionKind; id: string; title: string; body: string } =>
+      .filter((block): block is { contact?:import('./locationSection').LocationDetails; kind?:SectionKind; id: string; title: string; body: string } =>
         Boolean(
           block &&
           typeof block === "object" &&
@@ -67,9 +69,10 @@ export function parseSiteData(value: unknown): LandingDraft | null {
       )
       .map((block) => ({
         ...(block.kind?{kind:block.kind}:{}),
+        ...(block.contact?{contact:locationDetails(block.contact)}:{}),
         id: block.id.slice(0, 80),
         title: block.title.slice(0, 150),
-        body: block.body.slice(0, 2000),
+        body: block.contact?locationText(locationDetails(block.contact)!):block.body.slice(0, 2000),
       })),
     fields: Array.isArray(data.fields)
       ? [

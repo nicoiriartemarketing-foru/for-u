@@ -32,5 +32,6 @@ export function validateCreativeContext(draft:ContentDraft,project:string){
  if(context.origin&&!validLandingOrigin(context.origin,project))throw new Error('El origen de esta pieza no pertenece a este proyecto.');
  if(context.brand&&!validBrandProfile(context.brand,project))throw new Error('La identidad de esta pieza necesita revisión.');
  if(context.pillar&&(typeof context.pillar!=='string'||!context.brand?.pillars.includes(context.pillar)))throw new Error('El pilar no pertenece a las elecciones de este proyecto.');
+ const linked=context.origin?.offerId;if(linked&&(!context.reference||(context.reference.kind==='page'?context.reference.id!=='offer:'+linked:context.reference.id!==linked)))throw new Error('La oferta no coincide con el origen de esta pieza.');
  const r=context.reference;if(r&&(r.projectId!==project||!['proposal','catalog','page','offer'].includes(r.kind)||typeof r.id!=='string'||!r.id||r.id.length>200||typeof r.revision!=='string'||!r.revision||r.revision.length>100))throw new Error('La fuente no pertenece a este proyecto.');
 }

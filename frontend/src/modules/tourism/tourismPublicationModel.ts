@@ -1,3 +1,4 @@
+import {validTourLocation} from './model';
 import {presentationVersion} from '../../presentation/model';
 import type { TourismData, Tour } from './model';
 export const tourTimeZones = ['America/Lima', 'America/Bogota', 'America/Mexico_City', 'America/Argentina/Buenos_Aires', 'Europe/Madrid', 'UTC'] as const;
@@ -9,7 +10,7 @@ export function tourismSnapshot(data: TourismData): PublishedTourism {
   const timeZone = data.settings.timeZone ?? 'America/Lima';
   if (!tourTimeZones.some(zone => zone === timeZone)) throw new Error('Selecciona la zona horaria de tus salidas.');
   const tours = data.tours.filter(tour => tour.active).map(tour => {
-    if (!tour.name.trim() || !Number.isFinite(tour.price) || tour.price < 0 || !Number.isInteger(tour.durationMinutes) || tour.durationMinutes < 1 || !Number.isFinite(tour.latitude) || Math.abs(tour.latitude) > 90 || !Number.isFinite(tour.longitude) || Math.abs(tour.longitude) > 180) throw new Error('Revisa nombre, precio, duración y ubicación de tus experiencias.');
+    if (!tour.name.trim() || !Number.isFinite(tour.price) || tour.price < 0 || !Number.isInteger(tour.durationMinutes) || tour.durationMinutes < 1 || !validTourLocation(tour)) throw new Error('Revisa nombre, precio, duración y ubicación de tus experiencias.');
     return { id: tour.id, name: tour.name.trim(), description: tour.description, price: Math.round(tour.price * 100) / 100, durationMinutes: tour.durationMinutes, image: tour.image, active: true, meetingPoint: tour.meetingPoint, latitude: tour.latitude, longitude: tour.longitude, itinerary: tour.itinerary.map(stop => ({ id: stop.id, title: stop.title, description: stop.description })) };
   });
   if (!tours.length) throw new Error('Activa al menos una experiencia antes de publicar.');

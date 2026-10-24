@@ -267,3 +267,17 @@ Interpretar audio o generar textos con IA requiere acción explícita y pruebas 
 ## 22. IA contextual inspirada en NotebookLM
 
 Referencia investigada y adaptación detallada en [FOR_U_NOTEBOOKLM_REFERENCE.md](FOR_U_NOTEBOOKLM_REFERENCE.md). Fuentes elegidas, acciones contextuales, procedencia verificable, resultados separados y aceptación explícita. Integrar identidad/pilares/referencias mediante selección del usuario y resolución autorizada en servidor; no asumir lectura de perfiles ni enviar todo el negocio. Mantener una entrada contextual a IA y las composiciones locales sin consumo. Conservar límites, caché por revisión y trabajo manual, sin ahorro prometido, facturación nueva ni automatismos al navegar. Esta ampliación sigue pendiente de implementación y prueba con proveedor real; no confundir investigar la referencia con disponer de esas capacidades.
+
+
+## 23. Entrega final añadida el24 de octubre — página de enlaces y hasta tres promociones
+
+Ampliación solicitada después del trabajo en pedidos: se ejecutará al final sin sustituir los requisitos anteriores.
+
+### Página de enlaces personalizable
+Una página tipo Linktree dentro de FOR U, sencilla y funcional: foto/logo opcional, nombre, bio breve, botones de enlaces con título y destino, orden editable por arrastre y controles equivalentes, colores/fondo y apariencia de marca, previsualización móvil y enlace público propio. Usar el editor y la biblioteca compartidos; tocar un elemento abre una sola decisión. No es una réplica acreditada de todas las funciones comerciales o planes de Linktree ni una integración con ese servicio. Validar los destinos; nunca aceptar javascript: u otros esquemas arbitrarios. Enlaces a la página principal y promociones del propio proyecto deben elegirse sin volver a copiar información. Mantener borrador, publicación, guardado con revisión y separación por cuenta/proyecto.
+
+### Hasta tres landings para venta directa de promociones/ofertas
+Preparar por defecto hasta tres borradores independientes, editables y con enlace/identificador propio, a partir de ofertas confirmadas del proyecto. La cantidad es el alcance de los borradores iniciales, no una nueva cuota comercial o suscripción. Si todavía no hay ofertas confirmadas, ofrecer espacios orientativos para crearlas; no inventar2x1, precios, stock, condiciones, urgencia, testimonios ni promociones publicables.
+Cada landing reúne oferta concreta, beneficio confirmado, productos/variantes/precio del catálogo único, condiciones aportadas y CTA adecuado a su capacidad real (comprar, pedir, reservar, cotizar o contactar). Reutiliza las interacciones del editor especializado; no copia precios editables fuera del catálogo. Puede incluir fotos después o composición tipográfica sin foto. Publicar cada promoción es explícito y no reemplaza ni republica la página principal o la página de enlaces. Señalar la revisión necesaria cuando cambie la oferta, sin sobrescribir ediciones manuales. Los canales de compra/reserva deben estar comprobados antes de presentarse como activos.
+
+Aceptación: crear/editar página de enlaces → ordenar botones → guardar/recargar → abrir borrador de promoción1/2/3 → editar contenido → regresar a página de enlaces, conservando proyecto y cambios. Verificar dos proyectos,360/768/1440, ausencia de fotos y ofertas iniciales, enlaces inválidos, errores/conflictos y publicación separada en QA autorizado. La aprobación visual es independiente de los tests. Estado inicial pendiente: este registro no acredita implementación.

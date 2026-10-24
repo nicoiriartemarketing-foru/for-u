@@ -22,6 +22,7 @@ import './workspace.css';
 import './workspaceIdentity.css';
 import './worldExperience.css';
 import './workspaceNavigation.css';
+import './workspaceHomeBar.css';
 
 export default function WorkspaceShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
@@ -31,6 +32,9 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountOpen,setAccountOpen]=useState(false),[accountError,setAccountError]=useState('');const accountRoot=useRef<HTMLDivElement>(null),accountButton=useRef<HTMLButtonElement>(null);
+  useEffect(()=>{if(!accountOpen)return;const outside=(event:PointerEvent)=>{if(!accountRoot.current?.contains(event.target as Node))setAccountOpen(false);};const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'){setAccountOpen(false);accountButton.current?.focus();}};document.addEventListener('pointerdown',outside);document.addEventListener('keydown',escape);return()=>{document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',escape);};},[accountOpen]);
+  useEffect(()=>setAccountOpen(false),[location.pathname,location.search]);
   const menuButton = useRef<HTMLButtonElement>(null);
   useEffect(() => setMenuOpen(false), [location.pathname, location.search]);
   const projects = store.cloudUserId === user?.id ? Object.values(store.projectsById).filter(p => projectModuleType(p) && isSavedProject(p.id) && !p.cloudPending) : [];
@@ -91,8 +95,8 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
             </Link>
           </Tooltip>;
   };
-  return <div className={`workspace-shell workspace-shell-immersive ${isToolSurface?'is-tool-focused':''} ${isPageEditor?'is-page-editor':''} ${params.get('setup')==='1'?'is-guiding':''}`}>
-    {(!isProjectSurface||isToolSurface)&&<aside className={`workspace-sidebar ${menuOpen ? 'menu-open' : ''}`}>
+  return <div className={`workspace-shell workspace-shell-immersive ${isToolSurface?'is-tool-focused':''} ${!isProjectSurface&&!isToolSurface?'is-home':''} ${isPageEditor?'is-page-editor':''} ${params.get('setup')==='1'?'is-guiding':''}`}>
+    {isToolSurface&&<aside className={`workspace-sidebar ${menuOpen ? 'menu-open' : ''}`}>
       <Link className="workspace-brand" to="/dashboard" aria-label="FOR U · Mis proyectos"><Logo /></Link>
 
       {project && <TaskProgress projectId={project.id} type={type} />}
@@ -109,6 +113,8 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
     </aside>}
 
     <div className="workspace-main">
+      {!isProjectSurface&&!isToolSurface&&<><header className="workspace-home-bar"><Link className="workspace-project-logo" to="/dashboard" aria-label="FOR U · Mis proyectos"><Logo/></Link><div className="workspace-home-actions"><Link className="workspace-home-create" to="/dashboard?create=1"><span aria-hidden="true">＋</span> Nuevo proyecto</Link><div className="workspace-home-account" ref={accountRoot}><button type="button" ref={accountButton} aria-label="Opciones de cuenta" aria-expanded={accountOpen} aria-controls="workspace-home-account-actions" onClick={()=>setAccountOpen(!accountOpen)}>•••</button>{accountOpen&&<nav id="workspace-home-account-actions" aria-label="Mi cuenta"><Link to="/dashboard/settings">Mi cuenta y ajustes</Link><button type="button" onClick={async()=>{if(!confirmWorkspaceNavigation())return;try{await signOut();navigate('/login');}catch(error){setAccountError((error as Error).message);}}}>Cerrar sesión</button></nav>}</div></div></header>{accountError&&<p className="workspace-home-error" role="alert">{accountError}</p>}</>}
+
       {isToolSurface?<header className="workspace-focus-bar"><Link to={project?projectViewPath(project.id,'map'):'/dashboard'}>← Mapa</Link><span>{project?.name||'Mis proyectos'}</span><details key={location.pathname+location.search} className="workspace-focus-menu"><summary aria-label="Más opciones del proyecto">•••</summary><nav aria-label="Cambiar espacio">{project&&workspaceSpaces(project.id,type).filter(space=>space.path.split('?')[0]!==location.pathname).map(space=><Link key={space.id} to={space.path}>{space.title}</Link>)}{project&&projectViews.map(view=><Link key={view} to={projectViewPath(project.id,view)}>{({map:'Mapa',kanban:'Kanban',calendar:'Calendario',world:'Mi mundo'})[view]}</Link>)}<label>Proyecto activo<select value={project?.id??''} onChange={event=>{if(!confirmWorkspaceNavigation())return;store.switchProject(event.target.value);const next=projects.find(p=>p.id===event.target.value);if(next)navigate(resumePath(projectDestination(focusState.data,next.id),projectModuleType(next)!));}}>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><WorkspaceTools links={links} projectId={project?.id} type={type} onNavigate={rememberNavigation}/><Link to="/dashboard">Mis proyectos y Hoy</Link><Link to="/dashboard?create=1">Crear otro proyecto</Link></nav></details></header>:isProjectSurface&&<header className="workspace-project-bar">
         <div className="workspace-project-identity"><Link className="workspace-project-logo" to="/dashboard" aria-label="FOR U · Mis proyectos"><Logo/></Link><label><span className="sr-only">Proyecto activo</span><select aria-label="Proyecto activo" value={project?.id??''} onChange={event=>{if(!confirmWorkspaceNavigation())return;store.switchProject(event.target.value);const next=projects.find(p=>p.id===event.target.value);if(next)navigate(resumePath(projectDestination(focusState.data,next.id),projectModuleType(next)!));}}><option value="" disabled>Elige un proyecto</option>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label></div>
         <nav className="workspace-view-switch" aria-label="Vistas del proyecto">{project&&projectViews.map(view=><Link key={view} aria-current={(view==='world'?location.pathname==='/dashboard/world':location.pathname==='/dashboard'&&(params.get('view')==='management'?'map':params.get('view')||'map')===view)?'page':undefined} to={projectViewPath(project.id,view)}>{({map:'Mapa',kanban:'Kanban',calendar:'Calendario',world:'Mi mundo'})[view]}</Link>)}</nav>

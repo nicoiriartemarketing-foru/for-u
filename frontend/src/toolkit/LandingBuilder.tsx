@@ -1,3 +1,9 @@
+import NativeCatalogOfferCreator from './NativeCatalogOfferCreator';
+import NativeCatalogOfferEditor from './NativeCatalogOfferEditor';
+import {editableNativeTypes,type NativeEditableType} from './nativeOfferEdit';
+import ProposalOfferEditor from './ProposalOfferEditor';
+import RestaurantCatalogEditor from './RestaurantCatalogEditor';
+import RestaurantOfferEditor from './RestaurantOfferEditor';
 import SectionContentEditor from './SectionContentEditor';
 import {sectionKind} from './sectionComposition';
 import {useSavedNavigation} from '../lib/useSavedNavigation';
@@ -19,7 +25,7 @@ import PageAI from '../experience/PageAI';
 import PresentationReview from '../presentation/PresentationReview';
 import {LandingPreview as DesignPreview} from './LandingPreview';
 import WidgetEditor from '../widgets/WidgetEditor';
-import { nativeOffers, offerPrice, sameOffers, type Offer, type ProposalSource } from '../proposal/model';
+import { nativeOffers, parseProposal, offerPrice, sameOffers, type Offer, type ProposalSource } from '../proposal/model';
 import { readProposalSource } from '../proposal/sourceRepository';
 import { readLandingPublication, writeLandingPublication, landingPublicSnapshot, type LandingPublication } from '../services/landingPublication';
 import { privateMediaPath, isPrivateMedia } from '../components/shared/mediaReference';
@@ -54,7 +60,8 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
   const [routeParams] = useSearchParams();
   const [nextStep,setNextStep]=useState<'intro'|null>(()=>{try{return routeParams.get('tour')==='1'&&sessionStorage.getItem(`foru:landing-tour:${userId}:${projectId}`)!=='done'?'intro':null;}catch{return null;}});
   function dismissNext(){setNextStep(null);try{sessionStorage.setItem(`foru:landing-tour:${userId}:${projectId}`,'done');}catch{}}
-  async function createFromPage(){if(busy)return;if(dirty||!docs.landing){if(!await saveDraft())return;}dismissNext();navigateAfterSave(`/creator-studio?project=${encodeURIComponent(projectId)}&start=first-content&from=landing&section=${encodeURIComponent(selectedId)}&viewport=${viewport}`);}
+  async function createFromPage(){if(busy)return;if(dirty||!docs.landing){if(!await saveDraft())return;}dismissNext();const query=new URLSearchParams({project:projectId,start:'first-content',from:'landing',section:selectedId,viewport});if(selectedOfferId&&draft.offers?.some(offer=>offer.id===selectedOfferId))query.set('offer',selectedOfferId);const pageRevision=documentRevision('landing');if(pageRevision)query.set('pageRevision',pageRevision);navigateAfterSave('/creator-studio?'+query.toString());}
+
   const requestedStep = routeParams.get("step");
   const [history, dispatchHistory] = useReducer(editorHistory<LandingDraft>, { past: [], present: editorCatalog((docs.landing as LandingDraft) ?? prepareRoutePage(business.name,(business.route||business.moduleType||'services') as BusinessRoute,{},emptyProposal()),business.moduleType as ModuleType|undefined,docs['module-'+business.moduleType],docs['module-proposal']), future: [] } as EditorHistory<LandingDraft>);
   const draft = history.present;
@@ -81,7 +88,9 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
     return () => { active = false; };
   }, [userId, projectId, demo, publicationAttempt]);
   const [dirty, setDirty] = useState(false);
-  useUnsavedNavigation(!wizard && (dirty || busy));
+  const [offerPending,setOfferPending]=useState(false);
+  const [sectionPending,setSectionPending]=useState(false);
+  useUnsavedNavigation(!wizard && (dirty || busy || offerPending || sectionPending));
   const navigateAfterSave=useSavedNavigation(!dirty&&!busy);
   const drag = useRef(-1);
   const uploading = useRef(false);
@@ -92,7 +101,9 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
   const [settingsOpen, setSettingsOpen] = useState(requestedStep === "identity" || requestedStep === "publish");
   const [propertiesOpen, setPropertiesOpen] = useState(requestedStep === "identity" || requestedStep === "offer");
   const [imageRole, setImageRole] = useState('hero');
-  const [selectedOfferId, setSelectedOfferId] = useState('');
+  const [selectedOfferId, setSelectedOfferId] = useState(()=>draft.offers?.some(offer=>offer.id===routeParams.get('offer'))?routeParams.get('offer')!:'');
+  const selectedOfferRef=useRef(selectedOfferId);selectedOfferRef.current=selectedOfferId;
+  const pendingOfferFocus=useRef<string|undefined>(undefined);
   const [context, setContext] = useState<'text'|'section-content'|'image'|'cta'|'offer'|'catalog'>('text');
   const [insertBefore, setInsertBefore] = useState<string | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -126,7 +137,7 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
         const resolved = { ...draft, heroImage: await previewImage(draft.heroImage || ''), gallery: draft.gallery ? await Promise.all(draft.gallery.map(async image => ({...image, url: await previewImage(image.url)}))) : undefined, offers: draft.offers ? await Promise.all(draft.offers.map(async offer => ({ ...offer, image: await previewImage(offer.image) }))) : undefined };
         if (!active) return;
         previewDraft.current = resolved; setPreviewImageError('');
-        frame.current?.contentWindow?.postMessage({ type: 'foru:render', channel, projectId, draft: resolved, selectedId: selectedRef.current }, window.location.origin);
+        frame.current?.contentWindow?.postMessage({ type: 'foru:render', channel, projectId, draft: resolved, selectedId: selectedRef.current,focusOfferId:pendingOfferFocus.current }, window.location.origin);pendingOfferFocus.current=undefined;
       } catch (error) { if (active) setPreviewImageError((error as Error).message); }
     })();
     return () => { active = false; };
@@ -146,20 +157,20 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
         return;
       if (event.data.type === "foru:ready") {
         frame.current?.contentWindow?.postMessage(
-          { type: "foru:render", channel, projectId, draft: previewDraft.current, selectedId: selectedRef.current, resumeSelection: routeParams.get('resume')==='1'||initialWorkspace.sectionId!=='hero' },
+          { type: "foru:render", channel, projectId, draft: previewDraft.current, selectedId: selectedRef.current, resumeSelection: routeParams.get('resume')==='1'||initialWorkspace.sectionId!=='hero',focusOfferId:selectedOfferRef.current||undefined },
           window.location.origin,
         );
         return;
       }
       if (busy) return;
       if(event.data.type==='foru:configure'&&['catalog','text'].includes(event.data.kind)&&draftRef.current.blocks.some(b=>b.id===event.data.id)){
-        setSelectedId(event.data.id);setSelectionActive(true);setContext(event.data.kind==='text'?'section-content':'catalog');setPropertiesOpen(true);return;
+        setSelectedOfferId('');setSelectedId(event.data.id);setSelectionActive(true);setContext(event.data.kind==='text'?'section-content':'catalog');setPropertiesOpen(true);return;
       }
       if (event.data.type === 'foru:context') {
         setSelectionActive(true);
-        if (['image','cta'].includes(event.data.target)) { setImageRole('hero'); setSelectedId('hero'); setContext(event.data.target); setPropertiesOpen(true); }
-        else if(event.data.target==='gallery'&&draftRef.current.gallery?.some(photo=>photo.role===event.data.role)){setImageRole('gallery:'+event.data.role);setContext('image');setPropertiesOpen(true);}
-        else if (event.data.target === 'offer' && draftRef.current.offers?.some(offer => offer.id === event.data.id)) { setSelectedOfferId(event.data.id); setContext('offer'); setPropertiesOpen(true); }
+        if (['image','cta'].includes(event.data.target)) { setSelectedOfferId(''); setImageRole('hero'); setSelectedId('hero'); setContext(event.data.target); setPropertiesOpen(true); }
+        else if(event.data.target==='gallery'&&draftRef.current.gallery?.some(photo=>photo.role===event.data.role)){setSelectedOfferId('');setImageRole('gallery:'+event.data.role);setContext('image');setPropertiesOpen(true);}
+        else if (event.data.target === 'offer' && draftRef.current.offers?.some(offer => offer.id === event.data.id)) { const catalog=draftRef.current.blocks.find(block=>block.id===event.data.sectionId&&sectionKind(block)==='catalog')||draftRef.current.blocks.find(block=>sectionKind(block)==='catalog');setSelectedId(catalog?.id||'hero');setSelectedOfferId(event.data.id); setContext('offer'); setPropertiesOpen(true); }
         return;
       }
       if (event.data.type === 'foru:sections') {
@@ -169,7 +180,7 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
       }
       if (event.data.type === 'foru:image-drop' && event.data.target === 'hero' && event.data.file instanceof File) { void uploadPrivateCover(event.data.file); return; }
       if (event.data.type === 'foru:select' && typeof event.data.id === 'string') {
-        if (event.data.id === 'hero' || draftRef.current.blocks.some(block => block.id === event.data.id)) {setSelectedId(event.data.id);setSelectionActive(true);}
+        if (event.data.id === 'hero' || draftRef.current.blocks.some(block => block.id === event.data.id)) {const offerId=typeof event.data.offerId==='string'&&draftRef.current.offers?.some(offer=>offer.id===event.data.offerId)?event.data.offerId:'';setSelectedOfferId(offerId);if(offerId)setContext('offer');setSelectedId(event.data.id);setSelectionActive(true);}
         return;
       }
       if (event.data.type === 'foru:move' && typeof event.data.from === 'string' && typeof event.data.to === 'string') {
@@ -390,7 +401,7 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
       {saveError&&<section className="pe-feedback" role="alert"><p>{saveError}</p><DSButtonSecondary disabled={busy||/otra pestaña|otra versión|otra ventana/i.test(saveError)} onClick={()=>void saveDraft()}>Reintentar guardado</DSButtonSecondary><DSButtonSecondary onClick={()=>setRecoverOpen(true)}>Recuperar versión guardada</DSButtonSecondary></section>}
       <EditorSheet open={recoverOpen} title="Recuperar borrador" onClose={()=>setRecoverOpen(false)}><p>Recuperar sustituirá las ediciones pendientes por el borrador guardado. Tu publicación no cambia.</p><DSButtonSecondary onClick={()=>setRecoverOpen(false)}>Conservar mis cambios</DSButtonSecondary><DSButtonPrimary onClick={()=>{pending.current=null;setDirty(false);setRecoverOpen(false);void reload();}}>Descartar pendientes y recuperar</DSButtonPrimary></EditorSheet>
       {(notice || previewImageError) && <p className="pe-feedback" role={previewImageError ? 'alert' : 'status'}>{previewImageError || notice}</p>}
-      {selectionActive?<div className="pe-selection-strip"><span>Toca lo que quieres transformar</span><DSButtonSecondary className="pe-selection-edit" onClick={()=>{setContext('text');setPropertiesOpen(true);}}>Editar selección</DSButtonSecondary><DSButtonSecondary disabled={busy} onClick={()=>void createFromPage()}>✦ Crear contenido</DSButtonSecondary></div>:<p className="pe-tap-hint">Toca un texto, una foto o un botón para transformarlo.</p>}
+      {selectionActive?<div className="pe-selection-strip"><span>{selectedOfferId?draft.offers?.find(offer=>offer.id===selectedOfferId)?.name||'Tu oferta':'Toca lo que quieres transformar'}</span><DSButtonSecondary className="pe-selection-edit" onClick={()=>{setContext('text');setPropertiesOpen(true);}}>Editar selección</DSButtonSecondary><DSButtonSecondary disabled={busy} onClick={()=>void createFromPage()}>✦ Crear contenido</DSButtonSecondary></div>:<p className="pe-tap-hint">Toca un texto, una foto o un botón para transformarlo.</p>}
       <EditorSheet open={advancedOpen} title="Tu página · herramientas" onClose={()=>setAdvancedOpen(false)}>
         <details className="pe-mobile-view-tools"><summary>Vista e historial</summary><div className="pe-tool-choices"><DSButtonSecondary aria-pressed={viewport==='desktop'} onClick={()=>setViewport('desktop')}>Escritorio</DSButtonSecondary><DSButtonSecondary aria-pressed={viewport==='mobile'} onClick={()=>setViewport('mobile')}>Celular</DSButtonSecondary><DSButtonSecondary disabled={busy||!history.past.length} onClick={()=>{dispatchHistory({type:'undo'});setDirty(true);}}>Deshacer</DSButtonSecondary><DSButtonSecondary disabled={busy||!history.future.length} onClick={()=>{dispatchHistory({type:'redo'});setDirty(true);}}>Rehacer</DSButtonSecondary></div></details>
         {selectionActive&&<DSButtonSecondary className="pe-mobile-selection-edit" onClick={()=>{setAdvancedOpen(false);setContext('text');setPropertiesOpen(true);}}>Editar esta sección</DSButtonSecondary>}
@@ -408,10 +419,10 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
       }}>{draft.catalogSource === 'module' ? 'Actualizar vista previa del catálogo' : 'Usar mi catálogo guardado'}</DSButtonSecondary></details>}
 
         <WidgetEditor projectId={projectId} widgets={draft.widgets} onChange={widgets=>update({widgets})} disabled={busy||demo}/>
-        <nav className="pe-tool-choices"><Link className="pe-action-link" to={`/dashboard/tools/proposal?project=${projectId}`}>Mi propuesta</Link><Link className="pe-action-link" to={`/dashboard/tools/teleprompter?project=${projectId}&section=${encodeURIComponent(selectedId)}`}>Teleprompter</Link></nav>
+        <nav className="pe-tool-choices">{moduleType==='restaurant'&&<Link className="pe-action-link" to={'/modules/restaurant/orders?'+new URLSearchParams({project:projectId,from:'landing',section:selectedId,viewport,...(selectedOfferId?{offer:selectedOfferId}:{})}).toString()}>Pedidos y entregas →</Link>}<Link className="pe-action-link" to={`/dashboard/tools/proposal?project=${projectId}`}>Mi propuesta</Link><Link className="pe-action-link" to={`/dashboard/tools/teleprompter?project=${projectId}&section=${encodeURIComponent(selectedId)}`}>Teleprompter</Link></nav>
       </EditorSheet>
-      <EditorSheet open={propertiesOpen} title={context==='section-content'&&selectedBlock?selectedBlock.title:context==='catalog'?'Tu catálogo conectado':context==='image'?'Tu foto':context==='cta'?'Tu llamada a la acción':context==='offer'?'Tu oferta':'Editar selección'} onClose={()=>setPropertiesOpen(false)}>
-        {context==='section-content'&&selectedBlock?<SectionContentEditor key={selectedBlock.id} block={selectedBlock} disabled={busy} onChange={body=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,useModuleDetails:false,body}:block)})}/>:context==='catalog'?<><p>Los productos y sus precios se editan en su catálogo original. Esta sección mostrará los que hayas guardado.</p><Link className="pe-action-link" to={moduleType?`/modules/${moduleType}/editor?project=${projectId}`:`/dashboard/tools/proposal?project=${projectId}`}>Preparar {moduleType==='restaurant'?'mi menú':'mis ofertas'} →</Link></>:context==='offer'?<><p>Esta oferta conserva sus precios, variantes y extras en su catálogo original.</p><Link className="pe-action-link" to={selectedOfferId.startsWith(`${moduleType}:`)?`/modules/${moduleType}/editor?project=${projectId}&offer=${encodeURIComponent(selectedOfferId.slice(selectedOfferId.indexOf(':')+1))}`:`/dashboard/tools/proposal?project=${projectId}&offer=${encodeURIComponent(selectedOfferId)}`}>Editar esta oferta →</Link></>:<EditorDecision key={`${context}:${selectedId}:${imageRole}`} choices={context==='image'?[
+      <EditorSheet open={propertiesOpen} title={context==='section-content'&&selectedBlock?selectedBlock.title:context==='catalog'?(moduleType==='restaurant'?'Tu nuevo producto':'Tu catálogo'):context==='image'?'Tu foto':context==='cta'?'Tu llamada a la acción':context==='offer'?'Tu oferta':'Editar selección'} onClose={()=>{if((offerPending||sectionPending)&&!window.confirm('Hay cambios sin aplicar en este panel. ¿Quieres cerrar y descartarlos?'))return;setSectionPending(false);setPropertiesOpen(false);}}>
+        {(context==='offer'&&draft.catalogSource==='proposal'&&docs['module-proposal']!==undefined&&parseProposal(docs['module-proposal']).offers.some(offer=>offer.id===selectedOfferId)||context==='catalog'&&draft.catalogSource==='proposal'&&moduleType!=='restaurant')?<ProposalOfferEditor key={context==='offer'?selectedOfferId:'new-proposal'} offerId={context==='offer'?selectedOfferId:undefined} onPending={setOfferPending} onCancel={()=>{setOfferPending(false);setPropertiesOpen(false);}} onSaved={(proposal,savedId)=>{pendingOfferFocus.current=savedId;setSelectedOfferId(savedId);dispatchHistory({type:'sync',value:current=>{const synced=editorCatalog(current,moduleType||undefined,docs['module-'+moduleType],proposal);return {...current,offers:synced.offers,menuItems:undefined,proposalSource:{proposalRevision:documentRevision('module-proposal')!,catalogRevision:moduleType?documentRevision('module-'+moduleType):null}};}});setDirty(true);setOfferPending(false);setPropertiesOpen(false);setNotice('Oferta guardada en tu propuesta. Tu publicación se conserva.');}}/>:context==='section-content'&&selectedBlock?<SectionContentEditor key={selectedBlock.id} block={selectedBlock} disabled={busy} onPending={setSectionPending} onContactChange={next=>update({blocks:draft.blocks.map(block=>block.id===next.id?next:block)})} onChange={body=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,useModuleDetails:false,body}:block)})}/>:context==='catalog'&&moduleType==='restaurant'&&['module','proposal'].includes(draft.catalogSource||'')?<RestaurantCatalogEditor linkToProposal={draft.catalogSource==='proposal'} onPending={setOfferPending} onSaved={(data,proposal,savedId)=>{pendingOfferFocus.current=savedId?'restaurant:'+savedId:undefined;if(savedId)setSelectedOfferId('restaurant:'+savedId);dispatchHistory({type:'sync',value:current=>{const synced=editorCatalog(current,'restaurant',data,proposal||docs['module-proposal']);return {...current,offers:synced.offers,menuItems:undefined,...(proposal&&current.catalogSource==='proposal'?{proposalSource:{proposalRevision:documentRevision('module-proposal')!,catalogRevision:documentRevision('module-restaurant')}}:{})};}});setDirty(true);setOfferPending(false);setPropertiesOpen(false);setNotice('Producto guardado en tu menú. Tu publicación se conserva.');}}/>:context==='catalog'&&moduleType&&draft.catalogSource==='module'&&editableNativeTypes.includes(moduleType as NativeEditableType)?<NativeCatalogOfferCreator key={moduleType+':new'} type={moduleType as NativeEditableType} onPending={setOfferPending} onSaved={(data,savedId)=>{pendingOfferFocus.current=moduleType+':'+savedId;setSelectedOfferId(moduleType+':'+savedId);dispatchHistory({type:'sync',value:current=>{const synced=editorCatalog(current,moduleType,data,docs['module-proposal']);return {...current,offers:synced.offers,menuItems:undefined};}});setDirty(true);setOfferPending(false);setPropertiesOpen(false);setNotice('Oferta añadida a tu catálogo y al borrador. Tu publicación se conserva.');}}/>:context==='catalog'?<><p>Los productos y sus precios se editan en su catálogo original. Esta sección mostrará los que hayas guardado.</p><Link className="pe-action-link" to={moduleType?`/modules/${moduleType}/editor?project=${projectId}`:`/dashboard/tools/proposal?project=${projectId}`}>Preparar {moduleType==='restaurant'?'mi menú':'mis ofertas'} →</Link></>:context==='offer'&&moduleType==='restaurant'&&selectedOfferId.startsWith('restaurant:')?<RestaurantOfferEditor key={selectedOfferId} offerId={selectedOfferId.slice('restaurant:'.length)} onPending={setOfferPending} onSaved={(data,proposal,savedId)=>{pendingOfferFocus.current=savedId?'restaurant:'+savedId:undefined;if(savedId)setSelectedOfferId('restaurant:'+savedId);dispatchHistory({type:'sync',value:current=>{const synced=editorCatalog(current,'restaurant',data,proposal||docs['module-proposal']);return {...current,offers:synced.offers,menuItems:undefined,...(proposal&&current.catalogSource==='proposal'?{proposalSource:{proposalRevision:documentRevision('module-proposal')!,catalogRevision:documentRevision('module-restaurant')}}:{})};}});setDirty(true);setOfferPending(false);setPropertiesOpen(false);setNotice('Producto guardado en tu menú. Tu publicación se conserva.');}}/>:context==='offer'&&moduleType&&editableNativeTypes.includes(moduleType as NativeEditableType)&&selectedOfferId.startsWith(moduleType+':')?<NativeCatalogOfferEditor type={moduleType as NativeEditableType} offerId={selectedOfferId.slice(moduleType.length+1)} onPending={setOfferPending} onSaved={(data,savedId)=>{pendingOfferFocus.current=moduleType+':'+savedId;setSelectedOfferId(moduleType+':'+savedId);dispatchHistory({type:'sync',value:current=>{const synced=editorCatalog(current,moduleType,data,docs['module-proposal']);return {...current,offers:synced.offers,menuItems:undefined,...(current.catalogSource==='proposal'?{proposalSource:{proposalRevision:documentRevision('module-proposal')!,catalogRevision:documentRevision('module-'+moduleType)}}:{})};}});setDirty(true);setOfferPending(false);setPropertiesOpen(false);setNotice('Oferta guardada en tu catálogo. Tu publicación se conserva.');}}/>:context==='offer'?<><p>Esta oferta conserva sus precios, variantes y extras en su catálogo original.</p><Link className="pe-action-link" to={selectedOfferId.startsWith(`${moduleType}:`)?`/modules/${moduleType}/editor?project=${projectId}&offer=${encodeURIComponent(selectedOfferId.slice(selectedOfferId.indexOf(':')+1))}`:`/dashboard/tools/proposal?project=${projectId}&offer=${encodeURIComponent(selectedOfferId)}`}>Editar esta oferta →</Link></>:<EditorDecision key={`${context}:${selectedId}:${imageRole}`} choices={context==='image'?[
           {id:'photo',title:'Elegir mi foto',hint:'Sube una imagen o elige una del proyecto. También puedes encuadrarla.',icon:'▧',content:<MediaScope.Provider value={{userId,projectId}}><ProjectImageField label="Foto de portada" value={selectedPhoto?.url||''} onChange={url=>updatePhoto({url})}/></MediaScope.Provider>},
           {id:'alt',title:'Describir la foto',hint:'Ayuda a entender la imagen a quienes usan lectores de pantalla.',icon:'≋',content:<DSInput label="Descripción de la foto" value={selectedPhoto?.alt||''} maxLength={160} onChange={e=>updatePhoto({alt:e.target.value})}/>}
         ]:context==='cta'?[
@@ -421,7 +432,7 @@ function LandingBuilderSession({ wizard = false }: { wizard?: boolean }) {
           {id:'tone',title:'Elige su color',hint:'Tres acentos de FOR U, con texto legible.',icon:'◉',content:<DSSelect label="Color del botón" value={draft.ctaDesign?.tone||'violet'} onChange={e=>update({ctaDesign:{...draft.ctaDesign,version:1,tone:e.target.value as 'violet'|'mint'|'gold'}})}><option value="violet">Violeta</option><option value="mint">Mint</option><option value="gold">Dorado</option></DSSelect>}
         ]:selectedBlock?[
           {id:'title',title:'El título de esta sección',hint:'También puedes escribir directamente sobre la página.',icon:'✎',content:<DSInput label="Título de sección" value={selectedBlock.title} maxLength={150} onChange={e=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,title:e.target.value}:block)})}/>},
-          {id:'body',title:sectionKind(selectedBlock)==='faq'?'Preguntas y respuestas':'Cuenta esta parte',hint:sectionKind(selectedBlock)==='faq'?'Resuelve una duda por vez. Verás el resultado desplegable en tu página.':'Usa tus palabras y datos confirmados de tu negocio.',icon:'≋',content:<SectionContentEditor key={selectedBlock.id} block={selectedBlock} disabled={busy} onChange={body=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,useModuleDetails:false,body}:block)})}/>}
+          {id:'body',title:sectionKind(selectedBlock)==='faq'?'Preguntas y respuestas':'Cuenta esta parte',hint:sectionKind(selectedBlock)==='faq'?'Resuelve una duda por vez. Verás el resultado desplegable en tu página.':'Usa tus palabras y datos confirmados de tu negocio.',icon:'≋',content:<SectionContentEditor key={selectedBlock.id} block={selectedBlock} disabled={busy} onPending={setSectionPending} onContactChange={next=>update({blocks:draft.blocks.map(block=>block.id===next.id?next:block)})} onChange={body=>update({blocks:draft.blocks.map(block=>block.id===selectedBlock.id?{...block,useModuleDetails:false,body}:block)})}/>}
 
 
         ]:[

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc -b",
-    "test": "tsx --require ./tests/setup.cjs --test tests/*.test.mjs",
+    "test": "tsx --tsconfig tsconfig.app.json --require ./tests/setup.cjs --test tests/*.test.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

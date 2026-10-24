@@ -1,3 +1,5 @@
+import './calendarGuided.css';
+import EditorSheet from './EditorSheet';
 import type {Piece} from '../social/model';
 import type {AreaTask} from '../pages/dashboard/areaModel';
 import TaskSuggestion from '../ai/TaskSuggestion';
@@ -10,7 +12,7 @@ import { localDate } from "./engine";
 import { downloadBlob } from "./api";
 import type { CalendarEntry } from "./types";
 import { useUnsavedNavigation } from '../lib/useUnsavedNavigation';
-import { calendarDateTime, calendarICS, readCalendar } from './calendarModel';
+import { calendarDateTime, calendarICS, readCalendar, upsertCalendarActivity } from './calendarModel';
 export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOpenPiece}:{linkedTasks?:AreaTask[];onOpenTask?:(task:AreaTask)=>void;linkedPieces?:Piece[];onOpenPiece?:(id:string)=>void}={}) {
   const { docs, save, track, reload, projectId } = useToolkit();
   let initial: CalendarEntry[] = [], formatError = '';
@@ -21,6 +23,7 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
   const [anchor, setAnchor] = useState(new Date());
   const [view, setView] = useState("week");
   const [title, setTitle] = useState("");
+  const [formOpen,setFormOpen]=useState(false),[formStep,setFormStep]=useState(0);
   const [date, setDate] = useState(localDate(new Date()));
   const [time, setTime] = useState("10:00");
   const [notice, setNotice] = useState("");
@@ -32,6 +35,9 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
   const conflict = saveError.includes('otra pestaña');
   const blocked = busy || conflict || Boolean(formatError);
   const savingRef = useRef(false);
+  const formDraftId=useRef<string|null>(null);
+  const formRef=useRef<HTMLFormElement>(null);
+  useEffect(()=>{if(formOpen)formRef.current?.querySelector<HTMLInputElement>('input')?.focus();},[formOpen,formStep]);
   const [notifications, setNotifications] = useState(false);
   const reminded = useRef(new Set<string>());
   const original = entries.find(entry => entry.id === editing);
@@ -112,12 +118,12 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
   }
   function exportCalendar() {
     downloadBlob(
-      new Blob([calendarICS(entries,new Date(),linkedTasks.flatMap(t=>t.date?[{id:t.id,title:t.title,date:t.date,done:t.done}]:[]))], { type: "text/calendar;charset=utf-8" }),
+      new Blob([calendarICS(entries,new Date(),linkedTasks.flatMap(t=>t.date?[{id:t.id,title:t.title,date:t.date,done:t.done}]:[]),linkedPieces.filter(p=>p.date).map(p=>({id:p.id,title:p.title||'Mi pieza',date:p.date})))], { type: "text/calendar;charset=utf-8" }),
       "agenda-for-u.ics",
     );
   }
   return (
-    <div className="tk-stack magic-card">
+    <div className="tk-stack magic-card tk-calendar-workspace">
       {formatError && <p role="alert">{formatError}</p>}
       {pending !== null && <div><p role="status">{busy ? 'Guardando agenda…' : 'Cambios pendientes de guardar en tu cuenta.'}</p><DSButtonPrimary disabled={blocked} onClick={()=>void update(pending)}>Guardar cambios de agenda</DSButtonPrimary></div>}
       {saveError && <div role="alert"><p>{saveError}</p>{!conflict && <DSButtonSecondary disabled={busy} onClick={() => pending && void update(pending)}>Reintentar guardado</DSButtonSecondary>}<DSButtonSecondary disabled={busy} onClick={() => setRecovery(true)}>Recuperar agenda guardada</DSButtonSecondary><DSButtonSecondary onClick={() => downloadBlob(new Blob([JSON.stringify({projectId,entries},null,2)],{type:'application/json'}),'agenda-pendiente.json')}>Descargar mis cambios pendientes</DSButtonSecondary></div>}
@@ -155,7 +161,7 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
           <DSButtonSecondary onClick={() => setView(view === "week" ? "month" : "week")}>
             {view === "week" ? "Ver mes" : "Ver semana"}
           </DSButtonSecondary>
-          <DSButtonSecondary onClick={exportCalendar} disabled={!entries.length}>
+          <details className="calendar-extra-options"><summary>Opciones del calendario</summary><DSButtonSecondary onClick={exportCalendar} disabled={!entries.length&&!linkedTasks.some(task=>task.date)&&!linkedPieces.some(piece=>piece.date)}>
             Exportar agenda
           </DSButtonSecondary>
           <DSButtonSecondary
@@ -175,80 +181,33 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
           >
             Activar recordatorios
           </DSButtonSecondary>
-        </div>
         <small>
           Los avisos de FOR U funcionan con la app abierta. Importa la agenda en
           tu calendario para recibirlos cuando la cierres. La exportación es una
           copia de tu agenda; no sincroniza cambios posteriores.
-        </small>
-        <form
-          className="tk-toolbar"
+        </small></details></div>
+        <DSButtonPrimary disabled={blocked} onClick={()=>{setFormOpen(true);setFormStep(0);}}>＋ Añadir una actividad</DSButtonPrimary>
+        <EditorSheet open={formOpen} title={editing?'Editar actividad':'Un espacio para tu próximo paso'} onClose={()=>setFormOpen(false)}>
+        <form ref={formRef} className="calendar-guided-entry"
           onSubmit={async (e) => {
             e.preventDefault();
-            const form = new FormData(e.currentTarget);
-            const nextTitle = String(form.get('title') ?? '').trim();
-            const nextDate = String(form.get('date') ?? '');
-            const nextTime = String(form.get('time') ?? '');
+            if(formStep<2){setFormStep(formStep+1);return;}
+            const nextTitle=title.trim(),nextDate=date,nextTime=time;
             if (blocked || !nextTitle) return;
             try { calendarDateTime(nextDate,nextTime); } catch { setNotice('Revisa el título, la fecha y la hora.'); return; }
-            const success = await update(editing ? entries.map(entry => entry.id === editing ? { ...entry, title: nextTitle, date: nextDate, time: nextTime } : entry) : [
-                ...entries,
-                {
-                  id: crypto.randomUUID(),
-                  title: nextTitle,
-                  date: nextDate,
-                  time: nextTime,
-                  format: "contenido",
-                  done: false,
-                },
-              ]);
-              setTitle("");
-              setEditing(null);
-              if (success) track("calendar", true);
+            const id=editing||formDraftId.current||crypto.randomUUID();
+            formDraftId.current=id;
+            const success=await update(upsertCalendarActivity(entries,id,{title:nextTitle,date:nextDate,time:nextTime}));
+              if(success){formDraftId.current=null;setTitle("");setEditing(null);setFormOpen(false);setFormStep(0);track("calendar",true);}
           }}
         >
-          <label>
-            Publicación o tarea
-            <DSInput
-              required
-              name="title"
-              value={title}
-              maxLength={200}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Mostrar mi producto estrella"
-            />
-          </label>
-          <label>
-            Fecha
-            <DSInput
-              required
-              type="date"
-              name="date"
-              value={date}
-              onInput={(e) => setDate(e.currentTarget.value)}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </label>
-          <label>
-            Hora
-            <DSInput
-              required
-              type="time"
-              name="time"
-              value={time}
-              onInput={(e) => setTime(e.currentTarget.value)}
-              onChange={(e) => setTime(e.target.value)}
-            />
-          </label>
-          <DSButtonPrimary className="tk-primary" disabled={blocked}>
-            {editing ? 'Guardar actividad' : 'Agregar'}
-          </DSButtonPrimary>
-          {editing && <DSButtonSecondary type="button" onClick={() => { setEditing(null); setTitle(''); }}>Cancelar edición</DSButtonSecondary>}
-        </form>
-        <p className="tk-tip">
-          Aún no hay datos suficientes para recomendar una hora de publicación.
-          Prueba horarios y compara tus resultados.
-        </p>
+          <small>Paso {formStep+1} de 3</small>
+          {formStep===0&&<DSInput label="¿Qué quieres hacer?" required name="title" value={title} maxLength={200} onChange={e=>setTitle(e.target.value)} placeholder="Escribe una actividad" disabled={blocked}/>}
+          {formStep===1&&<DSInput label="¿Qué día le hacemos espacio?" required type="date" name="date" value={date} onInput={e=>setDate(e.currentTarget.value)} onChange={e=>setDate(e.target.value)} disabled={blocked}/>}
+          {formStep===2&&<DSInput label="¿A qué hora quieres empezar?" required type="time" name="time" value={time} onInput={e=>setTime(e.currentTarget.value)} onChange={e=>setTime(e.target.value)} disabled={blocked}/>}
+          <div className="calendar-guided-actions">{formStep>0&&<DSButtonSecondary type="button" disabled={blocked} onClick={()=>setFormStep(formStep-1)}>← Atrás</DSButtonSecondary>}<DSButtonPrimary type="submit" disabled={blocked||!title.trim()}>{busy?'Guardando…':formStep<2?'Continuar →':'Guardar actividad'}</DSButtonPrimary></div>
+          {saveError&&<p role="alert">{saveError} Tu actividad sigue aquí.</p>}
+        </form></EditorSheet>
       </DSCard>
       <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-toolbar">
@@ -308,7 +267,7 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
                     >
                       <span>{entry.time}</span>
                       <strong>{entry.title}</strong>
-                      <DSButtonSecondary disabled={blocked} onClick={() => { setEditing(entry.id); setTitle(entry.title); setDate(entry.date); setTime(entry.time); }}>Editar actividad</DSButtonSecondary>
+                      <DSButtonSecondary disabled={blocked} onClick={() => { setEditing(entry.id); setTitle(entry.title); setDate(entry.date); setTime(entry.time); formDraftId.current=null; setFormStep(0); setFormOpen(true); }}>Editar actividad</DSButtonSecondary>
                       <label className="tk-check">
                         <DSInput
                           type="checkbox"

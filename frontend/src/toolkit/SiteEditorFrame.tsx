@@ -75,9 +75,13 @@ export default function SiteEditorFrame() {
   const [imageDrop, setImageDrop] = useState(false);
   const [selected, setSelected] = useState("hero");
   const [resume,setResume]=useState<string|null>(null);
+  const [focusOffer,setFocusOffer]=useState<string|null>(null);
+
   const [hostProject,setHostProject]=useState<string>();
   const [draft, setDraft] = useState<LandingDraft | null>(null);
+
   useEffect(()=>{if(!draft||!resume)return;const target=resume==='hero'?document.querySelector('.tk-site-hero'):Array.from(document.querySelectorAll<HTMLElement>('[data-block-id]')).find(el=>el.dataset.blockId===resume);if(target){target.scrollIntoView({block:'start'});setResume(null);}},[draft,resume]);
+ useEffect(()=>{if(!draft||!focusOffer)return;const card=Array.from(document.querySelectorAll<HTMLElement>('[data-offer-id]')).find(node=>node.dataset.offerId===focusOffer);if(card){card.scrollIntoView({block:'center'});card.querySelector<HTMLButtonElement>('button')?.focus({preventScroll:true});}setFocusOffer(null);},[draft,focusOffer]);
   const channel = new URLSearchParams(window.location.search).get("channel");
   const send = (type: string, payload: object = {}) => {
     if (window.parent !== window)
@@ -97,7 +101,7 @@ export default function SiteEditorFrame() {
         return;
       const next = parseSiteData(event.data.draft);
       if (next) {
-        setDraft(next);
+        setDraft(next);if(typeof event.data.focusOfferId==='string'&&next.offers?.some(offer=>offer.id===event.data.focusOfferId))setFocusOffer(event.data.focusOfferId);
         setHostProject(typeof event.data.projectId==='string'&&/^[0-9a-f-]{36}$/i.test(event.data.projectId)?event.data.projectId:undefined);
         const id = event.data.selectedId;
         if (id === 'hero' || next.blocks.some(block => block.id === id)){setSelected(id);if(event.data.resumeSelection===true)setResume(id);}
@@ -143,7 +147,7 @@ export default function SiteEditorFrame() {
       </Card>
       {draft.blocks.map((block, index) => (<div key={block.id} className="pe-section-slot">
         <button type="button" className="pe-insert-section" onClick={()=>send('foru:sections',{beforeId:block.id})}>＋ Sección</button>
-        <Card as="section" key={block.id} data-block-id={block.id} className={`tk-site-block page-section-${sectionKind(block)||'details'} pe-editable-section ${selected === block.id ? 'pe-selected' : ''} ${dropTarget === block.id ? 'pe-drop-target' : ''}`} onClick={() => { setSelected(block.id); send('foru:select', { id: block.id }); }} onFocus={() => { setSelected(block.id); send('foru:select', { id: block.id }); }} onDragOver={event => { event.preventDefault(); setDropTarget(block.id); }} onDragLeave={() => setDropTarget(null)} onDrop={event => { setDropTarget(null); if (!drag.current) return; event.preventDefault(); event.stopPropagation(); send('foru:move', { from: drag.current, to: block.id }); drag.current = null; }}>
+        <Card as="section" key={block.id} data-block-id={block.id} className={`tk-site-block page-section-${sectionKind(block)||'details'} pe-editable-section ${selected === block.id ? 'pe-selected' : ''} ${dropTarget === block.id ? 'pe-drop-target' : ''}`} onClick={() => { setSelected(block.id); send('foru:select', { id: block.id }); }} onFocus={event => { setSelected(block.id); const offerId=(event.target as HTMLElement).closest<HTMLElement>('[data-offer-id]')?.dataset.offerId; send('foru:select', { id: block.id, ...(offerId?{offerId}:{}) }); }} onDragOver={event => { event.preventDefault(); setDropTarget(block.id); }} onDragLeave={() => setDropTarget(null)} onDrop={event => { setDropTarget(null); if (!drag.current) return; event.preventDefault(); event.stopPropagation(); send('foru:move', { from: drag.current, to: block.id }); drag.current = null; }}>
           <div className="pe-block-controls" contentEditable={false}>
             <ButtonGhost type="button" draggable aria-label={`Arrastrar ${block.title}`} tooltip="Arrastra para mover esta sección. También puedes usar los botones Subir y Bajar." onDragStart={event => { drag.current = block.id; event.dataTransfer.setData('text/plain', block.id); event.dataTransfer.effectAllowed = 'move'; }} onDragEnd={() => { drag.current = null; setDropTarget(null); }}><GripVertical size={18} aria-hidden="true"/></ButtonGhost>
             <ButtonGhost type="button" aria-label={`Subir ${block.title}`} disabled={index === 0} onClick={() => send('foru:move', { from: block.id, to: draft.blocks[index - 1].id })}><ArrowUp size={18} aria-hidden="true"/></ButtonGhost>
@@ -157,10 +161,11 @@ export default function SiteEditorFrame() {
             onEdit={edit}
           />
           {draft.presentationVersion===4&&!sectionConfigured(block,draft)?<EmptyPageSection kind={sectionKind(block)} layout={sectionLayout(block)} route={draft.template} onConfigure={()=>send('foru:configure',{id:block.id,kind:sectionKind(block)==='catalog'?'catalog':'text'})}/>: [3,4].includes(draft.presentationVersion||1)&&sectionKind(block)==='catalog'?<>
-            <SectionComposition block={block} draft={draft} onEditOffer={id=>send('foru:context',{target:'offer',id})}/>
+            <SectionComposition block={block} draft={draft} onEditOffer={id=>send('foru:context',{target:'offer',id,sectionId:block.id})}/>
+            {(['module','proposal'].includes(draft.catalogSource||'')||draft.offers?.some(offer=>!offer.id.includes(':')))&&<button type="button" className="pe-action-link" onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'catalog'});}}>{draft.template==='restaurant'?'＋ Añadir producto':'＋ Añadir oferta'}</button>}
             {!draft.offers?.length&&<div className="page-section-setup"><span aria-hidden="true">＋</span><p>{sectionHint('catalog',draft.template)}</p><button type="button" onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'catalog'});}}>Preparar mi catálogo →</button></div>}
           </>:<>
-            {([3,4].includes(draft.presentationVersion||1)&&sectionKind(block)==='faq'||draft.presentationVersion===4&&sectionLayout(block)!=='prose')&&block.body.trim()?<><div onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'text'});}}><SectionComposition block={block} draft={draft}/></div><button className="pe-action-link" type="button" onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'text'});}}>{sectionKind(block)==='faq'?'Editar preguntas y respuestas':sectionLayout(block)==='steps'?'Editar pasos':sectionLayout(block)==='quotes'?'Editar testimonios':'Editar elementos'}</button></>:<Editable value={block.body} field="body" blockId={block.id} tag="p" onEdit={edit}/>}
+            {([3,4].includes(draft.presentationVersion||1)&&(sectionKind(block)==='faq'||sectionKind(block)==='location'&&Boolean(block.contact))||draft.presentationVersion===4&&sectionLayout(block)!=='prose')&&(block.body.trim()||block.contact?.mapUrl)?<><div onClick={event=>{event.stopPropagation();if(sectionKind(block)==='location')event.preventDefault();send('foru:configure',{id:block.id,kind:'text'});}}><SectionComposition block={block} draft={draft}/></div><button className="pe-action-link" type="button" onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'text'});}}>{sectionKind(block)==='location'?'Editar ubicación y horario':sectionKind(block)==='faq'?'Editar preguntas y respuestas':sectionLayout(block)==='steps'?'Editar pasos':sectionLayout(block)==='quotes'?'Editar testimonios':'Editar elementos'}</button></>:<Editable value={block.body} field="body" blockId={block.id} tag="p" onEdit={edit}/>}
             {[3,4].includes(draft.presentationVersion||1)&&!block.body.trim()&&<p className="page-section-hint">{sectionHint(sectionKind(block),draft.template)}</p>}
           </>}
         </Card></div>

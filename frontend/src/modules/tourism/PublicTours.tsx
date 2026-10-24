@@ -47,7 +47,7 @@ export default function PublicTours({ site, slug, revision, api = bookingApi }: 
     <header><h1>{site.settings.name}</h1><p>{site.settings.about}</p><p>Horarios de {site.settings.timeZone.replaceAll('_', ' ')}.</p></header>
     <div className="tour-grid">{site.tours.map(item => <DSCard as="article" className="tour-card" key={item.id}>
       <ProjectImage value={item.image} alt={item.name} /><h2>{item.name}</h2><p>{item.description}</p><p>{item.durationMinutes} minutos · S/ {item.price.toFixed(2)} por persona</p>
-      <ol>{item.itinerary.map(stop => <li key={stop.id}><strong>{stop.title}</strong><p>{stop.description}</p></li>)}</ol><p>Punto de encuentro: {item.meetingPoint}</p><a href={tourMapUrl(item)} target="_blank" rel="noopener noreferrer">Ver punto en el mapa</a>
+      <ol>{item.itinerary.map(stop => <li key={stop.id}><strong>{stop.title}</strong><p>{stop.description}</p></li>)}</ol>{item.meetingPoint&&<p>Punto de encuentro: {item.meetingPoint}</p>}{tourMapUrl(item)&&<a href={tourMapUrl(item)!} target="_blank" rel="noopener noreferrer">Ver punto en el mapa</a>}
       <DSButtonSecondary type="button" disabled={busy} aria-expanded={selectedTour === item.id} onClick={() => { setSelectedTour(item.id); setRequest(null); setReceipt(null); setNotice(''); }}>Ver salidas de {item.name}</DSButtonSecondary>
     </DSCard>)}</div>
     {selectedTour && <DSCard as="section" className="tour-card"><h2>Salidas disponibles</h2><p role="status">{loading ? 'Consultando plazas…' : availabilityError}</p><DSButtonSecondary disabled={busy} type="button" onClick={() => setAttempt(value => value + 1)}>Actualizar salidas</DSButtonSecondary>

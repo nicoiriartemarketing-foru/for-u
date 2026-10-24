@@ -3,7 +3,7 @@ import './workspaceHome.css';
 import {useState} from 'react';
 import { Link } from 'react-router-dom';
 import { ButtonSecondary as Button } from '../../components/ui/DesignSystem';
-import type { ForUActiveProject } from '../../stores/useActiveProjectsStore';
+import {useActiveProjectsStore,type ForUActiveProject} from '../../stores/useActiveProjectsStore';
 import { moduleLabels, projectModuleType } from '../../modules/moduleProjects';
 import { areaDefinitions } from './areaModel';
 import { useAreaDocuments } from './AreaDocuments';
@@ -23,11 +23,13 @@ export function FocusStatus() {
 export default function WorkspaceHome({ projects }: { projects: ForUActiveProject[] }) {
   const { state } = useWorkspaceFocus();
   const [all,setAll]=useState(false),[search,setSearch]=useState('');
-  const visible=projects.filter(p=>p.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
+  const activeProject=useActiveProjectsStore(store=>store.activeProjectId);
+  const recent=[...projects].sort((a,b)=>Number(b.id===activeProject)-Number(a.id===activeProject)||(Date.parse(b.updatedAt||b.createdAt)-Date.parse(a.updatedAt||a.createdAt)||0));
+  const visible=recent.filter(p=>p.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   return <div className="foru-home">
-    <section className="workspace-projects" aria-labelledby="projects-heading"><header><div><h2 id="projects-heading">Elige tu proyecto</h2><p>Retoma donde lo dejaste.</p></div></header>{all&&<input className="home-project-search" aria-label="Buscar entre mis proyectos" placeholder="Busca tu proyecto…" value={search} onChange={e=>setSearch(e.target.value)}/>}<div className="workspace-project-grid">{(all?visible:visible.slice(0,3)).map(project => <ProjectCard key={project.id} project={project} />)}</div>{projects.length>3&&<Button className="home-see-all" onClick={()=>{setAll(!all);setSearch('');}}>{all?'Mostrar menos':`Ver mis ${projects.length} proyectos`}</Button>}{all&&!visible.length&&<p>No encontramos un proyecto con ese nombre.</p>}</section>
+    <section className="workspace-projects" aria-labelledby="projects-heading"><header><div><h2 id="projects-heading">Mis proyectos</h2></div></header>{all&&<input className="home-project-search" aria-label="Buscar entre mis proyectos" placeholder="Busca tu proyecto…" value={search} onChange={e=>setSearch(e.target.value)}/>}<div className="workspace-project-grid">{(all?visible:visible.slice(0,3)).map(project => <ProjectCard key={project.id} project={project} />)}</div>{projects.length>3&&<Button className="home-see-all" onClick={()=>{setAll(!all);setSearch('');}}>{all?'Mostrar menos':`Ver mis ${projects.length} proyectos`}</Button>}{all&&!visible.length&&<p>No encontramos un proyecto con ese nombre.</p>}</section>
     <details className="workspace-today home-today-fold"><summary><span>Mis prioridades de hoy</span><span>{state.data.today.length}/3 <span aria-hidden="true">⌄</span></span></summary><div className="home-today-content">
-      
+
       <p className="home-today-help">Hasta tres pasos que tú eliges. Lo demás puede esperar.</p>
       {!state.loaded ? <p role="status">{state.error ? 'Tu enfoque no está disponible. Puedes continuar con tus proyectos.' : 'Cargando tu enfoque…'}</p> : <>
         {!state.data.today.length && <p className="focus-empty">Aún no elegiste pasos. Puedes seleccionarlos aquí o desde un área.</p>}
@@ -47,8 +49,9 @@ function ProjectCard({ project }: { project: ForUActiveProject }) {
   const { state, remember } = useWorkspaceFocus();
   const last = projectDestination(state.data, project.id);
   const saved = entry?.loaded && entry.taskRevision !== null;
-  const icon={restaurant:'☕',ecommerce:'◈',tourism:'⌁',hospitality:'⌂',courses:'✎'}[type];
-  return <article className={`workspace-project-card home-project-${type}`}><div className="home-project-heading"><span className="home-project-symbol" aria-hidden="true">{icon}</span><small>{moduleLabels[type]}</small></div><h3>{project.name}</h3><p>{entry?.error ? 'Tu progreso no se pudo consultar.' : saved ? `${entry.tasks.tasks.filter(t => t.done).length} de ${entry.tasks.tasks.length} pasos${entry.dirty ? ' · cambios pendientes' : ''}` : entry?.loaded ? 'Un espacio por descubrir' : 'Cargando tu avance…'}</p><nav aria-label={`Acciones de ${project.name}`}><Link className="home-project-open" to={resumePath(last,type)} onClick={()=>remember(last)}>Abrir proyecto <span aria-hidden="true">→</span></Link></nav></article>;
+  const services=project.strategyProfile?.businessRoute==='services';
+  const icon=services?'✦':{restaurant:'☕',ecommerce:'◈',tourism:'⌁',hospitality:'⌂',courses:'✎'}[type];
+  return <article className={`workspace-project-card home-project-${type}`}><div className="home-project-heading"><span className="home-project-symbol" aria-hidden="true">{icon}</span><small>{services?'Servicios y ofertas mixtas':moduleLabels[type]}</small></div><h3>{project.name}</h3><p>{entry?.error ? 'Tu progreso no se pudo consultar.' : saved ? `${entry.tasks.tasks.filter(t => t.done).length} de ${entry.tasks.tasks.length} pasos${entry.dirty ? ' · cambios pendientes' : ''}` : entry?.loaded ? 'Un espacio por descubrir' : 'Cargando tu avance…'}</p><nav aria-label={`Acciones de ${project.name}`}><Link className="home-project-open" to={resumePath(last,type)} onClick={()=>remember(last)}>Abrir proyecto <span aria-hidden="true">→</span></Link></nav></article>;
 }
 function UnavailableTask({ reference, title = 'Este paso ya no está disponible o pertenece a un proyecto que no se pudo cargar.' }: { reference: TaskReference; title?: string }) {
   const { state, toggle } = useWorkspaceFocus();

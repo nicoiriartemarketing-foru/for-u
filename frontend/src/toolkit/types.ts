@@ -47,7 +47,7 @@ export type CalendarEntry = {
   done: boolean;
   remindedAt?: string;
 };
-export type LandingBlock = { useModuleDetails?:boolean; kind?:import('./sectionComposition').SectionKind; id: string; title: string; body: string };
+export type LandingBlock = { contact?:import('./locationSection').LocationDetails; useModuleDetails?:boolean; kind?:import('./sectionComposition').SectionKind; id: string; title: string; body: string };
 export type LandingDraft = {
   aiProvenance?: import('../ai/sourceContext').AIProvenance;
   presentationVersion?: import('../presentation/model').PresentationVersion;

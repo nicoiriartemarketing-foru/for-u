@@ -42,3 +42,12 @@ En QA Cursos MVP se bajó «Lo que ofrecemos», se observó «Borrador guardado�
 - Marketing ofrece ahora «Editar mi página» directamente; se comprobó la llegada al editor en dos clics desde el tablero. «Diseñar para redes» distingue el creador gráfico del editor de páginas.
 - Los campos de los cinco editores recibieron ayudas específicas. Se añadió Select al sistema de diseño y se aplicó a plantilla, tipo de lección, respuesta correcta y zona horaria. Quedan controles y pantallas por auditar; no supone migración completa de toda la aplicación.
 - TypeScript, build Vite 4 y 82 pruebas pasan en el entorno local de validación con Node 20.
+
+
+## Comparación renovada con INTI CHURIN —24 octubre2026
+
+Inspección actual solo de lectura, no prueba visual ni modificación: admin.html; assets/js/admin.js (openUploadsForPath y estado/historial); assets/js/app.js (makeInlineEditable y tarjetas de experiencia); assets/css/experience-editor.css. El proyecto local confirmado por el registro es /Users/nicoleiriartegomez/Documents/INTI CHURIN/inti-churin-web.
+
+La referencia no es solo un formulario de tours: presenta una experiencia con portada, imagen/galería, contenido y detalles dentro de una superficie dedicada; dispone de barra compacta y selección directa. La biblioteca se abre para una imagen concreta y cambia su contexto al cambiar de destino. Textos multilínea usan innerText, y los controles de imagen/selección se diferencian. FOR U conserva su puente cerrado por origen/ventana/canal/IDs, sin trasladar mensajes con destino* o rutas arbitrarias de la referencia.
+
+Aplicación actual en FOR U: edición directa del resultado, biblioteca por campo con MediaScope, historial y paneles contextuales; las ofertas nativas ahora pueden editarse desde la página y las nuevas pueden prepararse pregunta por pregunta. Diferencia pendiente importante: la tarjeta turística genérica todavía no ofrece una presentación detallada de experiencia equiparable a portada/galería/itinerario de INTI. Esa comparación sigue abierta; no declarar equivalencia visual por pasar tests ni por añadir solo duración/precio. Debe resolverse reutilizando itinerarios/recursos confirmados del catálogo propio, sin copiar ofertas, ubicaciones, precios, imágenes o textos de INTI.

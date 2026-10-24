@@ -23,9 +23,20 @@ export async function saveComposition(user:string,project:string,draft:ContentDr
  if(reference?.kind==='offer')throw new Error('Esta fuente necesita abrirse desde su oferta antes de crear.');
  const kind:ModuleDocumentKind|undefined=reference?.kind==='catalog'?reference.id.split(':')[0] as ModuleDocumentKind:reference?.kind==='page'?'landing':reference?.kind==='proposal'?'proposal':undefined;
  if(reference?.kind==='catalog'&&!['restaurant','ecommerce','tourism','hospitality','courses'].includes(String(kind)))throw new Error('La fuente del catálogo no es válida.');
- const [designs,profile,campaigns,source]=await Promise.all([storage.load(user,project,'content-creator'),storage.load(user,project,'social-profile'),draft.creative?.campaignId?storage.load(user,project,'campaigns'):null,kind?storage.load(user,project,kind):null]);
+ const origin=draft.creative?.origin;
+ const [designs,profile,campaigns,source,originPage]=await Promise.all([storage.load(user,project,'content-creator'),storage.load(user,project,'social-profile'),draft.creative?.campaignId?storage.load(user,project,'campaigns'):null,kind?storage.load(user,project,kind):null,origin?.pageRevision&&kind!=='landing'?storage.load(user,project,'landing'):null]);
  if(kind&&source?.revision!==reference?.revision)throw new Error('La información cambió. Vuelve a preparar las propuestas; tus diseños guardados siguen intactos.');
  if(reference&&source){const valid=reference.kind==='catalog'?nativeOffers(kind as ModuleType,source.payload).some(o=>o.id===reference.id):reference.kind==='page'?pageSections(source.payload as LandingDraft).some(s=>s.id===reference.id):reference.kind==='proposal'?(reference.id==='proposal'||parseProposal(source.payload).offers.some(o=>o.id===reference.id)):false;if(!valid)throw new Error('La fuente ya no está disponible. Vuelve a elegirla sin cambiar tus diseños guardados.');}
+ if(origin?.pageRevision){
+  const snapshot=kind==='landing'?source:originPage,page=snapshot?.payload as LandingDraft|undefined;
+  if(snapshot?.revision!==origin.pageRevision||!page||origin.sectionId!=='hero'&&!page.blocks.some(block=>block.id===origin.sectionId))throw new Error('La página de origen cambió. Vuelve a preparar las propuestas; no se sobrescribió ningún diseño.');
+  if(origin.offerId&&!page.offers?.some(offer=>offer.id===origin.offerId)){
+   let linked=page.catalogSource==='module'&&reference?.kind==='catalog'&&reference.id===origin.offerId;
+   if(page.catalogSource==='proposal'){const proposalSource=kind==='proposal'?source:await storage.load(user,project,'proposal');if(proposalSource){const proposal=parseProposal(proposalSource.payload);linked=proposal.nativeIds.includes(origin.offerId)||proposal.offers.some(offer=>offer.id===origin.offerId);}}
+   if(!linked)throw new Error('Esta oferta ya no aparece en la página de origen. Revisa tu selección.');
+  }
+ }
+
  const campaignDoc=campaigns?parseCampaigns(campaigns.payload,project):emptyCampaigns(project);
  if(draft.creative?.campaignId&&!campaignDoc.campaigns.some(row=>row.id===draft.creative!.campaignId))throw new Error('La campaña no está disponible. Vuelve a elegirla.');
  const next=saveContentDraft(contentDocument(designs?.payload,project),draft,project);

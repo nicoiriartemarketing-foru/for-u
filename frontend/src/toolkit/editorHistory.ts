@@ -1,6 +1,7 @@
 export type EditorHistory<T> = { past: T[]; present: T; future: T[] };
-export type EditorAction<T> = { type: 'edit'; value: T | ((current: T) => T) } | { type: 'undo' } | { type: 'redo' };
+export type EditorAction<T> = { type: 'edit'; value: T | ((current: T) => T) } | { type: 'undo' } | { type: 'redo' } | { type:'sync'; value:(current:T)=>T };
 export function editorHistory<T>(state: EditorHistory<T>, action: EditorAction<T>): EditorHistory<T> {
+  if(action.type==='sync')return {past:state.past.map(action.value),present:action.value(state.present),future:state.future.map(action.value)};
   if (action.type === 'undo') {
     if (!state.past.length) return state;
     return { past: state.past.slice(0, -1), present: state.past[state.past.length - 1], future: [state.present, ...state.future] };

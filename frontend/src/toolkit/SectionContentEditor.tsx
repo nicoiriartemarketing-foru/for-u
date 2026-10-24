@@ -1,3 +1,4 @@
+import LocationSectionEditor from './LocationSectionEditor';
 import {useState} from 'react';
 import {ButtonPrimary,ButtonSecondary,Input,Textarea} from '../components/ui/DesignSystem';
 import FaqSectionEditor from './FaqSectionEditor';
@@ -5,11 +6,11 @@ import {sectionKind,sectionLayout} from './sectionComposition';
 import type {LandingBlock} from './types';
 
 /** Keep the historical body string; edit one item/question, with no copied document. */
-export default function SectionContentEditor({block,disabled,onChange}:{block:LandingBlock;disabled:boolean;onChange:(body:string)=>void}){
+export default function SectionContentEditor({block,disabled,onChange,onContactChange,onPending}:{block:LandingBlock;disabled:boolean;onChange:(body:string)=>void;onContactChange?:(next:LandingBlock)=>void;onPending?:(value:boolean)=>void}){
  const [error,setError]=useState('');
  const kind=sectionKind(block),layout=sectionLayout(block);
  function commit(body:string){if(body.length>2000){setError('Esta sección admite hasta 2000 caracteres. Acorta un elemento para continuar.');return;}setError('');onChange(body);}
- return <>{kind==='faq'?<FaqSectionEditor body={block.body} disabled={disabled} onChange={commit}/>:layout!=='prose'?<ListContent key={block.id} body={block.body} disabled={disabled} layout={layout} onChange={commit}/>:<Textarea label={kind==='story'?'¿Cómo empezó tu negocio?':kind==='location'?'¿Dónde y cuándo pueden encontrarte?':'¿Qué quieres contar aquí?'} value={block.body} disabled={disabled} maxLength={2000} onChange={event=>commit(event.target.value)}/>} {error&&<p role="alert">{error}</p>}</>;
+ return <>{kind==='location'&&onContactChange?<LocationSectionEditor block={block} disabled={disabled} onChange={onContactChange} onPending={onPending}/>:kind==='faq'?<FaqSectionEditor body={block.body} disabled={disabled} onChange={commit}/>:layout!=='prose'?<ListContent key={block.id} body={block.body} disabled={disabled} layout={layout} onChange={commit}/>:<Textarea label={kind==='story'?'¿Cómo empezó tu negocio?':kind==='location'?'¿Dónde y cuándo pueden encontrarte?':'¿Qué quieres contar aquí?'} value={block.body} disabled={disabled} maxLength={2000} onChange={event=>commit(event.target.value)}/>} {error&&<p role="alert">{error}</p>}</>;
 }
 function ListContent({body,disabled,layout,onChange}:{body:string;disabled:boolean;layout:'steps'|'features'|'quotes';onChange:(body:string)=>void}){
  const rows=body?body.split(/\r?\n/):[];
