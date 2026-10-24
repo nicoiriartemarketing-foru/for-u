@@ -1,3 +1,4 @@
+import ExperienceDetail from './ExperienceDetail';
 import type {LandingBlock,LandingDraft} from './types';
 import {offerPrice} from '../proposal/model';
 import {faqRows,sectionKind,sectionLayout,compositionRows} from './sectionComposition';
@@ -5,6 +6,7 @@ export function CatalogCards({draft,onEditOffer}:{draft:LandingDraft;onEditOffer
  return <div className="tk-public-offers">{draft.offers?.map(offer=><article key={offer.id} data-offer-id={offer.id}>
   {offer.image?<img src={offer.image} alt={offer.name} loading="lazy"/>:<span className="page-offer-symbol" aria-hidden="true">{({restaurant:'◒',ecommerce:'◇',hospitality:'⌂',tourism:'↗',courses:'▤'} as Record<string,string>)[draft.template]||'✦'}</span>}
   <h3>{offer.name}</h3>{offer.description&&<p>{offer.description}</p>}
+  {offer.experience&&<ExperienceDetail value={offer.experience}/>}
   {offer.conditions&&<p className="page-offer-conditions">{offer.conditions}</p>}
   {!!offer.variants?.length&&<details><summary>Presentaciones</summary><ul>{offer.variants.map(v=><li key={v.id}>{v.name} · S/ {v.price.toFixed(2)}</li>)}</ul></details>}
   {!!offer.extras?.length&&<details><summary>Extras</summary><ul>{offer.extras.map(v=><li key={v.id}>{v.name} · +S/ {v.price.toFixed(2)}</li>)}</ul></details>}

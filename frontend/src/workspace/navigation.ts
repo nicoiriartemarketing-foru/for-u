@@ -32,3 +32,6 @@ export function workspaceSpaces(projectId:string,type:ModuleType){
 }
 
 export function destinationMatchesRoute(destination:ProjectDestination,type:ModuleType):boolean{const match=destination.path.match(/^\/modules\/([^/]+)/);return !match||match[1]===type;}
+
+/** Opening a project is predictable; resuming a tool is an explicit separate action. */
+export function projectStartPath(projectId:string){return destinationPath(projectId,{path:'/dashboard',params:{view:'start'}});}

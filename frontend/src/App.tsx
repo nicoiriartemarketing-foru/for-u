@@ -105,7 +105,7 @@ function PrivateWorkspace({ children }: { children: ReactNode }) {
   }
 
   const commonShell = location.pathname.startsWith('/dashboard') || location.pathname === '/creator-studio' || location.pathname === '/content-creator' || location.pathname.startsWith('/modules/');
-  return session ? <>{commonShell ? <WorkspaceShell>{children}</WorkspaceShell> : children}<FloatingPomodoro /><ForUCompanion /></> : <Navigate to={`/login?next=${encodeURIComponent(nextPath)}`} replace />;
+  return session ? <>{commonShell ? <WorkspaceShell>{children}</WorkspaceShell> : children}<div className="workspace-utilities"><FloatingPomodoro /><ForUCompanion /></div></> : <Navigate to={`/login?next=${encodeURIComponent(nextPath)}`} replace />;
 }
 
 function ExperienceSurface({children}:{children:ReactNode}) {

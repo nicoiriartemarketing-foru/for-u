@@ -1,3 +1,5 @@
+import ItineraryEditor from './ItineraryEditor';
+import type {ExperienceDetails} from '../proposal/experienceDetails';
 import {useEffect,useRef,useState} from 'react';
 import {ButtonPrimary,Input,Textarea} from '../components/ui/DesignSystem';
 import ProjectImageField from '../components/shared/ProjectImageField';
@@ -27,6 +29,7 @@ function Session({type,initial,onSaved,onPending}:{type:NativeEditableType;initi
  {id:'capacity',title:'Su capacidad',hint:'No podrá ser menor a la cantidad de huéspedes de una reserva activa.',icon:'◌',content:<Input label="Capacidad de la habitación" type="number" min="1" step="1" value={number('capacity')} onChange={event=>change('capacity',event.target.valueAsNumber)}/>},
  {id:'type',title:'Tipo de habitación',hint:'Conserva la descripción de tu catálogo original.',icon:'⌂',content:<Input label="Tipo de habitación" maxLength={100} value={text('type')} onChange={event=>change('type',event.target.value)}/>}
  ]:type==='tourism'?[
+ {id:'itinerary',title:'El recorrido',hint:'Edita y ordena las paradas de esta experiencia, una por vez.',icon:'↗',content:<ItineraryEditor value={item.itinerary as ExperienceDetails['itinerary']} onChange={next=>change('itinerary',next)}/>},
  {id:'duration',title:'Su duración',hint:'Las salidas y los horarios del guía se comprobarán antes de guardar.',icon:'◷',content:<Input label="Duración en minutos" type="number" min="1" step="1" value={number('durationMinutes')} onChange={event=>change('durationMinutes',event.target.valueAsNumber)}/>},
  {id:'meeting',title:'Punto de encuentro',hint:'Cambia las indicaciones escritas; se conservan las coordenadas confirmadas.',icon:'⌖',content:<Input label="Punto de encuentro" maxLength={500} value={text('meetingPoint')} onChange={event=>change('meetingPoint',event.target.value)}/>}
  ]:[];
@@ -35,5 +38,5 @@ function Session({type,initial,onSaved,onPending}:{type:NativeEditableType;initi
  {id:'price',title:'Su precio confirmado',hint:'En soles. Escribe cero únicamente si confirmas que no tiene costo.',icon:'S/',content:<Input label={label.price} type="number" min="0" max="1000000" step="0.01" value={number('price')} onChange={event=>change('price',event.target.valueAsNumber)}/>},
  {id:'description',title:type==='hospitality'?'Qué incluye':'Qué lo hace especial',hint:type==='hospitality'?'Una comodidad confirmada por línea. No se modifica el estado de limpieza.':'Describe lo que recibe tu cliente. El resto de la operación se conserva.',icon:'≋',content:description},
  {id:'photo',title:'Su imagen',hint:'Puedes empezar sin foto o elegirla de tu biblioteca.',icon:'▧',content:<ProjectImageField label={label.image} value={text(type==='courses'?'cover':'image')} onChange={image=>change(type==='courses'?'cover':'image',image)}/>},
- ...(options.length?[{id:'details',title:type==='ecommerce'?'Categoría, stock y condiciones':type==='hospitality'?'Tipo y capacidad':'Duración y encuentro',hint:'Abre solo el detalle que necesitas ajustar.',icon:'＋',content:<EditorDecision choices={options}/>}]:[])]}/></fieldset>{type==='courses'&&<p className="pe-catalog-note">Módulos, lecciones, materiales e inscripciones se conservan. Esta edición no activa un aula ni concede accesos.</p>}{error&&<p role="alert">{error}</p>}<ButtonPrimary disabled={busy||!dirty} onClick={()=>void store()}>{busy?'Guardando…':`Guardar ${label.name.toLowerCase()}`}</ButtonPrimary></section>;
+ ...(options.length?[{id:'details',title:type==='ecommerce'?'Categoría, stock y condiciones':type==='hospitality'?'Tipo y capacidad':'Recorrido, duración y encuentro',hint:'Abre solo el detalle que necesitas ajustar.',icon:'＋',content:<EditorDecision choices={options}/>}]:[])]}/></fieldset>{type==='courses'&&<p className="pe-catalog-note">Módulos, lecciones, materiales e inscripciones se conservan. Esta edición no activa un aula ni concede accesos.</p>}{error&&<p role="alert">{error}</p>}<ButtonPrimary disabled={busy||!dirty} onClick={()=>void store()}>{busy?'Guardando…':`Guardar ${label.name.toLowerCase()}`}</ButtonPrimary></section>;
 }

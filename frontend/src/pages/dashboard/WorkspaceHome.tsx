@@ -1,3 +1,4 @@
+import {projectStartPath} from '../../workspace/navigation';
 import '../../toolkit/professionalEditor.css';
 import './workspaceHome.css';
 import {useState} from 'react';
@@ -13,11 +14,12 @@ import { projectDestination, taskDestination, resumePath, sameTask, type TaskRef
 export function FocusStatus() {
   const { state, save, reload } = useWorkspaceFocus();
   if ((!state.loaded && !state.error)||(!state.dirty&&!state.busy&&!state.error)) return null;
-  return <div className="focus-status" role={state.error ? 'alert' : 'status'}>
+  if(state.busy&&!state.error)return null;
+  return <details className="focus-status-compact"><summary>{state.error?'Un cambio de enfoque necesita revisión':'Tu enfoque tiene cambios pendientes'}</summary><div role={state.error ? 'alert' : 'status'}>
     <span>{state.error || (state.busy ? 'Guardando enfoque…' : state.dirty ? 'Tu enfoque tiene cambios sin guardar.' : state.revision ? 'Enfoque guardado en tu cuenta.' : 'Elige hasta tres pasos para Hoy.')}</span>
     {state.loaded && state.dirty && <Button disabled={state.busy||state.conflict} onClick={() => void save()}>Guardar enfoque</Button>}
     {state.error && <Button disabled={state.busy} onClick={() => { if (!state.dirty || window.confirm('Recargar recuperará el enfoque guardado y descartará estos cambios de enfoque. ¿Continuar?')) void reload(true); }}>Recargar enfoque</Button>}
-  </div>;
+  </div></details>;
 }
 
 export default function WorkspaceHome({ projects }: { projects: ForUActiveProject[] }) {
@@ -46,12 +48,10 @@ export default function WorkspaceHome({ projects }: { projects: ForUActiveProjec
 function ProjectCard({ project }: { project: ForUActiveProject }) {
   const type = projectModuleType(project)!;
   const { entry } = useAreaDocuments(project.id, type);
-  const { state, remember } = useWorkspaceFocus();
-  const last = projectDestination(state.data, project.id);
   const saved = entry?.loaded && entry.taskRevision !== null;
   const services=project.strategyProfile?.businessRoute==='services';
   const icon=services?'✦':{restaurant:'☕',ecommerce:'◈',tourism:'⌁',hospitality:'⌂',courses:'✎'}[type];
-  return <article className={`workspace-project-card home-project-${type}`}><div className="home-project-heading"><span className="home-project-symbol" aria-hidden="true">{icon}</span><small>{services?'Servicios y ofertas mixtas':moduleLabels[type]}</small></div><h3>{project.name}</h3><p>{entry?.error ? 'Tu progreso no se pudo consultar.' : saved ? `${entry.tasks.tasks.filter(t => t.done).length} de ${entry.tasks.tasks.length} pasos${entry.dirty ? ' · cambios pendientes' : ''}` : entry?.loaded ? 'Un espacio por descubrir' : 'Cargando tu avance…'}</p><nav aria-label={`Acciones de ${project.name}`}><Link className="home-project-open" to={resumePath(last,type)} onClick={()=>remember(last)}>Abrir proyecto <span aria-hidden="true">→</span></Link></nav></article>;
+  return <article className={`workspace-project-card home-project-${type}`}><div className="home-project-heading"><span className="home-project-symbol" aria-hidden="true">{icon}</span><small>{services?'Servicios y ofertas mixtas':moduleLabels[type]}</small></div><h3>{project.name}</h3><p>{entry?.error ? 'Tu progreso no se pudo consultar.' : saved ? `${entry.tasks.tasks.filter(t => t.done).length} de ${entry.tasks.tasks.length} pasos${entry.dirty ? ' · cambios pendientes' : ''}` : entry?.loaded ? 'Un espacio por descubrir' : 'Cargando tu avance…'}</p><nav aria-label={`Acciones de ${project.name}`}><Link className="home-project-open" to={projectStartPath(project.id)}>Abrir proyecto <span aria-hidden="true">→</span></Link></nav></article>;
 }
 function UnavailableTask({ reference, title = 'Este paso ya no está disponible o pertenece a un proyecto que no se pudo cargar.' }: { reference: TaskReference; title?: string }) {
   const { state, toggle } = useWorkspaceFocus();

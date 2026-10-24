@@ -1,3 +1,4 @@
+import {experienceDetails} from '../proposal/experienceDetails';
 import {nativeOffers,publicOffer} from '../proposal/model';
 import {emptyEcommerce,saveProduct,type EcommerceData,type Product} from '../modules/ecommerce/model';
 import {emptyHospitality,saveRoom,type HospitalityData,type Room} from '../modules/hospitality/model';
@@ -8,7 +9,7 @@ export type NativeEditableData=EcommerceData|HospitalityData|TourismData|Courses
 export const editableNativeTypes:NativeEditableType[]=['ecommerce','hospitality','tourism','courses'];
 const collection={ecommerce:'products',hospitality:'rooms',tourism:'tours',courses:'courses'} as const;
 const arrays={ecommerce:['products','orders'],hospitality:['rooms','bookings','finances','sections'],tourism:['tours','guides','departures','bookings'],courses:['courses','enrollments','sales','certificates']} as const;
-const fields:Record<NativeEditableType,string[]>={ecommerce:['name','price','description','image','conditions','category','stock'],hospitality:['name','price','image','type','capacity','amenities'],tourism:['name','price','description','image','durationMinutes','meetingPoint'],courses:['name','price','description','cover']};
+const fields:Record<NativeEditableType,string[]>={ecommerce:['name','price','description','image','conditions','category','stock'],hospitality:['name','price','image','type','capacity','amenities'],tourism:['name','price','description','image','durationMinutes','meetingPoint','itinerary'],courses:['name','price','description','cover']};
 export function readNativeEditable(type:NativeEditableType,payload:unknown):NativeEditableData{
  if(!editableNativeTypes.includes(type)||!payload||typeof payload!=='object'||Array.isArray(payload))throw new Error('No pudimos leer el catálogo de este proyecto. Conservamos tu página.');
  const data=payload as Record<string,unknown>;
@@ -30,6 +31,7 @@ export function prepareNativeOfferEdit(type:NativeEditableType,payload:unknown,i
  if(Object.keys(patch).some(key=>!fields[type].includes(key)))throw new Error('Ese ajuste no corresponde a esta oferta.');
  for(const [key,value] of Object.entries(patch)){
   if(['price','stock','capacity','durationMinutes'].includes(key)){if(typeof value!=='number'||!Number.isFinite(value)||value<0||value>1000000)throw new Error('Confirma un valor válido antes de guardar.');}
+  else if(key==='itinerary'){experienceDetails({version:1,durationMinutes:original.durationMinutes,meetingPoint:original.meetingPoint,itinerary:value});}
   else if(key==='amenities'){if(!Array.isArray(value)||value.length>30||value.some(row=>typeof row!=='string'||row.length>200))throw new Error('Revisa las comodidades de esta habitación.');}
   else if(typeof value!=='string'||value.length>(key==='name'?120:['category','type'].includes(key)?100:['description','conditions','image','cover'].includes(key)?2000:500))throw new Error('Acorta este dato antes de guardar.');
  }

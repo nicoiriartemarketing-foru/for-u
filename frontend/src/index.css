@@ -62,7 +62,7 @@ body {
   background: var(--gradient-fondo);
   font-family: var(--font-principal);
   margin: 0;
-  min-width: 320px;
+  min-width: 0;
   line-height: 1.5;
 }
 

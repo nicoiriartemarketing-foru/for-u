@@ -90,3 +90,23 @@
 
 /* Confirmed contact data, no embeds or inferred opening hours. */
 .foru-presentation-v3 .page-location-widget{max-width:900px}.foru-presentation-v3 .page-location-note{white-space:pre-line;max-width:700px;margin:0 0 28px!important}.foru-presentation-v3 .page-location-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:18px}.foru-presentation-v3 .page-location-facts>div{display:flex;gap:18px;align-items:flex-start;padding:26px;border:1px solid #c9d9d0;border-radius:22px;background:#f8fcf8;min-width:0}.foru-presentation-v3 .page-location-facts>div>span{font-size:30px;color:#547c66;flex:none;line-height:1}.foru-presentation-v3 .page-location-facts small{font-size:10px;letter-spacing:.13em;color:#54705c}.foru-presentation-v3 .page-location-facts p{font-size:16px!important;line-height:1.7!important;white-space:pre-line;margin:12px 0 0!important;overflow-wrap:anywhere}.foru-presentation-v3 .page-location-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}.foru-presentation-v3 .page-location-actions>a{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 22px;background:var(--site-color,#7751b8);border-radius:999px;color:white;text-decoration:none;font-size:14px;font-weight:600}.foru-presentation-v3 .page-location-actions>a:focus-visible{outline:3px solid #7751b8;outline-offset:4px}.location-editor-preview{display:block;font-size:12px;color:#796d83;font-weight:400;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}.section-content-list>button>strong{min-width:0}.section-content-item h3{font-size:24px;line-height:1.25;letter-spacing:-.035em;margin:8px 0}
+
+/* A readable route within each tourism offer; no empty map or invented stops. */
+.page-experience {margin:1rem 0;min-width:0;color:inherit}
+.page-experience-duration {display:flex;align-items:center;gap:.5rem;font-size:.875rem;font-weight:600}
+.page-experience-details {border-top:1px solid #ded9e7;padding-top:.8rem}
+.page-experience-details summary {min-height:44px;display:flex;align-items:center;gap:.5rem;cursor:pointer;font-weight:600;color:#593b88}
+.page-experience-details summary::after {content:'＋';margin-left:auto}
+.page-experience-details[open] summary::after {content:'−'}
+.page-experience-details ol {list-style:none;margin:.7rem 0;padding:0}
+.page-experience-details li {display:grid;grid-template-columns:2rem minmax(0,1fr);gap:.7rem;padding:.6rem 0}
+.page-experience-step {font-size:.75rem;color:#7451a3;border-left:2px solid #d9cce9;padding-left:.5rem}
+.page-experience h4 {font-size:1rem;margin:0 0 .35rem;overflow-wrap:anywhere}
+.page-experience p {white-space:pre-wrap;overflow-wrap:anywhere}
+.page-experience-meeting {display:flex;gap:.7rem;padding:.8rem;border-radius:12px;background:#f4f1f9}
+
+.pe-itinerary-edit ol {list-style:none;padding:0;display:grid;gap:.6rem}
+.pe-itinerary-edit li {display:flex;justify-content:space-between;gap:.5rem;align-items:center;border-bottom:1px solid #e6dfed;padding:.5rem 0}
+.pe-itinerary-edit li>div {display:flex;gap:.25rem;flex-shrink:0}
+.pe-itinerary-edit li>button {overflow-wrap:anywhere;min-width:0;text-align:left}
+.pe-itinerary-edit input,.pe-itinerary-edit textarea {margin:1rem 0}

@@ -13,3 +13,6 @@ Se mantienen acumuladas las consultas de experiencia y accesos externos. La recu
 No desplegar Hostinger, publicar negocios reales, conectar cobros productivos, activar facturación, publicar Meta ni cambiar permisos de Supabase para continuar con las mejoras locales. Los pendientes de estas integraciones siguen en la matriz general y no se agrupan como autorización implícita.
 
 Checkpoint Git de cambios posteriores a418a44b aún pendiente; no afirmar que está creado.
+
+### Actualización 24 octubre
+La pestaña HTTP ya está accesible (se encontró una nueva pestaña de FOR U); no pedir otra vez abrir el navegador como bloqueo general. Se abrió una pestaña separada para mostrar pruebas. No cerrar ni mover la pestaña donde la usuaria explora. Permanecen las comprobaciones físicas/segunda cuenta y los pendientes externos. La revisión visual no está aprobada; las capturas del 24 de octubre son evidencia de cambios parciales.
