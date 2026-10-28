@@ -1,3 +1,4 @@
+import {captionAudioDuration,captionSchema,parseCaptions,captionInstruction} from './transcription.ts';
 import {contextSelection,selectedContext} from './sourceContext.ts';
 import {materialSchema,parseMaterial,authorizedMaterialPaths,materialInstruction} from './material.ts';
 import {creativePieceSource,creativeSchema,parseCreative,creativeInstruction,type CreativeKind} from './creative.ts';
@@ -31,14 +32,24 @@ Deno.serve(async req => {
   async function takeRequest(){const {data:allowed,error}=await supabase.rpc('toolkit_take_ai_request');if(error)throw new AIError('rate_limit_unavailable','No pudimos comprobar tu cuota de IA.',503);if(!allowed)throw new AIError('quota_exhausted','Llegaste al límite de 30 solicitudes por hora. Puedes seguir trabajando manualmente.',429);}
   try {
     if (req.headers.get('content-type')?.includes('multipart/form-data')) {
-      if(!key||Deno.env.get('FORU_AI_PAID_FEATURES_ENABLED')!=='true')throw new AIError('not_configured','La transcripción requiere su autorización existente de pago. Puedes escribir el guion manualmente.',503);
-      await takeRequest();
-      const form = await req.formData(); const file = form.get('file');
-      if (!(file instanceof File) || file.size > 24 * 1024 * 1024 || !/^(video|audio)\//.test(file.type)) return response({ error: 'Usa un archivo de audio o video de hasta 24 MB.' }, 400);
-      const body = new FormData(); body.set('file', file); body.set('model', 'whisper-1'); body.set('language', 'es'); body.set('response_format', 'verbose_json'); body.append('timestamp_granularities[]', 'segment');
-      const upstream = await fetch('https://api.openai.com/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${key}` }, body, signal: AbortSignal.timeout(90_000) });
-      if (!upstream.ok) return response({ error: 'No se pudo transcribir. Comprueba el formato o inténtalo de nuevo.' }, 502);
-      const result = await upstream.json(); return response({ segments: result.segments ?? [] });
+      if(provider!=='gemini'||!Deno.env.get('GEMINI_API_KEY'))throw new AIError('not_configured','La transcripción requiere la conexión de Gemini de FOR U.',503);
+      if(Deno.env.get('FORU_AI_FREE_TIER_CONFIRMED')!=='true')throw new AIError('free_tier_unconfirmed','Falta comprobar la cuota de Gemini. Tu video no cambió.',503);
+      const form=await req.formData(),projectId=form.get('projectId'),file=form.get('file');
+      if(form.get('action')!=='transcribe'||typeof projectId!=='string'||!/^[0-9a-f-]{36}$/i.test(projectId))throw new AIError('invalid_request','Selecciona el proyecto de esta toma.',400);
+      const project=await supabase.from('projects').select('id').eq('id',projectId).eq('user_id',user.id).maybeSingle();
+      if(project.error)throw new AIError('project_read_error','No pudimos comprobar el proyecto.',503);
+      if(!project.data)throw new AIError('forbidden_project','Proyecto no disponible.',403);
+      if(!(file instanceof File)||file.size>5760044||file.type!=='audio/wav')throw new AIError('invalid_audio','Prepara el audio de tu toma antes de transcribir.',400);
+      const bytes=new Uint8Array(await file.arrayBuffer()),duration=captionAudioDuration(bytes);
+      const model=Deno.env.get('GEMINI_MODEL')||'gemini-3.5-flash-lite';
+      const audioHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(b=>b.toString(16).padStart(2,'0')).join('');
+      const hash=JSON.stringify([user.id,projectId,'captions-v1',model,audioHash]);
+      const result=await sharedRequest(supabase,user.id,projectId,'transcribe',hash,()=>cache.run(hash,async()=>{
+        await takeRequest();let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);
+        const generated=await geminiGenerate({key:Deno.env.get('GEMINI_API_KEY')!,model,instruction:captionInstruction,content:{durationSeconds:duration},attachments:[{mimeType:'audio/wav',data:btoa(binary)}],schema:captionSchema,maxOutputTokens:12000,parseStructured:value=>parseCaptions(value,duration)});
+        console.info('foru_ai_usage',{action:'transcribe',model,...generated.usage});
+        return {segments:generated.structured,provider:'gemini'};
+      }));return response(result);
     }
     const raw = await req.text(); if (raw.length > 30_000) return response({ error: 'El mensaje es demasiado largo.' }, 400);
     let body;try{body=JSON.parse(raw);}catch{throw new AIError('invalid_request','Solicitud inválida.',400);}

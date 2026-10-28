@@ -22,3 +22,20 @@
 - UI con archivo sintético: original 480×270, 2.966 s; detectó una pausa, se aplicó propuesta, se escribió subtítulo y se exportó 720×720. Archivo descargado y reabierto: 2.174 s, subtítulo visible. No se vinculó el archivo sintético a la pieza comercial editada por la usuaria.
 - Vista móvil real 360 px sin desbordamiento. Pruebas 325/325, TypeScript, build y diff check correctos; correcciones finales de vista previa y guía verificadas en UI. HTTPS temporal sigue sirviendo la última compilación en removing-chain-benefits-mixer.trycloudflare.com, con login; no se cambió producción.
 - Guardado de toma real/iPhone, prueba física de cámara y transcripción automática siguen pendientes. Capturas teleprompter-guia-inicial.jpg y video-editor-guia-movil.jpg en docs/evidence/2026-10-27. Esperar aceptación visual antes de otro bloque. Objetivo general incompleto.
+
+### 2026-10-28 — Subtítulos automáticos y magia de Studio (bloque aprobado)
+- Gemini conectado en toolkit-ai: audio WAV mono preparado localmente, hasta 180 s; propiedad de proyecto, cuota y caché antes de generar. No se activó otro proveedor ni se cambiaron secretos. Respaldo remoto en /tmp/foru-toolkit-ai-before.ts; despliegue descargado y SHA-256 idéntico al bundle local.
+- Prueba real con voz sintética: cuatro frases temporizadas; propuesta → aceptar → corrección individual → exportación 9:16 descargada, 720×1280. No se guardó la toma sintética en la pieza del usuario.
+- Logo original, partículas y onda perlada durante creación IA, guion y subtítulos; sin demora artificial ni sonido obligatorio; movimiento reducido.
+- 330 pruebas pasan; TypeScript, build y diff check correctos. Ancho real 360 px sin overflow; controles de 44 px. Preview compilada actualizada.
+- Pendientes: aceptación visual humana y prueba con voz real/iPhone. El objetivo global continúa incompleto; esperar revisión antes de otro bloque.
+- Enlace HTTPS temporal renovado y login comprobado: https://standard-expressions-wrapped-demonstrated.trycloudflare.com . Cloudflared sesión 88846; preview existente puerto 4176. Depende de la computadora encendida.
+
+### 2026-10-28 — Editor con línea de tiempo (bloque aprobado)
+- Sustituida navegación por frases/pasos por vista previa, pistas VIDEO/SUBTÍTULOS, cursor, zoom y herramientas Recortar/Subtítulos/Formato. Miniaturas reales; toque para texto; arrastre de bloques y bordes con alternativa de teclado. Dividir/quitar/restaurar clips mantiene tiempos de la fuente y exportación existente.
+- Descarga arriba, guardado privado opcional después; descargar finaliza cambios pendientes, editar de nuevo los activa. Sin cambio de proveedor, pago, publicación ni escritura en piezas reales. Planes S/49/99/199 son propuestas comerciales sin activar.
+- QA real en toma sintética: transcribir → aceptar → corregir texto → arrastrar borde (2.8→2.5 s) → dividir en 3.4 s → quitar clip → exportar vertical. UI confirma descarga. Anchos reales 300 y 359 px sin overflow; seis miniaturas. Preview compilada actualizada.
+- 333 pruebas pasan, TypeScript/build/diff check correctos. Pendiente aprobación visual e interacción en iPhone real. Objetivo global incompleto; no continuar otro bloque sin aprobación.
+
+### Ampliación solicitada — plantillas y guía visual (pendiente de implementar)
+Cuatro recorridos creativos: Conóceme, Mira cómo lo hago, Esta es mi oferta y Mi primera transición. Añadir 20 estilos visuales de texto reutilizables con colores/tipografía de la marca, elección inicial de tres recomendados y exploración opcional; vista previa sobre la pieza antes de aplicar. Tu marca compartirá logo/colores/fuentes entre post, portada y video, conservando originales. Guías de grabación superpuestas con flechas, trayectoria y una instrucción por toma; capa de ayuda excluida del lienzo grabado/exportado. No confundir animación de texto con sincronización palabra por palabra: hoy solo existen tiempos por segmento. Propuestas complementarias: favoritos, recordar estilo por proyecto, comparación antes/después y márgenes orientativos. No se consideran implementadas estas funciones por haberlas añadido al acuerdo.

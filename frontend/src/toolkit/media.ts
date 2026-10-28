@@ -1,3 +1,4 @@
+import {paintStyledCaption,captionTypography,captionLines,type TextLook} from './textStyles';
 import {recordingFrames,recordingCrop,type RecordingRatio} from './prompterFrame';
 import type { Segment } from "./engine";
 export function recordingMime() {
@@ -118,6 +119,7 @@ export async function exportVideo(
   onProgress: (progress: number) => void,
   signal: AbortSignal,
   framing?:{ratio:RecordingRatio;focus:number},
+  textLook?:TextLook,
 ): Promise<Blob> {
   if (!segments.length)
     throw new Error("Conserva al menos un fragmento del video.");
@@ -149,8 +151,9 @@ export async function exportVideo(
       throw new Error("Este navegador no admite exportación con subtítulos.");
     const ctx = canvas.getContext("2d")!;
     // Reject captions that would be silently truncated by the four-line renderer.
-    const captionSize=Math.max(18,Math.round(canvas.width/27));ctx.font=`600 ${captionSize}px sans-serif`;
-    for(const subtitle of subtitles){let line='',lineCount=1;for(const word of subtitle.text.split(/\s+/)){if(ctx.measureText(`${line} ${word}`).width>canvas.width*.88&&line){lineCount++;line=word;}else line=`${line} ${word}`.trim();}if(lineCount>4)throw new Error('Una frase de subtítulos es demasiado larga. Divídela en frases más cortas antes de exportar.');}
+    const typography=textLook?captionTypography(canvas.width,textLook):{size:Math.max(18,Math.round(canvas.width/27)),weight:600,family:'sans-serif'};
+    ctx.font=`${typography.weight} ${typography.size}px ${typography.family}`;
+    for(const subtitle of subtitles){if(captionLines(ctx,subtitle.text,canvas.width*(textLook ? .82 : .88)).length>4)throw new Error('Este subtítulo ocupa más de cuatro líneas. Reduce su tamaño o divídelo antes de descargar.');}
     const source = audio.createMediaElementSource(video);
     const destination = audio.createMediaStreamDestination();
     source.connect(destination);
@@ -183,7 +186,7 @@ export async function exportVideo(
         )
         .map((s) => s.text)
         .join(" ");
-      if (text) drawCaption(ctx, text, canvas.width, canvas.height);
+      if(text){if(textLook){const active=subtitles.filter(s=>video.currentTime>=s.start&&video.currentTime<s.end);paintStyledCaption(ctx,text,canvas.width,canvas.height,textLook,video.currentTime-Math.min(...active.map(s=>s.start)));}else drawCaption(ctx,text,canvas.width,canvas.height);}
       raf = requestAnimationFrame(draw);
     };
     const total = segments.reduce((sum, s) => sum + s.end - s.start, 0);

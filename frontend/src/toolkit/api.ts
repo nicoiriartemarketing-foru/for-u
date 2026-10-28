@@ -29,34 +29,18 @@ export async function askAI(
     throw new Error("La IA no devolvió contenido. Inténtalo de nuevo.");
   return data.text;
 }
-export async function transcribe(file: File): Promise<Segment[]> {
-  if (!supabase)
-    throw new Error(
-      "Conecta tu cuenta para transcribir. También puedes agregar subtítulos manualmente.",
-    );
-  if (file.size > 24 * 1024 * 1024)
-    throw new Error(
-      "La transcripción admite hasta 24 MB. Usa un video más corto.",
-    );
-  const body = new FormData();
-  body.set("file", file);
-  const { data, error } = await supabase.functions.invoke("toolkit-ai", {
-    body,
-  });
-  if (error || data?.error)
-    throw new Error(
-      data?.error ??
-        "No se pudo transcribir. Puedes agregar subtítulos manualmente.",
-    );
-  if (!Array.isArray(data?.segments))
-    throw new Error("No se recibió una transcripción válida.");
-  return data.segments.filter(
-    (s: Segment) =>
-      Number.isFinite(s.start) &&
-      Number.isFinite(s.end) &&
-      s.end > s.start &&
-      typeof s.text === "string",
-  );
+export async function transcribe(file:File,projectId:string):Promise<Segment[]>{
+ if(!supabase)throw new Error('Inicia sesión para crear subtítulos.');
+ const scope=useActiveProjectsStore.getState();
+ const body=new FormData();body.set('action','transcribe');body.set('projectId',projectId);body.set('file',file);
+ const {data,error}=await supabase.functions.invoke('toolkit-ai',{body});
+ const current=useActiveProjectsStore.getState();
+ if(scope.cloudUserId!==current.cloudUserId||current.activeProjectId!==projectId)throw new Error('Cambiaste de cuenta o proyecto. No se aplicaron subtítulos.');
+ let message=data?.error;
+ if(error&&!message){try{message=(await error.context?.json())?.error;}catch{}}
+ if(error||message)throw new Error(message||'No pudimos transcribir. Tu video sigue intacto; puedes reintentar.');
+ if(!Array.isArray(data?.segments))throw new Error('No se recibió una transcripción válida.');
+ return data.segments;
 }
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
