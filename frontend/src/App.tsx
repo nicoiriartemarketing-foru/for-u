@@ -1,3 +1,4 @@
+import MagicTransition from './experience/ForUMagicOverlay';
 import NavigationGuard from './lib/NavigationGuard';
 import ForUCompanion from './experience/ForUCompanion';
 import BrandWelcome from './experience/BrandWelcome';
@@ -115,7 +116,7 @@ function ExperienceSurface({children}:{children:ReactNode}) {
   return <div className={customer?'foru-customer-surface':'foru-experience'}>{children}{!customer&&<BrandWelcome/>}</div>;
 }
 const appRouter=createBrowserRouter([{path:'*',element:<ApplicationRoutes/>,errorElement:<RouteFailure/>}]);
-function App(){return <AppErrorBoundary><RouterProvider router={appRouter}/></AppErrorBoundary>;}
+function App(){return <AppErrorBoundary><MagicTransition/><RouterProvider router={appRouter}/></AppErrorBoundary>;}
 function ApplicationRoutes() {
   return (
         <ExperienceSurface><NavigationGuard/><Toaster position="top-right" toastOptions={{ duration: 3500, success: { style: { background: '#f0fdf4', color: '#14532d', border: '1px solid #86efac' } } }} />

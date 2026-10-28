@@ -33,3 +33,13 @@ test('first-content editor return is a same-project route and never an arbitrary
  assert.equal(url.pathname,'/creator-studio');assert.equal(url.searchParams.get('project'),project);assert.equal(url.searchParams.get('task'),'route:content');assert.equal(url.searchParams.get('start'),'first-content');
  assert.equal(firstContentReturn(new URLSearchParams({return:'https://example.com'}),project),undefined);
 });
+
+test('several confirmed offers require a choice and an explicit missing offer never falls back to another',()=>{
+ const offer=id=>({key:'catalog:'+id,title:id,body:'Oferta confirmada',image:'',cta:'Consultar',reference:{kind:'catalog',projectId:project,id,revision:'catalog-r1'},group:'offer'});
+ const one=offer('one'),two=offer('two');const sources=[one,two];
+ assert.equal(firstContentSource(sources,'offer'),undefined);
+ assert.equal(firstContentSource(sources,'offer',undefined,'two'),two);
+ assert.equal(firstContentSource(sources,'awareness',undefined,'missing'),undefined);
+ assert.equal(firstContentSource([two],'offer'),two);
+ assert.deepEqual(sources,[one,two]);
+});

@@ -12,7 +12,7 @@ import { localDate } from "./engine";
 import { downloadBlob } from "./api";
 import type { CalendarEntry } from "./types";
 import { useUnsavedNavigation } from '../lib/useUnsavedNavigation';
-import { calendarDateTime, calendarICS, readCalendar, upsertCalendarActivity } from './calendarModel';
+import { calendarDateTime, calendarICS, readCalendar, upsertCalendarActivity,calendarWindow,type CalendarView } from './calendarModel';
 export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOpenPiece}:{linkedTasks?:AreaTask[];onOpenTask?:(task:AreaTask)=>void;linkedPieces?:Piece[];onOpenPiece?:(id:string)=>void}={}) {
   const { docs, save, track, reload, projectId } = useToolkit();
   let initial: CalendarEntry[] = [], formatError = '';
@@ -21,7 +21,7 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
     initial,
   );
   const [anchor, setAnchor] = useState(new Date());
-  const [view, setView] = useState("week");
+  const [view, setView] = useState<CalendarView>("agenda");
   const [title, setTitle] = useState("");
   const [formOpen,setFormOpen]=useState(false),[formStep,setFormStep]=useState(0);
   const [date, setDate] = useState(localDate(new Date()));
@@ -42,17 +42,9 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
   const reminded = useRef(new Set<string>());
   const original = entries.find(entry => entry.id === editing);
   useUnsavedNavigation(pending !== null || (editing ? Boolean(original && (original.title !== title || original.date !== date || original.time !== time)) : Boolean(title.trim())));
-  const start = new Date(
-    anchor.getFullYear(),
-    anchor.getMonth(),
-    view === "month" ? 1 : anchor.getDate(),
-  );
-  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
-  const days = Array.from({ length: view === "month" ? 42 : 7 }, (_, i) => {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
-    return d;
-  });
+  const days=calendarWindow(anchor,view);
+  const occupied=new Set([...entries.map(entry=>entry.date),...linkedTasks.map(task=>task.date),...linkedPieces.map(piece=>piece.date)]);
+  const visibleDays=view==='agenda'?days.filter(day=>occupied.has(localDate(day))):days;
   useEffect(() => {
     const timer = window.setInterval(() => {
       for (const entry of entries) {
@@ -123,7 +115,7 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
     );
   }
   return (
-    <div className="tk-stack magic-card tk-calendar-workspace">
+    <div className="tk-stack tk-calendar-workspace">
       {formatError && <p role="alert">{formatError}</p>}
       {pending !== null && <div><p role="status">{busy ? 'Guardando agenda…' : 'Cambios pendientes de guardar en tu cuenta.'}</p><DSButtonPrimary disabled={blocked} onClick={()=>void update(pending)}>Guardar cambios de agenda</DSButtonPrimary></div>}
       {saveError && <div role="alert"><p>{saveError}</p>{!conflict && <DSButtonSecondary disabled={busy} onClick={() => pending && void update(pending)}>Reintentar guardado</DSButtonSecondary>}<DSButtonSecondary disabled={busy} onClick={() => setRecovery(true)}>Recuperar agenda guardada</DSButtonSecondary><DSButtonSecondary onClick={() => downloadBlob(new Blob([JSON.stringify({projectId,entries},null,2)],{type:'application/json'}),'agenda-pendiente.json')}>Descargar mis cambios pendientes</DSButtonSecondary></div>}
@@ -155,13 +147,13 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
       <DSCard as="section" className="tk-card tk-stack">
         <div className="tk-toolbar">
           <div>
-            <div className="tk-eyebrow">ESPACIO PARA LO QUE IMPORTA</div>
+
             <h2>Tu calendario</h2>
           </div>
-          <DSButtonSecondary onClick={() => setView(view === "week" ? "month" : "week")}>
-            {view === "week" ? "Ver mes" : "Ver semana"}
+          <DSButtonSecondary onClick={() => setView(view === "month" ? "agenda" : "month")}>
+            {view === "month" ? "Ver agenda" : "Ver mes"}
           </DSButtonSecondary>
-          <details className="calendar-extra-options"><summary>Opciones del calendario</summary><DSButtonSecondary onClick={exportCalendar} disabled={!entries.length&&!linkedTasks.some(task=>task.date)&&!linkedPieces.some(piece=>piece.date)}>
+          <details className="calendar-extra-options"><summary>Opciones del calendario</summary><DSButtonSecondary onClick={()=>setView('week')}>Ver semana completa</DSButtonSecondary><DSButtonSecondary onClick={exportCalendar} disabled={!entries.length&&!linkedTasks.some(task=>task.date)&&!linkedPieces.some(piece=>piece.date)}>
             Exportar agenda
           </DSButtonSecondary>
           <DSButtonSecondary
@@ -215,10 +207,7 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
             ←
           </DSButtonSecondary>
           <h3>
-            {anchor.toLocaleDateString("es-PE", {
-              month: "long",
-              year: "numeric",
-            })}
+            {view==='month'?anchor.toLocaleDateString('es-PE',{month:'long',year:'numeric'}):days[0].toLocaleDateString('es-PE',{day:'numeric',month:'short'})+' — '+days[days.length-1].toLocaleDateString('es-PE',{day:'numeric',month:'short'})}
           </h3>
           <DSButtonSecondary className="magic-button magic-button-soft" aria-label="Periodo siguiente" onClick={() => shift(1)}>
             →
@@ -226,8 +215,9 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
           <DSButtonSecondary className="magic-button magic-button-soft" onClick={() => setAnchor(new Date())}>Hoy</DSButtonSecondary>
         </div>
         {original&&<TaskSuggestion key={original.id} projectId={projectId} sourceId={original.id} title={original.title} kind="calendar" disabled={blocked||Boolean(pending)} onApply={(nextTitle,guidance)=>{const next=entries.map(item=>item.id===original.id?{...item,title:nextTitle,guidance}:item);setEntries(next);setPending(next);setTitle(nextTitle);}}/>}
-        <div className="tk-calendar">
-          {days.map((day) => {
+        {view==='agenda'&&visibleDays.length===0&&<div className="calendar-agenda-empty"><span aria-hidden="true">◷</span><strong>Estos días tienen espacio para ti.</strong><p>Tus actividades, tareas y contenidos aparecerán aquí cuando les pongas fecha.</p></div>}
+        <div className={`tk-calendar${view==='agenda'?' calendar-agenda':''}`}>
+          {visibleDays.map((day) => {
             const key = localDate(day);
             return (
               <div
@@ -251,8 +241,8 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
                     day: "numeric",
                   })}
                 </time>
-                {linkedPieces.filter(piece=>piece.date===key).map(piece=><DSButtonSecondary key={`piece:${piece.id}`} className="calendar-linked-task" onClick={()=>onOpenPiece?.(piece.id)}>{piece.title||'Pieza sin título'}<small>Contenido planificado · abre la pieza original</small></DSButtonSecondary>)}
-                {linkedTasks.filter(task=>task.date===key).map(task=><DSButtonSecondary key={`task:${task.id}`} className="calendar-linked-task" onClick={()=>onOpenTask?.(task)}>{task.done?'✓':'○'} {task.title}<small>Tarea · sin hora</small></DSButtonSecondary>)}
+                {linkedPieces.filter(piece=>piece.date===key).map(piece=><DSButtonSecondary key={`piece:${piece.id}`} className="calendar-linked-task" onClick={()=>onOpenPiece?.(piece.id)}>{piece.title||'Pieza sin título'}<small>Contenido</small></DSButtonSecondary>)}
+                {linkedTasks.filter(task=>task.date===key).map(task=><DSButtonSecondary key={`task:${task.id}`} className="calendar-linked-task" onClick={()=>onOpenTask?.(task)}>{task.done?'✓':'○'} {task.title}<small>Tarea</small></DSButtonSecondary>)}
                 {entries
                   .filter((item) => item.date === key)
                   .sort((a, b) => a.time.localeCompare(b.time))
@@ -268,7 +258,7 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
                       <span>{entry.time}</span>
                       <strong>{entry.title}</strong>
                       <DSButtonSecondary disabled={blocked} onClick={() => { setEditing(entry.id); setTitle(entry.title); setDate(entry.date); setTime(entry.time); formDraftId.current=null; setFormStep(0); setFormOpen(true); }}>Editar actividad</DSButtonSecondary>
-                      <label className="tk-check">
+                      <details className="calendar-activity-options"><summary>Opciones</summary><label className="tk-check">
                         <DSInput
                           type="checkbox"
                           checked={entry.done}
@@ -320,7 +310,7 @@ export default function Calendar({linkedTasks=[],onOpenTask,linkedPieces=[],onOp
                         }
                       >
                         Eliminar
-                      </DSButtonSecondary>
+                      </DSButtonSecondary></details>
                     </div>
                   ))}
               </div>

@@ -1,3 +1,4 @@
+import {parsePillarDetails,type PillarDetail} from '../experience/pillarDetails';
 import {parseProposal,type Proposal} from '../proposal/model';
 import {parseSocial,type SocialDocument} from '../social/model';
 import {parseJourney,type Journey} from '../experience/journeyModel';
@@ -8,7 +9,7 @@ export type ProjectReference={projectId:string;id:string};
 export type SourceReference=ProjectReference&{kind:'proposal'|'catalog'|'page'|'offer';revision:string};
 export type Material={id:string;path:string;name:string;mime:string;kind:'image'|'audio'|'video'|'document'};
 export type InspirationReference={id:string;label:string;likes:string[];notes:string;different:string;files:{path:string;name:string}[]};
-export type Diagnostic={version:2;projectId:string;route:BusinessRoute;answers:Record<string,string|string[]>;cursor:string|null;inspiration?:InspirationReference[]};
+export type Diagnostic={version:2;projectId:string;route:BusinessRoute;answers:Record<string,string|string[]>;cursor:string|null;inspiration?:InspirationReference[];pillarDetails?:PillarDetail[]};
 export type ProjectRoute={version:1;projectId:string;stage:'explore'|'shape'|'prepare'|'operate'|'improve';diagnosticRevision:string|null;taskIds:string[];reasons:Record<string,string>};
 export type Campaign={id:string;title:string;intent:'awareness'|'conversation'|'trust'|'offer'|'followup'|'loyalty';offer:SourceReference|null;start:string|null;end:string|null;pieceIds:string[]};
 export type Campaigns={version:1;projectId:string;campaigns:Campaign[]};
@@ -34,6 +35,7 @@ export function parseDiagnostic(v:unknown,project:string):Diagnostic|Journey {
   const base=key.endsWith('Custom')?key.slice(0,-6):key;
   if(!questions.has(base)||!(text(value)||Array.isArray(value)&&value.length<=30&&value.every(x=>text(x,200))))fail();
  }
+ if(d.pillarDetails!==undefined)parsePillarDetails(d.pillarDetails);
  if(d.inspiration!==undefined){
   if(!Array.isArray(d.inspiration)||d.inspiration.length>10||new Set(d.inspiration.map(r=>r?.id)).size!==d.inspiration.length||!d.inspiration.every(r=>record(r)&&uuid(r.id)&&text(r.label,500)&&unique(r.likes,12)&&text(r.notes,2000)&&text(r.different,2000)&&Array.isArray(r.files)&&r.files.length<=20&&r.files.every(f=>record(f)&&text(f.name,200)&&text(f.path,2000)&&new RegExp('^[\\w-]+/'+project+'/[\\w.-]+$').test(f.path)&&!f.path.includes('..'))))fail();
  }

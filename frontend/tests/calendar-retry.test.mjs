@@ -16,3 +16,18 @@ test('export includes planned pieces and tasks with distinct source UIDs and no 
  assert.match(ics,/UID:task-same-reference@foru/);assert.match(ics,/UID:piece-same-reference@foru/);assert.match(ics,/DTSTART;VALUE=DATE:20261025/);assert.equal((ics.match(/BEGIN:VEVENT/g)||[]).length,2);assert.equal(piece.date,'2026-10-25');assert.equal(task.done,false);
  assert.throws(()=>calendarICS([],new Date(),[],[{...piece,date:'2026-02-30'}]));
 });
+
+test('the initial agenda includes tomorrow on Sunday while the optional week keeps its Monday boundary',async()=>{
+ const {calendarWindow}=await import('../src/toolkit/calendarModel.ts');
+ const anchor=new Date(2026,9,25,17,30),before=anchor.getTime();
+ const dates=calendarWindow(anchor,'agenda');
+ assert.equal(dates[0].getDate(),25);assert.ok(dates.some(day=>day.getDate()===26));assert.equal(dates[6].getDate(),31);
+ const week=calendarWindow(anchor,'week');assert.equal(week[0].getDay(),1);assert.equal(week[6].getDate(),25);
+ assert.equal(anchor.getTime(),before);assert.ok(dates.every(day=>day.getHours()===0));
+});
+test('the agenda crosses a year without UTC shifts or changing its anchor',async()=>{
+ const {calendarWindow}=await import('../src/toolkit/calendarModel.ts');
+ const anchor=new Date(2026,11,30,23,45),dates=calendarWindow(anchor,'agenda');
+ assert.deepEqual(dates.map(day=>[day.getFullYear(),day.getMonth()+1,day.getDate()]),[[2026,12,30],[2026,12,31],[2027,1,1],[2027,1,2],[2027,1,3],[2027,1,4],[2027,1,5]]);
+ assert.equal(anchor.getDate(),30);assert.throws(()=>calendarWindow(new Date(NaN),'agenda'));
+});

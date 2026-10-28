@@ -36,3 +36,11 @@ export function upsertCalendarActivity(entries:CalendarEntry[],id:string,value:{
  const existing=entries.find(entry=>entry.id===id),changed:CalendarEntry={...(existing||{id,format:'contenido',done:false}),...value,title:value.title.trim()};
  return existing?entries.map(entry=>entry.id===id?changed:entry):[...entries,changed];
 }
+
+export type CalendarView='agenda'|'week'|'month';
+export function calendarWindow(anchor:Date,view:CalendarView):Date[]{
+ if(!Number.isFinite(anchor.getTime()))throw new Error('Revisa la fecha del calendario.');
+ const start=new Date(anchor.getFullYear(),anchor.getMonth(),view==='month'?1:anchor.getDate());
+ if(view!=='agenda')start.setDate(start.getDate()-((start.getDay()+6)%7));
+ return Array.from({length:view==='month'?42:7},(_,index)=>new Date(start.getFullYear(),start.getMonth(),start.getDate()+index));
+}

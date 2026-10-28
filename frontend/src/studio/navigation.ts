@@ -4,8 +4,8 @@ export function validLandingOrigin(value:unknown,project:string):value is Landin
  const o=value as LandingOrigin;
  return o.kind==='landing'&&o.projectId===project&&typeof o.sectionId==='string'&&o.sectionId.length>0&&o.sectionId.length<=200&&(o.viewport===undefined||o.viewport==='desktop'||o.viewport==='mobile')&&!/[\x00-\x1f]/.test(o.sectionId)&&(o.offerId===undefined||typeof o.offerId==='string'&&o.offerId.length>0&&o.offerId.length<=200&&!/[\x00-\x1f]/.test(o.offerId))&&(o.pageRevision===undefined||typeof o.pageRevision==='string'&&o.pageRevision.length>0&&o.pageRevision.length<=100&&!/[\x00-\x1f]/.test(o.pageRevision));
 }
-export function landingOrigin(params:URLSearchParams,project:string):LandingOrigin|undefined {
- const o={kind:'landing',projectId:project,sectionId:params.get('section')||'hero',...(params.get('offer')?{offerId:params.get('offer')!}:{}),...(params.get('pageRevision')?{pageRevision:params.get('pageRevision')!}:{}),...(params.get('viewport')==='mobile'||params.get('viewport')==='desktop'?{viewport:params.get('viewport') as 'mobile'|'desktop'}:{})};
+export function landingOrigin(params:URLSearchParams,project:string,revision?:string|null):LandingOrigin|undefined {
+ const o={kind:'landing',projectId:project,sectionId:params.get('section')||'hero',...(params.get('offer')?{offerId:params.get('offer')!}:{}),...(revision||params.get('pageRevision')?{pageRevision:revision||params.get('pageRevision')!}:{}),...(params.get('viewport')==='mobile'||params.get('viewport')==='desktop'?{viewport:params.get('viewport') as 'mobile'|'desktop'}:{})};
  return params.get('from')==='landing'&&validLandingOrigin(o,project)?o:undefined;
 }
 export function landingReturn(origin:unknown,project:string):string|undefined {
@@ -16,4 +16,28 @@ export function firstContentReturn(params:URLSearchParams,project:string):string
  const query=new URLSearchParams({project,tab:'create',start:'first-content'});
  const task=params.get('task');if(task&&task.length<=200&&!/[\x00-\x1f]/.test(task))query.set('task',task);
  return '/creator-studio?'+query.toString();
+}
+
+const profileViews=['profile','grid','list','calendar'] as const;
+const returnLabels:Record<string,string>={profile:'← Mi perfil',grid:'← Mi cuadrícula',list:'← Mi contenido',calendar:'← Mi calendario',library:'← Mi biblioteca'};
+/** Current entry context takes precedence over historical content lineage. */
+export function studioReturn(params:URLSearchParams,origin:unknown,project:string,fallback:'profile'|'library'='library'):{path:string;label:string}{
+ const value=params.get('return');
+ if(value&&[...profileViews,'library'].includes(value as typeof profileViews[number])){
+  const query=new URLSearchParams({project,tab:value==='library'?'library':'profile'});
+  if(value!=='library')query.set('view',value);else if(['designs','files','materials'].includes(params.get('library')||''))query.set('library',params.get('library')!);
+  const campaign=params.get('campaign');if(value==='library'&&campaign&&/^[0-9a-f-]{36}$/i.test(campaign))query.set('campaign',campaign);
+  return {path:'/creator-studio?'+query,label:returnLabels[value]};
+ }
+ const page=landingReturn(origin,project);if(page)return {path:page,label:'← Volver a mi página'};
+ const first=firstContentReturn(params,project);if(first)return {path:first,label:'← Elegir contenido'};
+ return {path:'/creator-studio?'+new URLSearchParams({project,tab:fallback}),label:returnLabels[fallback]};
+}
+/** Forward only a known internal return context, never an arbitrary URL or project. */
+export function linkedPieceQuery(project:string,piece:string,params:URLSearchParams):string{
+ const query=new URLSearchParams({project,piece}),value=params.get('return');
+ if(value&&Object.prototype.hasOwnProperty.call(returnLabels,value))query.set('return',value);
+ if(value==='library'&&['designs','files','materials'].includes(params.get('library')||''))query.set('library',params.get('library')!);
+ const campaign=params.get('campaign');if(campaign&&/^[0-9a-f-]{36}$/i.test(campaign))query.set('campaign',campaign);
+ return '?'+query;
 }

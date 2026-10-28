@@ -481,3 +481,26 @@ A petición de la usuaria se reabre la referencia INTI CHURIN leyendo sus fuente
 - Verificación final de este checkpoint: 287/287 pruebas, TypeScript y build correctos en runtime Node 24. La revisión visual y el objetivo global continúan abiertos.
 
 - Corrección visual adicional: se quitó `body min-width:320px`, responsable de recortar la vista lateral real (297 px medidos). Tras el cambio, `scrollWidth === innerWidth` en esa vista. No se etiqueta esta captura como 360 px: el navegador lateral no aplicó ese ancho solicitado. Carita/Pomodoro van tras el contenido en los pasos enfocados para no cubrir acciones. Evidencia: `docs/evidence/2026-10-24/studio-temas-completo.png`. La prueba física y las medidas 360/768/1440 del nuevo flujo siguen pendientes.
+
+
+### 25 octubre — continuidad de temas, mapa y archivos de la pieza
+- Los borradores de ideas se separan por cuenta/proyecto/tema; notas del pilar recuperadas en QA Servicios y reutilizadas sin transcribirlas. Cambiar de tema conserva el borrador anterior.
+- El mapa carga el grafo solo en escritorio. Verificado a 360 px reales: sin desbordamiento horizontal ni grafo oculto montado. Marketing abre la idea y los pasos originales del restaurante QA.
+- Guardado explícito de video/portada: archivo privado → manifiesto → referencia en la misma pieza, con reintento sin duplicados. Portada PNG QA subida, recuperada desde Biblioteca → Videos y portadas y vinculada a cc0d9f58-379b-4454-a71f-84b42de03c6b; guion y origen conservados.
+- 303 pruebas, TypeScript y build correctos. Los cambios finales de MIME/reintento y borradores pasaron sus 7 pruebas focalizadas.
+- Pendiente: grabación/exportación en iPhone/Safari, diagnóstico remoto de formatos de video permitidos y aprobación visual. No equiparar estos resultados con cierre del objetivo completo. No se publicó contenido ni se modificó INTI CHURIN. Consultas de intervención reservadas hasta que Nicole vuelva.
+
+### 25 octubre — secciones completas y retorno móvil
+- Añadidos catálogos reinsertables de turismo/cursos, compra, comodidades/llegada/condiciones de hospedaje, docente/materiales y proceso de servicios. Composiciones nuevas vacías hasta completar datos reales. Docente no toma automáticamente la historia del negocio; páginas nuevas no fuerzan violeta.
+- Añadir una composición actualiza solo el borrador a presentación 4 y admite Deshacer; publicación anterior intacta. Primer catálogo vincula su fuente cuando no hay ofertas manuales que conservar.
+- QA Servicios: sección Cómo trabajamos 31678897-801f-467e-a02e-7c82dd80e08d guardada y recuperada; creó pieza 8dd7f7b5-0c39-4abd-b2c4-742556927272 con dos pasos QA, formato 4:5 y origen conservado. Regreso a esa misma sección comprobado. No se publicó.
+- Corregido scroll de recuperación: desplaza el documento del iframe sin mover el editor detrás de su barra. Verificado a 360×818 reales, sin desbordamiento horizontal.
+- 307 pruebas y TypeScript correctos; build general correcto y recompilación final del ajuste móvil registrada en /tmp/foru-sections-mobile-build.log. Aprobación visual, dispositivos físicos y restantes rubros/operaciones siguen pendientes de completar, no equivalentes a cierre global.
+
+### 26 octubre — idea → portada y regreso al contexto de trabajo
+- Las ideas sin diseño se muestran como tarjetas de título, no como diseños terminados. Nuevo recorrido: palabras → intención → formato → composición, conservando la misma pieza; errores parciales de guardado identificados.
+- Nueva idea QA Servicios 6c6a8849-1df7-42f0-810a-3c951a65101e, título «Idea QA: una pausa para conversar», convertida en portada 9:16 con el mismo UUID. Arrastre real mediante su agarrador a la primera posición orgánica, guardado y recarga comprobados. No modifica pines ni fechas. Nuevo orden incluye también piezas omitidas de listas históricas parciales.
+- Mover dispone de selección visual equivalente con teclado, sin desplegable. Guardar dejó de quedar debajo de la navegación fija; se comprobó el receptor real del clic antes de guardar. Arrastre táctil físico en iPhone sigue sin verificar.
+- El contexto de entrada prevalece sobre el origen histórico: Cuadrícula/Lista/Calendario/Biblioteca regresan a su vista. Se conserva por separado el origen de landing. Biblioteca mantiene también Diseños/Fotos/Videos y portadas y campaña. Continuar conserva from/viewport/compose/pin/panel/library sin cambiar proyecto.
+- QA 8dd7f7b5-0c39-4abd-b2c4-742556927272: Biblioteca → editor → guion guardado → teleprompter recuperó el texto y el mismo UUID; contexto de regreso Biblioteca conservado. Sin cámara, publicación ni llamadas IA.
+- 315 pruebas, TypeScript y build correctos (/tmp/foru-grid-return-*). El objetivo y la revisión visual siguen abiertos; encuadre separado de portada en la grilla, cámara/exportación física, rubros/operación restantes y aprobaciones pendientes aún no se declaran completados.

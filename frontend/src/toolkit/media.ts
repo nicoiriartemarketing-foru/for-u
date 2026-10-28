@@ -1,3 +1,4 @@
+import {recordingFrames,recordingCrop,type RecordingRatio} from './prompterFrame';
 import type { Segment } from "./engine";
 export function recordingMime() {
   if (typeof MediaRecorder === "undefined")
@@ -116,6 +117,7 @@ export async function exportVideo(
   subtitles: Segment[],
   onProgress: (progress: number) => void,
   signal: AbortSignal,
+  framing?:{ratio:RecordingRatio;focus:number},
 ): Promise<Blob> {
   if (!segments.length)
     throw new Error("Conserva al menos un fragmento del video.");
@@ -142,9 +144,13 @@ export async function exportVideo(
     );
     canvas.width = Math.round(video.videoWidth * ratio);
     canvas.height = Math.round(video.videoHeight * ratio);
+    if(framing){canvas.width=recordingFrames[framing.ratio].width;canvas.height=recordingFrames[framing.ratio].height;}
     if (!canvas.captureStream)
       throw new Error("Este navegador no admite exportación con subtítulos.");
     const ctx = canvas.getContext("2d")!;
+    // Reject captions that would be silently truncated by the four-line renderer.
+    const captionSize=Math.max(18,Math.round(canvas.width/27));ctx.font=`600 ${captionSize}px sans-serif`;
+    for(const subtitle of subtitles){let line='',lineCount=1;for(const word of subtitle.text.split(/\s+/)){if(ctx.measureText(`${line} ${word}`).width>canvas.width*.88&&line){lineCount++;line=word;}else line=`${line} ${word}`.trim();}if(lineCount>4)throw new Error('Una frase de subtítulos es demasiado larga. Divídela en frases más cortas antes de exportar.');}
     const source = audio.createMediaElementSource(video);
     const destination = audio.createMediaStreamDestination();
     source.connect(destination);
@@ -168,8 +174,9 @@ export async function exportVideo(
     recorder.onerror = () => {
       recordingError = new Error("No se pudo exportar el video.");
     };
+    const paintVideo=()=>{if(framing){const crop=recordingCrop(video.videoWidth,video.videoHeight,canvas.width,canvas.height,framing.focus);ctx.drawImage(video,crop.x,crop.y,crop.width,crop.height,0,0,canvas.width,canvas.height);}else ctx.drawImage(video,0,0,canvas.width,canvas.height);};
     const draw = () => {
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      paintVideo();
       const text = subtitles
         .filter(
           (s) => video.currentTime >= s.start && video.currentTime < s.end,
@@ -189,7 +196,7 @@ export async function exportVideo(
         video.currentTime = segment.start;
         await seek;
       }
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      paintVideo();
       if (recorder.state === "inactive") {
         draw();
         recorder.start(250);

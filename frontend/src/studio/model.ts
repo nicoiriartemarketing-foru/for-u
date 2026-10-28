@@ -23,7 +23,7 @@ export const firstContentIntentions=[
 ] as const;
 export function firstContentSource(sources:CreativeSource[],intent:Intent,sectionId?:string,offerId?:string):CreativeSource|undefined {
  if(offerId)return sources.find(source=>source.group==='offer'&&source.reference?.id===offerId)||sources.find(source=>source.group==='offer'&&source.reference?.kind==='page'&&source.reference.id==='offer:'+offerId);
- if(intent==='offer')return sources.find(source=>source.group==='offer');
+ if(intent==='offer'){const offers=sources.filter(source=>source.group==='offer');return offers.length===1?offers[0]:undefined;}
  if(sectionId)return sources.find(source=>source.reference?.kind==='page'&&source.reference.id===sectionId);
  if(intent==='conversation')return sources.find(source=>source.group==='page'&&source.reference?.id!=='hero'&&source.body.trim())||sources.find(source=>source.key==='proposal')||sources.find(source=>source.key==='page:hero');
  return sources.find(source=>source.key==='page:hero')||sources.find(source=>source.group==='proposal');

@@ -3,7 +3,7 @@ export const projectViews = ['map','kanban','calendar','world'] as const;
 export type ProjectView = typeof projectViews[number];
 export type ProjectDestination = {path:string; params:Record<string,string>};
 const paths = new Set(['/dashboard','/dashboard/world','/dashboard/settings','/creator-studio','/content-creator',...['profile','proposal','landing','summary','content','teleprompter','video','assistant','automation','orders','calendar','bookings','images','analytics'].map(x=>'/dashboard/tools/'+x),...['restaurant','ecommerce','tourism','hospitality','courses'].flatMap(x=>['','/editor',...(x==='restaurant'?['/orders','/categorias','/estilos']:[])].map(s=>'/modules/'+x+s))]);
-const params = new Set(['view','area','task','piece','design','campaign','section','tab','format','start','return','offer','pageRevision']);
+const params = new Set(['from','viewport','compose','pin','panel','library','pillar','view','area','task','piece','design','campaign','section','tab','format','start','return','offer','pageRevision']);
 export function validDestination(value:unknown):value is ProjectDestination {
  const d=value as ProjectDestination;
  return !!d&&paths.has(d.path)&&!!d.params&&typeof d.params==='object'&&!Array.isArray(d.params)&&Object.entries(d.params).every(([key,val])=>params.has(key)&&typeof val==='string'&&val.length>0&&val.length<=200&&!/[\u0000-\u001f]/.test(val));

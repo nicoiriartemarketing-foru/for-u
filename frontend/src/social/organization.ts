@@ -30,5 +30,5 @@ export function addGridIdea(document:SocialDocument,title:string,id:string,user?
  const value=title.trim();if(!value||value.length>160)throw new Error('Escribe un título de hasta 160 caracteres.');
  if(document.pieces.length>=100||document.pieces.some(p=>p.id===id))throw new Error('No se pudo añadir otra idea. Conservamos las anteriores.');
  const piece:Piece={id,title:value,objective:'',text:'',script:'',shots:'',date:'',status:'idea',files:[]};
- return parseSocial({...document,version:2,pieces:[...document.pieces,piece],gridOrder:[...document.gridOrder??document.pieces.map(p=>p.id),id]},document.projectId,user);
+ return parseSocial({...document,version:2,pieces:[...document.pieces,piece],gridOrder:[...orderedPieces(document).map(p=>p.id),id]},document.projectId,user);
 }

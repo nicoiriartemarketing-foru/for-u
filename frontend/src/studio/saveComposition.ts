@@ -1,3 +1,4 @@
+import {changePiece,parseSocial} from '../social/model';
 import {mainSlots,setMainSlot} from '../social/organization';
 import {nativeOffers,parseProposal} from '../proposal/model';
 import {pageSections} from '../experience/pageComposition';
@@ -16,7 +17,7 @@ export function contentDocument(value:unknown,project:string):ContentDocument{
  d.drafts.forEach(row=>validateCreativeContext(row,project));return d;
 }
 /** Ordered, retryable writes. A partial success is retained and named, not rolled back or hidden. */
-export async function saveComposition(user:string,project:string,draft:ContentDraft,status:(message:string)=>void=()=>{},storage=studioStorage,mainIndex?:number){
+export async function saveComposition(user:string,project:string,draft:ContentDraft,status:(message:string)=>void=()=>{},storage=studioStorage,mainIndex?:number,canvasFiles?:{path:string;name:string}[],seedScript=false){
  validateCreativeContext(draft,project);if(draft.projectId!==project)throw new Error('El diseño pertenece a otro proyecto.');
  for(const path of [draft.imagePath,draft.logoPath])if(path){mediaReference(path);if(!path.startsWith(`${user}/${project}/`))throw new Error('Un archivo pertenece a otro proyecto.');}
  const reference=draft.creative?.reference;
@@ -41,6 +42,12 @@ export async function saveComposition(user:string,project:string,draft:ContentDr
  if(draft.creative?.campaignId&&!campaignDoc.campaigns.some(row=>row.id===draft.creative!.campaignId))throw new Error('La campaña no está disponible. Vuelve a elegirla.');
  const next=saveContentDraft(contentDocument(designs?.payload,project),draft,project);
  let social=connectDesignPiece(profile?.payload,project,user,draft);
+ if(canvasFiles){
+  for(const file of canvasFiles){mediaReference(file.path);if(!file.path.startsWith(`${user}/${project}/`))throw new Error('Un material pertenece a otro proyecto.');}
+  const piece=social.pieces.find(row=>row.id===draft.id)!;
+  social=parseSocial(changePiece(social,draft.id,{title:draft.title,text:draft.caption||draft.subtitle,...(seedScript&&!piece.script.trim()?{script:draft.caption||[draft.title,draft.subtitle,draft.cta].filter(Boolean).join('\n\n')}:{}),files:[...piece.files,...canvasFiles.filter(file=>!piece.files.some(existing=>existing.path===file.path))]}),project,user);
+ }
+
  if(mainIndex!==undefined){if(!Number.isInteger(mainIndex)||mainIndex<0||mainIndex>2)throw new Error('Este espacio del perfil no es válido.');const current=mainSlots(social)[mainIndex];if(current&&current!==draft.id)throw new Error('Este espacio ya tiene una pieza. Vuelve al perfil para revisarla; no la reemplazamos.');social=setMainSlot(social,mainIndex,draft.id,user);}
  let saved='';
  try{

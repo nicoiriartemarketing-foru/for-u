@@ -22,3 +22,34 @@ test('creating for a main profile space preserves its exact position and retries
 test('a concurrently occupied profile space is not replaced by a newly created design',async()=>{const storage=store(),a=draft();await saveComposition(user,project,a,()=>{},storage,0);const b=draft();await assert.rejects(()=>saveComposition(user,project,b,()=>{},storage,0),/ya tiene una pieza/);assert.equal(storage.docs.get('content-creator').payload.drafts.length,1);assert.deepEqual(storage.docs.get('social-profile').payload.mainSlots,[a.id,null,null]);});
 
 test('sales moments adapt the invitation without inventing business facts or changing the source',()=>{const before=JSON.stringify(source);const posts=['awareness','conversation','offer'].map(intent=>compositionOptions(source,intent,'portrait',project,user,'QA')[0]);assert.equal(new Set(posts.map(post=>post.cta)).size,3);assert.ok(posts[1].caption.startsWith('¿Qué te gustaría saber'));for(const post of posts){assert.equal(post.subtitle,source.body);assert.equal(post.title,source.title);assert.deepEqual(post.creative.reference??null,source.reference);}assert.equal(posts[2].cta,source.cta);assert.equal(JSON.stringify(source),before);});
+
+test('photo-free compositions keep readable copy together and leave space for the invitation in every export ratio',()=>{
+ const measure=(text,size)=>text.length*size*.5;
+ for(const format of ['post','portrait','story'])for(const layout of ['editorial','poster','split']){
+  const input={...draft(),format,layout,title:'Tu idea merece encontrar su lugar',subtitle:'Cuenta lo que haces, con tus propias palabras. No necesitas una foto para empezar.',cta:'Conversemos'};
+  const before=JSON.stringify(input),g=artworkLayout(input,false,measure);
+  assert.equal(g.overflow,false,format+' '+layout);assert.equal(g.image,null);
+  assert.ok(g.title.y+g.title.h+40<=g.body.y);assert.ok(g.body.y+g.body.lines.length*g.body.size*1.2<g.cta.y);
+  assert.ok(g.title.size>=100);assert.ok(g.body.size>=40);
+  for(const box of [g.brand,g.title,g.body,g.cta]){assert.ok(box.x>=0&&box.y>=0);assert.ok(box.x+box.w<=g.width);assert.ok(box.y+box.h<=g.height);}
+  assert.ok(g.decorations.length>0);assert.equal(JSON.stringify(input),before);
+ }
+});
+
+test('canvas saves update the same piece text while retaining its script, order and prior files',async()=>{
+ const storage=store(),d=draft();await saveComposition(user,project,d,()=>{},storage);
+ const old=storage.docs.get('social-profile');old.payload.pieces[0].script='Guion que debe conservarse';old.payload.gridOrder=[d.id];
+ const edited={...d,title:'Título editado',subtitle:'Texto editado',caption:'Título editado\n\nTexto editado'};
+ const file={path:`${user}/${project}/nota.webm`,name:'Mi nota de voz'};
+ await saveComposition(user,project,edited,()=>{},storage,undefined,[file]);
+ await saveComposition(user,project,edited,()=>{},storage,undefined,[file]);
+ const profile=storage.docs.get('social-profile').payload;
+ assert.equal(profile.pieces.length,1);assert.equal(profile.pieces[0].id,d.id);assert.equal(profile.pieces[0].title,'Título editado');assert.equal(profile.pieces[0].text,edited.caption);assert.equal(profile.pieces[0].script,'Guion que debe conservarse');assert.equal(profile.pieces[0].files.filter(row=>row.path===file.path).length,1);assert.deepEqual(profile.gridOrder,[d.id]);
+});
+
+test('creating video seeds an empty script from the saved post but never replaces a written script',async()=>{
+ const storage=store(),d=draft();await saveComposition(user,project,d,()=>{},storage,undefined,[],true);
+ const profile=storage.docs.get('social-profile').payload;assert.equal(profile.pieces[0].script,d.caption);profile.pieces[0].script='Mi guion personal';
+ await saveComposition(user,project,{...d,caption:'Una versión nueva del post'},()=>{},storage,undefined,[],true);
+ assert.equal(storage.docs.get('social-profile').payload.pieces[0].script,'Mi guion personal');
+});

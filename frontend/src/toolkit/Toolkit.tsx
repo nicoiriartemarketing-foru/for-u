@@ -308,7 +308,7 @@ function ToolkitShell({
           </Suspense>
         ) : (
           <>
-            <header className="hoy-tool-heading" hidden={tool === "content" || tool === "proposal" || tool === "landing" || (tool === "profile" && new URLSearchParams(window.location.search).has("piece"))}>
+            <header className="hoy-tool-heading" hidden={tool === "video" || tool === "teleprompter" || tool === "content" || tool === "proposal" || tool === "landing" || (tool === "profile" && new URLSearchParams(window.location.search).has("piece"))}>
               <h1>{current?.name}</h1>
               <p>{current?.description}</p>
             </header>

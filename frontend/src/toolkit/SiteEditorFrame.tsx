@@ -80,8 +80,8 @@ export default function SiteEditorFrame() {
   const [hostProject,setHostProject]=useState<string>();
   const [draft, setDraft] = useState<LandingDraft | null>(null);
 
-  useEffect(()=>{if(!draft||!resume)return;const target=resume==='hero'?document.querySelector('.tk-site-hero'):Array.from(document.querySelectorAll<HTMLElement>('[data-block-id]')).find(el=>el.dataset.blockId===resume);if(target){target.scrollIntoView({block:'start'});setResume(null);}},[draft,resume]);
- useEffect(()=>{if(!draft||!focusOffer)return;const card=Array.from(document.querySelectorAll<HTMLElement>('[data-offer-id]')).find(node=>node.dataset.offerId===focusOffer);if(card){card.scrollIntoView({block:'center'});card.querySelector<HTMLButtonElement>('button')?.focus({preventScroll:true});}setFocusOffer(null);},[draft,focusOffer]);
+  useEffect(()=>{if(!draft||!resume)return;const target=resume==='hero'?document.querySelector('.tk-site-hero'):Array.from(document.querySelectorAll<HTMLElement>('[data-block-id]')).find(el=>el.dataset.blockId===resume);if(target){window.scrollTo({top:Math.max(0,window.scrollY+target.getBoundingClientRect().top-24),left:0,behavior:'auto'});setResume(null);}},[draft,resume]);
+ useEffect(()=>{if(!draft||!focusOffer)return;const card=Array.from(document.querySelectorAll<HTMLElement>('[data-offer-id]')).find(node=>node.dataset.offerId===focusOffer);if(card){const box=card.getBoundingClientRect();window.scrollTo({top:Math.max(0,window.scrollY+box.top-Math.max(24,(window.innerHeight-box.height)/2)),left:0,behavior:'auto'});card.querySelector<HTMLButtonElement>('button')?.focus({preventScroll:true});}setFocusOffer(null);},[draft,focusOffer]);
   const channel = new URLSearchParams(window.location.search).get("channel");
   const send = (type: string, payload: object = {}) => {
     if (window.parent !== window)
@@ -160,7 +160,7 @@ export default function SiteEditorFrame() {
             tag="h2"
             onEdit={edit}
           />
-          {draft.presentationVersion===4&&!sectionConfigured(block,draft)?<EmptyPageSection kind={sectionKind(block)} layout={sectionLayout(block)} route={draft.template} onConfigure={()=>send('foru:configure',{id:block.id,kind:sectionKind(block)==='catalog'?'catalog':'text'})}/>: [3,4].includes(draft.presentationVersion||1)&&sectionKind(block)==='catalog'?<>
+          {[3,4].includes(draft.presentationVersion||1)&&!sectionConfigured(block,draft)?<EmptyPageSection title={block.title} kind={sectionKind(block)} layout={sectionLayout(block)} route={draft.template} onConfigure={()=>send('foru:configure',{id:block.id,kind:sectionKind(block)==='catalog'?'catalog':'text'})}/>: [3,4].includes(draft.presentationVersion||1)&&sectionKind(block)==='catalog'?<>
             <SectionComposition block={block} draft={draft} onEditOffer={id=>send('foru:context',{target:'offer',id,sectionId:block.id})}/>
             {(['module','proposal'].includes(draft.catalogSource||'')||draft.offers?.some(offer=>!offer.id.includes(':')))&&<button type="button" className="pe-action-link" onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'catalog'});}}>{draft.template==='restaurant'?'＋ Añadir producto':'＋ Añadir oferta'}</button>}
             {!draft.offers?.length&&<div className="page-section-setup"><span aria-hidden="true">＋</span><p>{sectionHint('catalog',draft.template)}</p><button type="button" onClick={event=>{event.stopPropagation();send('foru:configure',{id:block.id,kind:'catalog'});}}>Preparar mi catálogo →</button></div>}

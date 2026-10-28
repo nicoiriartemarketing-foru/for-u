@@ -81,3 +81,12 @@ test('route-specific structured sections keep confirmed text and distinguish ame
  assert.equal(body,' Primera indicacion confirmada.\n\nSegunda indicacion. ');
  const parsed=parseSiteData({...page,blocks:[{...page.blocks[1],body}]});assert.equal(parsed.blocks[0].body,body);
 });
+
+
+test('arrival and teacher sections get the right widgets without borrowing a business history as a teacher biography',()=>{
+ const hotel=prepareRoutePage('QA Hospedaje','hospitality',{sections:['Habitaciones','Cómo llegar']},emptyProposal());
+ assert.equal(hotel.blocks[1].kind,'location');
+ const course=prepareRoutePage('QA Cursos','courses',{sections:['Cursos','Quién enseña','Materiales']},emptyProposal());
+ assert.equal(course.blocks[1].kind,'story');assert.equal(course.blocks[1].useModuleDetails,false);assert.equal(course.blocks[1].body,'');
+ assert.equal(course.color,'#6B6B6B');assert.equal(parseSiteData(course).blocks[1].body,'');
+});
